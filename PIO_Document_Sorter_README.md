@@ -130,17 +130,37 @@ from your folders or entered by you.
 | `ODA-PLA`, `ODA-BOA`             | Drawings → Original              |
 | `RPT`, `SPC`, `CER`, `FIT`, `MET`| Reports → Original               |
 | any of those **and** ends `_EN`  | Reports → Translated             |
-| `.xlsx` / `.xls`                 | Revision-folder root             |
+| `CNC-LST` (the document list)    | Revision-folder root             |
+| `.zip`                           | Revision-folder root             |
+| other `.xls` / `.xlsx`           | **skipped** (not needed, not warned) |
 | anything else                    | `_To_Sort_Manually` (and warned) |
 
+So only the things you actually need are kept: the **PDF drawings**, the **PDF
+reports**, any **zips**, and the **`CNC-LST` document list** (for reference at
+the `R00` level). Stray spreadsheets are skipped quietly rather than cluttering
+`_To_Sort_Manually`.
+
 All of this lives in the **CONFIG block at the top of the script** – the lists
-`SORTING_RULES`, `ROOT_EXTENSIONS`, `TRANSLATED_SUFFIX`. If a submission puts
-files in `_To_Sort_Manually`, add the keyword from those file names to
-`SORTING_RULES` and they'll sort next time.
+`SORTING_RULES`, `DOCUMENT_LIST_KEYWORDS`, `ROOT_EXTENSIONS`,
+`IGNORE_EXTENSIONS`, `TRANSLATED_SUFFIX`. If a submission puts files in
+`_To_Sort_Manually`, add the keyword from those file names to `SORTING_RULES`
+and they'll sort next time.
 
 Nothing is ever deleted, and unrecognised files are **copied** into a clearly
 named `_To_Sort_Manually` folder (with a `_READ_ME_unsorted.txt` listing them)
 so they are never lost.
+
+### You can select any level as the destination
+
+You don't have to point it at the top *Document Control* folder. Select whatever
+already exists and it builds only what's missing below:
+
+* Select **Document Control** → it finds (or creates) the package and sub-part
+  folders and adds the revision.
+* Select the **package folder** (e.g. `40102 CD-24`) → it adds the sub-part
+  folder (if needed) and the revision.
+* Select the **sub-part folder** (e.g. `401020 CD-24.1`) → it adds just the new
+  revision (e.g. `4010201 R01`) inside it and **touches nothing above**.
 
 ---
 

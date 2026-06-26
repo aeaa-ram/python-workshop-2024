@@ -111,9 +111,19 @@ SORTING_RULES = [
 # translated (English) version and goes into the "Translated" sub-folder.
 TRANSLATED_SUFFIX = "_EN"
 
-# Files with these extensions go straight to the revision-folder root (handy
-# for tracking spreadsheets that travel with the submission).
-ROOT_EXTENSIONS = [".xlsx", ".xls"]
+# The one spreadsheet worth keeping is the document list (e.g. "CNC-LST..."):
+# it is kept at the revision root for reference.  Matched by keyword anywhere in
+# the file name, case-insensitive.  Add other names here if yours differ.
+DOCUMENT_LIST_KEYWORDS = ["CNC-LST"]
+
+# Files with these extensions are kept as-is at the revision-folder root, so a
+# zip that travels with the submission is preserved.  (The document list above
+# is also kept at the root, whatever its extension.)
+ROOT_EXTENSIONS = [".zip"]
+
+# Spreadsheets / office files that are NOT the document list are not part of the
+# submission, so they are skipped silently - not copied and not flagged.
+IGNORE_EXTENSIONS = [".xls", ".xlsx", ".xlsm"]
 
 # Anything the rules can't place is copied here, inside the revision folder, so
 # nothing is ever lost and it is obvious what still needs a human.
@@ -224,14 +234,22 @@ def parse_source(source_path):
 # ===========================================================================
 
 
-def find_folder_by_regex(root, pattern, max_depth=6):
+def find_folder_by_regex(root, pattern, max_depth=6, include_self=False):
     """Search 'root' for the shallowest directory whose name matches 'pattern'
-    and starts with a run of digits.  Return (code, Path) or (None, None)."""
+    and starts with a run of digits.  Return (code, Path) or (None, None).
+
+    With include_self=True the chosen 'root' folder itself is considered too, so
+    a folder the user selects directly (already partway down the tree) is found.
+    """
     root = Path(root)
     if not root.exists():
         return None, None
     rx = re.compile(pattern, re.IGNORECASE)
     best = None  # (depth, code, path)
+    if include_self and rx.search(root.name):
+        m = re.match(r"\s*(\d+)", root.name)
+        if m:
+            best = (-1, m.group(1), root)  # -1 so it beats any descendant
     for dirpath, dirnames, _files in os.walk(root):
         depth = len(Path(dirpath).relative_to(root).parts)
         if depth >= max_depth:
@@ -255,58 +273,68 @@ def _suffix_from_code(code, stage):
 
 
 def resolve_placement(dest_root, stage, pkg, subpart):
-    """Find the existing package folder (and its 2-digit code) in the
-    destination, or work out where a new one should be created.
+    """Work out where to build, from whatever folder the user selected.
 
+    The user may select the top "Document Control" folder, OR a folder that is
+    already partway down the tree (its package or sub-part folder).  Either way
+    we find the deepest folder that already exists and build the rest below it.
     Nothing about the numbering is computed from the package number - the
     package code is read from your folder, or you type it once.
 
     Returns a dict:
         pkg_suffix        - the 2-digit package code ('' if not found)
-        package_dir       - existing package folder (str) or None
-        package_parent    - where to CREATE the package folder if it is None
-        subpart_dir       - existing sub-part folder (str) or None
-        subpart_code      - that folder's leading number, or None
-        package_detected  - True if an existing package folder was found
+        build_dir         - the existing folder to build inside
+        build_level       - "subpart" | "package" | "above_package": what
+                            build_dir is, i.e. how much of the tree to create
+        subpart_code      - an existing sub-part folder's number (to reuse), else None
+        package_detected  - True if an existing package/sub-part folder was found
     """
     dest_root = Path(dest_root)
     stage = (stage or "CD").upper()
     stage_code = STAGE_CODES.get(stage, "")
     info = {
         "pkg_suffix": "",
-        "package_dir": None,
-        "package_parent": str(dest_root),
-        "subpart_dir": None,
+        "build_dir": str(dest_root),
+        "build_level": "above_package",
         "subpart_code": None,
         "package_detected": False,
     }
     if pkg is None:
         return info
 
-    # 1) An existing package folder, e.g. "40101 Foundations_Piers (CD-23)".
-    #    (?![\d.]) keeps it from matching the sub-part folder "CD-23.4".
-    code, path = find_folder_by_regex(dest_root, rf"{stage}-?0*{pkg}(?![\d.])")
+    pkg_rx = rf"{stage}-?0*{pkg}(?![\d.])"
+    sub_rx = rf"{stage}-?0*{pkg}\.0*{subpart}(?!\d)" if subpart else None
+
+    # (A) An existing sub-part folder, e.g. "4010104 CD-23.4" - selected
+    #     directly, or found anywhere under the chosen folder.  Build the new
+    #     revision straight inside it (nothing above it is touched).
+    if sub_rx:
+        code, path = find_folder_by_regex(dest_root, sub_rx, include_self=True)
+        if code:
+            info["pkg_suffix"] = _suffix_from_code(code, stage)
+            info["build_dir"] = str(path)
+            info["build_level"] = "subpart"
+            info["subpart_code"] = code
+            info["package_detected"] = True
+            return info
+
+    # (B) An existing package folder, e.g. "40101 ... (CD-23)" - selected
+    #     directly, or found below.  (?![\d.]) keeps it off the sub-part folder.
+    code, path = find_folder_by_regex(dest_root, pkg_rx, include_self=True)
     if code:
         info["pkg_suffix"] = _suffix_from_code(code, stage)
-        info["package_dir"] = str(path)
-        info["package_parent"] = str(Path(path).parent)
+        info["build_dir"] = str(path)
+        info["build_level"] = "package"
         info["package_detected"] = True
-        # An existing sub-part folder inside it, e.g. "4010104 CD-23.4".
-        if subpart:
-            sub_code, sub_path = find_folder_by_regex(
-                path, rf"{stage}-?0*{pkg}\.0*{subpart}(?!\d)"
-            )
-            if sub_code:
-                info["subpart_dir"] = str(sub_path)
-                info["subpart_code"] = sub_code
         return info
 
-    # 2) No package folder yet - create one under the stage folder if it exists
-    #    (e.g. "401 Definitive"), otherwise directly under the destination.
+    # (C) Nothing yet - create under the stage folder (e.g. "401 Definitive")
+    #     if there is one, otherwise directly under the chosen folder.
     if stage_code:
-        _c, stage_dir = find_folder_by_regex(dest_root, rf"^\s*{stage_code}(?!\d)")
+        _c, stage_dir = find_folder_by_regex(
+            dest_root, rf"^\s*{stage_code}(?!\d)", include_self=True)
         if stage_dir:
-            info["package_parent"] = str(stage_dir)
+            info["build_dir"] = str(stage_dir)
     return info
 
 
@@ -363,24 +391,31 @@ def derive_codes(stage, pkg_code, subpart, rev_index, detected_subpart_code=None
 def build_structure(fields, codes, dry_run=False):
     """Create (unless dry-run) and return the folder map for one revision.
 
-    The package folder is reused when it was detected, or created (with a basic
-    name you can rename later) when it is new; the sub-part folder is handled
-    the same way.  Everything from the revision down is always created.
+    Only the levels BELOW what already exists are created.  'build_level' says
+    what the selected/detected folder is:
+        "subpart"        - build the revision straight inside it
+        "package"        - create the sub-part folder (if any) then the revision
+        "above_package"  - create the package folder, sub-part folder, revision
+    Existing folders are reused (never duplicated) thanks to exist_ok.
     """
     stage = (fields.get("stage") or "CD").upper()
     pkg = fields.get("pkg")
     subpart = fields.get("subpart")
+    build_dir = Path(fields["placement"])
+    level = fields.get("build_level", "above_package")
 
-    # --- Package folder ---------------------------------------------------
-    if fields.get("placement_is_package"):
-        package_dir = Path(fields["placement"])
-    else:
-        package_dir = Path(fields["placement"]) / f"{codes['package']} {stage}-{pkg}"
+    # --- Package folder (existing, or created with a basic name) ----------
+    if level == "above_package":
+        package_dir = build_dir / f"{codes['package']} {stage}-{pkg}"
+    elif level == "package":
+        package_dir = build_dir
+    else:  # "subpart": build_dir already IS the sub-part folder
+        package_dir = build_dir.parent
 
     # --- Sub-part folder (only when the package has sub-parts) ------------
     if subpart and codes.get("subpart"):
-        if fields.get("detected_subpart_dir"):
-            rev_parent = Path(fields["detected_subpart_dir"])
+        if level == "subpart":
+            rev_parent = build_dir
         else:
             rev_parent = package_dir / f"{codes['subpart']} {stage}-{pkg}.{subpart}"
     else:
@@ -420,50 +455,62 @@ def classify_file(name):
     """Decide where a file goes.
 
     Returns (key, note):
-        key  - destination folder key, or None if no rule matched.
+        key  - destination folder key, "ignore" to skip silently, or None if no
+               rule matched (file kept in _To_Sort_Manually and flagged).
         note - None, or a short string describing an ambiguity worth a warning.
 
-    Edit SORTING_RULES / TRANSLATED_SUFFIX / ROOT_EXTENSIONS at the top of the
-    file to change any of this.
+    Edit the CONFIG block at the top of the file to change any of this.
     """
     lower = name.lower()
     stem, ext = os.path.splitext(name)
+    ext = ext.lower()
 
-    if ext.lower() in ROOT_EXTENSIONS:
+    # The document list (e.g. CNC-LST) is kept at the revision root, whatever
+    # its extension.
+    if any(kw.lower() in lower for kw in DOCUMENT_LIST_KEYWORDS):
         return "root", None
 
+    # Drawings / reports by keyword (the FIRST matching rule wins).
     matched = [key for substrings, key in SORTING_RULES
                if any(s.lower() in lower for s in substrings)]
-    if not matched:
-        return None, None
+    if matched:
+        key = matched[0]
+        if key == "reports_original" and stem.lower().endswith(
+            TRANSLATED_SUFFIX.lower()
+        ):
+            key = "reports_translated"
+        # If the name matched two different categories (e.g. a drawing AND a
+        # report keyword) flag it so the user can confirm where it landed.
+        note = None
+        families = {m.split("_", 1)[0] for m in matched}
+        if len(families) > 1:
+            note = (f"matched more than one category ({', '.join(matched)}); "
+                    f"filed under '{key}'")
+        return key, note
 
-    key = matched[0]
-    if key == "reports_original" and stem.lower().endswith(
-        TRANSLATED_SUFFIX.lower()
-    ):
-        key = "reports_translated"
+    # Zips travel with the submission - kept at the revision root.
+    if ext in ROOT_EXTENSIONS:
+        return "root", None
 
-    # If the name matched two different categories (e.g. a drawing AND a report
-    # keyword) flag it so the user can confirm it landed in the right place.
-    note = None
-    families = {m.split("_", 1)[0] for m in matched}
-    if len(families) > 1:
-        note = (f"matched more than one category ({', '.join(matched)}); "
-                f"filed under '{key}'")
-    return key, note
+    # Spreadsheets that aren't the document list are not needed - skip silently.
+    if ext in IGNORE_EXTENSIONS:
+        return "ignore", None
+
+    return None, None
 
 
 def copy_and_sort(source, folders, dry_run=False):
     """Copy every file from the source folder into the right sub-folder.
 
-    Returns (copied, skipped, unsorted, ambiguous):
+    Returns (copied, skipped, unsorted, ambiguous, ignored):
         copied    - dict key -> [names]
         skipped   - [names] that already existed (left untouched, not overwritten)
         unsorted  - [names] no rule could place (kept in the _To_Sort_Manually folder)
         ambiguous - [(name, note)] that matched more than one category
+        ignored   - [names] intentionally skipped (e.g. stray spreadsheets)
     """
     copied = collections.defaultdict(list)
-    skipped, unsorted, ambiguous = [], [], []
+    skipped, unsorted, ambiguous, ignored = [], [], [], []
 
     for entry in sorted(Path(source).iterdir(), key=lambda p: p.name.lower()):
         if entry.is_dir():
@@ -471,6 +518,9 @@ def copy_and_sort(source, folders, dry_run=False):
         key, note = classify_file(entry.name)
         if note:
             ambiguous.append((entry.name, note))
+        if key == "ignore":
+            ignored.append(entry.name)
+            continue
         dest_dir = folders[key] if key else folders["unsorted"]
 
         if dry_run:
@@ -489,7 +539,7 @@ def copy_and_sort(source, folders, dry_run=False):
         if key is None:
             unsorted.append(entry.name)
 
-    return copied, skipped, unsorted, ambiguous
+    return copied, skipped, unsorted, ambiguous, ignored
 
 
 # ===========================================================================
@@ -631,7 +681,9 @@ def run(source, dest_root, fields, dry_run=False):
     )
     folders = build_structure(fields, codes, dry_run)
 
-    copied, skipped, unsorted, ambiguous = copy_and_sort(source, folders, dry_run)
+    copied, skipped, unsorted, ambiguous, ignored = copy_and_sort(
+        source, folders, dry_run
+    )
 
     cdnr = f"{pkg}.{subpart}" if subpart else (str(pkg) if pkg else "")
     merged_name = f"PIO_{stage}_{cdnr}_Combined_Drawings.pdf"
@@ -648,7 +700,7 @@ def run(source, dest_root, fields, dry_run=False):
         write_unsorted_note(folders["unsorted"], unsorted)
 
     summary = _summary(
-        source, folders, codes, fields, copied, skipped, merge_status,
+        source, folders, codes, fields, copied, skipped, ignored, merge_status,
         merged_path, merged_count, warnings, dry_run,
     )
     return summary, warnings
@@ -715,8 +767,8 @@ def write_unsorted_note(unsorted_dir, unsorted):
         pass
 
 
-def _summary(source, folders, codes, fields, copied, skipped, merge_status,
-             merged_path, merged_count, warnings, dry_run):
+def _summary(source, folders, codes, fields, copied, skipped, ignored,
+             merge_status, merged_path, merged_count, warnings, dry_run):
     lines = []
     head = "DRY RUN - nothing was written" if dry_run else "Done"
     lines.append(f"=== PIO Document Sorter - {head} ===")
@@ -747,13 +799,18 @@ def _summary(source, folders, codes, fields, copied, skipped, merge_status,
         "drawings_original": "Drawings/Original",
         "reports_original": "Reports/Original",
         "reports_translated": "Reports/Translated",
-        "root": "Revision root (spreadsheets)",
+        "root": "Revision root (doc list / zips)",
         "unsorted": f"{UNSORTED_FOLDER_NAME} (needs a human)",
     }
     for key, names in copied.items():
         lines.append(f"  - {pretty.get(key, key)}: {len(names)}")
     if skipped:
         lines.append(f"  - already existed, skipped: {len(skipped)}")
+    if ignored:
+        lines.append(
+            f"  - not part of the submission, skipped: {len(ignored)} "
+            f"(e.g. {ignored[0]})"
+        )
     lines.append("")
 
     if merge_status == "ok":
@@ -797,7 +854,7 @@ FIELD_LABELS = [
     ("Revision label", "rev_name"),
     ("Revision index (single digit)", "rev_index"),
     ("Package code - 2 digits after 400/401, e.g. 01", "pkg_code"),
-    ("Build inside this folder", "placement"),
+    ("Build from inside this folder", "placement"),
 ]
 
 
@@ -817,8 +874,9 @@ def _gather_fields(source, dest_root):
         )
 
     info = {
-        "pkg_suffix": "", "package_dir": None, "package_parent": str(dest_root),
-        "subpart_dir": None, "subpart_code": None, "package_detected": False,
+        "pkg_suffix": "", "build_dir": str(dest_root),
+        "build_level": "above_package", "subpart_code": None,
+        "package_detected": False,
     }
     if parsed["pkg"] is not None:
         info = resolve_placement(
@@ -832,13 +890,6 @@ def _gather_fields(source, dest_root):
                 "first time for each package - after that it is detected."
             )
 
-    if info["package_detected"]:
-        placement = info["package_dir"]
-        placement_is_package = True
-    else:
-        placement = info["package_parent"]
-        placement_is_package = False
-
     fields = {
         "stage": parsed["stage"],
         "pkg": parsed["pkg"] if parsed["pkg"] is not None else "",
@@ -846,10 +897,9 @@ def _gather_fields(source, dest_root):
         "rev_name": parsed["rev_name"],
         "rev_index": parsed["rev_index"],
         "pkg_code": info["pkg_suffix"],
-        "placement": placement,
-        "placement_is_package": placement_is_package,
+        "placement": info["build_dir"],
+        "build_level": info["build_level"],
         "package_detected": info["package_detected"],
-        "detected_subpart_dir": info.get("subpart_dir"),
         "detected_subpart_code": info.get("subpart_code"),
     }
     return fields, warnings

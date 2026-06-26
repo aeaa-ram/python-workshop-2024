@@ -66,6 +66,13 @@ def main():
     check("prelim.package", c3["package"], "40000")
     check("prelim.rev", c3["rev"], "400000")
 
+    # A higher revision reuses an existing sub-part folder's code as the base,
+    # e.g. selecting "401020 CD-24.1" to add R01 -> "4010201".
+    c4 = s.derive_codes("CD", "02", subpart=1, rev_index=1,
+                        detected_subpart_code="401020")
+    check("reuse.subpart", c4["subpart"], "401020")
+    check("reuse.rev", c4["rev"], "4010201")
+
     # --- File classification (key is the first item of the returned pair) --
     def key(name):
         return s.classify_file(name)[0]
@@ -78,39 +85,54 @@ def main():
     check("cls.spc", key("DEJV-SPC-9.pdf"), "reports_original")
     check("cls.pla", key("DEJV-ODA-PLA-0001.pdf"), "drawings_original")
     check("cls.boa", key("DEJV-ODA-BOA-0001.pdf"), "drawings_original")
-    check("cls.xlsx", key("tracking list.xlsx"), "root")
+    # Stray spreadsheets are skipped; only the document list and zips are kept.
+    check("cls.xlsx_ignored", key("tracking list.xlsx"), "ignore")
+    check("cls.doclist", key("DEJV-CNC-LST-001.xlsx"), "root")
+    check("cls.zip", key("submission package.zip"), "root")
     check("cls.unknown", key("random notes.docx"), None)
     # A name that matches both a report and a drawing keyword is flagged.
     check("cls.ambig_key", key("ODA-PLA-and-RPT-mix.pdf"), "drawings_original")
     check("cls.ambig_note", note("ODA-PLA-and-RPT-mix.pdf") is not None, True)
     check("cls.clean_note", note("DEJV-RPT-1.pdf"), None)
 
-    # --- Package-code detection from existing folders (fully generic) ------
+    # --- Placement detection from existing folders (fully generic) ---------
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
-        (root / "401 Definitive" / "40101 Foundations_Piers (CD-23)"
-         / "4010104 CD-23.4").mkdir(parents=True)
+        subdir = (root / "401 Definitive" / "40101 Foundations_Piers (CD-23)"
+                  / "4010104 CD-23.4")
+        subdir.mkdir(parents=True)
 
-        # Package folder found -> its 2-digit code is read out of the name.
+        # From the top: the sub-part folder is found deep, and we build inside
+        # it; its 2-digit package code is read out of the name.
         r = s.resolve_placement(root, "CD", 23, 4)
         check("detect.suffix", r["pkg_suffix"], "01")
         check("detect.flag", r["package_detected"], True)
-        # The existing sub-part folder is found and reused.
-        check("detect.subdir", str(r["subpart_dir"]).endswith("4010104 CD-23.4"), True)
+        check("detect.level", r["build_level"], "subpart")
+        check("detect.builddir", str(r["build_dir"]).endswith("4010104 CD-23.4"), True)
         check("detect.subcode", r["subpart_code"], "4010104")
 
-        # Same package, no sub-part asked for -> still detects the code.
+        # Same package, no sub-part asked for -> build inside the package folder.
         r2 = s.resolve_placement(root, "CD", 23, None)
         check("detect.nosub.suffix", r2["pkg_suffix"], "01")
-        check("detect.nosub.flag", r2["package_detected"], True)
+        check("detect.nosub.level", r2["build_level"], "package")
+        check("detect.nosub.builddir",
+              str(r2["build_dir"]).endswith("40101 Foundations_Piers (CD-23)"), True)
+
+        # Select a deeper folder DIRECTLY (the sub-part folder) - build from it,
+        # nothing above it is touched.
+        r3 = s.resolve_placement(subdir, "CD", 23, 4)
+        check("select.level", r3["build_level"], "subpart")
+        check("select.builddir", str(r3["build_dir"]).endswith("4010104 CD-23.4"), True)
+        check("select.suffix", r3["pkg_suffix"], "01")
 
         # An unknown package -> nothing detected, user must supply the code.
-        r3 = s.resolve_placement(root, "CD", 99, None)
-        check("detect.none.suffix", r3["pkg_suffix"], "")
-        check("detect.none.flag", r3["package_detected"], False)
+        r4 = s.resolve_placement(root, "CD", 99, None)
+        check("detect.none.suffix", r4["pkg_suffix"], "")
+        check("detect.none.flag", r4["package_detected"], False)
+        check("detect.none.level", r4["build_level"], "above_package")
         # ...and the new folder would be created under the stage folder.
-        check("detect.none.parent",
-              str(r3["package_parent"]).endswith("401 Definitive"), True)
+        check("detect.none.builddir",
+              str(r4["build_dir"]).endswith("401 Definitive"), True)
 
     if failures:
         print("TESTS FAILED:")
