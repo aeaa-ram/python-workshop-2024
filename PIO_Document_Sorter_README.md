@@ -35,7 +35,8 @@ Either way, two folder-picker windows appear:
 Then a small **confirmation window** shows what the script read (stage, package,
 sub-part, revision, folder code). Fix anything wrong and click **Run**. A
 summary window – with any **warnings at the top** – tells you exactly what
-happened, and a `PIO_Sorter_log_*.txt` is written next to the destination.
+happened, and a `PIO_Sorter_log_*.txt` is written **next to the program** (the
+`.bat`/`.exe`), so the sorted folders stay clean.
 
 ### Command-line use (no pop-ups)
 
@@ -217,19 +218,45 @@ The merged file is named `PIO_<CD|CP>_<package>_Combined_Drawings.pdf` and a
 
 ---
 
-## 8. Files in this folder
+## 8. One-time clean-up: renaming an existing tree
+
+If you already have folders numbered the **old** way, there is a separate
+one-time tool to renumber them to this scheme:
+
+> Double-click **`Rename_Existing_Folders.bat`** and pick the folder that
+> contains `400 …` and `401 …`.
+
+* It only changes each folder's **leading number** – the descriptive name
+  (`Foundation_Piers (CD-23)`, `CD-23.1`, `R00`, `Reports`, …) is kept.
+* It **never touches files** – only folder names.
+* It runs as a **preview first**: it shows every planned rename and changes
+  nothing until you click **APPLY** (or pass `--apply`). A full report is saved
+  next to the `.bat`.
+* Anything it can't map confidently (odd or duplicated folders) is **flagged
+  and left alone** for you to fix by hand – it never guesses.
+
+The new package code is read from your own tree (the lowest-numbered package in
+a stage becomes `00`, the next `01`, …), the sub-part from the folder name, and
+the revision index from the existing number – so the result matches what the
+sorter would build.
+
+---
+
+## 9. Files in this folder
 
 | File | What it is |
 |------|------------|
-| `PIO_Document_Sorter.py`        | the whole tool (one file) |
-| `Run_PIO_Sorter.bat`            | double-click to run it (no build) |
-| `Build_Windows_EXE.bat`         | double-click to build the `.exe` |
+| `PIO_Document_Sorter.py`        | the sorter – the main tool (one file) |
+| `Run_PIO_Sorter.bat`            | double-click to run the sorter (no build) |
+| `PIO_Folder_Renamer.py`         | the one-time renamer (Section 8) |
+| `Rename_Existing_Folders.bat`   | double-click to run the renamer (preview first) |
+| `Build_Windows_EXE.bat`         | double-click to build the sorter `.exe` |
 | `requirements.txt`              | the optional PDF libraries |
 | `test_pio_sorter.py`            | logic checks – `python test_pio_sorter.py` |
 
 ---
 
-## 9. Notes
+## 10. Notes
 
 * Select the **revision folder that actually contains the files** (the `00_R00`
   level). If you select a folder that only has sub-folders, the script asks you

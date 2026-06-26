@@ -831,11 +831,20 @@ def _summary(source, folders, codes, fields, copied, skipped, ignored,
     return "\n".join(lines)
 
 
-def write_log(dest_root, summary):
-    """Save the summary next to the destination so there is a record."""
+def _app_dir():
+    """The folder the program itself lives in (next to the .bat / .py, or the
+    .exe when frozen) - logs go here, never inside the sorted output."""
+    if getattr(sys, "frozen", False):  # running as a PyInstaller .exe
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def write_log(summary):
+    """Save the summary next to the program (the .bat/.exe) so there is a record
+    that does not clutter the sorted folders."""
     try:
         stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_path = Path(dest_root) / f"PIO_Sorter_log_{stamp}.txt"
+        log_path = _app_dir() / f"PIO_Sorter_log_{stamp}.txt"
         log_path.write_text(summary, encoding="utf-8")
         return log_path
     except Exception:  # noqa: BLE001 - logging must never crash the run
@@ -1087,7 +1096,7 @@ def main(argv=None):
 
     summary, warnings = run(source, dest, fields, dry_run=args.dry_run)
     if not args.dry_run:
-        log_path = write_log(dest, summary)
+        log_path = write_log(summary)
         if log_path:
             summary += f"\n\nLog saved to: {log_path}"
 
