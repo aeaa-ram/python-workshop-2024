@@ -27,22 +27,22 @@ Design notes / how the old flaws are fixed
 * Extra "0":        the numbering depth follows the real folder depth, so a
                     package WITH a sub-part gets one extra digit and a package
                     WITHOUT one does not - automatically.
-* Hard-coded "27":  the package number is parsed from the source path.
-* Hard-coded nr40:  the base folder code is detected from the folders you
-                    already have (e.g. "4011 Foundations_Piers (CD-23)"); if it
-                    can't be found it is computed and you can correct it in the
-                    confirmation window.
-* Definitive/Prelim: detected from the path -> CD or CP prefix.
-* Hard-coded "R00": the revision label and its index come from the source
-                    folder name (00_R00 -> "R00", 01_R01 -> "R01", ...).
-* Hard-coded user:  no user name is hard-coded anywhere - you choose both
-                    folders, and the paths are derived once.
-* Repeated paths:   every path is derived once from the two folders you pick.
-* Overwrite on re-run: folders are created with exist_ok and existing files are
+* Package number:   read from the source path, not hard-coded.
+* Base folder code: detected from the folders you already have, or typed once
+                    in the confirmation window - never computed or hard-coded,
+                    so any package / numbering scheme works.
+* Stage:            Definitive/Preliminaire detected from the path -> CD / CP.
+* Revision label:   read from the source folder name (00_R00 -> "R00",
+                    01_R01 -> "R01", 01_R01A -> "R01A", ...).
+* User directory:   nothing is hard-coded - you choose both folders, and every
+                    path is derived from them once.
+* Re-running:       folders are created with exist_ok and existing files are
                     skipped, so re-running the same package never fails.  No
                     shared "Temporary" folder is used.
 * PDF merge fails:  the merge is robust - encrypted/damaged PDFs are repaired
                     when possible and otherwise skipped and listed for you.
+* Files in limbo:   anything a rule can't place is reported in a warnings list
+                    and kept in a clearly named folder, never silently dropped.
 * 4 sub-flows:      everything is in this one file.
 
 The job is non-destructive: it COPIES from the SharePoint source and never
@@ -103,19 +103,23 @@ UNSORTED_FOLDER_NAME = "_To_Sort_Manually"
 # Drawings are merged in descending file-name order (matches the old flow).
 DRAWINGS_SORT_DESCENDING = True
 
-# Stage word found in the source path -> (prefix, stage digit used in codes).
-#   "401 Definitive" -> digit 1,   "400 Preliminary" -> digit 0
+# Which stage a path belongs to, recognised from a folder name in the path.
+#   "...\Definitive\..."  -> CD        "...\Preliminaire\..." -> CP
+# Add other spellings here if your folders ever use them.
 STAGE_FROM_PATH = {
-    "definit": ("CD", "1"),   # Definitive
-    "prelim":  ("CP", "0"),   # Preliminaire / Preliminary  (also matches "prelimin")
+    "definit": "CD",   # matches "Definitive"
+    "prelim":  "CP",   # matches "Preliminaire" / "Preliminary"
 }
-STAGE_DIGITS = {"CD": "1", "CP": "0"}
-STAGE_WORD = {"CD": "Definitive", "CP": "Preliminaire"}
 
-# Fallback only.  CD-23 -> 4011, CD-24 -> 4012 ...  i.e. last digit = number - 22.
-# This is ONLY used when the package folder can't be found in the destination;
-# you can always correct the result in the confirmation window.
-PACKAGE_NUMBER_OFFSET = 22
+# --- About the numbering (nothing here is package-specific) ----------------
+# Every folder code is its parent's code plus ONE digit per level.  Given a
+# base code B the tree becomes:
+#       "<B>0 <revision>"  ->  "<B>00 Reports"   ->  "<B>000 Original"
+#                          ->  "<B>01 Drawings"  ->  "<B>010 Original", ...
+# The base code is NEVER computed from the package number.  It is read from the
+# folder you already have for that package (e.g. a folder whose name contains
+# "(CD-23)"), or typed once in the confirmation window.  That is what keeps the
+# script generic for any package, stage or numbering scheme.
 
 # ===========================================================================
 #  PATH PARSING  -  read the stage / package / sub-part / revision from a path.
@@ -144,7 +148,7 @@ def parse_source(source_path):
     stage = None
     for part in parts:
         low = part.lower()
-        for marker, (code, _digit) in STAGE_FROM_PATH.items():
+        for marker, code in STAGE_FROM_PATH.items():
             if marker in low:
                 stage = code
     # --- Package number from CD-XX or CP-XX ---
@@ -211,39 +215,38 @@ def find_folder_by_regex(root, pattern, max_depth=6):
 
 
 def resolve_base_code(dest_root, stage, pkg, subpart):
-    """Return a dict with base_code, package_code, the folder to place the new
-    revision in, and whether the package was detected from existing folders."""
-    stage_digit = STAGE_DIGITS.get(stage, "1")
+    """Work out the base numeric code from the folders that already exist in the
+    destination - nothing about the numbering is hard-coded or package-specific.
 
-    # 1) Package folder, e.g. "4011 Foundations_Piers (CD-23)".
-    pkg_code, pkg_path = find_folder_by_regex(
-        dest_root, rf"{stage}-0*{pkg}(?![\d.])"
-    )
-    detected = pkg_code is not None
-    if not detected:
-        pkg_code = f"40{stage_digit}{pkg - PACKAGE_NUMBER_OFFSET}"
-
-    base_code, base_path = pkg_code, pkg_path
-
-    # 2) If there is a sub-part, prefer an existing sub-part folder, e.g.
-    #    "40113 CD-23.4"; otherwise append (sub - 1) to the package code.
+    Returns base_code ('' when it can't be found), the folder to create the new
+    revision inside, and whether it was detected.
+    """
+    # 1) An existing sub-part folder is the most specific match, e.g. a folder
+    #    whose name contains "CD-23.4".
     if subpart:
         sub_code, sub_path = find_folder_by_regex(
             dest_root, rf"(?:{stage}-)?0*{pkg}\.0*{subpart}(?!\d)"
         )
         if sub_code:
-            base_code, base_path = sub_code, sub_path
-        else:
-            base_code = f"{pkg_code}{subpart - 1}"
-            base_path = None
+            return {"base_code": sub_code, "placement": str(sub_path),
+                    "package_detected": True}
 
-    placement = base_path or pkg_path or Path(dest_root)
-    return {
-        "base_code": base_code,
-        "package_code": pkg_code,
-        "placement": str(placement),
-        "package_detected": detected,
-    }
+    # 2) Otherwise the package folder, e.g. one whose name contains "(CD-23)".
+    pkg_code, pkg_path = find_folder_by_regex(
+        dest_root, rf"{stage}-0*{pkg}(?![\d.])"
+    )
+    if pkg_code:
+        # First-time sub-part: its folder doesn't exist yet, so extend the
+        # package code by one digit (sub-part ".N" is the (N-1)th child).  This
+        # is the numbering convention itself, not a project-specific value.
+        base_code = f"{pkg_code}{subpart - 1}" if subpart else pkg_code
+        return {"base_code": base_code, "placement": str(pkg_path),
+                "package_detected": True}
+
+    # 3) Nothing matched - the user supplies the code once in the confirmation
+    #    window (or picks the parent folder), and it is reused from then on.
+    return {"base_code": "", "placement": str(dest_root),
+            "package_detected": False}
 
 
 def compute_codes(base_code, rev_index):
@@ -298,40 +301,60 @@ def build_structure(parent, codes, rev_name, dry_run=False):
 
 
 def classify_file(name):
-    """Return the destination key for a file name, or None if we can't tell.
+    """Decide where a file goes.
+
+    Returns (key, note):
+        key  - destination folder key, or None if no rule matched.
+        note - None, or a short string describing an ambiguity worth a warning.
 
     Edit SORTING_RULES / TRANSLATED_SUFFIX / ROOT_EXTENSIONS at the top of the
-    file to change this.
+    file to change any of this.
     """
     lower = name.lower()
     stem, ext = os.path.splitext(name)
 
     if ext.lower() in ROOT_EXTENSIONS:
-        return "root"
+        return "root", None
 
-    for substrings, key in SORTING_RULES:
-        if any(s.lower() in lower for s in substrings):
-            if key == "reports_original" and stem.lower().endswith(
-                TRANSLATED_SUFFIX.lower()
-            ):
-                return "reports_translated"
-            return key
-    return None
+    matched = [key for substrings, key in SORTING_RULES
+               if any(s.lower() in lower for s in substrings)]
+    if not matched:
+        return None, None
+
+    key = matched[0]
+    if key == "reports_original" and stem.lower().endswith(
+        TRANSLATED_SUFFIX.lower()
+    ):
+        key = "reports_translated"
+
+    # If the name matched two different categories (e.g. a drawing AND a report
+    # keyword) flag it so the user can confirm it landed in the right place.
+    note = None
+    families = {m.split("_", 1)[0] for m in matched}
+    if len(families) > 1:
+        note = (f"matched more than one category ({', '.join(matched)}); "
+                f"filed under '{key}'")
+    return key, note
 
 
 def copy_and_sort(source, folders, dry_run=False):
     """Copy every file from the source folder into the right sub-folder.
 
-    Returns (copied, skipped, unsorted) where copied maps key -> [names].
+    Returns (copied, skipped, unsorted, ambiguous):
+        copied    - dict key -> [names]
+        skipped   - [names] that already existed (left untouched, not overwritten)
+        unsorted  - [names] no rule could place (kept in the _To_Sort_Manually folder)
+        ambiguous - [(name, note)] that matched more than one category
     """
     copied = collections.defaultdict(list)
-    skipped = []
-    unsorted = []
+    skipped, unsorted, ambiguous = [], [], []
 
     for entry in sorted(Path(source).iterdir(), key=lambda p: p.name.lower()):
         if entry.is_dir():
             continue
-        key = classify_file(entry.name)
+        key, note = classify_file(entry.name)
+        if note:
+            ambiguous.append((entry.name, note))
         dest_dir = folders[key] if key else folders["unsorted"]
 
         if dry_run:
@@ -350,7 +373,7 @@ def copy_and_sort(source, folders, dry_run=False):
         if key is None:
             unsorted.append(entry.name)
 
-    return copied, skipped, unsorted
+    return copied, skipped, unsorted, ambiguous
 
 
 # ===========================================================================
@@ -459,7 +482,7 @@ def merge_drawings(drawings_dir, output_path, dry_run=False):
 
 
 def run(source, dest_root, fields, dry_run=False):
-    """Do the whole job and return a human-readable summary string."""
+    """Do the whole job.  Returns (summary_text, warnings_list)."""
     pkg = fields.get("pkg")
     subpart = fields.get("subpart")
     stage = fields.get("stage") or "CD"
@@ -469,7 +492,7 @@ def run(source, dest_root, fields, dry_run=False):
         fields["placement"], codes, fields["rev_name"], dry_run
     )
 
-    copied, skipped, unsorted = copy_and_sort(source, folders, dry_run)
+    copied, skipped, unsorted, ambiguous = copy_and_sort(source, folders, dry_run)
 
     cdnr = f"{pkg}.{subpart}" if subpart else (str(pkg) if pkg else "")
     merged_name = f"PIO_{stage}_{cdnr}_Combined_Drawings.pdf"
@@ -479,25 +502,98 @@ def run(source, dest_root, fields, dry_run=False):
         dry_run,
     )
 
-    return _summary(
-        source, folders, codes, fields, copied, skipped, unsorted,
-        merge_status, merged_path, merged_count, merge_failed, dry_run,
+    warnings = collect_warnings(
+        fields, skipped, unsorted, ambiguous, merge_status, merge_failed
     )
+    if not dry_run and unsorted:
+        write_unsorted_note(folders["unsorted"], unsorted)
+
+    summary = _summary(
+        source, folders, codes, fields, copied, skipped, merge_status,
+        merged_path, merged_count, warnings, dry_run,
+    )
+    return summary, warnings
 
 
-def _summary(source, folders, codes, fields, copied, skipped, unsorted,
-             merge_status, merged_path, merged_count, merge_failed, dry_run):
+def _short(text, n=80):
+    """Trim a long error message for display."""
+    return text if len(text) <= n else text[:n - 3] + "..."
+
+
+def collect_warnings(fields, skipped, unsorted, ambiguous, merge_status,
+                     merge_failed):
+    """Build one flat list of everything the user should look at by hand."""
+    w = []
+    if not fields.get("package_detected", True):
+        w.append(
+            "Base folder code was typed in manually (no matching folder was "
+            "found in the destination) - double-check the numbering."
+        )
+    for name in unsorted:
+        w.append(
+            f"NOT SORTED (no rule matched): {name}  ->  left in "
+            f"'{UNSORTED_FOLDER_NAME}'"
+        )
+    for name, note in ambiguous:
+        w.append(f"CHECK PLACEMENT: {name}  ->  {note}")
+    for name, reason in merge_failed:
+        w.append(
+            f"NOT MERGED (still in Drawings/Original): {name}  ({_short(reason)})"
+        )
+    if merge_status == "no-library":
+        w.append(
+            "Drawings were NOT merged - install a PDF library: "
+            "pip install pikepdf"
+        )
+    elif merge_status == "all-failed":
+        w.append("Drawings merge FAILED for every file - check the source PDFs.")
+    if skipped:
+        shown = ", ".join(skipped[:6]) + (" ..." if len(skipped) > 6 else "")
+        w.append(
+            f"{len(skipped)} file(s) already existed and were left as they were "
+            f"(not overwritten): {shown}"
+        )
+    return w
+
+
+def write_unsorted_note(unsorted_dir, unsorted):
+    """Drop a short readme next to the files that still need a human."""
+    try:
+        Path(unsorted_dir).mkdir(parents=True, exist_ok=True)
+        note = Path(unsorted_dir) / "_READ_ME_unsorted.txt"
+        lines = [
+            "These files did not match any sorting rule, so they were left here",
+            "for you to place by hand:",
+            "",
+        ] + [f"  - {n}" for n in unsorted] + [
+            "",
+            "To sort files like these automatically next time, add the keyword",
+            "from their names to SORTING_RULES at the top of",
+            "PIO_Document_Sorter.py.",
+        ]
+        note.write_text("\n".join(lines), encoding="utf-8")
+    except Exception:  # noqa: BLE001 - a note must never crash the run
+        pass
+
+
+def _summary(source, folders, codes, fields, copied, skipped, merge_status,
+             merged_path, merged_count, warnings, dry_run):
     lines = []
     head = "DRY RUN - nothing was written" if dry_run else "Done"
     lines.append(f"=== PIO Document Sorter - {head} ===")
-    lines.append(f"Source      : {source}")
-    lines.append(f"Revision    : {codes['rev']} {fields['rev_name']}")
-    lines.append(f"Created in  : {folders['rev']}")
-    if not fields.get("package_detected", True):
-        lines.append(
-            "  ! Package code was COMPUTED, not found in your folders - "
-            "double-check the numbering."
-        )
+    lines.append(f"Source     : {source}")
+    lines.append(f"Revision   : {codes['rev']} {fields['rev_name']}")
+    lines.append(f"Created in : {folders['rev']}")
+    lines.append("")
+
+    # WARNINGS first, so they are impossible to miss.
+    if warnings:
+        lines.append(f"###### WARNINGS ({len(warnings)}) - PLEASE REVIEW ######")
+        for w in warnings:
+            lines.append(f"  ! {w}")
+        lines.append("#" * 44)
+    else:
+        lines.append("No warnings - everything was sorted and merged cleanly.")
     lines.append("")
 
     total = sum(len(v) for v in copied.values())
@@ -516,7 +612,6 @@ def _summary(source, folders, codes, fields, copied, skipped, unsorted,
         lines.append(f"  - already existed, skipped: {len(skipped)}")
     lines.append("")
 
-    # Drawings merge
     if merge_status == "ok":
         lines.append(f"Drawings merged: {merged_count} PDF(s) -> {merged_path.name}")
     elif merge_status == "no-pdfs":
@@ -524,36 +619,14 @@ def _summary(source, folders, codes, fields, copied, skipped, unsorted,
     elif merge_status == "dry-run":
         lines.append(f"Drawings merged: would merge {merged_count} PDF(s).")
     elif merge_status == "no-library":
-        lines.append(
-            "Drawings merged: SKIPPED - install a PDF library "
-            "(pip install pikepdf  or  pip install pypdf)."
-        )
+        lines.append("Drawings merged: SKIPPED (no PDF library installed).")
     elif merge_status == "all-failed":
-        lines.append("Drawings merged: FAILED - none of the PDFs could be merged.")
-    if merge_failed:
-        lines.append(
-            f"  ! {len(merge_failed)} drawing(s) could NOT be merged "
-            "(merge the rest is fine - handle these by hand):"
-        )
-        for name, reason in merge_failed:
-            short = reason if len(reason) < 70 else reason[:67] + "..."
-            lines.append(f"      - {name}  ({short})")
+        lines.append("Drawings merged: FAILED (see warnings above).")
     lines.append("")
-
-    if unsorted:
-        lines.append(
-            f"{len(unsorted)} file(s) could not be sorted automatically and were "
-            f"placed in '{UNSORTED_FOLDER_NAME}':"
-        )
-        for name in unsorted:
-            lines.append(f"      - {name}")
-        lines.append(
-            "  Tip: add the keyword from these names to SORTING_RULES at the "
-            "top of the script so they sort next time."
-        )
-    else:
-        lines.append("All files were sorted automatically.")
-
+    lines.append(
+        "Tip: to teach the sorter a new file type, add its keyword to "
+        "SORTING_RULES at the top of PIO_Document_Sorter.py."
+    )
     return "\n".join(lines)
 
 
@@ -598,7 +671,7 @@ def _gather_fields(source, dest_root):
             "Could not find a CD-/CP- package number in the path - please enter it."
         )
 
-    resolved = {"base_code": "", "package_code": "", "placement": str(dest_root),
+    resolved = {"base_code": "", "placement": str(dest_root),
                 "package_detected": False}
     if parsed["pkg"] is not None:
         resolved = resolve_base_code(
@@ -607,7 +680,8 @@ def _gather_fields(source, dest_root):
         if not resolved["package_detected"]:
             warnings.append(
                 f"No existing folder for {parsed['stage']}-{parsed['pkg']} was "
-                "found - the base code was computed. Check it below."
+                "found in the destination. Enter the base folder code below "
+                "(you only need to do this the first time for each package)."
             )
 
     fields = {
@@ -636,16 +710,6 @@ def _normalise_fields(raw):
     fields["rev_name"] = (raw.get("rev_name") or "R00").strip()
     fields["base_code"] = str(raw.get("base_code", "")).strip()
     fields["placement"] = str(raw.get("placement", "")).strip()
-
-    # If the user supplied a package number but no base code (e.g. nothing could
-    # be auto-detected), compute the base code from the fallback formula so the
-    # run can still proceed instead of refusing.
-    if not fields["base_code"] and fields["pkg"] is not None:
-        stage_digit = STAGE_DIGITS.get(fields["stage"], "1")
-        pkg_code = f"40{stage_digit}{fields['pkg'] - PACKAGE_NUMBER_OFFSET}"
-        fields["base_code"] = (
-            f"{pkg_code}{fields['subpart'] - 1}" if fields["subpart"] else pkg_code
-        )
     return fields
 
 
@@ -730,7 +794,7 @@ def pick_folder(title):
         return None
 
 
-def show_message(summary, is_error=False):
+def show_message(summary, is_error=False, title="PIO Document Sorter - result"):
     """Show the final summary in a pop-up if possible, always print it too."""
     print("\n" + summary + "\n")
     try:
@@ -738,7 +802,7 @@ def show_message(summary, is_error=False):
         from tkinter import scrolledtext
 
         win = tk.Tk()
-        win.title("PIO Document Sorter - result")
+        win.title(title)
         box = scrolledtext.ScrolledText(win, width=90, height=28, wrap="word")
         box.insert("1.0", summary)
         box.configure(state="disabled")
@@ -764,16 +828,11 @@ def parse_args(argv):
                    help="Never open windows - use the command line only.")
     p.add_argument("--yes", action="store_true",
                    help="Skip the confirmation step (use detected values as-is).")
-    p.add_argument("--self-test", action="store_true",
-                   help="Run internal logic checks and exit.")
     return p.parse_args(argv)
 
 
 def main(argv=None):
     args = parse_args(argv if argv is not None else sys.argv[1:])
-
-    if args.self_test:
-        return _self_test()
 
     use_gui = not args.no_gui
 
@@ -810,86 +869,24 @@ def main(argv=None):
         fields = merged
 
     fields = _normalise_fields(fields)
-    if fields["pkg"] is None or not fields["base_code"]:
+    if not fields["base_code"]:
         show_message(
-            "Missing package number or base folder code - cannot continue.\n"
-            "Run again and fill those in.", is_error=True)
+            "No base folder code was given, so the numbering can't be built.\n\n"
+            "Run again and either pick a destination that already contains the "
+            "package folder (e.g. one named '... (CD-23)'), or type the base "
+            "code into the confirmation window.", is_error=True)
         return 1
 
-    summary = run(source, dest, fields, dry_run=args.dry_run)
+    summary, warnings = run(source, dest, fields, dry_run=args.dry_run)
     if not args.dry_run:
         log_path = write_log(dest, summary)
         if log_path:
             summary += f"\n\nLog saved to: {log_path}"
-    show_message(summary)
-    return 0
 
-
-# ===========================================================================
-#  SELF TEST  -  pure-logic checks so the numbering can't silently break.
-# ===========================================================================
-
-
-def _self_test():
-    failures = []
-
-    def check(label, got, want):
-        if got != want:
-            failures.append(f"{label}: got {got!r}, want {want!r}")
-
-    # Sub-part case: CD-23.4 / R00
-    src = r"C:\Users\AEAA\Cima+\...\De_Conception\Definitive\CD-23\23.4\00_R00"
-    p = parse_source(src)
-    check("subpart.stage", p["stage"], "CD")
-    check("subpart.pkg", p["pkg"], 23)
-    check("subpart.subpart", p["subpart"], 4)
-    check("subpart.rev_name", p["rev_name"], "R00")
-    check("subpart.rev_index", p["rev_index"], 0)
-    base = f"40{STAGE_DIGITS['CD']}{23 - PACKAGE_NUMBER_OFFSET}{4 - 1}"
-    check("subpart.base", base, "40113")
-    c = compute_codes(base, p["rev_index"])
-    check("subpart.rev", c["rev"], "401130")
-    check("subpart.reports", c["reports"], "4011300")
-    check("subpart.drawings", c["drawings"], "4011301")
-    check("subpart.rep_orig", c["rep_orig"], "40113000")
-    check("subpart.dwg_orig", c["dwg_orig"], "40113010")
-    check("subpart.dwg_comb", c["dwg_comb"], "40113011")
-
-    # No-sub-part case: CD-27 / R00  -> one digit shorter (the "extra 0" fix)
-    src2 = r"C:\Users\X\...\Definitive\CD-27\00_R00"
-    p2 = parse_source(src2)
-    check("nosub.pkg", p2["pkg"], 27)
-    check("nosub.subpart", p2["subpart"], None)
-    base2 = f"40{STAGE_DIGITS['CD']}{27 - PACKAGE_NUMBER_OFFSET}"
-    check("nosub.base", base2, "4015")
-    c2 = compute_codes(base2, p2["rev_index"])
-    check("nosub.rev", c2["rev"], "40150")
-    check("nosub.reports", c2["reports"], "401500")
-
-    # Preliminaire -> CP, alternate revision label
-    src3 = r"C:\X\Preliminaire\CP-24\24.2\01_R01A"
-    p3 = parse_source(src3)
-    check("prelim.stage", p3["stage"], "CP")
-    check("prelim.pkg", p3["pkg"], 24)
-    check("prelim.subpart", p3["subpart"], 2)
-    check("prelim.rev_name", p3["rev_name"], "R01A")
-    check("prelim.rev_index", p3["rev_index"], 1)
-
-    # File classification
-    check("cls.rpt", classify_file("DEJV-11000-1200-RPT-00001.pdf"), "reports_original")
-    check("cls.rpt_en", classify_file("DEJV-11000-1200-RPT-00001_EN.pdf"), "reports_translated")
-    check("cls.spc", classify_file("DEJV-SPC-9.pdf"), "reports_original")
-    check("cls.pla", classify_file("DEJV-ODA-PLA-0001.pdf"), "drawings_original")
-    check("cls.boa", classify_file("DEJV-ODA-BOA-0001.pdf"), "drawings_original")
-    check("cls.xlsx", classify_file("tracking list.xlsx"), "root")
-    check("cls.unknown", classify_file("random notes.docx"), None)
-
-    if failures:
-        print("SELF TEST FAILED:")
-        for f in failures:
-            print("  - " + f)
-        return 1
-    print("SELF TEST PASSED")
+    title = "PIO Document Sorter - result"
+    if warnings:
+        title = f"PIO Document Sorter - finished with {len(warnings)} warning(s)"
+    show_message(summary, title=title)
     return 0
 
 
