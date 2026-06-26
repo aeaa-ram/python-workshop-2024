@@ -65,48 +65,61 @@ For most people **`Run_PIO_Sorter.bat` is enough** and you can skip building the
 
 ---
 
-## 3. How the folder numbering works (and the "extra 0" fix)
+## 3. How the folder numbering works
 
-Each folder's number is its parent's number **plus one digit per level**. The
-depth – and therefore the number of digits – follows the real folder structure:
+The scheme is: a fixed 3-digit **stage** code, then a **2-digit package** code,
+then a **2-digit sub-part**, then **one more digit per level** below:
 
 ```
-401            Definitive                     (400 = Preliminaire)
- 4011          Foundations_Piers (CD-23)
-  40113        CD-23.4         <-- this level ONLY exists when there are sub-parts
-   401130      R00
-    4011300    Reports
-     40113000  Original
-     40113001  Translated
-    4011301    Drawings
-     40113010  Original
-     40113011  Combined
+400              Preliminaire        <-- the two stage codes are fixed
+401              Definitive
+ 40101           CD-23               (stage 401 + the 2-digit package code 01)
+  4010104        CD-23.4             (package + the 2-digit sub-part 04)
+   40101040      R00                 (one more digit per level from here down)
+    401010400    Reports
+     4010104000  Original
+     4010104001  Translated
+    401010401    Drawings
+     4010104010  Original
+     4010104011  Combined
 ```
 
-* A package **with** a sub-part (e.g. `CD-23.4`) gets the extra `40113` level,
-  so `R00` is `401130` (6 digits).
-* A package **without** a sub-part (e.g. `CD-27`) skips that level, so `R00` is
-  `40150` (5 digits).
+* A package **with** a sub-part (e.g. `CD-23.4`) gets the `4010104` level, so
+  `R00` is `40101040`.
+* A package **without** a sub-part (e.g. `CD-40`) skips that level, so `R00`
+  sits directly under the package, e.g. `401120` – one level shorter.
 
-The old flow used a fixed `nr40`, so it added that extra digit even when there
-was no sub-part. The script now **decides automatically** from the source path,
-so the digit count is always right.
+The depth follows the real source folder, so the digit count is always right
+(this is the "extra 0" fix – no level is ever added when there is no sub-part).
 
-### Where the base code comes from (no formula, nothing hard-coded)
+The fixed parts of the scheme live in the **CONFIG block** at the top of the
+script and are easy to change:
+
+```python
+STAGE_CODES = {"CP": "400", "CD": "401"}   # Preliminaire / Definitive
+PKG_SUFFIX_WIDTH = 2    # CD-23   -> a 2-digit package code, e.g. "01"
+SUBPART_WIDTH    = 2    # CD-23.4 -> the sub-part number as 2 digits, "04"
+```
+
+### Where the 2-digit package code comes from (nothing is guessed)
+
+There is **no** relationship between "23" and the package code "01" – so the
+script never computes it. It comes from one of two places:
 
 1. **Preferred – read from your folders.** It searches your *Document Control*
-   for the folder you already named for that package – e.g. one whose name
-   contains `(CD-23)`, or a sub-part folder containing `CD-23.4` – and reads the
-   code from it. It also drops the new revision folder *inside* that folder.
+   for the folder you already named for that package – one whose name contains
+   `(CD-23)` – and reads the `01` straight out of its number `40101`. It also
+   reuses an existing sub-part folder (e.g. `4010104 CD-23.4`) if you have one,
+   and builds the new revision inside it.
 2. **First time for a package – type it once.** If no matching folder exists
-   yet, the confirmation window shows an empty **Base folder code** box and a
-   warning. Type the code once; from then on the folder exists, so step 1 finds
-   it automatically. (The numbers `400`/`401`, the package digit, etc. are part
-   of *your* scheme – the script never guesses them.)
+   yet, the confirmation window shows an empty **Package code** box and a
+   warning. Type the two digits once (e.g. `01`); the script then creates the
+   `40101 CD-23` folder (under your `401 Definitive` folder if it has one), so
+   next time step 1 finds it automatically and you never type it again.
 
-The only arithmetic it ever does is the convention itself: a brand-new sub-part
-`.N` is the `(N-1)`-th child of its package folder. Everything else is read or
-entered.
+The only arithmetic it does is the convention itself (stage code + package code
++ sub-part number + one digit per level). Everything package-specific is read
+from your folders or entered by you.
 
 ---
 
@@ -142,7 +155,7 @@ log) covering:
   but flagged so you can check);
 * drawings that **couldn't be merged** (kept in Drawings/Original, listed by
   name with the reason);
-* a base code that was **typed manually** rather than detected;
+* a package code that was **typed manually** rather than detected;
 * files that **already existed** and were left untouched (not overwritten).
 
 If there are no warnings the summary says so in one line, and the result window
@@ -172,7 +185,7 @@ The merged file is named `PIO_<CD|CP>_<package>_Combined_Drawings.pdf` and a
 |----------------------------------------------|-----|
 | Extra `0` on some packages                   | digit count follows the real depth, decided automatically |
 | Package number hard-coded                    | read from the source path (`CD-27`, `CP-24`, …) |
-| `nr40` / base code hard-coded                | detected from your existing folders, or typed once – never computed |
+| `nr40` / package code hard-coded             | 2-digit package code detected from your existing folders, or typed once – never computed |
 | `Definitive`/`Preliminaire` not handled      | detected from the path → `CD`/`CP` |
 | Revision `R00` hard-coded                    | read from the source folder name (`00_R00`, `01_R01A`, …) |
 | Paths point at one user's directory          | nothing hard-coded – you pick both folders |
@@ -201,7 +214,9 @@ The merged file is named `PIO_<CD|CP>_<package>_Combined_Drawings.pdf` and a
 * Select the **revision folder that actually contains the files** (the `00_R00`
   level). If you select a folder that only has sub-folders, the script asks you
   to pick the right one.
-* The merge order matches the old flow (file name, descending). Change
-  `DRAWINGS_SORT_DESCENDING` at the top of the script to flip it.
+* Drawings merge in **ascending** file-name order (sheet 1, 2, 3 …) and each
+  page keeps its own rotation, so the combined PDF reads in the right order and
+  the right way up. Set `DRAWINGS_SORT_DESCENDING = True` at the top of the
+  script to flip it back.
 * ProjectWise is intentionally out of scope – the submission folder is built
   self-contained so you can drag-and-drop it as before.

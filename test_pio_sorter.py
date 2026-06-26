@@ -27,32 +27,44 @@ def main():
     check("subpart.rev_name", p["rev_name"], "R00")
     check("subpart.rev_index", p["rev_index"], 0)
 
-    # Codes are derived from a base code (as detection would supply it) - the
-    # script never computes the base code from the package number.
-    c = s.compute_codes("40113", p["rev_index"])
-    check("subpart.rev", c["rev"], "401130")
-    check("subpart.reports", c["reports"], "4011300")
-    check("subpart.drawings", c["drawings"], "4011301")
-    check("subpart.rep_orig", c["rep_orig"], "40113000")
-    check("subpart.dwg_orig", c["dwg_orig"], "40113010")
-    check("subpart.dwg_comb", c["dwg_comb"], "40113011")
+    # Codes follow the convention: stage 401, a 2-digit package code, a 2-digit
+    # sub-part, then one digit per level below.  The package code ("01") is what
+    # detection reads or the user types - it is never computed from "23".
+    c = s.derive_codes("CD", "01", subpart=4, rev_index=0)
+    check("subpart.package", c["package"], "40101")
+    check("subpart.subpart_code", c["subpart"], "4010104")
+    check("subpart.rev", c["rev"], "40101040")
+    check("subpart.reports", c["reports"], "401010400")
+    check("subpart.drawings", c["drawings"], "401010401")
+    check("subpart.rep_orig", c["rep_orig"], "4010104000")
+    check("subpart.rep_trans", c["rep_trans"], "4010104001")
+    check("subpart.dwg_orig", c["dwg_orig"], "4010104010")
+    check("subpart.dwg_comb", c["dwg_comb"], "4010104011")
 
-    # --- Path parsing: a package WITHOUT a sub-part (the "extra 0" fix) ----
+    # A typed package code of "1" is forgiven and padded to two digits.
+    check("subpart.pad", s.derive_codes("CD", "1", 4, 0)["package"], "40101")
+
+    # --- Path parsing: a package WITHOUT a sub-part -----------------------
     p2 = s.parse_source(r"C:\X\Definitive\CD-27\00_R00")
     check("nosub.pkg", p2["pkg"], 27)
     check("nosub.subpart", p2["subpart"], None)
-    # A no-sub-part base code is one digit shorter, so its tree is shallower.
-    c2 = s.compute_codes("4015", p2["rev_index"])
-    check("nosub.rev", c2["rev"], "40150")
-    check("nosub.reports", c2["reports"], "401500")
+    # No sub-part -> the sub-part level is skipped, so the tree is one shorter.
+    c2 = s.derive_codes("CD", "05", subpart=None, rev_index=0)
+    check("nosub.package", c2["package"], "40105")
+    check("nosub.subpart_none", c2["subpart"], None)
+    check("nosub.rev", c2["rev"], "401050")
+    check("nosub.reports", c2["reports"], "4010500")
 
-    # --- Preliminaire -> CP, alternate revision label ---------------------
+    # --- Preliminaire -> stage code 400, alternate revision label ---------
     p3 = s.parse_source(r"C:\X\Preliminaire\CP-24\24.2\01_R01A")
     check("prelim.stage", p3["stage"], "CP")
     check("prelim.pkg", p3["pkg"], 24)
     check("prelim.subpart", p3["subpart"], 2)
     check("prelim.rev_name", p3["rev_name"], "R01A")
     check("prelim.rev_index", p3["rev_index"], 1)
+    c3 = s.derive_codes("CP", "00", subpart=None, rev_index=0)
+    check("prelim.package", c3["package"], "40000")
+    check("prelim.rev", c3["rev"], "400000")
 
     # --- File classification (key is the first item of the returned pair) --
     def key(name):
@@ -73,32 +85,39 @@ def main():
     check("cls.ambig_note", note("ODA-PLA-and-RPT-mix.pdf") is not None, True)
     check("cls.clean_note", note("DEJV-RPT-1.pdf"), None)
 
-    # --- Base-code detection from existing folders (fully generic) ---------
+    # --- Package-code detection from existing folders (fully generic) ------
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
-        (root / "401 Definitive" / "4011 Foundations_Piers (CD-23)"
-         / "40113 CD-23.4").mkdir(parents=True)
-        # exact sub-part folder is found
-        r = s.resolve_base_code(root, "CD", 23, 4)
-        check("detect.sub.code", r["base_code"], "40113")
-        check("detect.sub.flag", r["package_detected"], True)
-        # package folder found, sub-part folder absent -> package code + (sub-1)
-        r2 = s.resolve_base_code(root, "CD", 23, 1)
-        check("detect.firstsub.code", r2["base_code"], "40110")
-        # package with no sub-part -> the package code itself
-        r3 = s.resolve_base_code(root, "CD", 23, None)
-        check("detect.pkg.code", r3["base_code"], "4011")
-        # nothing matching -> empty code, user must supply it
-        r4 = s.resolve_base_code(root, "CD", 99, None)
-        check("detect.none.code", r4["base_code"], "")
-        check("detect.none.flag", r4["package_detected"], False)
+        (root / "401 Definitive" / "40101 Foundations_Piers (CD-23)"
+         / "4010104 CD-23.4").mkdir(parents=True)
+
+        # Package folder found -> its 2-digit code is read out of the name.
+        r = s.resolve_placement(root, "CD", 23, 4)
+        check("detect.suffix", r["pkg_suffix"], "01")
+        check("detect.flag", r["package_detected"], True)
+        # The existing sub-part folder is found and reused.
+        check("detect.subdir", str(r["subpart_dir"]).endswith("4010104 CD-23.4"), True)
+        check("detect.subcode", r["subpart_code"], "4010104")
+
+        # Same package, no sub-part asked for -> still detects the code.
+        r2 = s.resolve_placement(root, "CD", 23, None)
+        check("detect.nosub.suffix", r2["pkg_suffix"], "01")
+        check("detect.nosub.flag", r2["package_detected"], True)
+
+        # An unknown package -> nothing detected, user must supply the code.
+        r3 = s.resolve_placement(root, "CD", 99, None)
+        check("detect.none.suffix", r3["pkg_suffix"], "")
+        check("detect.none.flag", r3["package_detected"], False)
+        # ...and the new folder would be created under the stage folder.
+        check("detect.none.parent",
+              str(r3["package_parent"]).endswith("401 Definitive"), True)
 
     if failures:
         print("TESTS FAILED:")
         for f in failures:
             print("  - " + f)
         return 1
-    print(f"ALL TESTS PASSED")
+    print("ALL TESTS PASSED")
     return 0
 
 

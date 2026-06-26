@@ -17,33 +17,52 @@ What it does
        * Package  -> CD-23 / CP-24 ...
        * Sub-part -> 23.4  (only when the package actually has sub-parts)
        * Revision -> R00 / R01 / R00A ...  (taken from the source folder name)
-4. It builds the correctly-numbered folder tree (no extra "0"), copies and
-   sorts the files by their naming convention, and merges the drawings into a
-   single PDF - skipping (and reporting) any PDF that cannot be merged instead
-   of failing the whole job.
+4. It builds the correctly-numbered folder tree, copies and sorts the files by
+   their naming convention, and merges the drawings into a single PDF - in the
+   right page order, skipping (and reporting) any PDF that cannot be merged
+   instead of failing the whole job.
+
+The numbering scheme (your convention)
+--------------------------------------
+       400              Preliminaire        (top-level stage codes - fixed)
+       401              Definitive
+        40101           CD-23               (stage + a 2-digit package code)
+         4010104        CD-23.4             (package + a 2-digit sub-part)
+          40101040      R00                 (one more digit per level below)
+           401010400    Reports
+            4010104000  Original
+            4010104001  Translated
+           401010401    Drawings
+            4010104010  Original
+            4010104011  Combined
+
+* The two stage codes (400 / 401) and the digit widths live in the CONFIG block
+  below - change them there if your scheme ever differs.
+* The 2-digit package code (e.g. "01" for CD-23) is NOT computed from the
+  package number - there is no fixed relationship between "23" and "01".  It is
+  read from the folder you already have for that package (one whose name
+  contains "(CD-23)"), or typed once in the confirmation window.  After the
+  first time the folder exists, so it is detected automatically.
 
 Design notes / how the old flaws are fixed
 ------------------------------------------
-* Extra "0":        the numbering depth follows the real folder depth, so a
-                    package WITH a sub-part gets one extra digit and a package
-                    WITHOUT one does not - automatically.
+* Wrong digit count:the depth follows the real folder depth - a package WITH a
+                    sub-part gets the extra sub-part level, one WITHOUT it does
+                    not - decided automatically from the source path.
 * Package number:   read from the source path, not hard-coded.
-* Base folder code: detected from the folders you already have, or typed once
-                    in the confirmation window - never computed or hard-coded,
-                    so any package / numbering scheme works.
-* Stage:            Definitive/Preliminaire detected from the path -> CD / CP.
-* Revision label:   read from the source folder name (00_R00 -> "R00",
-                    01_R01 -> "R01", 01_R01A -> "R01A", ...).
-* User directory:   nothing is hard-coded - you choose both folders, and every
-                    path is derived from them once.
-* Re-running:       folders are created with exist_ok and existing files are
-                    skipped, so re-running the same package never fails.  No
-                    shared "Temporary" folder is used.
-* PDF merge fails:  the merge is robust - encrypted/damaged PDFs are repaired
-                    when possible and otherwise skipped and listed for you.
+* Package code:     detected from the folders you already have, or typed once
+                    in the confirmation window - never guessed from the number.
+* Stage:            Definitive/Preliminaire detected from the path -> 401 / 400.
+* Revision label:   read from the source folder name (00_R00 -> "R00", ...).
+* User directory:   nothing is hard-coded - you choose both folders.
+* Re-running:       folders use exist_ok and existing files are skipped, so
+                    re-running the same package never fails.
+* PDF merge order:  drawings merge in ascending file-name order and each page
+                    keeps its own rotation, so the combined PDF reads correctly.
+* PDF merge fails:  encrypted/damaged PDFs are repaired when possible and
+                    otherwise skipped and listed for you.
 * Files in limbo:   anything a rule can't place is reported in a warnings list
                     and kept in a clearly named folder, never silently dropped.
-* 4 sub-flows:      everything is in this one file.
 
 The job is non-destructive: it COPIES from the SharePoint source and never
 deletes anything there.
@@ -100,8 +119,9 @@ ROOT_EXTENSIONS = [".xlsx", ".xls"]
 # nothing is ever lost and it is obvious what still needs a human.
 UNSORTED_FOLDER_NAME = "_To_Sort_Manually"
 
-# Drawings are merged in descending file-name order (matches the old flow).
-DRAWINGS_SORT_DESCENDING = True
+# Drawings are merged in ascending file-name order (sheet 1, 2, 3 ...).  Set
+# this to True if you ever want the old descending order back.
+DRAWINGS_SORT_DESCENDING = False
 
 # Which stage a path belongs to, recognised from a folder name in the path.
 #   "...\Definitive\..."  -> CD        "...\Preliminaire\..." -> CP
@@ -111,15 +131,26 @@ STAGE_FROM_PATH = {
     "prelim":  "CP",   # matches "Preliminaire" / "Preliminary"
 }
 
-# --- About the numbering (nothing here is package-specific) ----------------
-# Every folder code is its parent's code plus ONE digit per level.  Given a
-# base code B the tree becomes:
-#       "<B>0 <revision>"  ->  "<B>00 Reports"   ->  "<B>000 Original"
-#                          ->  "<B>01 Drawings"  ->  "<B>010 Original", ...
-# The base code is NEVER computed from the package number.  It is read from the
-# folder you already have for that package (e.g. a folder whose name contains
-# "(CD-23)"), or typed once in the confirmation window.  That is what keeps the
-# script generic for any package, stage or numbering scheme.
+# --- The numbering convention (this is the only fixed part of the scheme) ---
+# Each stage has a fixed top-level code; everything below is built from it.
+STAGE_CODES = {
+    "CP": "400",   # Preliminaire
+    "CD": "401",   # Definitive
+}
+# Friendly names used only when the script has to CREATE a stage / package
+# folder for the first time (you can rename them afterwards).
+STAGE_NAMES = {"CP": "Preliminaire", "CD": "Definitive"}
+
+# Digit widths for the two numbered levels under a stage.
+PKG_SUFFIX_WIDTH = 2   # CD-23   -> a 2-digit package code, e.g. "01" (40101)
+SUBPART_WIDTH = 2      # CD-23.4 -> the sub-part number as 2 digits  "04" (4010104)
+# Every level below that (revision, Reports/Drawings, Original/Translated/
+# Combined) adds exactly one digit.
+
+# The package code (e.g. "01" for CD-23) is NEVER computed from the package
+# number.  It is read from the folder you already have for that package (one
+# whose name contains "(CD-23)"), or typed once in the confirmation window.
+# That is what keeps the script generic for any package or numbering scheme.
 
 # ===========================================================================
 #  PATH PARSING  -  read the stage / package / sub-part / revision from a path.
@@ -188,8 +219,8 @@ def parse_source(source_path):
 
 
 # ===========================================================================
-#  FOLDER-CODE RESOLUTION  -  work out the base numeric code and where to put
-#  the new revision folder, preferring the folders you already have.
+#  FOLDER-CODE RESOLUTION  -  work out the 2-digit package code and where to
+#  put the new folders, preferring the folders you already have.
 # ===========================================================================
 
 
@@ -214,48 +245,80 @@ def find_folder_by_regex(root, pattern, max_depth=6):
     return (best[1], best[2]) if best else (None, None)
 
 
-def resolve_base_code(dest_root, stage, pkg, subpart):
-    """Work out the base numeric code from the folders that already exist in the
-    destination - nothing about the numbering is hard-coded or package-specific.
+def _suffix_from_code(code, stage):
+    """Pull the 2-digit package code out of an existing folder's number,
+    e.g. "40101" with stage CD (401) -> "01"."""
+    stage_code = STAGE_CODES.get((stage or "").upper(), "")
+    if stage_code and code.startswith(stage_code):
+        return code[len(stage_code):len(stage_code) + PKG_SUFFIX_WIDTH]
+    return code[:PKG_SUFFIX_WIDTH]
 
-    Returns base_code ('' when it can't be found), the folder to create the new
-    revision inside, and whether it was detected.
+
+def resolve_placement(dest_root, stage, pkg, subpart):
+    """Find the existing package folder (and its 2-digit code) in the
+    destination, or work out where a new one should be created.
+
+    Nothing about the numbering is computed from the package number - the
+    package code is read from your folder, or you type it once.
+
+    Returns a dict:
+        pkg_suffix        - the 2-digit package code ('' if not found)
+        package_dir       - existing package folder (str) or None
+        package_parent    - where to CREATE the package folder if it is None
+        subpart_dir       - existing sub-part folder (str) or None
+        subpart_code      - that folder's leading number, or None
+        package_detected  - True if an existing package folder was found
     """
-    # 1) An existing sub-part folder is the most specific match, e.g. a folder
-    #    whose name contains "CD-23.4".
-    if subpart:
-        sub_code, sub_path = find_folder_by_regex(
-            dest_root, rf"(?:{stage}-)?0*{pkg}\.0*{subpart}(?!\d)"
-        )
-        if sub_code:
-            return {"base_code": sub_code, "placement": str(sub_path),
-                    "package_detected": True}
+    dest_root = Path(dest_root)
+    stage = (stage or "CD").upper()
+    stage_code = STAGE_CODES.get(stage, "")
+    info = {
+        "pkg_suffix": "",
+        "package_dir": None,
+        "package_parent": str(dest_root),
+        "subpart_dir": None,
+        "subpart_code": None,
+        "package_detected": False,
+    }
+    if pkg is None:
+        return info
 
-    # 2) Otherwise the package folder, e.g. one whose name contains "(CD-23)".
-    pkg_code, pkg_path = find_folder_by_regex(
-        dest_root, rf"{stage}-0*{pkg}(?![\d.])"
-    )
-    if pkg_code:
-        # First-time sub-part: its folder doesn't exist yet, so extend the
-        # package code by one digit (sub-part ".N" is the (N-1)th child).  This
-        # is the numbering convention itself, not a project-specific value.
-        base_code = f"{pkg_code}{subpart - 1}" if subpart else pkg_code
-        return {"base_code": base_code, "placement": str(pkg_path),
-                "package_detected": True}
+    # 1) An existing package folder, e.g. "40101 Foundations_Piers (CD-23)".
+    #    (?![\d.]) keeps it from matching the sub-part folder "CD-23.4".
+    code, path = find_folder_by_regex(dest_root, rf"{stage}-?0*{pkg}(?![\d.])")
+    if code:
+        info["pkg_suffix"] = _suffix_from_code(code, stage)
+        info["package_dir"] = str(path)
+        info["package_parent"] = str(Path(path).parent)
+        info["package_detected"] = True
+        # An existing sub-part folder inside it, e.g. "4010104 CD-23.4".
+        if subpart:
+            sub_code, sub_path = find_folder_by_regex(
+                path, rf"{stage}-?0*{pkg}\.0*{subpart}(?!\d)"
+            )
+            if sub_code:
+                info["subpart_dir"] = str(sub_path)
+                info["subpart_code"] = sub_code
+        return info
 
-    # 3) Nothing matched - the user supplies the code once in the confirmation
-    #    window (or picks the parent folder), and it is reused from then on.
-    return {"base_code": "", "placement": str(dest_root),
-            "package_detected": False}
+    # 2) No package folder yet - create one under the stage folder if it exists
+    #    (e.g. "401 Definitive"), otherwise directly under the destination.
+    if stage_code:
+        _c, stage_dir = find_folder_by_regex(dest_root, rf"^\s*{stage_code}(?!\d)")
+        if stage_dir:
+            info["package_parent"] = str(stage_dir)
+    return info
 
 
-def compute_codes(base_code, rev_index):
-    """Derive every numeric code from the base code (one digit per level)."""
-    rev = f"{base_code}{rev_index}"
+def compute_codes(base, rev_index):
+    """Derive the revision code and everything below it from a base code
+    (one digit per level).  'base' is the package code (no sub-part) or the
+    sub-part code (with a sub-part)."""
+    rev = f"{base}{int(rev_index)}"
     reports = f"{rev}0"
     drawings = f"{rev}1"
     return {
-        "base": base_code,
+        "base": base,
         "rev": rev,
         "reports": reports,
         "drawings": drawings,
@@ -266,18 +329,70 @@ def compute_codes(base_code, rev_index):
     }
 
 
+def derive_codes(stage, pkg_code, subpart, rev_index, detected_subpart_code=None):
+    """Build every numeric code for one revision from the typed/detected
+    package code, following the convention in the CONFIG block."""
+    stage = (stage or "CD").upper()
+    stage_code = STAGE_CODES.get(stage, STAGE_CODES["CD"])
+    pkg_code = str(pkg_code).strip()
+    if pkg_code.isdigit():
+        pkg_code = pkg_code.zfill(PKG_SUFFIX_WIDTH)
+
+    package_code = f"{stage_code}{pkg_code}"
+    subpart_code = None
+    if subpart:
+        # Reuse the code of an existing sub-part folder if there is one, so the
+        # numbering on disk and in the script always agree.
+        subpart_code = (
+            detected_subpart_code
+            or f"{package_code}{int(subpart):0{SUBPART_WIDTH}d}"
+        )
+    base = subpart_code if subpart else package_code
+
+    codes = compute_codes(base, rev_index)
+    codes["package"] = package_code
+    codes["subpart"] = subpart_code
+    return codes
+
+
 # ===========================================================================
 #  FOLDER STRUCTURE + FILE SORTING
 # ===========================================================================
 
 
-def build_structure(parent, codes, rev_name, dry_run=False):
-    """Create (unless dry-run) and return the folder map for one revision."""
-    parent = Path(parent)
-    rev_dir = parent / f"{codes['rev']} {rev_name}"
+def build_structure(fields, codes, dry_run=False):
+    """Create (unless dry-run) and return the folder map for one revision.
+
+    The package folder is reused when it was detected, or created (with a basic
+    name you can rename later) when it is new; the sub-part folder is handled
+    the same way.  Everything from the revision down is always created.
+    """
+    stage = (fields.get("stage") or "CD").upper()
+    pkg = fields.get("pkg")
+    subpart = fields.get("subpart")
+
+    # --- Package folder ---------------------------------------------------
+    if fields.get("placement_is_package"):
+        package_dir = Path(fields["placement"])
+    else:
+        package_dir = Path(fields["placement"]) / f"{codes['package']} {stage}-{pkg}"
+
+    # --- Sub-part folder (only when the package has sub-parts) ------------
+    if subpart and codes.get("subpart"):
+        if fields.get("detected_subpart_dir"):
+            rev_parent = Path(fields["detected_subpart_dir"])
+        else:
+            rev_parent = package_dir / f"{codes['subpart']} {stage}-{pkg}.{subpart}"
+    else:
+        rev_parent = package_dir
+
+    # --- Revision tree ----------------------------------------------------
+    rev_dir = rev_parent / f"{codes['rev']} {fields['rev_name']}"
     reports = rev_dir / f"{codes['reports']} Reports"
     drawings = rev_dir / f"{codes['drawings']} Drawings"
     folders = {
+        "package": package_dir,
+        "subpart": rev_parent if (subpart and codes.get("subpart")) else None,
         "rev": rev_dir,
         "reports": reports,
         "drawings": drawings,
@@ -292,6 +407,7 @@ def build_structure(parent, codes, rev_name, dry_run=False):
         "unsorted": rev_dir / UNSORTED_FOLDER_NAME,
     }
     if not dry_run:
+        # parents=True creates the package and sub-part folders as needed.
         for key in (
             "rev", "reports", "drawings", "reports_original",
             "reports_translated", "drawings_original", "drawings_combined",
@@ -377,7 +493,8 @@ def copy_and_sort(source, folders, dry_run=False):
 
 
 # ===========================================================================
-#  PDF MERGING  -  robust against encrypted / damaged files.
+#  PDF MERGING  -  robust against encrypted / damaged files, keeps page order
+#  and each page's own rotation.
 # ===========================================================================
 
 
@@ -393,6 +510,25 @@ def _add_sequential_suffix(path):
         i += 1
 
 
+def _materialise_rotation(page):
+    """Copy an inherited /Rotate down onto the page so the rotation survives the
+    merge.  This only propagates a rotation the source PDF already set - it never
+    invents one - so it cannot turn a correct page upside down."""
+    try:
+        if "/Rotate" in page:
+            return
+        parent = page.get("/Parent")
+        seen = 0
+        while parent is not None and seen < 32:
+            if "/Rotate" in parent:
+                page.Rotate = int(parent.Rotate)
+                return
+            parent = parent.get("/Parent")
+            seen += 1
+    except Exception:  # noqa: BLE001 - rotation fix-up must never break a merge
+        pass
+
+
 def _merge_with_pikepdf(pdf_paths, output_path):
     """Best option: qpdf-based, repairs many 'cannot be merged' files."""
     import pikepdf
@@ -402,6 +538,8 @@ def _merge_with_pikepdf(pdf_paths, output_path):
     for p in pdf_paths:
         try:
             with pikepdf.open(str(p), password="") as src:
+                for page in src.pages:
+                    _materialise_rotation(page)
                 out.pages.extend(src.pages)
         except Exception as exc:  # noqa: BLE001 - we want to keep going
             failed.append((p.name, str(exc)))
@@ -485,12 +623,13 @@ def run(source, dest_root, fields, dry_run=False):
     """Do the whole job.  Returns (summary_text, warnings_list)."""
     pkg = fields.get("pkg")
     subpart = fields.get("subpart")
-    stage = fields.get("stage") or "CD"
+    stage = (fields.get("stage") or "CD").upper()
 
-    codes = compute_codes(fields["base_code"], int(fields["rev_index"]))
-    folders = build_structure(
-        fields["placement"], codes, fields["rev_name"], dry_run
+    codes = derive_codes(
+        stage, fields["pkg_code"], subpart, int(fields["rev_index"]),
+        fields.get("detected_subpart_code"),
     )
+    folders = build_structure(fields, codes, dry_run)
 
     copied, skipped, unsorted, ambiguous = copy_and_sort(source, folders, dry_run)
 
@@ -526,8 +665,8 @@ def collect_warnings(fields, skipped, unsorted, ambiguous, merge_status,
     w = []
     if not fields.get("package_detected", True):
         w.append(
-            "Base folder code was typed in manually (no matching folder was "
-            "found in the destination) - double-check the numbering."
+            "Package code was typed in manually (no matching folder was found "
+            "in the destination) - double-check the numbering."
         )
     for name in unsorted:
         w.append(
@@ -582,6 +721,11 @@ def _summary(source, folders, codes, fields, copied, skipped, merge_status,
     head = "DRY RUN - nothing was written" if dry_run else "Done"
     lines.append(f"=== PIO Document Sorter - {head} ===")
     lines.append(f"Source     : {source}")
+    code_line = f"Folder code: {codes['rev']}  (package {codes['package']}"
+    if codes.get("subpart"):
+        code_line += f", sub-part {codes['subpart']}"
+    code_line += ")"
+    lines.append(code_line)
     lines.append(f"Revision   : {codes['rev']} {fields['rev_name']}")
     lines.append(f"Created in : {folders['rev']}")
     lines.append("")
@@ -652,8 +796,8 @@ FIELD_LABELS = [
     ("Sub-part (blank if none)", "subpart"),
     ("Revision label", "rev_name"),
     ("Revision index (single digit)", "rev_index"),
-    ("Base folder code (drives numbering)", "base_code"),
-    ("Create revision folder inside", "placement"),
+    ("Package code - 2 digits after 400/401, e.g. 01", "pkg_code"),
+    ("Build inside this folder", "placement"),
 ]
 
 
@@ -664,25 +808,36 @@ def _gather_fields(source, dest_root):
     if parsed["stage"] is None:
         parsed["stage"] = "CD"
         warnings.append(
-            "Could not tell Definitive/Preliminaire from the path - assuming CD."
+            "Could not tell Definitive/Preliminaire from the path - assuming "
+            "CD (Definitive)."
         )
     if parsed["pkg"] is None:
         warnings.append(
             "Could not find a CD-/CP- package number in the path - please enter it."
         )
 
-    resolved = {"base_code": "", "placement": str(dest_root),
-                "package_detected": False}
+    info = {
+        "pkg_suffix": "", "package_dir": None, "package_parent": str(dest_root),
+        "subpart_dir": None, "subpart_code": None, "package_detected": False,
+    }
     if parsed["pkg"] is not None:
-        resolved = resolve_base_code(
+        info = resolve_placement(
             dest_root, parsed["stage"], parsed["pkg"], parsed["subpart"]
         )
-        if not resolved["package_detected"]:
+        if not info["package_detected"]:
             warnings.append(
                 f"No existing folder for {parsed['stage']}-{parsed['pkg']} was "
-                "found in the destination. Enter the base folder code below "
-                "(you only need to do this the first time for each package)."
+                "found in the destination. Enter its 2-digit package code below "
+                "(the part after 400/401, e.g. 01). You only need to do this the "
+                "first time for each package - after that it is detected."
             )
+
+    if info["package_detected"]:
+        placement = info["package_dir"]
+        placement_is_package = True
+    else:
+        placement = info["package_parent"]
+        placement_is_package = False
 
     fields = {
         "stage": parsed["stage"],
@@ -690,9 +845,12 @@ def _gather_fields(source, dest_root):
         "subpart": parsed["subpart"] if parsed["subpart"] else "",
         "rev_name": parsed["rev_name"],
         "rev_index": parsed["rev_index"],
-        "base_code": resolved["base_code"],
-        "placement": resolved["placement"],
-        "package_detected": resolved["package_detected"],
+        "pkg_code": info["pkg_suffix"],
+        "placement": placement,
+        "placement_is_package": placement_is_package,
+        "package_detected": info["package_detected"],
+        "detected_subpart_dir": info.get("subpart_dir"),
+        "detected_subpart_code": info.get("subpart_code"),
     }
     return fields, warnings
 
@@ -708,7 +866,7 @@ def _normalise_fields(raw):
     idx = str(raw.get("rev_index", "0")).strip()
     fields["rev_index"] = int(idx) if idx.isdigit() else 0
     fields["rev_name"] = (raw.get("rev_name") or "R00").strip()
-    fields["base_code"] = str(raw.get("base_code", "")).strip()
+    fields["pkg_code"] = str(raw.get("pkg_code", "")).strip()
     fields["placement"] = str(raw.get("placement", "")).strip()
     return fields
 
@@ -863,18 +1021,18 @@ def main(argv=None):
         if edited is None:
             print("Cancelled.")
             return 1
-        # keep package_detected/placement from detection unless user changed them
+        # keep the internal detection keys; overlay what the user edited.
         merged = dict(fields)
         merged.update(edited)
         fields = merged
 
     fields = _normalise_fields(fields)
-    if not fields["base_code"]:
+    if not fields["pkg_code"]:
         show_message(
-            "No base folder code was given, so the numbering can't be built.\n\n"
+            "No package code was given, so the numbering can't be built.\n\n"
             "Run again and either pick a destination that already contains the "
-            "package folder (e.g. one named '... (CD-23)'), or type the base "
-            "code into the confirmation window.", is_error=True)
+            "package folder (e.g. one named '... (CD-23)'), or type the 2-digit "
+            "package code into the confirmation window.", is_error=True)
         return 1
 
     summary, warnings = run(source, dest, fields, dry_run=args.dry_run)
