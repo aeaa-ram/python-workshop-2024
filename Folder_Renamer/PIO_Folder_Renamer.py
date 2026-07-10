@@ -87,16 +87,19 @@ def _stage_of(name):
     return None
 
 
-def _min_child_code(path):
+def _min_child_code(path, expected_digits=None):
     """Lowest leading number among a folder's direct sub-folders (used to find
-    the base each stage's package codes count up from)."""
+    the base each stage's package codes count up from).
+    If expected_digits is given, only folders whose leading number has exactly
+    that many digits are considered — excludes spurious short/long codes."""
     vals = []
     try:
         for e in os.scandir(path):
             if e.is_dir():
                 lead = _lead(e.name)
                 if lead is not None:
-                    vals.append(int(lead))
+                    if expected_digits is None or len(lead) == expected_digits:
+                        vals.append(int(lead))
     except OSError:
         pass
     return min(vals) if vals else None
@@ -159,7 +162,7 @@ def build_plan(root):
                 if st:
                     role, n_stage = "stage", st
                     new_code = STAGE_CODES.get(st, lead or "")
-                    n_base = _min_child_code(p)
+                    n_base = _min_child_code(p, expected_digits=len(new_code) + PKG_SUFFIX_WIDTH)
                 else:
                     # a wrapper folder (e.g. the project root) - just descend.
                     recurse(p, "root", None, None, None, None, None)
@@ -177,7 +180,9 @@ def build_plan(root):
                 new_code = f"{STAGE_CODES[stage]}{suffix:0{PKG_SUFFIX_WIDTH}d}"
                 m = re.search(r"(?i)(C[DP])[-\s]?\d+", name)
                 if m and m.group(1).upper() != stage:
-                    note = f"name says {m.group(1).upper()} but it sits under {stage}"
+                    wrong_stage = m.group(1).upper()
+                    note = f"name says {wrong_stage} but it sits under {stage} — corrected to {stage}"
+                    desc = re.sub(rf"(?i)\b{wrong_stage}(?=[-_\s]?\d)", stage, desc, count=1)
 
             elif parent_role == "package":
                 ms = re.search(r"(?i)C[DP][-\s]?\d+\.(\d+)", name)
@@ -252,8 +257,9 @@ def build_plan(root):
     # but allow picking a single stage folder directly too.
     st = _stage_of(root.name)
     if st:
-        recurse(root, "stage", STAGE_CODES.get(st, _lead(root.name) or ""),
-                _lead(root.name), st, None, _min_child_code(root))
+        stage_code = STAGE_CODES.get(st, _lead(root.name) or "")
+        recurse(root, "stage", stage_code, _lead(root.name), st, None,
+                _min_child_code(root, expected_digits=len(stage_code) + PKG_SUFFIX_WIDTH))
     else:
         recurse(root, "root", None, None, None, None, None)
     return plan, flags
