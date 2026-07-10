@@ -27,14 +27,14 @@ The numbering scheme (your convention)
        400              Preliminaire        (top-level stage codes - fixed)
        401              Definitive
         40101           CD-23               (stage + a 2-digit package code)
-         4010104        CD-23.4             (package + a 2-digit sub-part)
-          40101040      R00                 (one more digit per level below)
-           401010400    Reports
-            4010104000  Original
-            4010104001  Translated
-           401010401    Drawings
-            4010104010  Original
-            4010104011  Combined
+         4010103        CD-23.4             (package + sub-part, 0-indexed: .1→00 .2→01 .3→02 .4→03)
+          40101030      R00                 (one more digit per level below)
+           401010300    Reports
+            4010103000  Original
+            4010103001  Translated
+           401010301    Drawings
+            4010103010  Original
+            4010103011  Combined
 
 * The two stage codes (400 / 401) and the digit widths live in the CONFIG block
   below - change them there if your scheme ever differs.
@@ -87,7 +87,6 @@ on first run.
 
 import argparse
 import collections
-import datetime
 import os
 import re
 import shutil
@@ -392,7 +391,7 @@ def derive_codes(stage, pkg_code, subpart, rev_index, detected_subpart_code=None
         # numbering on disk and in the script always agree.
         subpart_code = (
             detected_subpart_code
-            or f"{package_code}{int(subpart):0{SUBPART_WIDTH}d}"
+            or f"{package_code}{(int(subpart) - 1):0{SUBPART_WIDTH}d}"
         )
     base = subpart_code if subpart else package_code
 
@@ -850,25 +849,6 @@ def _summary(source, folders, codes, fields, copied, skipped, ignored,
     return "\n".join(lines)
 
 
-def _app_dir():
-    """The folder the program itself lives in (next to the .bat / .py, or the
-    .exe when frozen) - logs go here, never inside the sorted output."""
-    if getattr(sys, "frozen", False):  # running as a PyInstaller .exe
-        return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parent
-
-
-def write_log(summary):
-    """Save the summary next to the program (the .bat/.exe) so there is a record
-    that does not clutter the sorted folders."""
-    try:
-        stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_path = _app_dir() / f"PIO_Sorter_log_{stamp}.txt"
-        log_path.write_text(summary, encoding="utf-8")
-        return log_path
-    except Exception:  # noqa: BLE001 - logging must never crash the run
-        return None
-
 
 # ===========================================================================
 #  USER INTERFACE  -  GUI folder pickers + an editable confirmation window,
@@ -1115,10 +1095,6 @@ def main(argv=None):
         return 1
 
     summary, warnings = run(source, dest, fields, dry_run=args.dry_run)
-    if not args.dry_run:
-        log_path = write_log(summary)
-        if log_path:
-            summary += f"\n\nLog saved to: {log_path}"
 
     title = "PIO Document Sorter - result"
     if warnings:

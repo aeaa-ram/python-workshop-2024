@@ -24,7 +24,7 @@ How the new numbers are worked out (read from your own tree, nothing guessed)
   lowest-numbered package in a stage becomes 00, the next 01, and so on.  That
   is read from the existing 4-digit codes (e.g. under Definitive 4010->00,
   4011->01, ... so CD-23 = 40101), so it matches what you already have.
-* The sub-part number is read from the folder name (CD-23.1 -> 01).
+* The sub-part number is read from the folder name, zero-indexed (CD-23.1 -> 00, CD-23.2 -> 01, ...).
 * The revision index is read from the existing number (R00 -> 0, R01 -> 1, the
   re-issue R01A keeps its existing slot).
 * Reports/Drawings and Original/Translated/Combined are read from the names.
@@ -47,13 +47,15 @@ Usage
 """
 
 import argparse
-import datetime
 import os
 import re
 import sys
 from pathlib import Path
 
-import PIO_Document_Sorter as sorter  # reuse STAGE_CODES and the digit widths
+# Must match the CONFIG block in PIO_Document_Sorter.py.
+STAGE_CODES = {"CP": "400", "CD": "401"}
+PKG_SUFFIX_WIDTH = 2
+SUBPART_WIDTH = 2
 
 
 # ---------------------------------------------------------------------------
@@ -72,19 +74,13 @@ def _desc(name):
     return re.sub(r"^\s*\d+[\s_]*", "", name).strip() or name
 
 
-def _app_dir():
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
-    return Path(__file__).resolve().parent
-
-
 def _stage_of(name):
     """CP / CD / None from a stage folder's name or code."""
     low = name.lower()
     lead = _lead(name)
-    if "prelim" in low or lead == sorter.STAGE_CODES.get("CP"):
+    if "prelim" in low or lead == STAGE_CODES.get("CP"):
         return "CP"
-    if "definit" in low or lead == sorter.STAGE_CODES.get("CD"):
+    if "definit" in low or lead == STAGE_CODES.get("CD"):
         return "CD"
     return None
 
@@ -160,7 +156,7 @@ def build_plan(root):
                 st = _stage_of(name)
                 if st:
                     role, n_stage = "stage", st
-                    new_code = sorter.STAGE_CODES.get(st, lead or "")
+                    new_code = STAGE_CODES.get(st, lead or "")
                     n_base = _min_child_code(p)
                 else:
                     # a wrapper folder (e.g. the project root) - just descend.
@@ -176,7 +172,7 @@ def build_plan(root):
                 if suffix < 0 or suffix > 99:
                     flags.append((p, f"package number {lead} is outside the expected range"))
                     continue
-                new_code = f"{sorter.STAGE_CODES[stage]}{suffix:0{sorter.PKG_SUFFIX_WIDTH}d}"
+                new_code = f"{STAGE_CODES[stage]}{suffix:0{PKG_SUFFIX_WIDTH}d}"
                 m = re.search(r"(?i)(C[DP])[-\s]?\d+", name)
                 if m and m.group(1).upper() != stage:
                     note = f"name says {m.group(1).upper()} but it sits under {stage}"
@@ -185,7 +181,7 @@ def build_plan(root):
                 ms = re.search(r"(?i)C[DP][-\s]?\d+\.(\d+)", name)
                 if ms:
                     role = "subpart"
-                    new_code = (f"{parent_new}{int(ms.group(1)):0{sorter.SUBPART_WIDTH}d}"
+                    new_code = (f"{parent_new}{(int(ms.group(1)) - 1):0{SUBPART_WIDTH}d}"
                                 if parent_new else None)
                 elif re.search(r"(?i)\bR\d", name):
                     role = "revision"
@@ -254,7 +250,7 @@ def build_plan(root):
     # but allow picking a single stage folder directly too.
     st = _stage_of(root.name)
     if st:
-        recurse(root, "stage", sorter.STAGE_CODES.get(st, _lead(root.name) or ""),
+        recurse(root, "stage", STAGE_CODES.get(st, _lead(root.name) or ""),
                 _lead(root.name), st, None, _min_child_code(root))
     else:
         recurse(root, "root", None, None, None, None, None)
@@ -333,15 +329,6 @@ def build_report(root, plan, flags, applied=None):
         lines.append(f"  {e['old']}  ->  {e['new']}")
     return "\n".join(lines)
 
-
-def write_report(text):
-    try:
-        stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = _app_dir() / f"PIO_Renamer_report_{stamp}.txt"
-        path.write_text(text, encoding="utf-8")
-        return path
-    except Exception:  # noqa: BLE001
-        return None
 
 
 # ---------------------------------------------------------------------------
@@ -459,25 +446,16 @@ def main(argv=None):
         do_apply = confirm_apply_gui(preview, len(renames))
     elif not do_apply:
         # CLI preview only
-        path = write_report(preview)
         print(preview)
         print(f"\nPREVIEW only. Re-run with --apply to perform the {len(renames)} rename(s).")
-        if path:
-            print(f"Report saved to: {path}")
         return 0
 
     if not do_apply:
-        path = write_report(preview)
         print("Closed without changes.")
-        if path:
-            print(f"Preview report saved to: {path}")
         return 0
 
     result = apply_plan(plan)
     final = build_report(root, plan, flags, applied=result)
-    path = write_report(final)
-    if path:
-        final += f"\n\nReport saved to: {path}"
     print(final)
     show_result_gui(final)
     return 0
