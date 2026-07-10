@@ -7,11 +7,13 @@ Renames an EXISTING ProjectWise folder tree so its numbers match the scheme
 used by PIO_Document_Sorter.py:
 
     400 / 401            stage (Preliminaire / Definitive)        - unchanged
-     40101              package   = stage + 2-digit package code
-      4010104           sub-part  = package + 2-digit sub-part
-       40101040         revision  = sub-part + 1 digit
-        401010400       Reports / Drawings
-         4010104000     Original / Translated / Combined
+     40101              package   = stage + 2-digit package code  (0-indexed: first = 00)
+      4010103           sub-part  = package + 2-digit sub-part   (0-indexed: .1→00 .2→01 .3→02 .4→03)
+       40101030         revision  = sub-part + 1 digit           (R00→0 R01→1 ...)
+        401010300       Reports   = revision + "0"
+        401010301       Drawings  = revision + "1"
+         4010103000     Original  = Reports/Drawings + "0"
+         4010103001     Translated (under Reports) / Combined (under Drawings) = parent + "1"
 
 It only ever changes the **leading number** of each folder; the descriptive
 part of the name (e.g. "Foundation_Piers (CD-23)", "CD-23.1", "R00", "Reports")
