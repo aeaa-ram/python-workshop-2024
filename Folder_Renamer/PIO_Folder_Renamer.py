@@ -105,20 +105,37 @@ def _min_child_code(path, expected_digits=None):
     return min(vals) if vals else None
 
 
-def _rev_code(parent_new, parent_old, lead):
-    """New revision code = parent's new code + the revision index read from the
-    existing number.  Returns (code, None) or (None, reason)."""
-    if not (parent_new and parent_old and lead):
-        return None, "missing parent/own number"
-    if not lead.startswith(parent_old):
-        return None, f"revision number {lead} does not extend its parent {parent_old}"
-    rest = lead[len(parent_old):]
-    if rest == "":
-        rev_index = 0
-    elif rest.isdigit():
-        rev_index = int(rest)
-    else:
-        return None, f"cannot read a revision index from '{rest}'"
+def _rev_code(parent_new, parent_old, lead, name):
+    """New revision code = parent's new code + the revision index.
+
+    Tries two strategies in order:
+    1. Code-based: read the index as the suffix of the existing leading number
+       after stripping parent_old (e.g. parent_old="4010100", lead="40101002"
+       → index 2).  Preserves R01A sitting at slot 2 rather than slot 1.
+    2. Name-based fallback: read the index from the R-number in the folder name
+       (e.g. "401100 R00" → index 0).  Used when the existing code was
+       pre-numbered against a different parent (common after partial renames).
+
+    Returns (code, None) on success or (None, reason) on failure."""
+    if not parent_new:
+        return None, "missing parent code"
+
+    # Strategy 1: derive index from the existing leading number.
+    if parent_old and lead and lead.startswith(parent_old):
+        rest = lead[len(parent_old):]
+        if rest == "":
+            return f"{parent_new}0", None
+        if rest.isdigit():
+            rev_index = int(rest)
+            if rev_index <= 99:
+                return f"{parent_new}{rev_index}", None
+
+    # Strategy 2: read the R-number from the folder name.
+    m = re.search(r"(?i)\bR(\d+)", name)
+    if not m:
+        return None, (f"revision number {lead!r} does not extend its parent "
+                      f"{parent_old!r} and no R-number found in the folder name")
+    rev_index = int(m.group(1))
     if rev_index > 99:
         return None, f"revision index {rev_index} looks wrong"
     return f"{parent_new}{rev_index}", None
@@ -192,7 +209,7 @@ def build_plan(root):
                                 if parent_new else None)
                 elif re.search(r"(?i)\bR\d", name):
                     role = "revision"
-                    new_code, reason = _rev_code(parent_new, parent_old, lead)
+                    new_code, reason = _rev_code(parent_new, parent_old, lead, name)
                     if not new_code:
                         flags.append((p, reason)); continue
                 else:
@@ -202,7 +219,7 @@ def build_plan(root):
             elif parent_role == "subpart":
                 if re.search(r"(?i)\bR\d", name):
                     role = "revision"
-                    new_code, reason = _rev_code(parent_new, parent_old, lead)
+                    new_code, reason = _rev_code(parent_new, parent_old, lead, name)
                     if not new_code:
                         flags.append((p, reason)); continue
                 else:
