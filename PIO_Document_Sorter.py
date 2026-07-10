@@ -81,8 +81,8 @@ Usage
     python PIO_Document_Sorter.py --source ... --dest ... --dry-run
 
 Optional packages (the script still runs without them, but PDF merging needs
-one of them):  see requirements.txt.  Build instructions for the .exe are in
-PIO_Document_Sorter_README.md.
+one of them):  pikepdf (recommended) or pypdf.  Both are installed automatically
+on first run.
 """
 
 import argparse
@@ -91,8 +91,27 @@ import datetime
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
+
+
+def _ensure_deps():
+    """Install pikepdf automatically if it is not already present."""
+    try:
+        import pikepdf  # noqa: F401
+        return
+    except ImportError:
+        pass
+    try:
+        print("Setting up PDF library (first time only, may take a minute)...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet", "pikepdf"]
+        )
+        print("PDF library ready.")
+    except Exception:
+        pass  # script still runs; drawings merge is skipped if pikepdf is missing
+
 
 # ===========================================================================
 #  CONFIG  -  edit this section to change the behaviour.  Nothing below here
@@ -1049,6 +1068,7 @@ def parse_args(argv):
 
 
 def main(argv=None):
+    _ensure_deps()
     args = parse_args(argv if argv is not None else sys.argv[1:])
 
     use_gui = not args.no_gui
