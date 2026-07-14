@@ -105,6 +105,80 @@ def _min_child_code(path, expected_digits=None):
     return min(vals) if vals else None
 
 
+def _ensure_child(parent, code, label, created):
+    """Create `code label` inside parent if nothing with that label keyword exists there."""
+    try:
+        for e in os.scandir(parent):
+            if e.is_dir() and label.lower() in e.name.lower():
+                return
+    except OSError:
+        return
+    target = parent / f"{code} {label}"
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+        created.append(target)
+    except OSError:
+        pass
+
+
+def fill_missing_subfolders(root):
+    """Walk the renamed tree and create any missing sub-structure.
+
+    Pass 1 — revision folders:  create Reports + Drawings if absent.
+    Pass 2 — Reports/Drawings:  create Original + Translated/Combined if absent.
+
+    Both passes validate that a folder's code starts with its parent's code, so
+    wrong-coded leftover folders (e.g. from a previous buggy run) are skipped
+    rather than getting wrong sub-structure created inside them.
+    """
+    created = []
+    root = Path(root)
+
+    # Pass 1: revision folders → Reports + Drawings
+    for dirpath, dirnames, _ in os.walk(root, topdown=True):
+        dirnames.sort()
+        parent_code = _lead(Path(dirpath).name) or ""
+        for dname in list(dirnames):
+            code = _lead(dname)
+            if not code:
+                continue
+            low = dname.lower()
+            # Must look like a revision (R + digits somewhere) but NOT be a
+            # Reports/Drawings/Original/Translated/Combined folder.
+            if not re.search(r"(?i)\bR\d+", dname):
+                continue
+            if any(k in low for k in ("report", "draw", "origin", "translat", "combin")):
+                continue
+            # Parent-code validation: revision code must start with parent code.
+            if parent_code and not code.startswith(parent_code):
+                continue
+            rev_path = Path(dirpath) / dname
+            _ensure_child(rev_path, f"{code}0", "Reports", created)
+            _ensure_child(rev_path, f"{code}1", "Drawings", created)
+
+    # Pass 2: Reports / Drawings → Original + Translated / Combined
+    for dirpath, dirnames, _ in os.walk(root, topdown=True):
+        dirnames.sort()
+        parent_code = _lead(Path(dirpath).name) or ""
+        for dname in list(dirnames):
+            code = _lead(dname)
+            if not code:
+                continue
+            # Parent-code validation.
+            if parent_code and not code.startswith(parent_code):
+                continue
+            low = dname.lower()
+            cat_path = Path(dirpath) / dname
+            if "report" in low:
+                _ensure_child(cat_path, f"{code}0", "Original", created)
+                _ensure_child(cat_path, f"{code}1", "Translated", created)
+            elif "drawing" in low:
+                _ensure_child(cat_path, f"{code}0", "Original", created)
+                _ensure_child(cat_path, f"{code}1", "Combined", created)
+
+    return created
+
+
 def _rev_code(parent_new, parent_old, lead, name):
     """New revision code = parent's new code + the revision index.
 
@@ -187,6 +261,9 @@ def build_plan(root):
 
             elif parent_role == "stage":
                 role = "package"
+                # Review_Procedure uses non-standard date-named sub-folders — skip silently.
+                if re.search(r"(?i)review.{0,6}proced", name):
+                    continue
                 if lead is None or base is None:
                     flags.append((p, "package folder has no usable number"))
                     continue
@@ -287,29 +364,38 @@ def build_plan(root):
 # ---------------------------------------------------------------------------
 
 def apply_plan(plan):
-    """Perform the renames.  Returns (done, collisions, errors)."""
+    """Perform the renames.  Returns (done, collisions, errors, auto_deleted)."""
     renames = [e for e in plan if e["status"] == "rename"]
     renames.sort(key=lambda e: e["depth"], reverse=True)  # children before parents
-    done, collisions, errors = 0, [], []
+    done, collisions, errors, auto_deleted = 0, [], [], []
     for e in renames:
         old = Path(e["path"])
         new = old.with_name(e["new"])
         try:
             if new.exists() and os.path.normcase(str(new)) != os.path.normcase(str(old)):
-                collisions.append((old, new))
+                # Target already exists.  If the source is empty (a stale wrong-coded
+                # folder from a previous buggy run), remove it automatically.
+                try:
+                    if not any(old.iterdir()):
+                        old.rmdir()
+                        auto_deleted.append(old)
+                    else:
+                        collisions.append((old, new))
+                except OSError:
+                    collisions.append((old, new))
                 continue
             os.rename(old, new)
             done += 1
         except OSError as exc:
             errors.append((old, str(exc)))
-    return done, collisions, errors
+    return done, collisions, errors, auto_deleted
 
 
 # ---------------------------------------------------------------------------
 #  Reporting
 # ---------------------------------------------------------------------------
 
-def build_report(root, plan, flags, applied=None):
+def build_report(root, plan, flags, applied=None, fill_created=None):
     renames = [e for e in plan if e["status"] == "rename"]
     same = [e for e in plan if e["status"] == "same"]
     notes = [e for e in plan if e.get("note")]
@@ -324,15 +410,27 @@ def build_report(root, plan, flags, applied=None):
     if notes:
         lines.append(f"Renamed but worth a look: {len(notes)}")
     if applied is not None:
-        done, collisions, errors = applied
+        done, collisions, errors, auto_deleted = applied
         lines.append("")
         lines.append(f"RESULT: renamed {done}, "
-                     f"skipped {len(collisions)} (name already existed), "
+                     f"skipped {len(collisions)} (non-empty target exists), "
                      f"errors {len(errors)}")
+        if auto_deleted:
+            lines.append(f"  Auto-removed {len(auto_deleted)} empty wrong-coded folder(s):")
+            for p in auto_deleted:
+                lines.append(f"    - {p.name}")
         for old, new in collisions:
-            lines.append(f"  ! SKIPPED (target exists): {old.name}  ->  {new.name}")
+            lines.append(f"  ! SKIPPED (target exists and is non-empty): {old.name}  ->  {new.name}")
+            lines.append(f"      Move its contents into '{new.name}' then delete it by hand.")
         for old, exc in errors:
             lines.append(f"  ! ERROR: {old}  ({exc})")
+        if fill_created:
+            lines.append(f"Sub-structure created: {len(fill_created)} folder(s)")
+            for fc in fill_created:
+                lines.append(f"  + {fc}")
+    else:
+        lines.append("Note: APPLY will also create any missing Reports/Drawings/Original/"
+                     "Translated/Combined sub-folders.")
     lines.append("")
 
     if flags:
@@ -461,8 +559,16 @@ def main(argv=None):
     preview = build_report(root, plan, flags)
 
     if not renames and not flags:
-        print(preview)
-        show_result_gui(preview + "\n\nEverything already matches - nothing to do.")
+        # No renames needed; still fill in any missing sub-structure.
+        fill_created = fill_missing_subfolders(root)
+        if fill_created:
+            msg = (f"\nNo renames needed.\n"
+                   f"Created {len(fill_created)} missing sub-folder(s):\n"
+                   + "\n".join(f"  + {fc}" for fc in fill_created))
+        else:
+            msg = "\n\nEverything already matches — nothing to do."
+        print(preview + msg)
+        show_result_gui(preview + msg)
         return 0
 
     # Decide whether to apply.
@@ -480,7 +586,8 @@ def main(argv=None):
         return 0
 
     result = apply_plan(plan)
-    final = build_report(root, plan, flags, applied=result)
+    fill_created = fill_missing_subfolders(root)
+    final = build_report(root, plan, flags, applied=result, fill_created=fill_created)
     print(final)
     show_result_gui(final)
     return 0
