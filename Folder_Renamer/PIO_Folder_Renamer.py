@@ -51,6 +51,7 @@ Usage
 import argparse
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -119,6 +120,112 @@ def _ensure_child(parent, code, label, created):
         created.append(target)
     except OSError:
         pass
+
+
+def _merge_into_correct(stale: Path, correct: Path, moved_count: int) -> int:
+    """Recursively move everything in *stale* into *correct*.
+
+    Files are moved one-by-one (skipped if the destination already exists).
+    Sub-folders are matched to their counterpart in *correct* by label keyword
+    (original / translated / combined / reports / drawings); if no counterpart
+    exists yet, one is created with the correct folder's code as prefix.
+    After draining a sub-folder we try to remove it; if it's non-empty (e.g.
+    duplicate files were skipped) it stays — no data is ever deleted."""
+    correct.mkdir(parents=True, exist_ok=True)
+    try:
+        items = list(stale.iterdir())
+    except OSError:
+        return moved_count
+    for item in items:
+        if item.is_file():
+            dest = correct / item.name
+            if not dest.exists():
+                try:
+                    shutil.move(str(item), str(dest))
+                    moved_count += 1
+                except OSError:
+                    pass
+        elif item.is_dir():
+            sub_low = item.name.lower()
+            label = next(
+                (k for k in ("original", "translated", "combined", "reports", "drawings")
+                 if k in sub_low),
+                None,
+            )
+            if label is None:
+                continue
+            correct_sub = next(
+                (Path(e.path) for e in os.scandir(correct)
+                 if e.is_dir() and label in e.name.lower()),
+                None,
+            )
+            if correct_sub is None:
+                c_code = _lead(correct.name) or ""
+                digit = "0" if label in ("original", "reports") else "1"
+                correct_sub = correct / f"{c_code}{digit} {label.capitalize()}"
+            moved_count = _merge_into_correct(item, correct_sub, moved_count)
+            try:
+                item.rmdir()
+            except OSError:
+                pass
+    return moved_count
+
+
+def fix_misplaced_files(root):
+    """Move files out of wrong-coded folders into their correct-coded twins.
+
+    After apply_plan, collision folders (non-empty wrong-coded folders whose
+    correct-coded target already exists) are left on disk.  This function
+    finds same-label sibling pairs where one has a code that starts with the
+    parent's code (correct) and one does not (stale), merges the stale one
+    into the correct one, then deletes the now-empty stale folder.
+
+    Returns (files_moved, folders_deleted)."""
+    root = Path(root)
+    files_moved = 0
+    folders_deleted = []
+
+    for dirpath, dirnames, _ in os.walk(root, topdown=True):
+        dirnames.sort()
+        parent_code = _lead(Path(dirpath).name) or ""
+
+        by_label: dict[str, list[str]] = {}
+        for dname in list(dirnames):
+            low = dname.lower()
+            for kw in ("reports", "drawings", "original", "translated", "combined"):
+                if kw in low:
+                    by_label.setdefault(kw, []).append(dname)
+                    break
+
+        for kw, names in by_label.items():
+            if len(names) < 2:
+                continue
+            correct_name: str | None = None
+            stale_names: list[str] = []
+            for n in sorted(names):
+                code = _lead(n)
+                if code and (not parent_code or code.startswith(parent_code)):
+                    if correct_name is None:
+                        correct_name = n
+                    else:
+                        stale_names.append(n)
+                else:
+                    stale_names.append(n)
+
+            if not correct_name or not stale_names:
+                continue
+
+            correct_path = Path(dirpath) / correct_name
+            for sname in stale_names:
+                stale_path = Path(dirpath) / sname
+                files_moved = _merge_into_correct(stale_path, correct_path, files_moved)
+                try:
+                    stale_path.rmdir()
+                    folders_deleted.append(stale_path)
+                except OSError:
+                    pass
+
+    return files_moved, folders_deleted
 
 
 def fill_missing_subfolders(root):
@@ -395,7 +502,7 @@ def apply_plan(plan):
 #  Reporting
 # ---------------------------------------------------------------------------
 
-def build_report(root, plan, flags, applied=None, fill_created=None):
+def build_report(root, plan, flags, applied=None, fix_result=None, fill_created=None):
     renames = [e for e in plan if e["status"] == "rename"]
     same = [e for e in plan if e["status"] == "same"]
     notes = [e for e in plan if e.get("note")]
@@ -421,9 +528,15 @@ def build_report(root, plan, flags, applied=None, fill_created=None):
                 lines.append(f"    - {p.name}")
         for old, new in collisions:
             lines.append(f"  ! SKIPPED (target exists and is non-empty): {old.name}  ->  {new.name}")
-            lines.append(f"      Move its contents into '{new.name}' then delete it by hand.")
         for old, exc in errors:
             lines.append(f"  ! ERROR: {old}  ({exc})")
+        if fix_result is not None:
+            files_moved, deleted_stale = fix_result
+            if files_moved or deleted_stale:
+                lines.append(f"Misplaced files: moved {files_moved} file(s) into correct-coded folders, "
+                             f"removed {len(deleted_stale)} stale folder(s)")
+            else:
+                lines.append("Misplaced files: none found (all files already in correct-coded folders)")
         if fill_created:
             lines.append(f"Sub-structure created: {len(fill_created)} folder(s)")
             for fc in fill_created:
@@ -497,7 +610,8 @@ def confirm_apply_gui(summary, count):
         if messagebox.askyesno(
             "Confirm",
             f"Rename {count} folder(s) now?\n\n"
-            "Files are not touched. This changes folder names on disk.",
+            "After renaming, any files still sitting in old wrong-coded folders\n"
+            "will be moved into their correct-coded counterparts automatically.",
         ):
             state["apply"] = True
             win.destroy()
@@ -559,12 +673,18 @@ def main(argv=None):
     preview = build_report(root, plan, flags)
 
     if not renames and not flags:
-        # No renames needed; still fill in any missing sub-structure.
+        # No renames needed; still fix misplaced files and missing sub-structure.
+        files_moved, deleted_stale = fix_misplaced_files(root)
         fill_created = fill_missing_subfolders(root)
+        extras = []
+        if files_moved or deleted_stale:
+            extras.append(f"Misplaced files: moved {files_moved} file(s) into correct-coded folders, "
+                          f"removed {len(deleted_stale)} stale folder(s)")
         if fill_created:
-            msg = (f"\nNo renames needed.\n"
-                   f"Created {len(fill_created)} missing sub-folder(s):\n"
-                   + "\n".join(f"  + {fc}" for fc in fill_created))
+            extras.append(f"Created {len(fill_created)} missing sub-folder(s):\n"
+                          + "\n".join(f"  + {fc}" for fc in fill_created))
+        if extras:
+            msg = "\nNo renames needed.\n" + "\n".join(extras)
         else:
             msg = "\n\nEverything already matches — nothing to do."
         print(preview + msg)
@@ -586,8 +706,10 @@ def main(argv=None):
         return 0
 
     result = apply_plan(plan)
+    fix_result = fix_misplaced_files(root)
     fill_created = fill_missing_subfolders(root)
-    final = build_report(root, plan, flags, applied=result, fill_created=fill_created)
+    final = build_report(root, plan, flags, applied=result, fix_result=fix_result,
+                         fill_created=fill_created)
     print(final)
     show_result_gui(final)
     return 0
