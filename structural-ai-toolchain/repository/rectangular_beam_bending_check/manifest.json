@@ -1,0 +1,107 @@
+{
+  "tool_id": "rectangular_beam_bending_check",
+  "title": "Rectangular Beam Bending Check",
+  "description": "Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.",
+  "reference": "",
+  "source_file": "beam_bending_check.ipynb",
+  "source_format": "ipynb",
+  "converted": "2026-07-18",
+  "status": "converted-unreviewed",
+  "variables": [
+    {
+      "name": "b",
+      "role": "input",
+      "unit": "mm",
+      "description": "Section width",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "h",
+      "role": "input",
+      "unit": "mm",
+      "description": "Section depth",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "L",
+      "role": "input",
+      "unit": "mm",
+      "description": "Span",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "q",
+      "role": "input",
+      "unit": "kN/m",
+      "description": "Distributed load (design)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "f_m",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Design bending strength",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "M_max",
+      "role": "derived",
+      "unit": "kNm",
+      "description": "Maximum bending moment",
+      "expression": "q*(L/1000)**2/8",
+      "fingerprint": "a5d4427ca6014829"
+    },
+    {
+      "name": "W",
+      "role": "derived",
+      "unit": "mm^3",
+      "description": "Elastic section modulus",
+      "expression": "b*h**2/6",
+      "fingerprint": "c90ad4dba6f367ab"
+    },
+    {
+      "name": "sigma_m",
+      "role": "derived",
+      "unit": "MPa",
+      "description": "Maximum bending stress",
+      "expression": "M_max*1000000/W",
+      "fingerprint": "91f725590d543e9e"
+    }
+  ],
+  "checks": [
+    "sigma_m <= f_m"
+  ],
+  "results": {
+    "b": 200.0,
+    "h": 400.0,
+    "L": 5000.0,
+    "q": 4.5,
+    "f_m": 24.0,
+    "M_max": 14.0625,
+    "W": 5333333.333333333,
+    "sigma_m": 2.63671875
+  },
+  "warnings": [],
+  "formula_analysis": [
+    {
+      "name": "M_max",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "W",
+      "status": "matches_atom",
+      "match": "mech.section.W_el_rect"
+    },
+    {
+      "name": "sigma_m",
+      "status": "new",
+      "match": ""
+    }
+  ]
+}

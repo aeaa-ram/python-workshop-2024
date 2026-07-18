@@ -1,0 +1,85 @@
+{
+  "tool_id": "concrete_modulus_at_age_t_ec2",
+  "title": "Concrete Modulus at Age t (EN 1992-1-1 3.1.3)",
+  "description": "Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.",
+  "reference": "EN 1992-1-1:2004 \u00a73.1.2, \u00a73.1.3",
+  "source_file": "concrete_modulus_at_age_t_ec2.py",
+  "source_format": "native",
+  "converted": "2026-07-18",
+  "status": "native-unreviewed",
+  "variables": [
+    {
+      "name": "s_cem",
+      "role": "input",
+      "unit": "-",
+      "description": "Cement class coefficient (0.20 R / 0.25 N / 0.38 S)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "t",
+      "role": "input",
+      "unit": "days",
+      "description": "Concrete age at loading",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "f_cm",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Mean compressive strength at 28 days (C30/37)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "E_cm",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Secant modulus at 28 days (C30/37)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "beta_cc_t",
+      "role": "derived",
+      "unit": "-",
+      "description": "Concrete strength development coefficient at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.2)]",
+      "expression": "exp(s_cem*(1 - sqrt(28/t)))",
+      "fingerprint": "aafe6104cd4613c0",
+      "atom_id": "ec2.concrete.beta_cc_t"
+    },
+    {
+      "name": "f_cm_t",
+      "role": "derived",
+      "unit": "MPa",
+      "description": "Mean concrete compressive strength at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.1)]",
+      "expression": "beta_cc_t * f_cm",
+      "fingerprint": "3ebb460220df110f",
+      "atom_id": "ec2.concrete.f_cm_t"
+    },
+    {
+      "name": "E_cm_t",
+      "role": "derived",
+      "unit": "MPa",
+      "description": "Concrete secant modulus of elasticity at age t [EN 1992-1-1:2004 \u00a73.1.3(3), Eq. (3.5)]",
+      "expression": "(f_cm_t / f_cm)**0.3 * E_cm",
+      "fingerprint": "2c3b9210a919d617",
+      "atom_id": "ec2.concrete.E_cm_t"
+    }
+  ],
+  "checks": [
+    "E_cm_t <= E_cm"
+  ],
+  "results": {
+    "s_cem": 0.25,
+    "t": 7.0,
+    "f_cm": 38.0,
+    "E_cm": 32837.0,
+    "beta_cc_t": 0.7788007830714049,
+    "f_cm_t": 29.594429756713385,
+    "E_cm_t": 30464.31286057069
+  },
+  "warnings": [],
+  "formula_analysis": []
+}

@@ -1,0 +1,290 @@
+{
+  "tool_id": "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
+  "title": "Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)",
+  "description": "Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.",
+  "reference": "",
+  "source_file": "crack_width_ec2.xlsx",
+  "source_format": "xlsx",
+  "converted": "2026-07-18",
+  "status": "converted-unreviewed",
+  "variables": [
+    {
+      "name": "b",
+      "role": "input",
+      "unit": "mm",
+      "description": "Section width (per metre strip)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "h",
+      "role": "input",
+      "unit": "mm",
+      "description": "Section depth",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "d",
+      "role": "input",
+      "unit": "mm",
+      "description": "Effective depth",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "c_nom",
+      "role": "input",
+      "unit": "mm",
+      "description": "Nominal concrete cover",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "phi",
+      "role": "input",
+      "unit": "mm",
+      "description": "Bar diameter",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "A_s",
+      "role": "input",
+      "unit": "mm^2",
+      "description": "Tension reinforcement area (5 H16)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "M_qp",
+      "role": "input",
+      "unit": "kNm",
+      "description": "Quasi-permanent bending moment",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "E_s",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Steel modulus of elasticity",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "E_cm",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Concrete secant modulus",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "f_ct_eff",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Effective concrete tensile strength",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "k_t",
+      "role": "input",
+      "unit": "-",
+      "description": "Load duration factor (long term)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "k_1",
+      "role": "input",
+      "unit": "-",
+      "description": "Bond factor (high-bond bars)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "k_2",
+      "role": "input",
+      "unit": "-",
+      "description": "Strain distribution factor (bending)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "k_3",
+      "role": "input",
+      "unit": "-",
+      "description": "Code coefficient",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "k_4",
+      "role": "input",
+      "unit": "-",
+      "description": "Code coefficient",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "w_max",
+      "role": "input",
+      "unit": "mm",
+      "description": "Allowable crack width (XC exposure)",
+      "expression": "",
+      "fingerprint": null
+    },
+    {
+      "name": "alpha_e",
+      "role": "derived",
+      "unit": "-",
+      "description": "Modular ratio E_s/E_cm",
+      "expression": "E_s/E_cm",
+      "fingerprint": "06d0cfbf8df2d5e0"
+    },
+    {
+      "name": "x",
+      "role": "derived",
+      "unit": "mm",
+      "description": "Neutral axis depth (cracked section)",
+      "expression": "(alpha_e*A_s/b)*(sqrt(1+2*b*d/(alpha_e*A_s))-1)",
+      "fingerprint": "0d78008124eed41b"
+    },
+    {
+      "name": "z",
+      "role": "derived",
+      "unit": "mm",
+      "description": "Internal lever arm",
+      "expression": "d-x/3",
+      "fingerprint": "f73b2874e7eb6be5"
+    },
+    {
+      "name": "sigma_s",
+      "role": "derived",
+      "unit": "MPa",
+      "description": "Steel stress under quasi-permanent loads",
+      "expression": "M_qp*1000000/(z*A_s)",
+      "fingerprint": "b918ddf9cf29e452"
+    },
+    {
+      "name": "h_c_eff",
+      "role": "derived",
+      "unit": "mm",
+      "description": "Effective tension zone height",
+      "expression": "min(2.5*(h-d),(h-x)/3,h/2)",
+      "fingerprint": "95647c0c017bb019"
+    },
+    {
+      "name": "rho_p_eff",
+      "role": "derived",
+      "unit": "-",
+      "description": "Effective reinforcement ratio",
+      "expression": "A_s/(b*h_c_eff)",
+      "fingerprint": "3c403083934a28b6"
+    },
+    {
+      "name": "s_r_max",
+      "role": "derived",
+      "unit": "mm",
+      "description": "Maximum crack spacing",
+      "expression": "k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff",
+      "fingerprint": "6c3099e1f1e07133"
+    },
+    {
+      "name": "eps_diff",
+      "role": "derived",
+      "unit": "-",
+      "description": "Mean strain difference (eps_sm - eps_cm)",
+      "expression": "max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s)",
+      "fingerprint": "f76a2ee9d0f4ccf1"
+    },
+    {
+      "name": "w_k",
+      "role": "derived",
+      "unit": "mm",
+      "description": "Characteristic crack width",
+      "expression": "s_r_max*eps_diff",
+      "fingerprint": "3ebb460220df110f"
+    }
+  ],
+  "checks": [
+    "w_k <= w_max"
+  ],
+  "results": {
+    "b": 1000.0,
+    "h": 300.0,
+    "d": 260.0,
+    "c_nom": 30.0,
+    "phi": 16.0,
+    "A_s": 1005.0,
+    "M_qp": 45.0,
+    "E_s": 200000.0,
+    "E_cm": 33000.0,
+    "f_ct_eff": 2.9,
+    "k_t": 0.4,
+    "k_1": 0.8,
+    "k_2": 0.5,
+    "k_3": 3.4,
+    "k_4": 0.425,
+    "w_max": 0.3,
+    "alpha_e": 6.0606060606060606,
+    "x": 50.516262723503665,
+    "z": 243.1612457588321,
+    "sigma_s": 184.14167629077758,
+    "h_c_eff": 83.16124575883211,
+    "rho_p_eff": 0.012084956049293724,
+    "s_r_max": 327.07322235226195,
+    "eps_diff": 0.0005524250288723327,
+    "w_k": 0.18068343430131523
+  },
+  "warnings": [],
+  "formula_analysis": [
+    {
+      "name": "alpha_e",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "x",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "z",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "sigma_s",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "h_c_eff",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "rho_p_eff",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "s_r_max",
+      "status": "matches_atom",
+      "match": "ec2.crack.s_r_max"
+    },
+    {
+      "name": "eps_diff",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "w_k",
+      "status": "new",
+      "match": ""
+    }
+  ]
+}

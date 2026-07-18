@@ -1,0 +1,65 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm,headheight=30pt,includeheadfoot]{geometry}
+\usepackage{amsmath}
+\usepackage[table]{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{array}
+\definecolor{BrandPrimary}{HTML}{1F3A5F}
+\definecolor{BrandAccent}{HTML}{2E86AB}
+\definecolor{BrandLight}{HTML}{EDF2F7}
+\definecolor{PassGreen}{HTML}{1E7D32}
+\definecolor{FailRed}{HTML}{C62828}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{1.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{BrandAccent}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.8pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{BrandAccent}\leaders\hrule height \footrulewidth\hfill}}
+\newcommand{\calccheckpass}[1]{\noindent\colorbox{PassGreen}{\textcolor{white}{\textbf{~PASS~}}}\; #1}
+\newcommand{\calccheckfail}[1]{\noindent\colorbox{FailRed}{\textcolor{white}{\textbf{~FAIL~}}}\; #1}
+
+\fancyhead[L]{\textcolor{BrandPrimary}{\textbf{—}}}
+\fancyhead[R]{\textcolor{BrandPrimary}{Concrete Modulus at Age t (EN 1992-1-1 3.1.3)}}
+\fancyfoot[L]{\small\textcolor{BrandPrimary}{Rev. 0.1 — 2026-07-18}}
+\fancyfoot[C]{\small\textcolor{BrandPrimary}{Structural AI Toolchain}}
+\fancyfoot[R]{\small\textcolor{BrandPrimary}{Page \thepage\ of \pageref{LastPage}}}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{BrandPrimary} Concrete Modulus at Age t (EN 1992-1-1 3.1.3)}\\[4pt]
+{\color{BrandAccent}\large EN 1992-1-1:2004 §3.1.2, §3.1.3}\\[2pt]
+{\small Prepared by: Toolchain example}
+\end{center}
+\noindent Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.\par
+\vspace{6pt}
+\section*{\color{BrandPrimary}1.\ Input Parameters}
+\rowcolors{2}{BrandLight}{white}
+\noindent\begin{tabular}{>{$}l<{$} r l p{7cm}}
+\rowcolor{BrandPrimary}\textcolor{white}{\textbf{Symbol}} & \textcolor{white}{\textbf{Value}} & \textcolor{white}{\textbf{Unit}} & \textcolor{white}{\textbf{Description}} \\
+s_{cem} & 0.25 & - & Cement class coefficient (0.20 R / 0.25 N / 0.38 S) \\
+t & 7 & days & Concrete age at loading \\
+f_{cm} & 38 & MPa & Mean compressive strength at 28 days (C30/37) \\
+E_{cm} & 32837 & MPa & Secant modulus at 28 days (C30/37) \\
+\end{tabular}\par\vspace{8pt}
+\section*{\color{BrandPrimary}2.\ Calculation (all formulas from the shared library)}
+\noindent\textbf{Concrete strength development coefficient at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.2)]}
+\begin{align*}
+\beta_{cc,t} &= e^{s_{cem} \cdot \left(1 - \sqrt{\frac{28}{t}}\right)} \\
+&= e^{0.25 \cdot \left(1 - \sqrt{\frac{28}{7}}\right)} \\
+&= \mathbf{0.7788}
+\end{align*}
+\noindent\textbf{Mean concrete compressive strength at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.1)]}
+\begin{align*}
+f_{cm,t} &= \beta_{cc,t} \cdot f_{cm} \\
+&= 0.7788 \cdot 38 \\
+&= \mathbf{29.59}\ \mathrm{MPa}
+\end{align*}
+\noindent\textbf{Secant modulus of elasticity at age t [EN 1992-1-1:2004 §3.1.3(3), Eq. (3.5)]}
+\begin{align*}
+E_{cm,t} &= E_{cm} \cdot \left(\frac{f_{cm,t}}{f_{cm}}\right)^{0.3} \\
+&= 32837 \cdot \left(\frac{29.59}{38}\right)^{0.3} \\
+&= \mathbf{30464}\ \mathrm{MPa}
+\end{align*}
+\section*{\color{BrandPrimary}3.\ Verification}
+\calccheckpass{$E_{cm,t} = 30464\ \mathrm{MPa} \; \le \; E_{cm} = 32837\ \mathrm{MPa}$ \small(Modulus at early age does not exceed the 28-day value)}\par\vspace{4pt}
+\end{document}

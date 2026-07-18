@@ -1,0 +1,44 @@
+# Prototyping CI (GitHub). Production runs on enterprise GitLab with the
+# mirrored pipeline in structural-ai-toolchain/.gitlab-ci.yml — keep the
+# stages and env-var names in sync between the two files.
+name: structural-ai-toolchain CI
+
+on:
+  push:
+    paths:
+      - "structural-ai-toolchain/**"
+      - ".github/workflows/toolchain-ci.yml"
+  pull_request:
+    paths:
+      - "structural-ai-toolchain/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: structural-ai-toolchain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -q
+
+  gatekeeper-index:
+    needs: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: structural-ai-toolchain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Rebuild knowledge-graph index
+        run: python main.py index

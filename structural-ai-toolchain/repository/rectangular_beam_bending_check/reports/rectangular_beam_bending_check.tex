@@ -1,0 +1,64 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm,headheight=30pt,includeheadfoot]{geometry}
+\usepackage{amsmath}
+\usepackage[table]{xcolor}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{array}
+\definecolor{BrandPrimary}{HTML}{1F3A5F}
+\definecolor{BrandAccent}{HTML}{2E86AB}
+\definecolor{BrandLight}{HTML}{EDF2F7}
+\definecolor{PassGreen}{HTML}{1E7D32}
+\definecolor{FailRed}{HTML}{C62828}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{1.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{BrandAccent}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\footrulewidth}{0.8pt}
+\renewcommand{\footrule}{\hbox to\headwidth{\color{BrandAccent}\leaders\hrule height \footrulewidth\hfill}}
+\newcommand{\calccheckpass}[1]{\noindent\colorbox{PassGreen}{\textcolor{white}{\textbf{~PASS~}}}\; #1}
+\newcommand{\calccheckfail}[1]{\noindent\colorbox{FailRed}{\textcolor{white}{\textbf{~FAIL~}}}\; #1}
+
+\fancyhead[L]{\textcolor{BrandPrimary}{\textbf{—}}}
+\fancyhead[R]{\textcolor{BrandPrimary}{Rectangular Beam Bending Check}}
+\fancyfoot[L]{\small\textcolor{BrandPrimary}{Rev. 0.1 — 2026-07-18}}
+\fancyfoot[C]{\small\textcolor{BrandPrimary}{Structural AI Toolchain}}
+\fancyfoot[R]{\small\textcolor{BrandPrimary}{Page \thepage\ of \pageref{LastPage}}}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{BrandPrimary} Rectangular Beam Bending Check}\\[4pt]
+\end{center}
+\noindent Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.\par
+\vspace{6pt}
+\section*{\color{BrandPrimary}1.\ Input Parameters}
+\rowcolors{2}{BrandLight}{white}
+\noindent\begin{tabular}{>{$}l<{$} r l p{7cm}}
+\rowcolor{BrandPrimary}\textcolor{white}{\textbf{Symbol}} & \textcolor{white}{\textbf{Value}} & \textcolor{white}{\textbf{Unit}} & \textcolor{white}{\textbf{Description}} \\
+b & 200 & mm & Section width \\
+h & 400 & mm & Section depth \\
+L & 5000 & mm & Span \\
+q & 4.5 & kN/m & Distributed load (design) \\
+f_{m} & 24 & MPa & Design bending strength \\
+\end{tabular}\par\vspace{8pt}
+\section*{\color{BrandPrimary}2.\ Calculation}
+\noindent\textbf{Maximum bending moment}
+\begin{align*}
+M_{max} &= \frac{q \cdot \left(\frac{L}{1000}\right)^{2}}{8} \\
+&= \frac{4.5 \cdot \left(\frac{5000}{1000}\right)^{2}}{8} \\
+&= \mathbf{14.06}\ \mathrm{kNm}
+\end{align*}
+\noindent\textbf{Elastic section modulus}
+\begin{align*}
+W &= \frac{b \cdot h^{2}}{6} \\
+&= \frac{200 \cdot 400^{2}}{6} \\
+&= \mathbf{5.333e+06}\ \mathrm{mm}^{3}
+\end{align*}
+\noindent\textbf{Maximum bending stress}
+\begin{align*}
+\sigma_{m} &= M_{max} \cdot 1000000 \cdot \frac{1}{W} \\
+&= 14.06 \cdot 1000000 \cdot \frac{1}{5.333e+06} \\
+&= \mathbf{2.637}\ \mathrm{MPa}
+\end{align*}
+\section*{\color{BrandPrimary}3.\ Verification}
+\calccheckpass{$\sigma_{m} = 2.637\ \mathrm{MPa} \; \le \; f_{m} = 24\ \mathrm{MPa}$}\par\vspace{4pt}
+\end{document}

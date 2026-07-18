@@ -1,0 +1,21 @@
+# Core
+sympy>=1.12          # symbolic math: evaluation + LaTeX generation
+openpyxl>=3.1        # .xlsx/.xlsm ingestion (formula-level access)
+nbformat>=5.9        # .ipynb ingestion
+matplotlib>=3.8      # offline TeX->SVG math for self-contained HTML reports
+pypdf>=4.0           # PDF bookmarks + embedded machine-readable calcsheet
+# tkinter (GUI) ships with CPython; on Debian/Ubuntu: apt install python3-tk
+# poppler-utils (optional): most robust PDF text extraction for
+#   reconstruct_from_pdf(); apt install poppler-utils. Falls back to pypdf.
+
+# Dev / CI
+pytest>=8.0
+
+# Future (uncomment when the SharePoint layer goes live)
+# msal>=1.28         # MS Graph client-credentials auth
+# requests>=2.32     # Graph REST calls
+# fastapi>=0.110     # webhook receiver
+# uvicorn>=0.29
+
+# Future (knowledge-graph embeddings)
+# anthropic / voyageai / chromadb — decision pending, see ARCHITECTURE.md

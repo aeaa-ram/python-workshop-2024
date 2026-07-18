@@ -1,0 +1,95 @@
+{
+  "tools": [
+    {
+      "slug": "concrete_modulus_at_age_t_ec2",
+      "title": "Concrete Modulus at Age t (EN 1992-1-1 3.1.3)",
+      "variables": [
+        "s_cem",
+        "t",
+        "f_cm",
+        "E_cm",
+        "beta_cc_t",
+        "f_cm_t",
+        "E_cm_t"
+      ],
+      "formulas": [
+        "exp(s_cem*(1 - sqrt(28/t)))",
+        "beta_cc_t * f_cm",
+        "(f_cm_t / f_cm)**0.3 * E_cm"
+      ]
+    },
+    {
+      "slug": "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
+      "title": "Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)",
+      "variables": [
+        "b",
+        "h",
+        "d",
+        "c_nom",
+        "phi",
+        "A_s",
+        "M_qp",
+        "E_s",
+        "E_cm",
+        "f_ct_eff",
+        "k_t",
+        "k_1",
+        "k_2",
+        "k_3",
+        "k_4",
+        "w_max",
+        "alpha_e",
+        "x",
+        "z",
+        "sigma_s",
+        "h_c_eff",
+        "rho_p_eff",
+        "s_r_max",
+        "eps_diff",
+        "w_k"
+      ],
+      "formulas": [
+        "E_s/E_cm",
+        "(alpha_e*A_s/b)*(sqrt(1+2*b*d/(alpha_e*A_s))-1)",
+        "d-x/3",
+        "M_qp*1000000/(z*A_s)",
+        "min(2.5*(h-d),(h-x)/3,h/2)",
+        "A_s/(b*h_c_eff)",
+        "k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff",
+        "max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s)",
+        "s_r_max*eps_diff"
+      ]
+    },
+    {
+      "slug": "rectangular_beam_bending_check",
+      "title": "Rectangular Beam Bending Check",
+      "variables": [
+        "b",
+        "h",
+        "L",
+        "q",
+        "f_m",
+        "M_max",
+        "W",
+        "sigma_m"
+      ],
+      "formulas": [
+        "q*(L/1000)**2/8",
+        "b*h**2/6",
+        "M_max*1000000/W"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "tools": [
+        "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
+        "rectangular_beam_bending_check"
+      ],
+      "shared_variables": [
+        "b",
+        "h"
+      ]
+    }
+  ]
+}

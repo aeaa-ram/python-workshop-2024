@@ -1,0 +1,61 @@
+# Production pipeline for enterprise GitLab.
+# NOTE: while the project lives inside the python-workshop-2024 prototype
+# repo this file is dormant; on migration to its own GitLab project move it
+# to the repository root. Stages and env-var names deliberately mirror
+# .github/workflows/toolchain-ci.yml.
+#
+# Required CI/CD variables (Settings > CI/CD > Variables, masked):
+#   MSGRAPH_TENANT_ID / MSGRAPH_CLIENT_ID / MSGRAPH_CLIENT_SECRET
+#   SHAREPOINT_SITE_ID / SHAREPOINT_DRIVE_ID
+#   WEBHOOK_NOTIFICATION_URL / WEBHOOK_CLIENT_STATE
+#   KG_EMBEDDING_ENDPOINT / KG_EMBEDDING_API_KEY
+
+image: python:3.11-slim
+
+stages:
+  - test
+  - gatekeeper
+  - docs
+
+default:
+  before_script:
+    - pip install -r requirements.txt
+
+test:
+  stage: test
+  script:
+    - pytest -q
+
+gatekeeper-index:
+  stage: gatekeeper
+  script:
+    - python main.py index
+  artifacts:
+    paths:
+      - repository/.index.json
+    expire_in: 1 week
+
+render-docs:
+  stage: docs
+  script:
+    - |
+      python - <<'PY'
+      import json, pathlib, subprocess
+      for manifest in sorted(pathlib.Path("repository").glob("*/manifest.json")):
+          slug = json.loads(manifest.read_text())["tool_id"]
+          subprocess.run(["python", "main.py", "render", slug], check=True)
+      PY
+  artifacts:
+    paths:
+      - repository/*/reports/
+    expire_in: 1 month
+
+# Scheduled job (Pipelines > Schedules): renew the MS Graph webhook
+# subscription before its ~30-day expiry. No-op until sharepoint_sync
+# is implemented.
+renew-graph-subscription:
+  stage: gatekeeper
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - python -c "print('TODO: call sharepoint_sync.webhooks.renew_subscription')"

@@ -1,0 +1,153 @@
+{
+  "schema": "structural-ai-toolchain/calcsheet@1",
+  "tool_id": "concrete_modulus_at_age_t_ec2",
+  "title": "Concrete Modulus at Age t (EN 1992-1-1 3.1.3)",
+  "description": "Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.",
+  "reference": "EN 1992-1-1:2004 \u00a73.1.2, \u00a73.1.3",
+  "author": "Toolchain example",
+  "project": "",
+  "revision": "0.1",
+  "created": "2026-07-18",
+  "items": [
+    {
+      "kind": "section",
+      "name": "Input Parameters",
+      "description": "",
+      "unit": "",
+      "value": null,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "input",
+      "name": "s_cem",
+      "description": "Cement class coefficient (0.20 R / 0.25 N / 0.38 S)",
+      "unit": "-",
+      "value": 0.25,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "input",
+      "name": "t",
+      "description": "Concrete age at loading",
+      "unit": "days",
+      "value": 7.0,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "input",
+      "name": "f_cm",
+      "description": "Mean compressive strength at 28 days (C30/37)",
+      "unit": "MPa",
+      "value": 38.0,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "input",
+      "name": "E_cm",
+      "description": "Secant modulus at 28 days (C30/37)",
+      "unit": "MPa",
+      "value": 32837.0,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "section",
+      "name": "Calculation (all formulas from the shared library)",
+      "description": "",
+      "unit": "",
+      "value": null,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "calc",
+      "name": "beta_cc_t",
+      "description": "Concrete strength development coefficient at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.2)]",
+      "unit": "-",
+      "value": 0.7788007830714049,
+      "expression": "exp(s_cem*(1 - sqrt(28/t)))",
+      "passed": null,
+      "text": "",
+      "atom_id": "ec2.concrete.beta_cc_t"
+    },
+    {
+      "kind": "calc",
+      "name": "f_cm_t",
+      "description": "Mean concrete compressive strength at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.1)]",
+      "unit": "MPa",
+      "value": 29.594429756713385,
+      "expression": "beta_cc_t * f_cm",
+      "passed": null,
+      "text": "",
+      "atom_id": "ec2.concrete.f_cm_t"
+    },
+    {
+      "kind": "calc",
+      "name": "E_cm_t",
+      "description": "Secant modulus of elasticity at age t [EN 1992-1-1:2004 \u00a73.1.3(3), Eq. (3.5)]",
+      "unit": "MPa",
+      "value": 30464.31286057069,
+      "expression": "(f_cm_t / f_cm)**0.3 * E_cm",
+      "passed": null,
+      "text": "",
+      "atom_id": "ec2.concrete.E_cm_t"
+    },
+    {
+      "kind": "section",
+      "name": "Verification",
+      "description": "",
+      "unit": "",
+      "value": null,
+      "expression": "",
+      "passed": null,
+      "text": "",
+      "atom_id": ""
+    },
+    {
+      "kind": "check",
+      "name": "E_cm_t <= E_cm",
+      "description": "Modulus at early age does not exceed the 28-day value",
+      "unit": "",
+      "value": null,
+      "expression": "E_cm_t <= E_cm",
+      "passed": true,
+      "text": "",
+      "atom_id": ""
+    }
+  ],
+  "results": {
+    "s_cem": 0.25,
+    "t": 7.0,
+    "f_cm": 38.0,
+    "E_cm": 32837.0,
+    "beta_cc_t": 0.7788007830714049,
+    "f_cm_t": 29.594429756713385,
+    "E_cm_t": 30464.31286057069
+  },
+  "units": {
+    "s_cem": "-",
+    "t": "days",
+    "f_cm": "MPa",
+    "E_cm": "MPa",
+    "beta_cc_t": "-",
+    "f_cm_t": "MPa",
+    "E_cm_t": "MPa"
+  },
+  "checks_passed": true
+}
