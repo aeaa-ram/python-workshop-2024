@@ -6,7 +6,7 @@
   "source_file": "beam_bending_check.ipynb",
   "source_format": "ipynb",
   "converted": "2026-07-19",
-  "status": "converted-unreviewed",
+  "status": "needs-clarification",
   "interpreter": "",
   "variables": [
     {
@@ -88,7 +88,13 @@
     "sigma_m": 2.63671875
   },
   "warnings": [],
-  "clarifications": [],
+  "clarifications": [
+    {
+      "location": "sigma_m",
+      "issue": "unit-scale-mismatch",
+      "question": "'sigma_m' is shown as 2.637 MPa but the formula evaluates to 2.637e+06 MPa (off by x1.000e+06 \u2014 a units slip)."
+    }
+  ],
   "formula_analysis": [
     {
       "name": "M_max",

@@ -49,32 +49,39 @@ body {{ font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif;
 
 .sheet {{ width: 210mm; margin: 8mm auto; background: #fff;
   border-collapse: collapse; box-shadow: 0 2px 12px rgba(0,0,0,.16); }}
-.sheet td {{ padding: 0; border: 1.3pt solid #111; }}
+.sheet > thead > tr > td {{ padding: 0; border: 1.4pt solid var(--primary); }}
+.sheet > tbody > tr > td {{ padding: 0;
+  border: 1.4pt solid var(--primary); border-top: none; }}
 
-/* ---- cartouche (repeats every printed page) ---- */
-.cartouche {{ border-bottom: 2.5px solid var(--primary); }}
-.cart-row {{ display: flex; align-items: stretch; }}
-.cart-logo {{ padding: 3.5mm 5mm; display: flex; align-items: center;
-  border-right: 1px solid var(--rule); }}
-.cart-logo svg, .logo-img {{ height: 8.5mm; width: auto; }}
-.cart-title {{ flex: 1; padding: 2.6mm 5mm; }}
-.cart-title .proj {{ font-size: 8pt; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .6px; }}
-.cart-title h1 {{ font-size: 13.5pt; color: var(--primary); margin: .6mm 0 0; }}
-.cart-title .ref {{ font-size: 8.4pt; color: var(--accent); margin-top: .4mm; }}
-.cart-status {{ padding: 2.6mm 5mm; text-align: right;
-  border-left: 1px solid var(--rule); min-width: 33mm; font-size: 8pt;
-  color: var(--muted); }}
-.cart-status .badge {{ display: inline-block; margin-top: 1mm; padding: .7mm 2.4mm;
+/* ---- Mathcad-style title block (bounding-box grid), repeats each page ---- */
+table.tblock {{ width: 100%; border-collapse: collapse; }}
+table.tblock td {{ border: 0.8pt solid var(--rule); padding: 1.6mm 3mm;
+  vertical-align: top; }}
+.tb-logo {{ width: 42mm; text-align: center; vertical-align: middle;
+  background: #fff; }}
+.tb-logo svg, .tb-logo .logo-img {{ height: 10mm; width: auto; max-width: 38mm; }}
+.tb-k {{ font-size: 6.8pt; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); display: block; }}
+.tb-v {{ font-size: 10pt; color: var(--primary); font-weight: 600; }}
+.tb-title {{ }}
+.tb-title .ttl {{ font-size: 12.5pt; font-weight: 700; color: var(--primary);
+  line-height: 1.15; }}
+.tb-title .ref {{ font-size: 8.4pt; color: var(--accent); margin-top: .6mm; }}
+.tb-people {{ width: 40mm; }}
+.tb-people .row {{ display: flex; justify-content: space-between;
+  font-size: 8.6pt; padding: .3mm 0; }}
+.tb-people .row b {{ color: var(--muted); font-weight: 600;
+  text-transform: uppercase; font-size: 6.8pt; letter-spacing: .4px;
+  align-self: center; }}
+.tb-people .row span {{ color: var(--primary); font-weight: 600; }}
+.tb-status {{ text-align: right; }}
+.tb-status .badge {{ display: inline-block; padding: .6mm 2.4mm;
   background: var(--accent); color: #fff; border-radius: 2px; font-weight: 700;
-  letter-spacing: .5px; }}
-.foot {{ border-top: 1.5px solid var(--primary); display: flex; font-size: 7.8pt;
-  color: #4a5361; }}
-.foot .cell {{ padding: 1.7mm 4mm; border-right: 1px solid var(--rule); }}
-.foot .cell:last-child {{ border-right: none; margin-left: auto; }}
-.foot b {{ color: var(--primary); }}
+  font-size: 7.6pt; letter-spacing: .5px; }}
 
-.body {{ padding: 5mm 9mm 6mm; }}
+.body {{ padding: 5mm 9mm 7mm; }}
+h1.doctitle {{ font-size: 3px; line-height: 1; margin: 0; color: #fff;
+  font-weight: normal; }}
 
 /* ---- narrative / abstract ---- */
 .abstract {{ background: var(--light); border-left: 3px solid var(--accent);
@@ -147,16 +154,24 @@ table.inputs td.ref {{ color: var(--muted); font-style: italic; font-size: 8.4pt
   margin-top: .8mm; }}
 
 /* machine-readable layer: in normal flow, painted white & tiny so it is
-   extractable by pdftotext (reconstruct_from_pdf) yet visually silent. */
+   extractable by pdftotext (reconstruct_from_pdf) yet visually silent.
+   break-inside:avoid keeps the base64 on ONE page so the repeating header
+   text can't interleave into it across a page break and corrupt it. */
 .mr-data {{ color: #fff; font-family: monospace; font-size: 3px;
   line-height: 1.05; word-break: break-all; white-space: pre-wrap;
-  user-select: all; }}
+  user-select: all; break-inside: avoid; page-break-inside: avoid; }}
 
 @media print {{
   html, body {{ background: #fff; }}
-  @page {{ size: A4; margin: 7mm 6mm; }}
+  @page {{ size: A4; margin: 11mm 6mm 6mm;
+    @top-right {{ content: "Page " counter(page) " of " counter(pages);
+      font-family: "Segoe UI",Arial,sans-serif; font-size: 8pt;
+      color: {b.primary}; }}
+    @top-left {{ content: "{b.company_name}"; font-family: "Segoe UI",Arial;
+      font-size: 8pt; color: #6b7686; }}
+  }}
   .sheet {{ width: auto; margin: 0; box-shadow: none; }}
-  .body {{ padding: 3mm 6mm; }}
+  .body {{ padding: 4mm 7mm; }}
 }}
 """
 
@@ -168,6 +183,10 @@ class _SvgMath:
         import matplotlib
 
         matplotlib.use("Agg")
+        # Emit <text>/<tspan> (real, selectable characters) instead of glyph
+        # <path> outlines, so the PRINTED equations are selectable/copyable
+        # in the PDF — not just the hidden machine-readable layer.
+        matplotlib.rcParams["svg.fonttype"] = "none"
         from matplotlib import mathtext
         from matplotlib.font_manager import FontProperties
 
@@ -251,28 +270,35 @@ def render_html(
                     f"<style>{_css(b)}</style>", "</head><body>"]
 
     status = esc(m.status or "DRAFT")
+    # Mathcad-style title block (bounding-box grid), repeated on every page
+    # via <thead>. No footer — "nothing below but calculations".
     p.append('<table class="sheet"><thead><tr><td>')
-    p.append('<div class="cartouche"><div class="cart-row">')
-    p.append(f'<div class="cart-logo">{b.logo_markup()}</div>')
-    p.append('<div class="cart-title">')
-    p.append(f'<div class="proj">{esc(m.project or b.company_name)}'
-             f'{" · " + esc(m.project_no) if m.project_no else ""}</div>')
-    p.append(f"<h1>{esc(sheet.title)}</h1>")
-    if sheet.reference:
-        p.append(f'<div class="ref">{esc(sheet.reference)}</div>')
-    p.append("</div>")
-    p.append(f'<div class="cart-status">Rev {esc(sheet.revision)}<br>'
-             f'{esc(sheet.created)}<br><span class="badge">{status}</span></div>')
-    p.append("</div></div></td></tr></thead>")
-
-    p.append('<tfoot><tr><td><div class="foot">')
-    p.append(f'<div class="cell"><b>Prepared</b> {esc(m.prepared_by or "—")}</div>')
-    p.append(f'<div class="cell"><b>Checked</b> {esc(m.checked_by or "—")}</div>')
-    p.append(f'<div class="cell"><b>Approved</b> {esc(m.approved_by or "—")}</div>')
-    p.append(f'<div class="cell">{esc(b.company_name)}</div>')
-    p.append("</div></td></tr></tfoot>")
+    p.append('<table class="tblock"><tr>')
+    p.append(f'<td class="tb-logo" rowspan="2">{b.logo_markup()}</td>')
+    p.append('<td><span class="tb-k">Project</span>'
+             f'<span class="tb-v">{esc(m.project or "—")}</span></td>')
+    p.append('<td><span class="tb-k">Project No.</span>'
+             f'<span class="tb-v">{esc(m.project_no or "—")}</span></td>')
+    p.append('<td class="tb-people" rowspan="2">'
+             f'<div class="row"><b>Prepared</b><span>{esc(m.prepared_by or "—")}</span></div>'
+             f'<div class="row"><b>Checked</b><span>{esc(m.checked_by or "—")}</span></div>'
+             f'<div class="row"><b>Approved</b><span>{esc(m.approved_by or "—")}</span></div>'
+             '</td></tr>')
+    p.append('<tr><td class="tb-title" colspan="2">'
+             f'<div class="ttl">{esc(sheet.title)}</div>'
+             + (f'<div class="ref">{esc(sheet.reference)}</div>' if sheet.reference else "")
+             + '</td></tr>')
+    p.append('<tr>'
+             f'<td colspan="3"><span class="tb-k">Rev / Date</span>'
+             f'<span class="tb-v">{esc(sheet.revision)} · {esc(sheet.created)}</span></td>'
+             f'<td class="tb-status"><span class="badge">{status}</span></td>'
+             '</tr>')
+    p.append("</table></td></tr></thead>")
 
     p.append('<tbody><tr><td><div class="body">')
+    # semantic H1 for the PDF document outline (bookmark) — visually silent
+    # since the title already shows in the title block above.
+    p.append(f'<h1 class="doctitle">{esc(sheet.title)}</h1>')
     if sheet.description:
         p.append('<div class="abstract"><span class="lbl">Purpose</span>'
                  f'{esc(sheet.description)}</div>')

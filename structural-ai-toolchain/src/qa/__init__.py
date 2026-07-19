@@ -4,6 +4,13 @@ from src.qa.ai_reviewer import (
     AnthropicReviewer,
     build_review_prompt,
 )
+from src.qa.master_review import (
+    ReviewFinding,
+    ReviewReport,
+    deterministic_review,
+    review,
+    review_to_convergence,
+)
 
 __all__ = [
     "run_checks",
@@ -11,4 +18,9 @@ __all__ = [
     "build_review_prompt",
     "AIReviewer",
     "AnthropicReviewer",
+    "review",
+    "review_to_convergence",
+    "deterministic_review",
+    "ReviewReport",
+    "ReviewFinding",
 ]

@@ -17,16 +17,33 @@ import base64
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Placeholder wordmark — NOT the official logo. Replace via logo_path or by
-# editing assets/logo.svg. Kept deliberately simple/typographic.
+# Ramboll wordmark recreation (SVG). This is a close approximation for the
+# report template, NOT the official trademarked asset — drop the official
+# file at assets/logo.svg (or set Branding.logo_path) to replace it.
 _PLACEHOLDER_LOGO_SVG = (
-    '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="34" '
-    'viewBox="0 0 150 34" role="img" aria-label="Company logo placeholder">'
-    '<rect width="150" height="34" rx="3" fill="#0033A0"/>'
-    '<text x="12" y="23" font-family="Arial, Helvetica, sans-serif" '
-    'font-size="18" font-weight="700" letter-spacing="1" fill="#ffffff">'
-    'RAMBÖLL</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 56" '
+    'role="img" aria-label="Ramboll">'
+    '<rect x="0" y="0" width="232" height="56" rx="10" fill="#00A0DF"/>'
+    '<text x="116" y="39" text-anchor="middle" '
+    'font-family="Arial, Helvetica, sans-serif" font-size="34" '
+    'font-weight="800" letter-spacing="1.5" fill="#ffffff">'
+    'RAMBØLL</text></svg>'
 )
+
+
+def _default_logo() -> str:
+    """Prefer the on-disk asset (assets/logo.svg) so a dropped-in official
+    logo is used automatically; else the embedded recreation."""
+    from pathlib import Path
+
+    asset = Path(__file__).resolve().parents[2] / "assets" / "logo.svg"
+    if asset.exists():
+        try:
+            svg = asset.read_text(encoding="utf-8")
+            return svg[svg.index("<svg"):]
+        except Exception:
+            pass
+    return _PLACEHOLDER_LOGO_SVG
 
 
 @dataclass
@@ -35,10 +52,10 @@ class Branding:
 
     company_name: str = "Ramboll"
     company_tagline: str = "Bright ideas. Sustainable change."
-    logo_path: str = ""            # .svg or .png; empty -> placeholder
-    primary: str = "#0033A0"       # header/border ink
-    accent: str = "#00A0D2"        # rules / highlights
-    light: str = "#EEF2F8"         # zebra / panels
+    logo_path: str = ""            # .svg or .png; empty -> asset/recreation
+    primary: str = "#13293D"       # header/border ink (deep navy)
+    accent: str = "#00A0DF"        # Ramboll cyan — rules / highlights
+    light: str = "#EAF1F6"         # zebra / panels
     ok_color: str = "#1E7D32"      # passing verification
     not_ok_color: str = "#C62828"  # failing verification
     ok_label: str = "OK"
@@ -48,10 +65,10 @@ class Branding:
     def logo_markup(self) -> str:
         """Inline logo as SVG markup or a data-URI <img> (self-contained)."""
         if not self.logo_path:
-            return _PLACEHOLDER_LOGO_SVG
+            return _default_logo()
         path = Path(self.logo_path)
         if not path.exists():
-            return _PLACEHOLDER_LOGO_SVG
+            return _default_logo()
         if path.suffix.lower() == ".svg":
             svg = path.read_text(encoding="utf-8")
             return svg[svg.index("<svg"):] if "<svg" in svg else svg

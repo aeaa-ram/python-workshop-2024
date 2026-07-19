@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.ingestion.base import get_parser
-from src.models.calculation import ParsedTool
+from src.models.calculation import Clarification, ParsedTool
 from src.output_engine import render_markdown
 
 
@@ -39,6 +39,7 @@ class GrindResult:
     reuse_findings: list = field(default_factory=list)
     clarifications: list = field(default_factory=list)
     interpreter: str = ""
+    review_findings: list = field(default_factory=list)
 
 
 def slugify(title: str) -> str:
@@ -84,6 +85,21 @@ def grind(
 
     reuse_findings = analyze_reuse(parsed, repo_dir)
 
+    # Master reviewer (deterministic pass): catch "looks right but wrong"
+    # results — chiefly units-scale slips — before the tool is trusted.
+    review_findings: list = []
+    try:
+        from src.qa.master_review import deterministic_review
+
+        review_findings = deterministic_review(parsed.to_sheet())
+    except Exception:
+        review_findings = []
+    for f in review_findings:
+        if f.severity == "error" and f.code == "unit-scale-mismatch":
+            parsed.clarifications.append(Clarification(
+                location=f.location, issue=f.code,
+                question=f.message, context=f.suggested_fix))
+
     slug = slugify(parsed.title)
     tool_dir = repo_dir / slug
     tool_dir.mkdir(parents=True, exist_ok=True)
@@ -110,6 +126,7 @@ def grind(
         reuse_findings=reuse_findings,
         clarifications=parsed.clarifications,
         interpreter=parsed.interpreter,
+        review_findings=review_findings,
     )
 
 

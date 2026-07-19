@@ -157,6 +157,24 @@ def cmd_qa(args) -> int:
     return 1 if errors else 0
 
 
+def cmd_review(args) -> int:
+    from src.ingestion.native import load_sheet
+    from src.qa import review
+
+    sheet = load_sheet(args.slug, REPO_DIR)
+    render_dir = (REPO_DIR / args.slug / "reports" / "_review") \
+        if args.visual else None
+    rep = review(sheet, render_dir=render_dir)
+    print(f"Master review of '{args.slug}' "
+          f"({'AI+deterministic' if rep.ai_used else 'deterministic'}):")
+    print(rep)
+    if not rep.passed():
+        print(f"\n⛔ {len(rep.errors())} error(s) — not ready to issue.")
+    else:
+        print("\n✔ No blocking issues found.")
+    return 1 if not rep.passed() else 0
+
+
 def cmd_atoms(args) -> int:
     from src.library import all_atoms, catalog_lines, search
 
@@ -334,6 +352,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--prompt", action="store_true",
                    help="also export the AI review prompt")
     p.set_defaults(func=cmd_qa)
+
+    p = sub.add_parser("review", help="AI master reviewer: catch wrong "
+                       "results (units, unresolved) before issue")
+    p.add_argument("slug")
+    p.add_argument("--visual", action="store_true",
+                   help="also render pages for the AI visual review")
+    p.set_defaults(func=cmd_review)
 
     p = sub.add_parser("atoms", help="browse the shared formula library")
     p.add_argument("--tree", action="store_true",

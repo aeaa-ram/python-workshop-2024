@@ -93,9 +93,13 @@ def reconstruct_from_pdf(pdf_path: str | Path) -> dict:
     match = _MR_RE.search(text)
     if match:
         b64 = re.sub(r"[^A-Za-z0-9+/=]", "", match.group(1))
-        raw = gzip.decompress(base64.b64decode(b64))
-        return json.loads(raw.decode("utf-8"))
-    # fall back to the attachment channel if the text layer is gone
+        try:
+            raw = gzip.decompress(base64.b64decode(b64))
+            return json.loads(raw.decode("utf-8"))
+        except Exception:
+            # the in-page base64 was corrupted (e.g. header text interleaved
+            # across a page break) — fall back to the attachment channel.
+            pass
     try:
         return read_embedded_calcsheet(pdf_path)
     except Exception as exc:

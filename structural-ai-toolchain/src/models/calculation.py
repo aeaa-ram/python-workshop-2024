@@ -548,7 +548,12 @@ class CalcSheet:
         result = sp.N(result)
         if not result.is_number:
             raise CalcSheetError(f"Expression {source!r} did not evaluate")
-        out = float(result)
+        try:
+            out = float(result)
+        except TypeError as exc:
+            # zoo (division by zero) / complex results
+            raise CalcSheetError(
+                f"Expression {source!r} is undefined ({exc})") from exc
         if not math.isfinite(out):
             # a division by an unresolved (0) upstream value, etc. — treat
             # as unevaluable so it is flagged, not silently propagated.
