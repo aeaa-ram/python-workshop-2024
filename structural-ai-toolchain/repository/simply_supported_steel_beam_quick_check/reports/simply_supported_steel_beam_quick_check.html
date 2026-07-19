@@ -4,91 +4,125 @@
 <title>Simply Supported Steel Beam — quick check</title>
 <style>
 :root {
-  --primary: #0033A0;
-  --accent: #00A0D2;
-  --light: #EEF2F8;
-  --ok: #1E7D32;
-  --not-ok: #C62828;
+  --primary: #0033A0; --accent: #00A0D2; --light: #EEF2F8;
+  --ok: #1E7D32; --not-ok: #C62828;
+  --ink: #1c2530; --muted: #6b7686; --rule: #d7dee8;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #f4f5f7; }
-body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-       color: #1a202c; font-size: 10.5pt; }
+html, body { margin: 0; padding: 0; background: #eef1f5; }
+body { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif;
+  color: var(--ink); font-size: 10.2pt; line-height: 1.4; }
 
-/* Page = a table so the header (thead) and footer (tfoot) repeat on
-   every printed page and never overlap the flowing body (tbody). This
-   is the most reliable running-header technique in headless Chromium.
-   The black Mathcad-style frame is the border on the body cell. */
 .sheet { width: 210mm; margin: 8mm auto; background: #fff;
-         border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
-.sheet > thead, .sheet > tfoot { display: table-header-group; }
-.sheet > tfoot { display: table-footer-group; }
-.sheet td { padding: 0; border: 1.4pt solid #111; }
+  border-collapse: collapse; box-shadow: 0 2px 12px rgba(0,0,0,.16); }
+.sheet td { padding: 0; border: 1.3pt solid #111; }
+
+/* ---- cartouche (repeats every printed page) ---- */
 .cartouche { border-bottom: 2.5px solid var(--primary); }
 .cart-row { display: flex; align-items: stretch; }
-.cart-logo { padding: 4mm 5mm; display: flex; align-items: center;
-             border-right: 1px solid #d3d9e3; }
-.cart-logo svg, .logo-img { height: 9mm; width: auto; }
-.cart-title { flex: 1; padding: 3mm 5mm; }
-.cart-title .proj { font-size: 8.5pt; color: #5a6472; text-transform: uppercase;
-                    letter-spacing: .5px; }
-.cart-title h1 { font-size: 14pt; color: var(--primary); margin: 1mm 0 0 0; }
-.cart-status { padding: 3mm 5mm; text-align: right; border-left: 1px solid #d3d9e3;
-               min-width: 34mm; font-size: 8.5pt; color: #5a6472; }
-.cart-status .badge { display: inline-block; margin-top: 1mm; padding: .8mm 2.4mm;
-                      background: var(--accent); color: #fff; border-radius: 2px;
-                      font-weight: 700; letter-spacing: .5px; }
-
-/* Footer cartouche */
-.foot { border-top: 1.5px solid var(--primary); display: flex;
-        font-size: 8pt; color: #47505e; }
-.foot .cell { padding: 2mm 4mm; border-right: 1px solid #d3d9e3; }
-.foot .cell:last-child { border-right: none; margin-left: auto; text-align: right; }
+.cart-logo { padding: 3.5mm 5mm; display: flex; align-items: center;
+  border-right: 1px solid var(--rule); }
+.cart-logo svg, .logo-img { height: 8.5mm; width: auto; }
+.cart-title { flex: 1; padding: 2.6mm 5mm; }
+.cart-title .proj { font-size: 8pt; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px; }
+.cart-title h1 { font-size: 13.5pt; color: var(--primary); margin: .6mm 0 0; }
+.cart-title .ref { font-size: 8.4pt; color: var(--accent); margin-top: .4mm; }
+.cart-status { padding: 2.6mm 5mm; text-align: right;
+  border-left: 1px solid var(--rule); min-width: 33mm; font-size: 8pt;
+  color: var(--muted); }
+.cart-status .badge { display: inline-block; margin-top: 1mm; padding: .7mm 2.4mm;
+  background: var(--accent); color: #fff; border-radius: 2px; font-weight: 700;
+  letter-spacing: .5px; }
+.foot { border-top: 1.5px solid var(--primary); display: flex; font-size: 7.8pt;
+  color: #4a5361; }
+.foot .cell { padding: 1.7mm 4mm; border-right: 1px solid var(--rule); }
+.foot .cell:last-child { border-right: none; margin-left: auto; }
 .foot b { color: var(--primary); }
 
-.body { padding: 5mm 8mm 6mm 8mm; }
-h2.section { color: var(--primary); font-size: 12pt; margin: 5mm 0 2mm 0;
-             padding-bottom: 1mm; border-bottom: 1px solid var(--light); }
-p.note { margin: 2mm 0; }
+.body { padding: 5mm 9mm 6mm; }
 
-table.inputs { border-collapse: collapse; width: 100%; margin: 2mm 0;
-               font-size: 9.5pt; }
+/* ---- narrative / abstract ---- */
+.abstract { background: var(--light); border-left: 3px solid var(--accent);
+  padding: 2.6mm 3.5mm; margin: 1mm 0 3mm; font-size: 9.8pt; }
+.abstract .lbl { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--primary); font-weight: 700; display: block; margin-bottom: 1mm; }
+
+h2.section { color: var(--primary); font-size: 11.6pt; margin: 6mm 0 1mm;
+  padding-bottom: 1.2mm; border-bottom: 1.5px solid var(--primary);
+  display: flex; align-items: baseline; gap: 2.5mm; }
+h2.section .num { font-size: 9.5pt; background: var(--primary); color: #fff;
+  border-radius: 3px; padding: .3mm 2mm; }
+p.intro { color: #33404f; margin: 1.4mm 0 2.5mm; font-size: 9.7pt; }
+p.note { margin: 1.6mm 0; }
+
+/* ---- inputs ---- */
+table.inputs { border-collapse: collapse; width: 100%; margin: 1.5mm 0 2mm;
+  font-size: 9.4pt; }
 table.inputs th { background: var(--primary); color: #fff; text-align: left;
-                  padding: 1.4mm 2.4mm; font-weight: 600; }
-table.inputs td { padding: 1.2mm 2.4mm; border-bottom: 1px solid #e6eaf0; }
-table.inputs tr:nth-child(even) td { background: var(--light); }
-table.inputs td svg { vertical-align: middle; }
+  padding: 1.3mm 2.4mm; font-weight: 600; }
+table.inputs td { padding: 1.1mm 2.4mm; border: none;
+  border-bottom: 1px solid #e7ebf1; }
+table.inputs tr:nth-child(even) td { background: #f6f8fb; }
+table.inputs td.sym svg { vertical-align: middle; }
+table.inputs td.ref { color: var(--muted); font-style: italic; font-size: 8.4pt;
+  text-align: right; white-space: nowrap; }
 
-.step { break-inside: avoid; margin: 2.5mm 0; padding-left: 3mm;
-        border-left: 2.5px solid var(--accent); }
-.step .desc { font-weight: 600; color: var(--primary); margin-bottom: 1mm;
-             font-size: 9.5pt; }
-.step .clause { font-weight: 400; color: #7a828e; font-size: 8.5pt; }
-.mline { margin: .6mm 0 .6mm 6mm; overflow-x: auto; }
+/* ---- calculation steps ---- */
+.step { break-inside: avoid; margin: 2.6mm 0; padding-left: 3mm;
+  border-left: 2.5px solid var(--accent); }
+.step .lead { font-weight: 600; color: var(--primary); font-size: 9.7pt;
+  margin-bottom: .6mm; }
+.eqrow { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 6mm; }
+.eqrow .eq { flex: 1 1 auto; min-width: 0; }
+.eqrow .clause { flex: 0 0 auto; color: var(--muted); font-style: italic;
+  font-size: 8.4pt; text-align: right; max-width: 46mm; padding-top: 1mm; }
+.mline { margin: .5mm 0 .5mm 6mm; overflow-x: auto; }
 .mline.first { margin-left: 0; }
+.result svg { }
 .compact { break-inside: avoid; margin: 1.4mm 0; padding-left: 3mm;
-           border-left: 2.5px solid var(--accent); }
-.mfallback { font-family: "Consolas", monospace; font-size: 9pt; color: #445; }
+  border-left: 2.5px solid var(--accent); display: flex;
+  justify-content: space-between; gap: 6mm; }
+.compact .clause { color: var(--muted); font-style: italic; font-size: 8.4pt; }
+.mfallback { font-family: "Consolas",monospace; font-size: 9pt; color: #445; }
 
-.check { break-inside: avoid; display: flex; align-items: center; gap: 3mm;
-         margin: 2.5mm 0; padding: 2mm 3mm; border-radius: 3px; }
-.check.ok { background: #E9F6EC; border-left: 4px solid var(--ok); }
-.check.no { background: #FCEBEB; border-left: 4px solid var(--not-ok); }
-.verdict { font-weight: 800; color: #fff; padding: .8mm 3mm; border-radius: 3px;
-           letter-spacing: .5px; font-size: 9pt; white-space: nowrap; }
+/* invisible-but-selectable plain text of each equation (copy/paste + AI).
+   MUST stay in normal flow and painted (white, tiny) — off-screen/absolute
+   text is clipped out of the printed PDF and would not be extractable. */
+.sr { display: block; color: #fff; font-family: "Consolas",monospace;
+  font-size: 2px; line-height: 1; margin: 0; user-select: all;
+  white-space: pre-wrap; word-break: break-all; }
+
+/* ---- verification panels ---- */
+.checks-head { margin-top: 2mm; }
+.check { break-inside: avoid; margin: 2.4mm 0; border-radius: 5px;
+  border: 1px solid; display: flex; align-items: stretch; overflow: hidden; }
+.check.ok { border-color: var(--ok); background: #eaf6ec; }
+.check.no { border-color: var(--not-ok); background: #fcecec; }
+.check .verdict { display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; letter-spacing: .6px; padding: 0 4mm;
+  font-size: 11pt; min-width: 22mm; }
 .check.ok .verdict { background: var(--ok); }
 .check.no .verdict { background: var(--not-ok); }
+.check .body2 { padding: 2mm 3.5mm; flex: 1; }
+.check .body2 .desc { font-weight: 600; color: var(--primary); font-size: 9.6pt;
+  margin-bottom: .6mm; }
+.check .body2 .crit { overflow-x: auto; }
+.check .body2 .clause { color: var(--muted); font-style: italic; font-size: 8.2pt;
+  margin-top: .8mm; }
 
-/* Machine-readable layer: present in page content, visually silent. */
-.mr-data { color: #ffffff; font-family: monospace; font-size: 3px;
-           line-height: 1.05; word-break: break-all; white-space: pre-wrap;
-           user-select: all; }
+/* machine-readable layer: in normal flow, painted white & tiny so it is
+   extractable by pdftotext (reconstruct_from_pdf) yet visually silent. */
+.mr-data { color: #fff; font-family: monospace; font-size: 3px;
+  line-height: 1.05; word-break: break-all; white-space: pre-wrap;
+  user-select: all; }
 
 @media print {
   html, body { background: #fff; }
   @page { size: A4; margin: 7mm 6mm; }
   .sheet { width: auto; margin: 0; box-shadow: none; }
-  .body { padding: 3mm 5mm; }
+  .body { padding: 3mm 6mm; }
 }
 </style>
 </head><body>
@@ -108,14 +142,14 @@ table.inputs td svg { vertical-align: middle; }
 <div class="cell">Ramboll</div>
 </div></td></tr></tfoot>
 <tbody><tr><td><div class="body">
-<h2 class="section">1. Input Parameters</h2>
+<h2 class="section"><span class="num">1</span>Input Parameters</h2>
 <table class="inputs"><thead><tr><th>Symbol</th><th>Value</th><th>Unit</th><th>Description</th></tr></thead><tbody>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="42pt" height="11pt" viewBox="0 0 42 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="42pt" height="11pt" viewBox="0 0 42 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.912513</dc:date>
+    <dc:date>2026-07-19T07:05:53.525314</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -327,12 +361,12 @@ z
  </g>
 </svg>
 </td><td>1</td><td></td><td>beam_h1</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="33pt" height="12pt" viewBox="0 0 33 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="33pt" height="12pt" viewBox="0 0 33 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.945362</dc:date>
+    <dc:date>2026-07-19T07:05:53.533808</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -501,12 +535,12 @@ z
  </g>
 </svg>
 </td><td>6</td><td>m</td><td>Span L (m)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="50pt" height="12pt" viewBox="0 0 50 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="50pt" height="12pt" viewBox="0 0 50 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.956104</dc:date>
+    <dc:date>2026-07-19T07:05:53.543940</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -753,12 +787,12 @@ z
  </g>
 </svg>
 </td><td>12</td><td>kN/m</td><td>Line load w (kN/m)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="93pt" height="12pt" viewBox="0 0 93 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="93pt" height="12pt" viewBox="0 0 93 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.972612</dc:date>
+    <dc:date>2026-07-19T07:05:53.556308</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1138,12 +1172,12 @@ z
  </g>
 </svg>
 </td><td>324</td><td>cm3</td><td>Section modulus Wel (cm3)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="35pt" height="13pt" viewBox="0 0 35 13" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="35pt" height="13pt" viewBox="0 0 35 13" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.986235</dc:date>
+    <dc:date>2026-07-19T07:05:53.568339</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1316,12 +1350,12 @@ z
  </g>
 </svg>
 </td><td>355</td><td>MPa</td><td>Yield fy (MPa)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="49pt" height="11pt" viewBox="0 0 49 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="49pt" height="11pt" viewBox="0 0 49 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:43.998074</dc:date>
+    <dc:date>2026-07-19T07:05:53.576659</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1602,13 +1636,13 @@ z
 </svg>
 </td><td>1</td><td></td><td>factors_b2</td></tr>
 </tbody></table>
-<h2 class="section">2. Calculation</h2>
-<div class="step"><div class="desc">Moment M (kNm)</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="143pt" height="20pt" viewBox="0 0 143 20" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<h2 class="section"><span class="num">2</span>Calculation</h2>
+<div class="step"><div class="lead">Moment M (kNm)</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="143pt" height="20pt" viewBox="0 0 143 20" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.018277</dc:date>
+    <dc:date>2026-07-19T07:05:53.594579</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2105,7 +2139,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.041647</dc:date>
+    <dc:date>2026-07-19T07:05:53.614124</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2282,7 +2316,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.054374</dc:date>
+    <dc:date>2026-07-19T07:05:53.624148</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2433,13 +2467,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Bending stress sigma (MPa)</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="337pt" height="18pt" viewBox="0 0 337 18" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">Moment_M = Line_load_w*Span_L**2/8 = 54 kNm</span></div></div></div>
+<div class="step"><div class="lead">Bending stress sigma (MPa)</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="337pt" height="18pt" viewBox="0 0 337 18" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.083120</dc:date>
+    <dc:date>2026-07-19T07:05:53.646498</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3165,7 +3199,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.118665</dc:date>
+    <dc:date>2026-07-19T07:05:53.673831</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3378,7 +3412,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.139521</dc:date>
+    <dc:date>2026-07-19T07:05:53.688308</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3562,14 +3596,14 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<h2 class="section">3. Verification</h2>
-<div class="check ok"><span class="verdict">OK</span><span><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="288pt" height="14pt" viewBox="0 0 288 14" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">Bending_stress_sigma = Moment_M*1000/Section_modulus_Wel*factors_b2 = 166.7 MPa</span></div></div></div>
+<h2 class="section"><span class="num">3</span>Verification</h2>
+<div class="check ok"><div class="verdict">OK</div><div class="body2"><div class="crit"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="288pt" height="14pt" viewBox="0 0 288 14" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:44.164806</dc:date>
+    <dc:date>2026-07-19T07:05:53.706641</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -4188,6 +4222,6 @@ z
   </g>
  </g>
 </svg>
-</span></div>
-<div class="mr-data">@@CALCSHEET/1@@H4sIAKRmXGoC/8WWW0/bMBTH3/MprDx1FaVJgO6iTZrY0yQ6IVXaNG2TZZxT6tVxMl+ACvHdsZ0mOMOAJtHRN/ucY//+7rnkOkkVXUFF0ncoVVoaqo0kfELYRNc1pyvCxJQSTtUKQH/M070kdQbMSh/BqoZvsDJNU0sNJVYagOMzIBX+YxhdY3s4Xfsopjm4mIWPQYsuBi1cDDq2MeinKbL8EPlQ1IeWoKhkjWa1cAe4LQlLkCAodBvE6FUtu1Uj699A9Z33BVPb6Gzfi6ASiL3c7RRZMZtkryf5W2dgGiplt38k10m6ZqLVaQ9z8dYuSOUv/Swao9EpkXatQaoHQI1gPcYF4cbFCsO5XcJVI0GpwLkhSnmmrYeGqz6Y6Lravnqa3OyFdMyhhGz+/Vd5BCmwxMjy/WynYIuGCHwS4XIGdIJG1asQrQrZZjtmO2ECMK9JiS8jgM6KnBVdotH6y3QI6jYG71js+iHbhMRVXRpuFP4GPPaqrRfaeiHrhUa0Ohiw23WIflAc7pj9OwNe4uUmAuxNaLlBo/kpGVDa9YDy6GjHlEtCdS0VPisinEPjf6ikSAP6ZLuy4aTbfqHe42ZDSDWvKxAazyNIrQnNXf38XT6D6jmKZWBQnuO2jYzHxfTNM6IfgyiZOLczzF2LFTuvSETG1g21bsi7PZmv+Wy2Pxv87gnsXm6cZ1k2jRT4eJh1z5dJX0GyJaMvnkrdvH/sD3n/4ZH28U+kT5/e67DfRfCojuSX/8pQhmv37WBFdYO26wTbydeNsXDY9OMi1tTvGnJPdtf9goTo7unrry+jaFrHMtL9Hf757knwinsF7VgeKugnYFxDN2QCDV2FDDT4iwIJXWd4QIM/w2P73FF48I8lN7fO3z2J3goAAA==@@END@@</div>
+</div></div></div>
+<div class="mr-data">@@CALCSHEET/1@@H4sIAFF3XGoC/81WW2vbMBR+968QecrC0thum13YYHRPg2YUAhtjG0KVTxotsuzp0gul/32SHLnyqraMQVO/HZ1zpO/zuV5nI0XXUJPRWzRSWhqqjSR8SthUNw2na8LEjBJO1RpAfyhGL7ORU2BWeQ9Wt/wKK9O2jdRQYaUBOD4FUuPfhtENtpfTjfdimoPzWXoftAw+aOl80JH1QT9MmRcHyLui3rUCRSVrNWuEu8AdSViBBEEhHBCj140MUiubX0D1rfU5U1vvfM+ToBKIfdydlHk5n+avpsUbp2AaamWPv2fX2WjDRMfTXub8rV6Q2j/6SbRGoxMiraxBqnuAGsF6GOeEG+crDOdWhMtWglKRcUuU8pi2Fhoue2eim3r715M/gAktGy9kNy9j7MwBjZH76KyLBOBIk8Jd7OU7hL1sicDHCdROgY7RuH4RA69j5POdIj9mAjBvSIUvEvCdFjktukDjzefZkIY7GMSg3G0QukLAdVMZbhT+CjwVkc4Kba2QtUJjWu8PmFk5JrZfHuyU2TcGvMKrqwQdr0KrKzRenJABBysPOBwe7pTDilDdSIVPywSLoXLn9Z1oqR/tnDGchONn2U3dLIwxL5oahMaLBOBOhRauqv8u6kFNH6YyP2oak671TSbl7PWTETsCUTFxZie6A4UVO6tJguTWDHVmyJs9WifFfL43H3x36If/OinyPJ8l2s5kmM9PlaNfQLIVo888ScPm9FAw371/oOX9E4/Hb+9Z2g0T/oNl9tNbKMO129Es5bCyhO613RLCyI9Hbz88U0PsdgD1uG/7eZRq4Z2+7vvyTRZMKtddsPzPvUPB8+0ZdCvMkEG/D6Q5hKEacQi1N+DgH4oohI50Dwd/h4ftM0vhQTyzmz/lNx+TRgwAAA==@@END@@</div>
 </div></td></tr></tbody></table></body></html>

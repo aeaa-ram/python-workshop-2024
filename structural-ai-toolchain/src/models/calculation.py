@@ -55,6 +55,10 @@ _COMPARATORS = ("<=", ">=", "==", "<", ">")
 
 def fmt_number(value: float, sig: int = 4) -> str:
     """Format a number with sensible significant digits for reports."""
+    import math
+
+    if value is None or (isinstance(value, float) and not math.isfinite(value)):
+        return "n/a"
     if value == 0:
         return "0"
     if abs(value) >= 1e6 or abs(value) < 1e-4:
@@ -102,6 +106,8 @@ class CalcItem:
     passed: Optional[bool] = None   # only for checks
     text: str = ""                  # only for 'text' items
     atom_id: str = ""               # library atom this step reuses, if any
+    reference: str = ""             # code clause, shown right-aligned italic
+    intro: str = ""                 # narrative shown under a section heading
 
 
 class CalcSheetError(Exception):
@@ -148,8 +154,10 @@ class CalcSheet:
     # ------------------------------------------------------------------ #
     # Authoring API
     # ------------------------------------------------------------------ #
-    def section(self, heading: str) -> CalcItem:
-        item = CalcItem(kind="section", name=heading)
+    def section(self, heading: str, intro: str = "") -> CalcItem:
+        """A numbered section heading, with optional narrative intro that
+        explains what the section does (the report 'tells a story')."""
+        item = CalcItem(kind="section", name=heading, intro=intro)
         self.items.append(item)
         return item
 
@@ -165,6 +173,7 @@ class CalcSheet:
         unit: str = "",
         description: str = "",
         latex: Optional[str] = None,
+        reference: str = "",
     ) -> CalcItem:
         """Declare an input parameter."""
         self._register(name, float(value), unit, description, latex)
@@ -175,6 +184,7 @@ class CalcSheet:
             unit=unit,
             description=description,
             latex_lhs=self._latex_symbol(name),
+            reference=reference,
         )
         self.items.append(item)
         return item
@@ -186,11 +196,14 @@ class CalcSheet:
         unit: str = "",
         description: str = "",
         latex: Optional[str] = None,
+        reference: str = "",
     ) -> CalcItem:
         """Declare a derived quantity from a formula string.
 
         The formula may reference any previously defined variable and the
         functions sqrt/min/max/abs/sin/cos/tan/log/exp and the constant pi.
+        ``reference`` is the code clause, shown right-aligned in italic
+        next to the equation (Mathcad-style margin reference).
         """
         expr = self._parse(expression)
         value = self._evaluate(expr, expression)
@@ -204,6 +217,13 @@ class CalcSheet:
         symbolic = self._latex_expr(display)
         substituted = self._latex_substituted(display)
         self._register(name, value, unit, description, latex)
+        # a trailing "[clause]" in the description doubles as the reference
+        if not reference:
+            import re as _re
+            m = _re.search(r"\[([^\]]+)\]\s*$", description)
+            if m:
+                reference = m.group(1).strip()
+                description = description[: m.start()].strip()
         item = CalcItem(
             kind="calc",
             name=name,
@@ -214,11 +234,13 @@ class CalcSheet:
             latex_lhs=self._latex_symbol(name),
             latex_symbolic=symbolic,
             latex_substituted=substituted,
+            reference=reference,
         )
         self.items.append(item)
         return item
 
-    def check(self, expression: str, description: str = "") -> CalcItem:
+    def check(self, expression: str, description: str = "",
+              reference: str = "") -> CalcItem:
         """Declare a pass/fail verification, e.g. ``"w_k <= w_max"``."""
         comparator = next((c for c in _COMPARATORS if c in expression), None)
         if comparator is None:
@@ -252,6 +274,7 @@ class CalcSheet:
             expression=expression,
             latex_symbolic=sym,
             passed=bool(passed),
+            reference=reference,
         )
         self.items.append(item)
         return item
@@ -436,6 +459,8 @@ class CalcSheet:
                     "passed": i.passed,
                     "text": i.text,
                     "atom_id": i.atom_id,
+                    "reference": i.reference,
+                    "intro": i.intro,
                 }
                 for i in self.items
             ],
@@ -516,12 +541,21 @@ class CalcSheet:
             return self._parse(expression)
 
     def _evaluate(self, expr: sp.Expr, source: str) -> float:
+        import math
+
         subs = {sp.Symbol(n): sp.Float(v) for n, v in self.values.items()}
         result = expr.xreplace(subs)
         result = sp.N(result)
         if not result.is_number:
             raise CalcSheetError(f"Expression {source!r} did not evaluate")
-        return float(result)
+        out = float(result)
+        if not math.isfinite(out):
+            # a division by an unresolved (0) upstream value, etc. — treat
+            # as unevaluable so it is flagged, not silently propagated.
+            raise CalcSheetError(
+                f"Expression {source!r} is non-finite ({out}); an upstream "
+                "value is unresolved")
+        return out
 
     def _pretty(self, name: str) -> str:
         """LaTeX for a symbol: explicit override, else naming convention."""

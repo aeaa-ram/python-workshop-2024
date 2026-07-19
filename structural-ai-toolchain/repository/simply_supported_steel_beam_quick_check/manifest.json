@@ -98,6 +98,11 @@
       "location": "Factors!B2",
       "issue": "magic-number",
       "question": "Cell Factors!B2 = 1 has no adjacent label. What quantity is it?"
+    },
+    {
+      "location": "Beam!C9",
+      "issue": "untranslatable-function",
+      "question": "'Utilisation_check' at Beam!C9 uses ['IF'] which reads external/lookup data. Confirm the intended value or provide the underlying formula."
     }
   ],
   "formula_analysis": [

@@ -168,26 +168,65 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
     lines.append(f"        tool_id={slug!r},")
     lines.append("    )")
 
+    # Mirror ParsedTool.to_sheet's resilience: emit calc()/check() only for
+    # expressions that actually evaluate given the available inputs, so the
+    # generated tool never crashes on load. Unresolvable formulas (e.g. ones
+    # that referenced a Mathcad matrix/vector we couldn't translate) are
+    # emitted as an input with an [unresolved formula] note instead.
+    from src.models.calculation import CalcSheet, CalcSheetError
+
+    probe = CalcSheet(title=parsed.title)
     inputs = [v for v in parsed.variables if v.role == "input"]
     derived = [v for v in parsed.variables if v.role == "derived"]
     if inputs:
         lines.append('    sheet.section("Input Parameters")')
         for var in inputs:
+            val = var.value if var.value is not None else 0.0
             lines.append(
-                f"    sheet.define({var.name!r}, {var.value!r}, "
+                f"    sheet.define({var.name!r}, {val!r}, "
                 f"unit={var.unit!r}, description={var.description!r})"
             )
+            try:
+                probe.define(var.name, val, unit=var.unit)
+            except CalcSheetError:
+                pass
     if derived:
         lines.append('    sheet.section("Calculation")')
         for var in derived:
-            lines.append(
-                f"    sheet.calc({var.name!r}, {var.expression!r}, "
-                f"unit={var.unit!r}, description={var.description!r})"
-            )
+            ok = True
+            try:
+                probe.calc(var.name, var.expression, unit=var.unit)
+            except CalcSheetError:
+                ok = False
+            if ok:
+                lines.append(
+                    f"    sheet.calc({var.name!r}, {var.expression!r}, "
+                    f"unit={var.unit!r}, description={var.description!r})"
+                )
+            else:
+                note = (var.description + " [unresolved formula: "
+                        + var.expression + "]").strip()
+                fallback = var.value if var.value is not None else 0.0
+                lines.append(
+                    f"    sheet.define({var.name!r}, {fallback!r}, "
+                    f"unit={var.unit!r}, description={note!r})"
+                )
+                try:
+                    probe.define(var.name, fallback, unit=var.unit)
+                except CalcSheetError:
+                    pass
     if parsed.checks:
-        lines.append('    sheet.section("Verification")')
+        emitted = []
         for chk in parsed.checks:
-            lines.append(f"    sheet.check({chk!r})")
+            try:
+                probe.check(chk)
+                emitted.append(chk)
+            except CalcSheetError:
+                pass
+        if emitted:
+            lines.append('    sheet.section("Verification")')
+            for chk in emitted:
+                lines.append(f"    sheet.check({chk!r})")
     lines.append("    return sheet")
     lines.append("")
     lines.append("")

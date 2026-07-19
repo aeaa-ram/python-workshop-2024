@@ -18,7 +18,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -29,7 +31,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -40,7 +44,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -51,7 +57,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -62,7 +70,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -73,40 +83,48 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
       "name": "beta_cc_t",
-      "description": "Concrete strength development coefficient at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.2)]",
+      "description": "Concrete strength development coefficient at age t",
       "unit": "-",
       "value": 0.7788007830714049,
       "expression": "exp(s_cem*(1 - sqrt(28/t)))",
       "passed": null,
       "text": "",
-      "atom_id": "ec2.concrete.beta_cc_t"
+      "atom_id": "ec2.concrete.beta_cc_t",
+      "reference": "EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.2)",
+      "intro": ""
     },
     {
       "kind": "calc",
       "name": "f_cm_t",
-      "description": "Mean concrete compressive strength at age t [EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.1)]",
+      "description": "Mean concrete compressive strength at age t",
       "unit": "MPa",
       "value": 29.594429756713385,
       "expression": "beta_cc_t * f_cm",
       "passed": null,
       "text": "",
-      "atom_id": "ec2.concrete.f_cm_t"
+      "atom_id": "ec2.concrete.f_cm_t",
+      "reference": "EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.1)",
+      "intro": ""
     },
     {
       "kind": "calc",
       "name": "E_cm_t",
-      "description": "Secant modulus of elasticity at age t [EN 1992-1-1:2004 \u00a73.1.3(3), Eq. (3.5)]",
+      "description": "Secant modulus of elasticity at age t",
       "unit": "MPa",
       "value": 30464.31286057069,
       "expression": "(f_cm_t / f_cm)**0.3 * E_cm",
       "passed": null,
       "text": "",
-      "atom_id": "ec2.concrete.E_cm_t"
+      "atom_id": "ec2.concrete.E_cm_t",
+      "reference": "EN 1992-1-1:2004 \u00a73.1.3(3), Eq. (3.5)",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -117,7 +135,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "check",
@@ -128,7 +148,9 @@
       "expression": "E_cm_t <= E_cm",
       "passed": true,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     }
   ],
   "results": {

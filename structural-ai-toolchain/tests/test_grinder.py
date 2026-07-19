@@ -63,9 +63,20 @@ def test_grind_notebook(tmp_path):
     assert manifest["checks"] == ["sigma_m <= f_m"]
 
 
-def test_mcdx_mock_flags_manual_conversion(tmp_path):
+def test_mcdx_parser_handles_unreadable_container(tmp_path):
+    # a non-zip .mcdx must warn (not crash) — the real parser degrades
+    # gracefully just like the AI grinder does
     fake = tmp_path / "legacy_tool.mcdx"
     fake.write_bytes(b"not a zip")
     tool = get_parser(fake).parse(fake)
     assert tool.source_format == "mcdx"
-    assert any("MOCK PARSER" in w for w in tool.warnings)
+    assert tool.warnings  # some warning about the container
+
+
+def test_mcdx_translates_operator_tree():
+    # the ml: operator-tree translator turns Mathcad math into our syntax
+    from src.ingestion.mathcad_parser import _slug, _clean_code_ref
+
+    assert _slug("γ") == "gamma"
+    assert _slug("t_s") == "t_s"
+    assert _clean_code_ref("EN 199 4 -1-1") == "EN 1994-1-1"

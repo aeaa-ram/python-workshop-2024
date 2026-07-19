@@ -42,19 +42,19 @@ f_{cm} & 38 & MPa & Mean compressive strength at 28 days (C30/37) \\
 E_{cm} & 32837 & MPa & Secant modulus at 28 days (C30/37) \\
 \end{tabular}\par\vspace{8pt}
 \section*{\color{BrandPrimary}2.\ Calculation (all formulas from the shared library)}
-\noindent\textbf{Concrete strength development coefficient at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.2)]}
+\noindent\textbf{Concrete strength development coefficient at age t}
 \begin{align*}
 \beta_{cc,t} &= e^{s_{cem} \cdot \left(1 - \sqrt{\frac{28}{t}}\right)} \\
 &= e^{0.25 \cdot \left(1 - \sqrt{\frac{28}{7}}\right)} \\
 &= \mathbf{0.7788}
 \end{align*}
-\noindent\textbf{Mean concrete compressive strength at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.1)]}
+\noindent\textbf{Mean concrete compressive strength at age t}
 \begin{align*}
 f_{cm,t} &= \beta_{cc,t} \cdot f_{cm} \\
 &= 0.7788 \cdot 38 \\
 &= \mathbf{29.59}\ \mathrm{MPa}
 \end{align*}
-\noindent\textbf{Secant modulus of elasticity at age t [EN 1992-1-1:2004 §3.1.3(3), Eq. (3.5)]}
+\noindent\textbf{Secant modulus of elasticity at age t}
 \begin{align*}
 E_{cm,t} &= E_{cm} \cdot \left(\frac{f_{cm,t}}{f_{cm}}\right)^{0.3} \\
 &= 32837 \cdot \left(\frac{29.59}{38}\right)^{0.3} \\

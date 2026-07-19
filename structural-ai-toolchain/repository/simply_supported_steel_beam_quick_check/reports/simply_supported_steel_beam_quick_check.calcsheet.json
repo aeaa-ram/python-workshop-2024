@@ -18,7 +18,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -29,7 +31,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -40,7 +44,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -51,7 +57,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -62,7 +70,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -73,7 +83,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -84,7 +96,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -95,7 +109,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -106,7 +122,9 @@
       "expression": "Line_load_w*Span_L**2/8",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -117,7 +135,9 @@
       "expression": "Moment_M*1000/Section_modulus_Wel*factors_b2",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -128,7 +148,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "check",
@@ -139,7 +161,9 @@
       "expression": "Bending_stress_sigma<=Yield_fy",
       "passed": true,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     }
   ],
   "results": {

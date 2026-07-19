@@ -4,91 +4,125 @@
 <title>Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)</title>
 <style>
 :root {
-  --primary: #0033A0;
-  --accent: #00A0D2;
-  --light: #EEF2F8;
-  --ok: #1E7D32;
-  --not-ok: #C62828;
+  --primary: #0033A0; --accent: #00A0D2; --light: #EEF2F8;
+  --ok: #1E7D32; --not-ok: #C62828;
+  --ink: #1c2530; --muted: #6b7686; --rule: #d7dee8;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #f4f5f7; }
-body { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-       color: #1a202c; font-size: 10.5pt; }
+html, body { margin: 0; padding: 0; background: #eef1f5; }
+body { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif;
+  color: var(--ink); font-size: 10.2pt; line-height: 1.4; }
 
-/* Page = a table so the header (thead) and footer (tfoot) repeat on
-   every printed page and never overlap the flowing body (tbody). This
-   is the most reliable running-header technique in headless Chromium.
-   The black Mathcad-style frame is the border on the body cell. */
 .sheet { width: 210mm; margin: 8mm auto; background: #fff;
-         border-collapse: collapse; box-shadow: 0 2px 10px rgba(0,0,0,.18); }
-.sheet > thead, .sheet > tfoot { display: table-header-group; }
-.sheet > tfoot { display: table-footer-group; }
-.sheet td { padding: 0; border: 1.4pt solid #111; }
+  border-collapse: collapse; box-shadow: 0 2px 12px rgba(0,0,0,.16); }
+.sheet td { padding: 0; border: 1.3pt solid #111; }
+
+/* ---- cartouche (repeats every printed page) ---- */
 .cartouche { border-bottom: 2.5px solid var(--primary); }
 .cart-row { display: flex; align-items: stretch; }
-.cart-logo { padding: 4mm 5mm; display: flex; align-items: center;
-             border-right: 1px solid #d3d9e3; }
-.cart-logo svg, .logo-img { height: 9mm; width: auto; }
-.cart-title { flex: 1; padding: 3mm 5mm; }
-.cart-title .proj { font-size: 8.5pt; color: #5a6472; text-transform: uppercase;
-                    letter-spacing: .5px; }
-.cart-title h1 { font-size: 14pt; color: var(--primary); margin: 1mm 0 0 0; }
-.cart-status { padding: 3mm 5mm; text-align: right; border-left: 1px solid #d3d9e3;
-               min-width: 34mm; font-size: 8.5pt; color: #5a6472; }
-.cart-status .badge { display: inline-block; margin-top: 1mm; padding: .8mm 2.4mm;
-                      background: var(--accent); color: #fff; border-radius: 2px;
-                      font-weight: 700; letter-spacing: .5px; }
-
-/* Footer cartouche */
-.foot { border-top: 1.5px solid var(--primary); display: flex;
-        font-size: 8pt; color: #47505e; }
-.foot .cell { padding: 2mm 4mm; border-right: 1px solid #d3d9e3; }
-.foot .cell:last-child { border-right: none; margin-left: auto; text-align: right; }
+.cart-logo { padding: 3.5mm 5mm; display: flex; align-items: center;
+  border-right: 1px solid var(--rule); }
+.cart-logo svg, .logo-img { height: 8.5mm; width: auto; }
+.cart-title { flex: 1; padding: 2.6mm 5mm; }
+.cart-title .proj { font-size: 8pt; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px; }
+.cart-title h1 { font-size: 13.5pt; color: var(--primary); margin: .6mm 0 0; }
+.cart-title .ref { font-size: 8.4pt; color: var(--accent); margin-top: .4mm; }
+.cart-status { padding: 2.6mm 5mm; text-align: right;
+  border-left: 1px solid var(--rule); min-width: 33mm; font-size: 8pt;
+  color: var(--muted); }
+.cart-status .badge { display: inline-block; margin-top: 1mm; padding: .7mm 2.4mm;
+  background: var(--accent); color: #fff; border-radius: 2px; font-weight: 700;
+  letter-spacing: .5px; }
+.foot { border-top: 1.5px solid var(--primary); display: flex; font-size: 7.8pt;
+  color: #4a5361; }
+.foot .cell { padding: 1.7mm 4mm; border-right: 1px solid var(--rule); }
+.foot .cell:last-child { border-right: none; margin-left: auto; }
 .foot b { color: var(--primary); }
 
-.body { padding: 5mm 8mm 6mm 8mm; }
-h2.section { color: var(--primary); font-size: 12pt; margin: 5mm 0 2mm 0;
-             padding-bottom: 1mm; border-bottom: 1px solid var(--light); }
-p.note { margin: 2mm 0; }
+.body { padding: 5mm 9mm 6mm; }
 
-table.inputs { border-collapse: collapse; width: 100%; margin: 2mm 0;
-               font-size: 9.5pt; }
+/* ---- narrative / abstract ---- */
+.abstract { background: var(--light); border-left: 3px solid var(--accent);
+  padding: 2.6mm 3.5mm; margin: 1mm 0 3mm; font-size: 9.8pt; }
+.abstract .lbl { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--primary); font-weight: 700; display: block; margin-bottom: 1mm; }
+
+h2.section { color: var(--primary); font-size: 11.6pt; margin: 6mm 0 1mm;
+  padding-bottom: 1.2mm; border-bottom: 1.5px solid var(--primary);
+  display: flex; align-items: baseline; gap: 2.5mm; }
+h2.section .num { font-size: 9.5pt; background: var(--primary); color: #fff;
+  border-radius: 3px; padding: .3mm 2mm; }
+p.intro { color: #33404f; margin: 1.4mm 0 2.5mm; font-size: 9.7pt; }
+p.note { margin: 1.6mm 0; }
+
+/* ---- inputs ---- */
+table.inputs { border-collapse: collapse; width: 100%; margin: 1.5mm 0 2mm;
+  font-size: 9.4pt; }
 table.inputs th { background: var(--primary); color: #fff; text-align: left;
-                  padding: 1.4mm 2.4mm; font-weight: 600; }
-table.inputs td { padding: 1.2mm 2.4mm; border-bottom: 1px solid #e6eaf0; }
-table.inputs tr:nth-child(even) td { background: var(--light); }
-table.inputs td svg { vertical-align: middle; }
+  padding: 1.3mm 2.4mm; font-weight: 600; }
+table.inputs td { padding: 1.1mm 2.4mm; border: none;
+  border-bottom: 1px solid #e7ebf1; }
+table.inputs tr:nth-child(even) td { background: #f6f8fb; }
+table.inputs td.sym svg { vertical-align: middle; }
+table.inputs td.ref { color: var(--muted); font-style: italic; font-size: 8.4pt;
+  text-align: right; white-space: nowrap; }
 
-.step { break-inside: avoid; margin: 2.5mm 0; padding-left: 3mm;
-        border-left: 2.5px solid var(--accent); }
-.step .desc { font-weight: 600; color: var(--primary); margin-bottom: 1mm;
-             font-size: 9.5pt; }
-.step .clause { font-weight: 400; color: #7a828e; font-size: 8.5pt; }
-.mline { margin: .6mm 0 .6mm 6mm; overflow-x: auto; }
+/* ---- calculation steps ---- */
+.step { break-inside: avoid; margin: 2.6mm 0; padding-left: 3mm;
+  border-left: 2.5px solid var(--accent); }
+.step .lead { font-weight: 600; color: var(--primary); font-size: 9.7pt;
+  margin-bottom: .6mm; }
+.eqrow { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 6mm; }
+.eqrow .eq { flex: 1 1 auto; min-width: 0; }
+.eqrow .clause { flex: 0 0 auto; color: var(--muted); font-style: italic;
+  font-size: 8.4pt; text-align: right; max-width: 46mm; padding-top: 1mm; }
+.mline { margin: .5mm 0 .5mm 6mm; overflow-x: auto; }
 .mline.first { margin-left: 0; }
+.result svg { }
 .compact { break-inside: avoid; margin: 1.4mm 0; padding-left: 3mm;
-           border-left: 2.5px solid var(--accent); }
-.mfallback { font-family: "Consolas", monospace; font-size: 9pt; color: #445; }
+  border-left: 2.5px solid var(--accent); display: flex;
+  justify-content: space-between; gap: 6mm; }
+.compact .clause { color: var(--muted); font-style: italic; font-size: 8.4pt; }
+.mfallback { font-family: "Consolas",monospace; font-size: 9pt; color: #445; }
 
-.check { break-inside: avoid; display: flex; align-items: center; gap: 3mm;
-         margin: 2.5mm 0; padding: 2mm 3mm; border-radius: 3px; }
-.check.ok { background: #E9F6EC; border-left: 4px solid var(--ok); }
-.check.no { background: #FCEBEB; border-left: 4px solid var(--not-ok); }
-.verdict { font-weight: 800; color: #fff; padding: .8mm 3mm; border-radius: 3px;
-           letter-spacing: .5px; font-size: 9pt; white-space: nowrap; }
+/* invisible-but-selectable plain text of each equation (copy/paste + AI).
+   MUST stay in normal flow and painted (white, tiny) — off-screen/absolute
+   text is clipped out of the printed PDF and would not be extractable. */
+.sr { display: block; color: #fff; font-family: "Consolas",monospace;
+  font-size: 2px; line-height: 1; margin: 0; user-select: all;
+  white-space: pre-wrap; word-break: break-all; }
+
+/* ---- verification panels ---- */
+.checks-head { margin-top: 2mm; }
+.check { break-inside: avoid; margin: 2.4mm 0; border-radius: 5px;
+  border: 1px solid; display: flex; align-items: stretch; overflow: hidden; }
+.check.ok { border-color: var(--ok); background: #eaf6ec; }
+.check.no { border-color: var(--not-ok); background: #fcecec; }
+.check .verdict { display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; letter-spacing: .6px; padding: 0 4mm;
+  font-size: 11pt; min-width: 22mm; }
 .check.ok .verdict { background: var(--ok); }
 .check.no .verdict { background: var(--not-ok); }
+.check .body2 { padding: 2mm 3.5mm; flex: 1; }
+.check .body2 .desc { font-weight: 600; color: var(--primary); font-size: 9.6pt;
+  margin-bottom: .6mm; }
+.check .body2 .crit { overflow-x: auto; }
+.check .body2 .clause { color: var(--muted); font-style: italic; font-size: 8.2pt;
+  margin-top: .8mm; }
 
-/* Machine-readable layer: present in page content, visually silent. */
-.mr-data { color: #ffffff; font-family: monospace; font-size: 3px;
-           line-height: 1.05; word-break: break-all; white-space: pre-wrap;
-           user-select: all; }
+/* machine-readable layer: in normal flow, painted white & tiny so it is
+   extractable by pdftotext (reconstruct_from_pdf) yet visually silent. */
+.mr-data { color: #fff; font-family: monospace; font-size: 3px;
+  line-height: 1.05; word-break: break-all; white-space: pre-wrap;
+  user-select: all; }
 
 @media print {
   html, body { background: #fff; }
   @page { size: A4; margin: 7mm 6mm; }
   .sheet { width: auto; margin: 0; box-shadow: none; }
-  .body { padding: 3mm 5mm; }
+  .body { padding: 3mm 6mm; }
 }
 </style>
 </head><body>
@@ -108,15 +142,15 @@ table.inputs td svg { vertical-align: middle; }
 <div class="cell">Ramboll</div>
 </div></td></tr></tfoot>
 <tbody><tr><td><div class="body">
-<p class="note">Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.</p>
-<h2 class="section">1. Input Parameters</h2>
+<div class="abstract"><span class="lbl">Purpose</span>Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.</div>
+<h2 class="section"><span class="num">1</span>Input Parameters</h2>
 <table class="inputs"><thead><tr><th>Symbol</th><th>Value</th><th>Unit</th><th>Description</th></tr></thead><tbody>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="10pt" viewBox="0 0 7 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="10pt" viewBox="0 0 7 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.101089</dc:date>
+    <dc:date>2026-07-19T07:05:50.267795</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -181,12 +215,12 @@ z
  </g>
 </svg>
 </td><td>1000</td><td>mm</td><td>Section width (per metre strip)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="9pt" viewBox="0 0 7 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="9pt" viewBox="0 0 7 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.107134</dc:date>
+    <dc:date>2026-07-19T07:05:50.272929</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -242,12 +276,12 @@ z
  </g>
 </svg>
 </td><td>300</td><td>mm</td><td>Section depth</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="10pt" viewBox="0 0 7 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="10pt" viewBox="0 0 7 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.112620</dc:date>
+    <dc:date>2026-07-19T07:05:50.277011</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -312,12 +346,12 @@ z
  </g>
 </svg>
 </td><td>260</td><td>mm</td><td>Effective depth</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="24pt" height="9pt" viewBox="0 0 24 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="24pt" height="9pt" viewBox="0 0 24 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.118973</dc:date>
+    <dc:date>2026-07-19T07:05:50.282279</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -464,12 +498,12 @@ z
  </g>
 </svg>
 </td><td>30</td><td>mm</td><td>Nominal concrete cover</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="8pt" height="12pt" viewBox="0 0 8 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="8pt" height="12pt" viewBox="0 0 8 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.126981</dc:date>
+    <dc:date>2026-07-19T07:05:50.288707</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -533,12 +567,12 @@ z
  </g>
 </svg>
 </td><td>16</td><td>mm</td><td>Bar diameter</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.133116</dc:date>
+    <dc:date>2026-07-19T07:05:50.293829</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -619,12 +653,12 @@ z
  </g>
 </svg>
 </td><td>1005</td><td>mm^2</td><td>Tension reinforcement area (5 H16)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="20pt" height="13pt" viewBox="0 0 20 13" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="20pt" height="13pt" viewBox="0 0 20 13" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.141148</dc:date>
+    <dc:date>2026-07-19T07:05:50.299561</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -737,12 +771,12 @@ z
  </g>
 </svg>
 </td><td>45</td><td>kNm</td><td>Quasi-permanent bending moment</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.148723</dc:date>
+    <dc:date>2026-07-19T07:05:50.305646</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -822,12 +856,12 @@ z
  </g>
 </svg>
 </td><td>200000</td><td>MPa</td><td>Steel modulus of elasticity</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="19pt" height="11pt" viewBox="0 0 19 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="19pt" height="11pt" viewBox="0 0 19 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.155952</dc:date>
+    <dc:date>2026-07-19T07:05:50.311515</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -938,12 +972,12 @@ z
  </g>
 </svg>
 </td><td>33000</td><td>MPa</td><td>Concrete secant modulus</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="26pt" height="12pt" viewBox="0 0 26 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="26pt" height="12pt" viewBox="0 0 26 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.167084</dc:date>
+    <dc:date>2026-07-19T07:05:50.320465</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1094,12 +1128,12 @@ z
  </g>
 </svg>
 </td><td>2.9</td><td>MPa</td><td>Effective concrete tensile strength</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="10pt" height="11pt" viewBox="0 0 10 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="10pt" height="11pt" viewBox="0 0 10 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.176934</dc:date>
+    <dc:date>2026-07-19T07:05:50.327714</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1172,12 +1206,12 @@ z
  </g>
 </svg>
 </td><td>0.4</td><td>-</td><td>Load duration factor (long term)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.184351</dc:date>
+    <dc:date>2026-07-19T07:05:50.333193</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1239,12 +1273,12 @@ z
  </g>
 </svg>
 </td><td>0.8</td><td>-</td><td>Bond factor (high-bond bars)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.191734</dc:date>
+    <dc:date>2026-07-19T07:05:50.339467</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1316,12 +1350,12 @@ z
  </g>
 </svg>
 </td><td>0.5</td><td>-</td><td>Strain distribution factor (bending)</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.198822</dc:date>
+    <dc:date>2026-07-19T07:05:50.345463</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1401,12 +1435,12 @@ z
  </g>
 </svg>
 </td><td>3.4</td><td>-</td><td>Code coefficient</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="12pt" height="11pt" viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.206223</dc:date>
+    <dc:date>2026-07-19T07:05:50.351103</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1473,12 +1507,12 @@ z
  </g>
 </svg>
 </td><td>0.425</td><td>-</td><td>Code coefficient</td></tr>
-<tr><td><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="27pt" height="9pt" viewBox="0 0 27 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="27pt" height="9pt" viewBox="0 0 27 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.215761</dc:date>
+    <dc:date>2026-07-19T07:05:50.359479</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1619,13 +1653,13 @@ z
 </svg>
 </td><td>0.3</td><td>mm</td><td>Allowable crack width (XC exposure)</td></tr>
 </tbody></table>
-<h2 class="section">2. Calculation</h2>
-<div class="step"><div class="desc">Modular ratio E_s/E_cm</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="45pt" height="18pt" viewBox="0 0 45 18" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<h2 class="section"><span class="num">2</span>Calculation</h2>
+<div class="step"><div class="lead">Modular ratio E_s/E_cm</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="45pt" height="18pt" viewBox="0 0 45 18" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.228297</dc:date>
+    <dc:date>2026-07-19T07:05:50.369194</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -1859,7 +1893,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.244803</dc:date>
+    <dc:date>2026-07-19T07:05:50.382125</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2004,7 +2038,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.256859</dc:date>
+    <dc:date>2026-07-19T07:05:50.444286</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2126,13 +2160,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Neutral axis depth (cracked section)</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="125pt" height="24pt" viewBox="0 0 125 24" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">alpha_e = E_s/E_cm = 6.061</span></div></div></div>
+<div class="step"><div class="lead">Neutral axis depth (cracked section)</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="125pt" height="24pt" viewBox="0 0 125 24" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.281822</dc:date>
+    <dc:date>2026-07-19T07:05:50.463472</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2524,7 +2558,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.409952</dc:date>
+    <dc:date>2026-07-19T07:05:50.495299</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2827,7 +2861,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.436450</dc:date>
+    <dc:date>2026-07-19T07:05:50.516009</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -2984,13 +3018,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Internal lever arm</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="51pt" height="15pt" viewBox="0 0 51 15" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">x = (alpha_e*A_s/b)*(sqrt(1+2*b*d/(alpha_e*A_s))-1) = 50.52 mm</span></div></div></div>
+<div class="step"><div class="lead">Internal lever arm</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="51pt" height="15pt" viewBox="0 0 51 15" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.448468</dc:date>
+    <dc:date>2026-07-19T07:05:50.525483</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3151,7 +3185,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.460845</dc:date>
+    <dc:date>2026-07-19T07:05:50.537216</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3364,7 +3398,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.476381</dc:date>
+    <dc:date>2026-07-19T07:05:50.548929</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3526,13 +3560,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Steel stress under quasi-permanent loads</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="140pt" height="17pt" viewBox="0 0 140 17" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">z = d-x/3 = 243.2 mm</span></div></div></div>
+<div class="step"><div class="lead">Steel stress under quasi-permanent loads</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="140pt" height="17pt" viewBox="0 0 140 17" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.494108</dc:date>
+    <dc:date>2026-07-19T07:05:50.563405</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -3811,7 +3845,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.517835</dc:date>
+    <dc:date>2026-07-19T07:05:50.582206</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -4039,7 +4073,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.536739</dc:date>
+    <dc:date>2026-07-19T07:05:50.597571</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -4241,13 +4275,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Effective tension zone height</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="197pt" height="16pt" viewBox="0 0 197 16" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">sigma_s = M_qp*1000000/(z*A_s) = 184.1 MPa</span></div></div></div>
+<div class="step"><div class="lead">Effective tension zone height</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="197pt" height="16pt" viewBox="0 0 197 16" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.560823</dc:date>
+    <dc:date>2026-07-19T07:05:50.616819</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -4724,7 +4758,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.600144</dc:date>
+    <dc:date>2026-07-19T07:05:50.648004</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -5110,7 +5144,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.630060</dc:date>
+    <dc:date>2026-07-19T07:05:50.672179</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -5314,13 +5348,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Effective reinforcement ratio</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="76pt" height="19pt" viewBox="0 0 76 19" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">h_c_eff = min(2.5*(h-d),(h-x)/3,h/2) = 83.16 mm</span></div></div></div>
+<div class="step"><div class="lead">Effective reinforcement ratio</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="76pt" height="19pt" viewBox="0 0 76 19" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.649559</dc:date>
+    <dc:date>2026-07-19T07:05:50.687297</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -5646,7 +5680,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.671800</dc:date>
+    <dc:date>2026-07-19T07:05:50.704048</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -5892,7 +5926,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.687947</dc:date>
+    <dc:date>2026-07-19T07:05:50.715926</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -6047,13 +6081,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Maximum crack spacing</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="161pt" height="19pt" viewBox="0 0 161 19" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">rho_p_eff = A_s/(b*h_c_eff) = 0.01208</span></div></div></div>
+<div class="step"><div class="lead">Maximum crack spacing</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="161pt" height="19pt" viewBox="0 0 161 19" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.713129</dc:date>
+    <dc:date>2026-07-19T07:05:50.734123</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -6626,7 +6660,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.745999</dc:date>
+    <dc:date>2026-07-19T07:05:50.761917</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -6946,7 +6980,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.767259</dc:date>
+    <dc:date>2026-07-19T07:05:50.778223</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -7113,13 +7147,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Mean strain difference (eps_sm - eps_cm)</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="210pt" height="24pt" viewBox="0 0 210 24" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">s_r_max = k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff = 327.1 mm</span></div></div></div>
+<div class="step"><div class="lead">Mean strain difference (eps_sm - eps_cm)</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="210pt" height="24pt" viewBox="0 0 210 24" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.808117</dc:date>
+    <dc:date>2026-07-19T07:05:50.812283</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -7830,7 +7864,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.873606</dc:date>
+    <dc:date>2026-07-19T07:05:50.872000</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -8316,7 +8350,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.911172</dc:date>
+    <dc:date>2026-07-19T07:05:50.910971</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -8464,13 +8498,13 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<div class="step"><div class="desc">Characteristic crack width</div><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="92pt" height="10pt" viewBox="0 0 92 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">eps_diff = max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s) = 0.0005524</span></div></div></div>
+<div class="step"><div class="lead">Characteristic crack width</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="92pt" height="10pt" viewBox="0 0 92 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.928100</dc:date>
+    <dc:date>2026-07-19T07:05:50.923980</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -8814,7 +8848,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.944004</dc:date>
+    <dc:date>2026-07-19T07:05:50.936849</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -9038,7 +9072,7 @@ z
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.959064</dc:date>
+    <dc:date>2026-07-19T07:05:50.949006</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -9212,14 +9246,14 @@ z
   </g>
  </g>
 </svg>
-</div></div>
-<h2 class="section">3. Verification</h2>
-<div class="check ok"><span class="verdict">OK</span><span><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="210pt" height="11pt" viewBox="0 0 210 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+</div><span class="sr">w_k = s_r_max*eps_diff = 0.1807 mm</span></div></div></div>
+<h2 class="section"><span class="num">3</span>Verification</h2>
+<div class="check ok"><div class="verdict">OK</div><div class="body2"><div class="crit"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="210pt" height="11pt" viewBox="0 0 210 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
  <metadata>
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-07-19T05:54:40.975533</dc:date>
+    <dc:date>2026-07-19T07:05:50.963019</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -9572,6 +9606,6 @@ z
   </g>
  </g>
 </svg>
-</span></div>
-<div class="mr-data">@@CALCSHEET/1@@H4sIAKBmXGoC/8VY227jNhB991cQfpK1kSxRsmwXLdBtEKALNMG2KdoCRSvQEh2p1m1JKnGz2H/vUDfTtqzFohYWRgLqQupwhnPmzHycTHkQ0ZRMv0FTLlgZiJKRxCCxIfI8CSISZ/OAJAGPKBXf29ObyVQ+8ONQzggYCXb+SxyKyH+mLN7GARFxnvks8HlCNj7NfHu9xr4Nv6Xv+G61QCwSKqffyunodzkd/aZMRwb65RY9wgJIu3tAcgXDNmy0NB3TncklQsoDFhfy5WqhiMBSApbgIg5QBQtVsNA2Z4ggRuMMRgENUZBnAaOCIgkQlVlIGfpQEh4bBWUpyWgmUJKTMM6eTPkpRreU0SyoEMsbpBRRztqrguX/0EC0l4w+x7xBZZmVveBrRNDKXtjCnmEtDXstH8SCphxu/zn5OJnu4qx6hcNicj48z0haffRdVpQCvYctpoCb8R4DyFtlFncwnklSyrlZmSRwSfcFo5wrLxeE8wpT84ag+24yEXnaOHg6+XSjooslFBXbpgfMY72FxgEamBUBcAYWF/DWTMWapipa27Is0xoVbzSAN6SFiC6jc0YHF/aAu9tuJbxn+jl42BsbXuBnedoD8SFP44wkh8gKciCDIUOODLSI4h6YPxCGwriOoYEz6I0M7q3fF8C/0kx+7EBUqeQhAtSBtAX60fZOwuZvfBI4i5Fh3/sfih7cP58w54ZmkjlRmssNqJh3D0d2dscGfNdr50dBaQLowjIpOcq3iCZE5oxY/KuCvX9PjmLLssanpjs/6Iuu2y5f0YCAhRvsA2gdZ3ywWz8QPt1uBxmrIwQhT3dSJQCaPR2z2KmpzfWowHe+6MH8EyR8FIL0qRLBFrQEyAYtyeEkA1ukR8FnqHAt0x0Zrt1HZXkWdiij+CkyNvLOhjA+BHU1MlTcG3AMNCQQr0z+m/LIvg1ZDEFejAzZ6Y24UJ5dON3ACycsdgTPGd357v+BB2cTj2u/Fz8l+x6Ib5MkfyEbiHhVimt/3CLAkvOS0QEVaJnONUH3COpbKGjKhLS3v5KWlmWViookRUR82oPoXlI+qJeKnhAktnmbK3r9DgrGO/6dwVbXuBL8vnPwQEsI/wSRfcxr/Yq06kRAHdb4ZeAgLCD8bQ97eImdheV43vlh1hqj6aCq5puZrvEPTGj2G6xv9HCuPp3NDHt2xe2+9mz3XQbJQirhhIIABvWWDsh11zFtz8buYrlYrRxsn+0tNPZz54qIefyUkgFRJJMz5wMV8ZDmsFeuabu2t/Tw2louYU9n+5EKUrcrJWXNtdfKKVfcXuQHnxUkolHZr3lGUUQhcYrLHlqdOOjcQ1D2aNhc6FpkhLMb+L+fzZ2baI6vuS8W5X7x2Z0d1w0VUQzkBcvG1spdLzzLXeO1s8TneUwGlLbRG6tec0PcZxfSxj3wRFqmTdLgBQlAHQzUkXhpWksHY6AHjD17fc4PkOD1qmx9A0JKB4UCf64O9eH8yKxX2hktuB/GvZ66pySTEVZroW3TUkKanMJTZCA5CAaFJoTNYoEhpVt4tQJKhO2fn0iy17Qm0A2Qunqr0w/71YEeW17sbs5mkA74jWV6ejNbXl/T6y/+7osad0P6wF5Z3spx4WfZjr3A53qhOWO66pHr6Qe1V/k1BUREg92JjdG336FLquyLcJ2u1WEUrKSDGCd/VX1QXiZCdjcB8Ebt7UVKKy1U+lZ1d6nrDskeTteNkT0TpctR9SK6FsJd9VAp0Stho5bBXbHalpeyCGxrN1lhtcWRLGHaqkPWBq3El0L8oKdrm7RCtZVtF3TX/pKQeb0gAto0fSGntmmuPz8dWO0izbf0e4k/24i5TDkylHvDUJ7P6oQpfm+CNzoMw8Ow9XlzWfu8uah93rW6Gp+3baTa6a0KaTzeXir+bm/VHq8ptfZ4O8bK2FHGbjdu/d0AOzi8fqw8ej0MD25sIRw817yiOqte6uCb5hXFGy2WXfO0MnZFAdw/Cs7Jp/8AARzr6dYZAAA=@@END@@</div>
+</div></div></div>
+<div class="mr-data">@@CALCSHEET/1@@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@@END@@</div>
 </div></td></tr></tbody></table></body></html>

@@ -18,7 +18,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -29,7 +31,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -40,7 +44,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -51,7 +57,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -62,7 +70,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -73,7 +83,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -84,7 +96,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -95,7 +109,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -106,7 +122,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -117,7 +135,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -128,7 +148,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -139,7 +161,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -150,7 +174,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -161,7 +187,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -172,7 +200,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -183,7 +213,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "input",
@@ -194,7 +226,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -205,7 +239,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -216,7 +252,9 @@
       "expression": "E_s/E_cm",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -227,7 +265,9 @@
       "expression": "(alpha_e*A_s/b)*(sqrt(1+2*b*d/(alpha_e*A_s))-1)",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -238,7 +278,9 @@
       "expression": "d-x/3",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -249,7 +291,9 @@
       "expression": "M_qp*1000000/(z*A_s)",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -260,7 +304,9 @@
       "expression": "min(2.5*(h-d),(h-x)/3,h/2)",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -271,7 +317,9 @@
       "expression": "A_s/(b*h_c_eff)",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -282,7 +330,9 @@
       "expression": "k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -293,7 +343,9 @@
       "expression": "max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s)",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "calc",
@@ -304,7 +356,9 @@
       "expression": "s_r_max*eps_diff",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "section",
@@ -315,7 +369,9 @@
       "expression": "",
       "passed": null,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     },
     {
       "kind": "check",
@@ -326,7 +382,9 @@
       "expression": "w_k <= w_max",
       "passed": true,
       "text": "",
-      "atom_id": ""
+      "atom_id": "",
+      "reference": "",
+      "intro": ""
     }
   ],
   "results": {

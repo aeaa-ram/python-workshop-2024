@@ -17,7 +17,7 @@ Time-development of the concrete secant modulus of elasticity, from cement class
 
 ## 2. Calculation (all formulas from the shared library)
 
-**Concrete strength development coefficient at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.2)]**
+**Concrete strength development coefficient at age t**
 
 $$
 \begin{aligned}
@@ -27,7 +27,7 @@ $$
 \end{aligned}
 $$
 
-**Mean concrete compressive strength at age t [EN 1992-1-1:2004 §3.1.2(6), Eq. (3.1)]**
+**Mean concrete compressive strength at age t**
 
 $$
 \begin{aligned}
@@ -37,7 +37,7 @@ f_{cm,t} &= \beta_{cc,t} \cdot f_{cm} \\
 \end{aligned}
 $$
 
-**Secant modulus of elasticity at age t [EN 1992-1-1:2004 §3.1.3(3), Eq. (3.5)]**
+**Secant modulus of elasticity at age t**
 
 $$
 \begin{aligned}
