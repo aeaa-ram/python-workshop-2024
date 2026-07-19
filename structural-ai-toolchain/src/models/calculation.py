@@ -47,6 +47,8 @@ _ALLOWED_FUNCTIONS = {
     "log": sp.log,
     "ln": sp.log,
     "exp": sp.exp,
+    "floor": sp.floor,
+    "ceiling": sp.ceiling,
     "pi": sp.pi,
 }
 
@@ -81,6 +83,8 @@ def unit_latex(unit: str) -> str:
     if not unit or unit.strip() in ("-", "–", "—"):
         return ""
     out = unit
+    # a trailing digit right after a letter is an exponent: mm2 -> mm^2
+    out = re.sub(r"([A-Za-z])(\d+)", r"\1^\2", out)
     out = re.sub(r"\^(\d+)", r"^{\1}", out)
     out = out.replace("%", r"\%")
     # Wrap the alphabetic parts in \mathrm so they are upright.
@@ -136,6 +140,7 @@ class CalcSheet:
         project: str = "",
         revision: str = "0.1",
         tool_id: str = "",
+        unit_aware: bool = False,
     ):
         self.title = title
         self.description = description
@@ -146,10 +151,37 @@ class CalcSheet:
         self.tool_id = tool_id
         self.created = _dt.date.today().isoformat()
         self.items: list[CalcItem] = []
+        # In unit-aware mode (e.g. Mathcad sheets, where formulas carry
+        # units and contain NO manual unit conversions), ``values`` holds
+        # each quantity in canonical units (N, mm), so the arithmetic is
+        # dimensionally correct, and each result is converted back to its
+        # declared unit for display. ``display_values`` holds the number as
+        # shown. In the default (unit-naive) mode both are identical and the
+        # behaviour is unchanged — for legacy Excel sheets that bake in
+        # manual conversions like ``*1e6``.
+        self.unit_aware = unit_aware
         self.values: dict[str, float] = {}
+        self.display_values: dict[str, float] = {}
         self.units: dict[str, str] = {}
         self.latex_names: dict[str, str] = {}
         self.descriptions: dict[str, str] = {}
+
+    # ------------------------------------------------------------------ #
+    def _to_canonical(self, value: float, unit: str) -> float:
+        if not self.unit_aware:
+            return value
+        from src.qa.units import scale_of
+
+        s = scale_of(unit)
+        return value * s if s is not None else value
+
+    def _from_canonical(self, canonical: float, unit: str) -> float:
+        if not self.unit_aware:
+            return canonical
+        from src.qa.units import scale_of
+
+        s = scale_of(unit)
+        return canonical / s if s not in (None, 0) else canonical
 
     # ------------------------------------------------------------------ #
     # Authoring API
@@ -176,11 +208,13 @@ class CalcSheet:
         reference: str = "",
     ) -> CalcItem:
         """Declare an input parameter."""
-        self._register(name, float(value), unit, description, latex)
+        canonical = self._to_canonical(float(value), unit)
+        self._register(name, canonical, unit, description, latex)
+        self.display_values[name] = float(value)
         item = CalcItem(
             kind="input",
             name=name,
-            value=float(value),
+            value=float(value),          # shown as-written in its own unit
             unit=unit,
             description=description,
             latex_lhs=self._latex_symbol(name),
@@ -206,7 +240,8 @@ class CalcSheet:
         next to the equation (Mathcad-style margin reference).
         """
         expr = self._parse(expression)
-        value = self._evaluate(expr, expression)
+        canonical = self._evaluate(expr, expression)   # in canonical units
+        display_value = self._from_canonical(canonical, unit)
         if latex is not None:
             self.latex_names[name] = latex
         # Display uses a non-evaluated parse so the rendered formula
@@ -216,7 +251,10 @@ class CalcSheet:
         display = self._parse_display(expression)
         symbolic = self._latex_expr(display)
         substituted = self._latex_substituted(display)
-        self._register(name, value, unit, description, latex)
+        # downstream calcs use the canonical value; the report shows the
+        # value converted to this quantity's declared unit.
+        self._register(name, canonical, unit, description, latex)
+        self.display_values[name] = display_value
         # a trailing "[clause]" in the description doubles as the reference
         if not reference:
             import re as _re
@@ -227,7 +265,7 @@ class CalcSheet:
         item = CalcItem(
             kind="calc",
             name=name,
-            value=value,
+            value=display_value,
             unit=unit,
             description=description,
             expression=expression,
@@ -260,12 +298,15 @@ class CalcSheet:
         comp_latex = {"<=": r"\le", ">=": r"\ge", "==": "=", "<": "<", ">": ">"}
         lhs_unit = self.units.get(lhs_str, "")
         rhs_unit = self.units.get(rhs_str, "")
+        # display numbers in their declared units (converted from canonical)
+        lhs_disp = self._from_canonical(lhs, lhs_unit)
+        rhs_disp = self._from_canonical(rhs, rhs_unit)
         sym = (
             f"{self._latex_expr(self._parse_display(lhs_str))} = "
-            f"{fmt_number(lhs)}"
+            f"{fmt_number(lhs_disp)}"
             f"{self._unit_suffix(lhs_unit)} \\; {comp_latex[comparator]} \\; "
             f"{self._latex_expr(self._parse_display(rhs_str))} = "
-            f"{fmt_number(rhs)}{self._unit_suffix(rhs_unit)}"
+            f"{fmt_number(rhs_disp)}{self._unit_suffix(rhs_unit)}"
         )
         item = CalcItem(
             kind="check",
@@ -371,6 +412,16 @@ class CalcSheet:
         return out or self.calcs()[-1:]  # fallback: last computed quantity
 
     def results(self) -> dict[str, float]:
+        """Results in each quantity's DISPLAY unit (what the report shows).
+        In unit-aware mode this differs from the internal canonical values;
+        in the default mode the two are identical."""
+        if self.unit_aware:
+            out = dict(self.values)
+            out.update(self.display_values)
+            return out
+        return dict(self.values)
+
+    def canonical_results(self) -> dict[str, float]:
         return dict(self.values)
 
     def all_passed(self) -> bool:
@@ -654,6 +705,7 @@ class ParsedTool:
     warnings: list[str] = field(default_factory=list)
     clarifications: list[Clarification] = field(default_factory=list)
     interpreter: str = ""   # which interpreter produced this (llm/heuristic)
+    unit_aware: bool = False  # source carries units (e.g. Mathcad)
 
     def needs_clarification(self) -> bool:
         return bool(self.clarifications)
@@ -670,6 +722,7 @@ class ParsedTool:
             title=self.title,
             description=self.description,
             reference=self.reference,
+            unit_aware=self.unit_aware,
         )
         inputs = [v for v in self.variables if v.role == "input"]
         derived = [v for v in self.variables if v.role == "derived"]

@@ -25,3 +25,11 @@ Cell Factors!B2 = 1 has no adjacent label. What quantity is it?
 > context: `=IF(C7<=F4,1,0)`
 
 **Answer:** _..._
+
+## 4. `Bending_stress_sigma` — unit-scale-mismatch
+
+'Bending_stress_sigma' is shown as 166.7 MPa but the formula evaluates to 166667 MPa (off by x1000 — a units slip).
+
+> context: `display 166667 MPa, or reconcile the input units`
+
+**Answer:** _..._

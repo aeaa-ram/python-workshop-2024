@@ -66,3 +66,4 @@ The AI Grinder could not confidently resolve these — see `CLARIFICATIONS.md`:
 - **Beam!H1** (magic-number): Cell Beam!H1 = 1 has no adjacent label. What quantity is it?
 - **Factors!B2** (magic-number): Cell Factors!B2 = 1 has no adjacent label. What quantity is it?
 - **Beam!C9** (untranslatable-function): 'Utilisation_check' at Beam!C9 uses ['IF'] which reads external/lookup data. Confirm the intended value or provide the underlying formula.
+- **Bending_stress_sigma** (unit-scale-mismatch): 'Bending_stress_sigma' is shown as 166.7 MPa but the formula evaluates to 166667 MPa (off by x1000 — a units slip).

@@ -78,7 +78,14 @@ def deterministic_review(sheet: CalcSheet) -> list[ReviewFinding]:
 
 def _units_scale_check(sheet: CalcSheet) -> list[ReviewFinding]:
     """Recompute each derived quantity in canonical (N, mm) units and
-    compare the natural scale to its declared unit."""
+    compare the natural scale to its declared unit.
+
+    Only meaningful for unit-NAIVE sheets (e.g. Excel with hand-coded
+    conversions), where a scale slip is a real risk. Unit-aware sheets
+    (Mathcad) already convert correctly by construction, so this is skipped
+    to avoid a spurious double-conversion."""
+    if getattr(sheet, "unit_aware", False):
+        return []
     findings: list[ReviewFinding] = []
     units = sheet.units
     values = sheet.values

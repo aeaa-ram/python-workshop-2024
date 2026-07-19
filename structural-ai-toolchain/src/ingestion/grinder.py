@@ -183,6 +183,8 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
     if parsed.reference:
         lines.append(f"        reference={parsed.reference!r},")
     lines.append(f"        tool_id={slug!r},")
+    if parsed.unit_aware:
+        lines.append("        unit_aware=True,")
     lines.append("    )")
 
     # Mirror ParsedTool.to_sheet's resilience: emit calc()/check() only for
@@ -192,7 +194,7 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
     # emitted as an input with an [unresolved formula] note instead.
     from src.models.calculation import CalcSheet, CalcSheetError
 
-    probe = CalcSheet(title=parsed.title)
+    probe = CalcSheet(title=parsed.title, unit_aware=parsed.unit_aware)
     inputs = [v for v in parsed.variables if v.role == "input"]
     derived = [v for v in parsed.variables if v.role == "derived"]
     if inputs:

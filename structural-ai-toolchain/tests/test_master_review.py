@@ -80,6 +80,39 @@ def test_division_by_zero_is_flagged_not_crashed():
         s.calc("r", "b/a", unit="mm")   # graceful, not a TypeError crash
 
 
+def test_unit_aware_evaluation_produces_correct_display():
+    # the real bug class: MPa·mm² gives N, must display as kN correctly
+    s = CalcSheet(title="Stud", unit_aware=True)
+    s.define("f_uk", 450, unit="MPa")
+    s.define("phi", 19, unit="mm")
+    s.define("gamma", 1.25, unit="-")
+    step = s.calc("P_Rd", "0.8*f_uk*pi*phi**2/4/gamma", unit="kN")
+    # displayed value is in kN (81.66), NOT the raw N number (81656)
+    assert step.value == pytest.approx(81.66, abs=0.1)
+    # internal canonical value stays in N for downstream consistency
+    assert s.canonical_results()["P_Rd"] == pytest.approx(81656, rel=1e-3)
+    # and the reviewer is clean (no false unit flag on a correct sheet)
+    assert review(s).passed()
+
+
+def test_unit_aware_area_converts_mm2_to_cm2():
+    s = CalcSheet(title="Area", unit_aware=True)
+    s.define("D", 1420, unit="mm")
+    s.calc("A", "pi*D**2/4", unit="cm2")
+    # pi*1420^2/4 = 1.583e6 mm^2 = 15833 cm^2
+    assert s.results()["A"] == pytest.approx(15833, rel=1e-3)
+
+
+def test_unit_naive_sheet_unchanged():
+    # default sheets (Excel with baked-in conversions) must be untouched
+    s = CalcSheet(title="Crack")  # unit_aware defaults False
+    s.define("M_qp", 45, unit="kNm")
+    s.define("z", 243.2, unit="mm")
+    s.define("A_s", 1005, unit="mm^2")
+    step = s.calc("sigma_s", "M_qp*1000000/(z*A_s)", unit="MPa")
+    assert step.value == pytest.approx(184.1, abs=0.5)  # manual conv. intact
+
+
 def test_review_report_and_convergence_smoke():
     from src.qa import review_to_convergence
 

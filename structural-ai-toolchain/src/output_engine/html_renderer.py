@@ -351,9 +351,18 @@ def render_html(
                 p.append(f'<div class="compact"><div>{lead}{eq}{sr}</div>'
                          f'{clause}</div>')
             else:
-                lines = [f"{it.latex_lhs} = {it.latex_symbolic}",
-                         f"= {it.latex_substituted}",
-                         f"= \\mathbf{{{result}}}{unit}"]
+                # Unit-aware sheets (Mathcad) carry units, so a
+                # substituted-numbers line can't be consistent once the
+                # result is converted to its display unit — show the clean
+                # two-line symbolic = result. Unit-naive sheets keep the
+                # full three-line Mathcad breakdown.
+                if getattr(sheet, "unit_aware", False):
+                    lines = [f"{it.latex_lhs} = {it.latex_symbolic}",
+                             f"= \\mathbf{{{result}}}{unit}"]
+                else:
+                    lines = [f"{it.latex_lhs} = {it.latex_symbolic}",
+                             f"= {it.latex_substituted}",
+                             f"= \\mathbf{{{result}}}{unit}"]
                 p.append(
                     f'<div class="step">{lead}'
                     f'<div class="eqrow"><div class="eq">{display_lines(lines)}'

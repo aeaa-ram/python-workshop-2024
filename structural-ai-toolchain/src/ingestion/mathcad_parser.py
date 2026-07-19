@@ -64,6 +64,7 @@ class MathcadParser(BaseParser):
             source_path=str(path),
             source_format="mcdx",
             interpreter="mcdx",
+            unit_aware=True,   # Mathcad formulas carry units, no manual conv.
         )
         try:
             with zipfile.ZipFile(path) as zf:
@@ -140,6 +141,26 @@ class MathcadParser(BaseParser):
         name = _dedupe(name, used)
         value_node = children[1] if len(children) > 1 else None
         if value_node is None:
+            return
+        # matrix / vector input (e.g. D := [1420, 1720] mm — several load
+        # cases or sizes). Take the first value as the governing scalar and
+        # raise a clarification listing all of them, so downstream formulas
+        # resolve for case 1 instead of failing.
+        mat_vals, mat_unit = _matrix_values_and_unit(value_node)
+        if mat_vals is not None and not _has_variable(value_node):
+            tool.variables.append(ParsedVariable(
+                name=name, value=mat_vals[0], unit=mat_unit, role="input",
+                description=(description + f" (case 1 of {len(mat_vals)})").strip(),
+                source_cell="mcdx"))
+            if len(mat_vals) > 1:
+                tool.clarifications.append(Clarification(
+                    location=name, issue="multi-value-input",
+                    question=(f"'{name}' is a vector {mat_vals} {mat_unit} "
+                              f"({len(mat_vals)} load cases/sizes). Using the "
+                              f"first ({mat_vals[0]}); confirm the governing "
+                              "case or run a parametric study over all."),
+                    options=[f"{v} {mat_unit}" for v in mat_vals],
+                    context=str(mat_vals)))
             return
         # numeric literal (possibly with a unit) -> input
         literal, unit = _literal_and_unit(value_node)
@@ -257,7 +278,29 @@ def _translate_apply(node) -> str:
         return f"({t(0)})"
     if op in ("scale", "unitOverride"):
         return t(0)
+    # function application: <apply><ml:id>min</ml:id><ml:sequence>a,b</...>
+    if op == "id":
+        fname = _slug("".join(kids[0].itertext())).lower()
+        fargs = _flatten_args(args)
+        _FUNC = {"min": "min", "max": "max", "abs": "abs", "sqrt": "sqrt",
+                 "round": "", "floor": "floor", "ceil": "ceiling",
+                 "trunc": "", "sin": "sin", "cos": "cos", "tan": "tan"}
+        if fname in _FUNC:
+            inner = ",".join(_translate(a) for a in fargs)
+            py = _FUNC[fname]
+            return f"({inner})" if py == "" else f"{py}({inner})"
     raise _Untranslatable(f"operator <{op}>")
+
+
+def _flatten_args(args):
+    """Expand <ml:sequence> argument lists into individual operands."""
+    out = []
+    for a in args:
+        if _local(a.tag) == "sequence":
+            out.extend(list(a))
+        else:
+            out.append(a)
+    return out
 
 
 # ------------------------------------------------------------------ #
@@ -347,6 +390,54 @@ def _literal_and_unit(node):
     return None, ""
 
 
+def _matrix_values_and_unit(node):
+    """(list-of-floats, unit) if the node is a matrix/vector of reals
+    (optionally scaled by a unit / transposed), else (None, '')."""
+    unit = ""
+    n = node
+    # unwrap scale (value * unit) and transpose wrappers
+    for _ in range(4):
+        tag = _local(n.tag)
+        if tag in ("scale", "unitOverride") and len(n):
+            # a UNIT id sibling gives the unit
+            for c in n:
+                if _local(c.tag) == "id" and c.get("labels") == "UNIT":
+                    unit = "".join(c.itertext()).strip()
+            n = n[0]
+            continue
+        if tag == "apply" and len(n) >= 2 and _local(n[0].tag) in (
+                "transpose", "scale"):
+            if _local(n[0].tag) == "scale":
+                for c in n[1:]:
+                    if _local(c.tag) == "id" and c.get("labels") == "UNIT":
+                        unit = "".join(c.itertext()).strip()
+            n = n[1]
+            continue
+        # matrix multiplied by a scalar/unit: dig into the mult operand that
+        # holds the matrix (e.g. M_Ed := [4323.8, 7439.8] kNm).
+        if tag == "apply" and len(n) >= 2 and _local(n[0].tag) == "mult":
+            matrix_operand = None
+            for c in n[1:]:
+                if any(_local(e.tag) == "matrix" for e in c.iter()):
+                    matrix_operand = c
+                elif _local(c.tag) == "id" and c.get("labels") == "UNIT":
+                    unit = "".join(c.itertext()).strip()
+            if matrix_operand is not None:
+                n = matrix_operand
+                continue
+        break
+    if _local(n.tag) == "matrix":
+        vals = []
+        for r in n.iter(f"{ML}real"):
+            try:
+                vals.append(float(r.text))
+            except (TypeError, ValueError):
+                return None, ""
+        if vals:
+            return vals, unit
+    return None, ""
+
+
 def _has_variable(node) -> bool:
     for el in node.iter(f"{ML}id"):
         if el.get("labels") == "VARIABLE":
@@ -355,10 +446,17 @@ def _has_variable(node) -> bool:
 
 
 def _result_unit(node) -> str:
+    """Display unit of a result, e.g. 'cm^2' — keep the exponent (a
+    <ml:pow><ml:id>cm</ml:id><ml:real>2</ml:real></ml:pow> means cm^2)."""
     uo = node.find(f".//{ML}unitOverride")
-    if uo is not None:
-        return "".join(t for t in uo.itertext() if t and not t.strip().isdigit()).strip()
-    return ""
+    if uo is None:
+        return ""
+    pow_node = uo.find(f".//{ML}pow")
+    if pow_node is not None and len(pow_node) == 2:
+        base = "".join(pow_node[0].itertext()).strip()
+        exp = "".join(pow_node[1].itertext()).strip()
+        return f"{base}^{exp}" if base and exp else base
+    return "".join(uo.itertext()).strip()
 
 
 def _parent_apply(root, op_tag):

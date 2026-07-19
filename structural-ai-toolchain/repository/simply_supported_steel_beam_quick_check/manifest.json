@@ -103,6 +103,11 @@
       "location": "Beam!C9",
       "issue": "untranslatable-function",
       "question": "'Utilisation_check' at Beam!C9 uses ['IF'] which reads external/lookup data. Confirm the intended value or provide the underlying formula."
+    },
+    {
+      "location": "Bending_stress_sigma",
+      "issue": "unit-scale-mismatch",
+      "question": "'Bending_stress_sigma' is shown as 166.7 MPa but the formula evaluates to 166667 MPa (off by x1000 \u2014 a units slip)."
     }
   ],
   "formula_analysis": [

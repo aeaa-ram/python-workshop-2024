@@ -26,9 +26,14 @@ _UNITS: dict[str, tuple[tuple[int, int], float]] = {
     "mm2": ((0, 2), 1.0), "mm^2": ((0, 2), 1.0),
     "cm2": ((0, 2), 100.0), "cm^2": ((0, 2), 100.0),
     "m2": ((0, 2), 1e6), "m^2": ((0, 2), 1e6),
-    # volume / section props
+    # volume / section modulus (length^3)
     "mm3": ((0, 3), 1.0), "mm^3": ((0, 3), 1.0),
+    "cm3": ((0, 3), 1e3), "cm^3": ((0, 3), 1e3),
+    "m3": ((0, 3), 1e9), "m^3": ((0, 3), 1e9),
+    # second moment of area (length^4)
     "mm4": ((0, 4), 1.0), "mm^4": ((0, 4), 1.0),
+    "cm4": ((0, 4), 1e4), "cm^4": ((0, 4), 1e4),
+    "m4": ((0, 4), 1e12), "m^4": ((0, 4), 1e12),
     # force
     "N": ((1, 0), 1.0), "kN": ((1, 0), 1e3), "MN": ((1, 0), 1e6),
     # stress / pressure / modulus
