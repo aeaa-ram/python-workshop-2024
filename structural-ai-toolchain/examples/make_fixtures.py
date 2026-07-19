@@ -154,9 +154,43 @@ def make_all(out_dir: str | Path) -> list[Path]:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     return [
-        make_crack_width_xlsx(out_dir),
+        make_crack_width_xlsx(out_dir),   # tidy: convention fast-path
         make_beam_notebook(out_dir),
+        make_messy_beam_xlsx(out_dir),    # messy: AI Grinder + clarifications
     ]
+
+
+def make_messy_beam_xlsx(out_dir: Path) -> Path:
+    """A deliberately DISORGANISED sheet: no INPUTS/CALCULATIONS blocks,
+    scattered labels, values across two tabs, a lookup, and an unlabelled
+    magic number — to exercise the AI Grinder + human-in-the-loop path."""
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Beam"
+    ws["B1"] = "Simply Supported Steel Beam — quick check"
+    # scattered label/value pairs (label left of value), not in a block
+    ws["B3"] = "Span L (m)"; ws["C3"] = 6.0
+    ws["B4"] = "Line load w (kN/m)"; ws["C4"] = 12.0
+    ws["E3"] = "Section modulus Wel (cm3)"; ws["F3"] = 324.0
+    ws["E4"] = "Yield fy (MPa)"; ws["F4"] = 355.0
+    # a formula referencing scattered cells (bending moment, kNm)
+    ws["B6"] = "Moment M (kNm)"; ws["C6"] = "=C4*C3^2/8"
+    # stress = M/Wel with unit juggling; references another tab's factor
+    ws["B7"] = "Bending stress sigma (MPa)"; ws["C7"] = "=C6*1000/F3*Factors!B2"
+    # a hardcoded magic number with NO label
+    ws["H1"] = 1.0
+    # a verification via IF
+    ws["B9"] = "Utilisation check"; ws["C9"] = "=IF(C7<=F4,1,0)"
+    ws["B10"] = "Capacity check"; ws["C10"] = "=C7<=F4"
+
+    ws2 = wb.create_sheet("Factors")
+    ws2["A1"] = "Amplification"; ws2["B2"] = 1.0
+
+    out_path = out_dir / "messy_beam.xlsx"
+    wb.save(out_path)
+    return out_path
 
 
 if __name__ == "__main__":

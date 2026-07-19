@@ -5,8 +5,9 @@
   "reference": "",
   "source_file": "beam_bending_check.ipynb",
   "source_format": "ipynb",
-  "converted": "2026-07-18",
+  "converted": "2026-07-19",
   "status": "converted-unreviewed",
+  "interpreter": "",
   "variables": [
     {
       "name": "b",
@@ -87,6 +88,7 @@
     "sigma_m": 2.63671875
   },
   "warnings": [],
+  "clarifications": [],
   "formula_analysis": [
     {
       "name": "M_max",

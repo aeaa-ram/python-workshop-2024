@@ -5,11 +5,30 @@ engineering files (Mathcad, Excel, Python, Jupyter) into a centralized,
 version-controlled repository of standardized Python tools with
 Mathcad-style, print-ready documentation.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design,
+**New here? Read the 1-page [docs/QUICKSTART.md](docs/QUICKSTART.md)**
+(also as [QUICKSTART.pdf](docs/QUICKSTART.pdf)) — it navigates the whole
+thing without the deep docs.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design (incl.
+the **AI Grinder** for messy spreadsheets),
 [docs/TOOL_TEMPLATE.md](docs/TOOL_TEMPLATE.md) for the standardized doc
 format, [docs/AUTHORING_GUIDE.md](docs/AUTHORING_GUIDE.md) for writing new
 tools by hand, and [docs/PITFALLS.md](docs/PITFALLS.md) for the pitfalls
 database the QA layer targets.
+
+## The AI Grinder (messy sheets)
+
+`grind` auto-dispatches: tidy convention sheets convert exactly; **messy
+real-world sheets** (scattered tables, multi-tab, named ranges, lookups)
+go through an LLM pipeline that reads the workbook, names the variables,
+translates the formulas, and — crucially — **recomputes everything and
+checks it against the sheet's own cached values**, so nothing is silently
+wrong. Anything it can't deduce (a magic number, a `VLOOKUP`, circular
+logic) is written to `CLARIFICATIONS.md` as a precise question, not a
+failure. Works offline via a deterministic heuristic; set
+`ANTHROPIC_API_KEY` (+ `pip install anthropic`) to use Claude for the
+hardest sheets. See the pipeline in `src/ingestion/{workbook_extract,
+interpret,llm_client,ai_pipeline}.py`.
 
 ## Quickstart
 

@@ -2,7 +2,7 @@
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-18 |
+| 0.1 | 2026-07-19 |
 
 Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.
 

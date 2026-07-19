@@ -67,20 +67,63 @@ formal typeset deliverables once TeX Live is available in CI.
 ## The Grinder (src/ingestion)
 
 - `base.py` — parser registry; one class per format.
-- `excel_parser.py` — reads **formulas, not cached values** from
-  convention-structured workbooks (INPUTS / CALCULATIONS / CHECKS blocks),
-  maps cell references back to variable names, translates Excel functions.
-  Re-computation by the toolchain doubles as an independent audit of the
-  legacy workbook. Also hosts the CSV variant.
+- `excel_parser.py` — the Excel entry point `AIExcelParser` **dispatches**:
+  convention sheets (INPUTS/CALCULATIONS/CHECKS) take the exact deterministic
+  fast-path (`ConventionExcelParser`); everything else goes through the AI
+  pipeline. Also hosts the cross-sheet formula translator
+  (`translate_excel_formula`) and the CSV variant.
 - `notebook_parser.py` / `python_parser.py` — line-convention extraction
   (`name = expr  # unit | description`).
 - `mathcad_parser.py` — **mock**; documents the worksheet.xml translation
   plan for .mcdx (OPC zip container).
-- `grinder.py` — pipeline: parse → gatekeeper check → write
-  `repository/<slug>/{<slug>.py, <slug>.md, manifest.json, source/}`.
+- `grinder.py` — pipeline: parse → gatekeeper check → reuse analysis →
+  write `repository/<slug>/{<slug>.py, <slug>.md, manifest.json, source/}`
+  (+ `CLARIFICATIONS.md` when the AI parser needs human input).
 
-Unparseable content becomes a visible warning in the tool doc, never a
-silent drop.
+### The AI Grinder (messy real-world sheets)
+
+Rigid block-scanning fails on real legacy sheets (scattered tables, named
+ranges, multi-tab, static values mixed with formulas). The AI pipeline
+handles them in six stages, on the principle **"AI proposes, deterministic
+code disposes"** — the LLM only assigns *meaning*, never does arithmetic:
+
+1. **Extract** (`workbook_extract.py`) — openpyxl reads every sheet
+   (formulas + cached values), named ranges, comments → a `WorkbookDigest`
+   IR of non-empty cells only, grouped into **regions** (connected blocks),
+   each cell tagged with its nearest text label.
+2. **Digest/chunk** — never dump the grid. `to_markdown()` emits compact
+   `cell | label | value | formula` tables with a **token budget** that
+   always keeps formula cells (the logic) and samples value-only cells.
+   This is the context-window control point.
+3. **Interpret** (`interpret.py`) — an `Interpreter` interface with two
+   implementations: `LLMInterpreter` (Claude via `llm_client.py`, strict
+   JSON) and `HeuristicInterpreter` (deterministic label-adjacency +
+   formula analysis, runs offline). Both emit the same `Interpretation`:
+   variable dictionary, roles, a **cell→symbol map**, and clarifications.
+4. **Translate** (deterministic, `translate_excel_formula`) — using the
+   cell→symbol map, rewrite Excel formulas (incl. `Sheet2!B4` cross-sheet
+   refs, `IF(...)` checks) to math syntax. Lookup functions
+   (`INDEX`/`VLOOKUP`/…) and unmapped refs are **not** guessed — they raise
+   a targeted clarification (with the cached value offered as a "freeze"
+   fallback so the rest of the tool still works).
+5. **Verify** (deterministic, `ai_pipeline.py`) — recompute via CalcSheet
+   and compare to the workbook's own cached values; a mismatch becomes a
+   `value-mismatch` clarification. So a wrong LLM guess is caught, not
+   trusted.
+6. **Assemble** → the same `ParsedTool` (now with `clarifications` and
+   `interpreter`), consumed unchanged by the Knowledge Graph and writers.
+
+**LLM backend:** `AnthropicLLMClient` (needs `pip install anthropic` +
+`ANTHROPIC_API_KEY`; model via `GRINDER_LLM_MODEL`). With no key/package the
+pipeline transparently falls back to the heuristic interpreter, so the
+system and its tests run fully offline; the LLM simply does a better job on
+the messiest sheets when available.
+
+**Human-in-the-loop:** anything ambiguous (magic number with no label,
+lookup that needs external data, circular/undeducible logic, value
+mismatch) is written to `repository/<slug>/CLARIFICATIONS.md` as a specific
+question pointing at the exact cell, and the tool's status becomes
+`needs-clarification`. Nothing is silently dropped or fabricated.
 
 ## Knowledge Graph / Gatekeeper (src/knowledge_graph)
 

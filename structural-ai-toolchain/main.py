@@ -33,9 +33,10 @@ def cmd_grind(args) -> int:
     except DuplicateToolError as exc:
         print(f"⛔ {exc}")
         return 1
-    print(f"✔ Ground '{args.file}' -> {result.tool_dir}")
+    interp = f" (interpreter: {result.interpreter})" if result.interpreter else ""
+    print(f"✔ Ground '{args.file}' -> {result.tool_dir}{interp}")
     for kind, path in result.files.items():
-        print(f"  {kind:>9}: {path}")
+        print(f"  {kind:>13}: {path}")
     for warning in result.warnings:
         print(f"  ⚠️  {warning}")
     for match in result.gatekeeper_report:
@@ -44,6 +45,11 @@ def cmd_grind(args) -> int:
         print("  Atomic breakdown:")
         for finding in result.reuse_findings:
             print(f"    {finding}")
+    if result.clarifications:
+        print(f"  ❓ {len(result.clarifications)} clarification(s) needed "
+              f"(status: needs-clarification) — see CLARIFICATIONS.md:")
+        for c in result.clarifications:
+            print(f"    {c}")
     from src.knowledge_graph import build_index
 
     build_index(REPO_DIR)

@@ -6,15 +6,16 @@ source_file: beam_bending_check.ipynb
 source_format: ipynb
 reference: ""
 status: converted-unreviewed
+interpreter: convention
 reviewed_by: null
-converted: 2026-07-18
+converted: 2026-07-19
 revision: '0.1'
 ---
 # Rectangular Beam Bending Check
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-18 |
+| 0.1 | 2026-07-19 |
 
 Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.
 

@@ -37,6 +37,8 @@ class GrindResult:
     warnings: list[str] = field(default_factory=list)
     gatekeeper_report: list = field(default_factory=list)
     reuse_findings: list = field(default_factory=list)
+    clarifications: list = field(default_factory=list)
+    interpreter: str = ""
 
 
 def slugify(title: str) -> str:
@@ -95,6 +97,10 @@ def grind(
             _write_manifest(parsed, tool_dir, slug, reuse_findings)
         ),
     }
+    if parsed.clarifications:
+        files["clarifications"] = str(
+            _write_clarifications(parsed, tool_dir, slug)
+        )
     return GrindResult(
         slug=slug,
         tool_dir=tool_dir,
@@ -102,7 +108,38 @@ def grind(
         warnings=parsed.warnings,
         gatekeeper_report=report,
         reuse_findings=reuse_findings,
+        clarifications=parsed.clarifications,
+        interpreter=parsed.interpreter,
     )
+
+
+def _write_clarifications(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
+    """Human-in-the-loop worksheet: exactly what the parser could not deduce."""
+    lines = [
+        f"# Clarifications needed — {parsed.title}",
+        "",
+        f"The Grinder ({parsed.interpreter or 'parser'}) converted this "
+        "sheet but could not confidently resolve the items below. Answer "
+        "each, update the source or the generated tool, then re-grind.",
+        "",
+    ]
+    for i, c in enumerate(parsed.clarifications, 1):
+        lines.append(f"## {i}. `{c.location}` — {c.issue}")
+        lines.append("")
+        lines.append(c.question)
+        if c.context:
+            lines.append("")
+            lines.append(f"> context: `{c.context}`")
+        if c.options:
+            lines.append("")
+            lines.append("Options:")
+            lines += [f"- [ ] {o}" for o in c.options]
+        lines.append("")
+        lines.append("**Answer:** _..._")
+        lines.append("")
+    path = tool_dir / "CLARIFICATIONS.md"
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
 
 
 # ---------------------------------------------------------------------- #
@@ -175,7 +212,8 @@ def _write_markdown(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
         f"source_file: {Path(parsed.source_path).name}",
         f"source_format: {parsed.source_format}",
         f"reference: {json.dumps(parsed.reference)}",
-        "status: converted-unreviewed",
+        f"status: {'needs-clarification' if parsed.clarifications else 'converted-unreviewed'}",
+        f"interpreter: {parsed.interpreter or 'convention'}",
         "reviewed_by: null",
         f"converted: {_dt.date.today().isoformat()}",
         "revision: '0.1'",
@@ -183,6 +221,13 @@ def _write_markdown(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
         "",
     ]
     body = render_markdown(sheet)
+    if parsed.clarifications:
+        cl_block = ["", "## ❓ Clarifications needed (human-in-the-loop)", "",
+                    "The AI Grinder could not confidently resolve these — "
+                    "see `CLARIFICATIONS.md`:", ""]
+        cl_block += [f"- **{c.location}** ({c.issue}): {c.question}"
+                     for c in parsed.clarifications]
+        body += "\n".join(cl_block) + "\n"
     if parsed.warnings:
         warn_block = ["", "## Conversion Warnings", ""]
         warn_block += [f"- ⚠️ {w}" for w in parsed.warnings]
@@ -209,7 +254,9 @@ def _write_manifest(
         "source_file": Path(parsed.source_path).name,
         "source_format": parsed.source_format,
         "converted": _dt.date.today().isoformat(),
-        "status": "converted-unreviewed",
+        "status": ("needs-clarification" if parsed.clarifications
+                   else "converted-unreviewed"),
+        "interpreter": parsed.interpreter,
         "variables": [
             {
                 "name": v.name,
@@ -226,6 +273,10 @@ def _write_manifest(
         "checks": parsed.checks,
         "results": sheet.results(),
         "warnings": parsed.warnings,
+        "clarifications": [
+            {"location": c.location, "issue": c.issue, "question": c.question}
+            for c in parsed.clarifications
+        ],
         "formula_analysis": [
             {
                 "name": f.name,

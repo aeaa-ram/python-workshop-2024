@@ -47,8 +47,29 @@ _FUNCTION_MAP = {
 _MARKERS = ("INPUTS", "CALCULATIONS", "CHECKS")
 
 
-class ExcelParser(BaseParser):
-    extensions = (".xlsx", ".xlsm")
+def has_convention_markers(path: Path) -> bool:
+    """True if the first sheet uses the strict INPUTS/CALCULATIONS blocks."""
+    try:
+        wb = load_workbook(path, data_only=False, read_only=True)
+        ws = wb.worksheets[0]
+        seen = set()
+        for row in ws.iter_rows(min_row=1, max_row=200, max_col=1):
+            v = row[0].value
+            if isinstance(v, str) and v.strip().upper() in _MARKERS:
+                seen.add(v.strip().upper())
+        wb.close()
+        return {"INPUTS", "CALCULATIONS"} <= seen
+    except Exception:
+        return False
+
+
+class ConventionExcelParser(BaseParser):
+    """Deterministic fast-path for sheets that already follow the strict
+    INPUTS/CALCULATIONS/CHECKS convention. Not registered on its own — the
+    AIExcelParser delegates here when the markers are present (exact, cheap,
+    no LLM). Kept as the reference for well-formed sheets."""
+
+    extensions = ()  # not auto-registered; used via AIExcelParser
 
     def parse(self, path: Path) -> ParsedTool:
         path = Path(path)
@@ -180,6 +201,155 @@ class ExcelParser(BaseParser):
             r"\bpow\(([^,]+),([^)]+)\)", r"(\1)**(\2)", out
         )
         return out.strip(), unresolved
+
+
+# Back-compat alias: tests and other modules import ``ExcelParser`` and use
+# its ``translate_formula`` staticmethod.
+ExcelParser = ConventionExcelParser
+
+
+# ====================================================================== #
+# AI Grinder: cross-sheet formula translation + dispatching parser
+# ====================================================================== #
+# Excel functions we can translate to sympy-safe syntax.
+_TRANSLATABLE_FUNCS = {
+    "SQRT": "sqrt", "MIN": "min", "MAX": "max", "ABS": "abs",
+    "LN": "log", "LOG": "log", "EXP": "exp", "SIN": "sin", "COS": "cos",
+    "TAN": "tan", "ROUND": "", "ROUNDUP": "", "ROUNDDOWN": "",
+}
+# Functions that need external data / lookups — cannot be translated to a
+# closed-form expression; trigger human-in-the-loop clarification.
+_LOOKUP_FUNCS = ("INDEX", "VLOOKUP", "HLOOKUP", "MATCH", "OFFSET", "INDIRECT",
+                 "LOOKUP", "SUMPRODUCT", "SUMIF", "COUNTIF", "XLOOKUP")
+_QUALIFIED_REF = re.compile(r"(?:'([^']+)'|([A-Za-z0-9_]+))!\$?([A-Z]{1,3})\$?(\d+)")
+_BARE_REF = re.compile(r"(?<![A-Za-z0-9_!'])\$?([A-Z]{1,3})\$?(\d+)")
+
+
+class TranslationResult:
+    def __init__(self) -> None:
+        self.expression = ""
+        self.unresolved_refs: list[str] = []
+        self.unknown_funcs: list[str] = []
+        self.is_check = False
+        self.check_expression = ""
+
+    @property
+    def ok(self) -> bool:
+        return not self.unresolved_refs and not self.unknown_funcs
+
+
+def translate_excel_formula(
+    formula: str, current_sheet: str, cell_map: dict[str, str]
+) -> TranslationResult:
+    """Translate an Excel formula to toolchain math using a cell->symbol map.
+
+    Handles cross-sheet refs (``Sheet2!B4``, ``'My Sheet'!B4``) and bare
+    refs (resolved against ``current_sheet``). Unknown lookup functions and
+    unmapped references are reported, not silently dropped, so the caller
+    can raise a precise clarification.
+    """
+    result = TranslationResult()
+    body = formula[1:] if formula.startswith("=") else formula
+
+    for fn in _LOOKUP_FUNCS:
+        if re.search(rf"\b{fn}\s*\(", body, re.IGNORECASE):
+            result.unknown_funcs.append(fn)
+
+    # qualified refs first (Sheet!Coord)
+    def repl_qualified(m: re.Match) -> str:
+        sheet = m.group(1) or m.group(2)
+        coord = f"{m.group(3)}{m.group(4)}"
+        ref = f"{sheet}!{coord}"
+        if ref in cell_map:
+            return cell_map[ref]
+        result.unresolved_refs.append(ref)
+        return "__UNRESOLVED__"
+
+    body = _QUALIFIED_REF.sub(repl_qualified, body)
+
+    # bare refs -> current sheet
+    def repl_bare(m: re.Match) -> str:
+        coord = f"{m.group(1)}{m.group(2)}"
+        ref = f"{current_sheet}!{coord}"
+        if ref in cell_map:
+            return cell_map[ref]
+        result.unresolved_refs.append(ref)
+        return "__UNRESOLVED__"
+
+    body = _BARE_REF.sub(repl_bare, body)
+
+    # a check? (top-level comparison, or IF(cond, ...))
+    if_match = re.match(r"\s*IF\s*\((.+)\)\s*$", body, re.IGNORECASE)
+    cond = None
+    if if_match:
+        cond = _split_if_condition(if_match.group(1))
+    elif any(op in body for op in ("<=", ">=", "<", ">")):
+        cond = body
+    if cond and any(op in cond for op in ("<=", ">=", "<", ">")):
+        result.is_check = True
+        result.check_expression = _clean_expr(cond)
+
+    result.expression = _clean_expr(_apply_funcs(body))
+    return result
+
+
+def _split_if_condition(inner: str) -> str:
+    """Extract the condition from an IF(cond, a, b) argument list."""
+    depth = 0
+    for i, ch in enumerate(inner):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            return inner[:i]
+    return inner
+
+
+def _apply_funcs(body: str) -> str:
+    out = body.replace("^", "**")
+    # ROUND(x, n) -> x  (drop rounding for the symbolic form)
+    out = re.sub(r"\bROUND(?:UP|DOWN)?\s*\(([^,]+),[^)]*\)", r"(\1)",
+                 out, flags=re.IGNORECASE)
+    out = re.sub(r"\bPOWER\s*\(([^,]+),([^)]+)\)", r"(\1)**(\2)",
+                 out, flags=re.IGNORECASE)
+    out = re.sub(r"\bPI\s*\(\s*\)", "pi", out, flags=re.IGNORECASE)
+    for xl, py in _TRANSLATABLE_FUNCS.items():
+        if py:
+            out = re.sub(rf"\b{xl}\s*\(", f"{py}(", out, flags=re.IGNORECASE)
+    return out
+
+
+def _clean_expr(text: str) -> str:
+    return text.strip().strip("=").strip()
+
+
+class AIExcelParser(BaseParser):
+    """The AI Grinder's Excel entry point.
+
+    Dispatch:
+    - convention sheets (INPUTS/CALCULATIONS/CHECKS) -> exact deterministic
+      path (ConventionExcelParser), preserving quality for tidy sheets;
+    - everything else (messy, multi-tab, scattered) -> the AI pipeline:
+      extract digest -> interpret (LLM if configured, else heuristic) ->
+      deterministic formula translation -> verify -> ParsedTool, with
+      human-in-the-loop clarifications for anything ambiguous.
+    """
+
+    extensions = (".xlsx", ".xlsm")
+
+    def __init__(self, prefer_client: str | None = None) -> None:
+        self.prefer_client = prefer_client
+
+    def parse(self, path: Path) -> ParsedTool:
+        path = Path(path)
+        if has_convention_markers(path):
+            tool = ConventionExcelParser().parse(path)
+            tool.interpreter = "convention"
+            return tool
+        from src.ingestion.ai_pipeline import run_ai_pipeline
+
+        return run_ai_pipeline(path, prefer_client=self.prefer_client)
 
 
 class CsvParser(BaseParser):

@@ -20,45 +20,39 @@
 \newcommand{\calccheckfail}[1]{\noindent\colorbox{FailRed}{\textcolor{white}{\textbf{~FAIL~}}}\; #1}
 
 \fancyhead[L]{\textcolor{BrandPrimary}{\textbf{—}}}
-\fancyhead[R]{\textcolor{BrandPrimary}{Rectangular Beam Bending Check}}
+\fancyhead[R]{\textcolor{BrandPrimary}{Simply Supported Steel Beam — quick check}}
 \fancyfoot[L]{\small\textcolor{BrandPrimary}{Rev. 0.1 — 2026-07-19}}
 \fancyfoot[C]{\small\textcolor{BrandPrimary}{Structural AI Toolchain}}
 \fancyfoot[R]{\small\textcolor{BrandPrimary}{Page \thepage\ of \pageref{LastPage}}}
 \begin{document}
 \begin{center}
-{\LARGE\bfseries\color{BrandPrimary} Rectangular Beam Bending Check}\\[4pt]
+{\LARGE\bfseries\color{BrandPrimary} Simply Supported Steel Beam — quick check}\\[4pt]
 \end{center}
-\noindent Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.\par
 \vspace{6pt}
 \section*{\color{BrandPrimary}1.\ Input Parameters}
 \rowcolors{2}{BrandLight}{white}
 \noindent\begin{tabular}{>{$}l<{$} r l p{7cm}}
 \rowcolor{BrandPrimary}\textcolor{white}{\textbf{Symbol}} & \textcolor{white}{\textbf{Value}} & \textcolor{white}{\textbf{Unit}} & \textcolor{white}{\textbf{Description}} \\
-b & 200 & mm & Section width \\
-h & 400 & mm & Section depth \\
-L & 5000 & mm & Span \\
-q & 4.5 & kN/m & Distributed load (design) \\
-f_{m} & 24 & MPa & Design bending strength \\
+beam_{h1} & 1 &  & beam\_h1 \\
+Span_{L} & 6 & m & Span L (m) \\
+Line_{load,w} & 12 & kN/m & Line load w (kN/m) \\
+Section_{modulus,Wel} & 324 & cm3 & Section modulus Wel (cm3) \\
+Yield_{fy} & 355 & MPa & Yield fy (MPa) \\
+factors_{b2} & 1 &  & factors\_b2 \\
 \end{tabular}\par\vspace{8pt}
 \section*{\color{BrandPrimary}2.\ Calculation}
-\noindent\textbf{Maximum bending moment}
+\noindent\textbf{Moment M (kNm)}
 \begin{align*}
-M_{max} &= \frac{q \cdot \left(\frac{L}{1000}\right)^{2}}{8} \\
-&= \frac{4.5 \cdot \left(\frac{5000}{1000}\right)^{2}}{8} \\
-&= \mathbf{14.06}\ \mathrm{kNm}
+Moment_{M} &= \frac{Line_{load,w} \cdot Span_{L}^{2}}{8} \\
+&= \frac{12 \cdot 6^{2}}{8} \\
+&= \mathbf{54}\ \mathrm{kNm}
 \end{align*}
-\noindent\textbf{Elastic section modulus}
+\noindent\textbf{Bending stress sigma (MPa)}
 \begin{align*}
-W &= \frac{b \cdot h^{2}}{6} \\
-&= \frac{200 \cdot 400^{2}}{6} \\
-&= \mathbf{5.333e+06}\ \mathrm{mm}^{3}
-\end{align*}
-\noindent\textbf{Maximum bending stress}
-\begin{align*}
-\sigma_{m} &= M_{max} \cdot 1000000 \cdot \frac{1}{W} \\
-&= 14.06 \cdot 1000000 \cdot \frac{1}{5.333e+06} \\
-&= \mathbf{2.637}\ \mathrm{MPa}
+Bending_{stress,\sigma} &= Moment_{M} \cdot 1000 \cdot \frac{1}{Section_{modulus,Wel}} \cdot factors_{b2} \\
+&= 54 \cdot 1000 \cdot \frac{1}{324} \cdot 1 \\
+&= \mathbf{166.7}\ \mathrm{MPa}
 \end{align*}
 \section*{\color{BrandPrimary}3.\ Verification}
-\calccheckpass{$\sigma_{m} = 2.637\ \mathrm{MPa} \; \le \; f_{m} = 24\ \mathrm{MPa}$}\par\vspace{4pt}
+\calccheckpass{$Bending_{stress,\sigma} = 166.7\ \mathrm{MPa} \; \le \; Yield_{fy} = 355\ \mathrm{MPa}$}\par\vspace{4pt}
 \end{document}

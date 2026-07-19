@@ -6,15 +6,16 @@ source_file: crack_width_ec2.xlsx
 source_format: xlsx
 reference: ""
 status: converted-unreviewed
+interpreter: convention
 reviewed_by: null
-converted: 2026-07-18
+converted: 2026-07-19
 revision: '0.1'
 ---
 # Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-18 |
+| 0.1 | 2026-07-19 |
 
 Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.
 

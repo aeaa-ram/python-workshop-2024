@@ -78,6 +78,24 @@
         "b*h**2/6",
         "M_max*1000000/W"
       ]
+    },
+    {
+      "slug": "simply_supported_steel_beam_quick_check",
+      "title": "Simply Supported Steel Beam \u2014 quick check",
+      "variables": [
+        "beam_h1",
+        "Span_L",
+        "Line_load_w",
+        "Section_modulus_Wel",
+        "Yield_fy",
+        "Moment_M",
+        "Bending_stress_sigma",
+        "factors_b2"
+      ],
+      "formulas": [
+        "Line_load_w*Span_L**2/8",
+        "Moment_M*1000/Section_modulus_Wel*factors_b2"
+      ]
     }
   ],
   "relationships": [

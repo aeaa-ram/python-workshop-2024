@@ -566,6 +566,27 @@ class ParsedVariable:
     description: str = ""
     role: str = "input"  # 'input' | 'derived'
     expression: str = ""  # only for derived variables
+    source_cell: str = ""     # provenance, e.g. "Sheet1!C7" (AI grinder)
+    source_formula: str = ""  # original Excel formula, if any
+
+
+@dataclass
+class Clarification:
+    """A specific human-in-the-loop question the parser could not resolve.
+
+    Emitted instead of silently guessing or failing — points at the exact
+    cell/logic and, where possible, offers options.
+    """
+
+    location: str          # e.g. "Sheet2!D14" or a variable name
+    issue: str             # short machine tag, e.g. "magic-number"
+    question: str          # human-readable question
+    options: list[str] = field(default_factory=list)
+    context: str = ""      # the raw formula / value for reference
+
+    def __str__(self) -> str:
+        opts = f"  options: {self.options}" if self.options else ""
+        return f"❓ [{self.issue}] {self.location}: {self.question}{opts}"
 
 
 @dataclass
@@ -585,9 +606,20 @@ class ParsedTool:
     checks: list[str] = field(default_factory=list)
     sections: dict[str, str] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    clarifications: list[Clarification] = field(default_factory=list)
+    interpreter: str = ""   # which interpreter produced this (llm/heuristic)
+
+    def needs_clarification(self) -> bool:
+        return bool(self.clarifications)
 
     def to_sheet(self) -> CalcSheet:
-        """Build an executable CalcSheet from the parsed content."""
+        """Build an executable CalcSheet from the parsed content.
+
+        Resilient: a derived formula that will not evaluate (e.g. an
+        unresolved lookup from a messy sheet) is downgraded to a warning
+        and, if it has a cached value, kept as an input — so one bad cell
+        never sinks the whole conversion.
+        """
         sheet = CalcSheet(
             title=self.title,
             description=self.description,
@@ -598,19 +630,40 @@ class ParsedTool:
         if inputs:
             sheet.section("Input Parameters")
             for var in inputs:
-                sheet.define(
-                    var.name, var.value, unit=var.unit,
-                    description=var.description,
-                )
+                try:
+                    sheet.define(
+                        var.name, var.value if var.value is not None else 0.0,
+                        unit=var.unit, description=var.description,
+                    )
+                except CalcSheetError as exc:
+                    self.warnings.append(f"Input '{var.name}' skipped: {exc}")
         if derived:
             sheet.section("Calculation")
             for var in derived:
-                sheet.calc(
-                    var.name, var.expression, unit=var.unit,
-                    description=var.description,
-                )
+                try:
+                    sheet.calc(
+                        var.name, var.expression, unit=var.unit,
+                        description=var.description,
+                    )
+                except CalcSheetError as exc:
+                    self.warnings.append(
+                        f"Formula '{var.name}' ({var.source_cell or '?'}) "
+                        f"could not be converted and was kept as an input: "
+                        f"{exc}"
+                    )
+                    if var.name not in sheet.values:
+                        sheet.define(
+                            var.name,
+                            var.value if var.value is not None else 0.0,
+                            unit=var.unit,
+                            description=(var.description
+                                         + " [unresolved formula]").strip(),
+                        )
         if self.checks:
             sheet.section("Verification")
             for chk in self.checks:
-                sheet.check(chk)
+                try:
+                    sheet.check(chk)
+                except CalcSheetError as exc:
+                    self.warnings.append(f"Check '{chk}' skipped: {exc}")
         return sheet

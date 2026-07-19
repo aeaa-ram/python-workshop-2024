@@ -11,6 +11,10 @@ pypdf>=4.0           # PDF bookmarks + embedded machine-readable calcsheet
 # Dev / CI
 pytest>=8.0
 
+# AI Grinder LLM backend (optional — heuristic fallback works without it)
+# anthropic>=0.40     # Claude for interpreting messy spreadsheets;
+#                     # set ANTHROPIC_API_KEY and GRINDER_LLM_MODEL
+
 # Future (uncomment when the SharePoint layer goes live)
 # msal>=1.28         # MS Graph client-credentials auth
 # requests>=2.32     # Graph REST calls

@@ -5,8 +5,9 @@
   "reference": "",
   "source_file": "crack_width_ec2.xlsx",
   "source_format": "xlsx",
-  "converted": "2026-07-18",
+  "converted": "2026-07-19",
   "status": "converted-unreviewed",
+  "interpreter": "convention",
   "variables": [
     {
       "name": "b",
@@ -240,6 +241,7 @@
     "w_k": 0.18068343430131523
   },
   "warnings": [],
+  "clarifications": [],
   "formula_analysis": [
     {
       "name": "alpha_e",
