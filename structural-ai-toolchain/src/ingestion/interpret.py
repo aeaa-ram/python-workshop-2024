@@ -219,8 +219,23 @@ def _name_from(cell: CellRecord, used: set[str]) -> str:
     return name
 
 
+# greek letters (incl. the theta symbol ϴ) -> ascii names, so a label of
+# "ϴ" becomes "theta" instead of an unusable coordinate fallback.
+_GREEK_UNICODE = {
+    "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta", "ε": "epsilon",
+    "ζ": "zeta", "η": "eta", "θ": "theta", "ϴ": "theta", "ι": "iota",
+    "κ": "kappa", "λ": "lambda", "μ": "mu", "ν": "nu", "ξ": "xi",
+    "π": "pi", "ρ": "rho", "σ": "sigma", "ς": "sigma", "τ": "tau",
+    "φ": "phi", "ϕ": "phi", "χ": "chi", "ψ": "psi", "ω": "omega",
+    "Δ": "Delta", "Σ": "Sigma", "Ω": "Omega", "Φ": "Phi", "Θ": "theta",
+    "Ø": "phi", "ø": "phi", "∅": "phi",
+}
+
+
 def _slug_ident(text: str) -> str:
     text = re.sub(r"[\[(].*?[\])]", " ", str(text))  # drop bracketed units
+    for uni, name in _GREEK_UNICODE.items():
+        text = text.replace(uni, f" {name} ")
     text = text.strip().replace("%", "pct")
     parts = re.findall(r"[A-Za-z0-9]+", text)
     if not parts:

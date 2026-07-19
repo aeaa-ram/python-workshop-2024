@@ -31,6 +31,9 @@ _ALLOWED = {
     "sqrt": sp.sqrt, "min": sp.Min, "max": sp.Max, "abs": sp.Abs,
     "exp": sp.exp, "log": sp.log, "ln": sp.log, "pi": sp.pi,
     "sin": sp.sin, "cos": sp.cos, "tan": sp.tan,
+    "cot": sp.cot, "sec": sp.sec, "csc": sp.csc,
+    "asin": sp.asin, "acos": sp.acos, "atan": sp.atan, "acot": sp.acot,
+    "sinh": sp.sinh, "cosh": sp.cosh, "tanh": sp.tanh,
 }
 
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -94,10 +97,16 @@ def fingerprint(expression: str) -> str:
 
 
 def try_fingerprint(expression: str) -> str | None:
-    """Fingerprint, or None when the expression is unparseable."""
+    """Fingerprint, or None when the expression is unparseable.
+
+    Catches broadly: messy real-world formulas (Excel functions sympy
+    doesn't know, attribute-access artefacts like ``_xlfn.COT``) can raise
+    ValueError/AttributeError/RecursionError deep in sympy — a fingerprint
+    must never crash the pipeline over one weird cell.
+    """
     try:
         return fingerprint(expression)
-    except FingerprintError:
+    except Exception:
         return None
 
 
@@ -116,8 +125,8 @@ def fingerprint_if_matchable(expression: str) -> str | None:
     """
     try:
         expr = sp.sympify(expression, locals=parse_locals(expression))
-    except (sp.SympifyError, SyntaxError, TypeError):
-        return None
-    if sp.count_ops(expr) < _MIN_MATCH_OPS:
+        if sp.count_ops(expr) < _MIN_MATCH_OPS:
+            return None
+    except Exception:
         return None
     return try_fingerprint(expression)

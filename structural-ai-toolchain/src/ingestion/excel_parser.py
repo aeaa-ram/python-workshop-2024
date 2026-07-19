@@ -214,13 +214,20 @@ ExcelParser = ConventionExcelParser
 # Excel functions we can translate to sympy-safe syntax.
 _TRANSLATABLE_FUNCS = {
     "SQRT": "sqrt", "MIN": "min", "MAX": "max", "ABS": "abs",
-    "LN": "log", "LOG": "log", "EXP": "exp", "SIN": "sin", "COS": "cos",
-    "TAN": "tan", "ROUND": "", "ROUNDUP": "", "ROUNDDOWN": "",
+    "LN": "log", "LOG": "log", "EXP": "exp",
+    "SIN": "sin", "COS": "cos", "TAN": "tan",
+    "COT": "cot", "SEC": "sec", "CSC": "csc",
+    "ASIN": "asin", "ACOS": "acos", "ATAN": "atan", "ACOT": "acot",
+    "SINH": "sinh", "COSH": "cosh", "TANH": "tanh",
 }
+# sympy-safe function names allowed to remain after translation (the
+# catch-all uses this to spot Excel functions we did NOT handle).
+_ALLOWED_MATH_FUNCS = set(_TRANSLATABLE_FUNCS.values()) | {"pi"}
 # Functions that need external data / lookups — cannot be translated to a
 # closed-form expression; trigger human-in-the-loop clarification.
 _LOOKUP_FUNCS = ("INDEX", "VLOOKUP", "HLOOKUP", "MATCH", "OFFSET", "INDIRECT",
                  "LOOKUP", "SUMPRODUCT", "SUMIF", "COUNTIF", "XLOOKUP")
+_FUNC_CALL = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 _QUALIFIED_REF = re.compile(r"(?:'([^']+)'|([A-Za-z0-9_]+))!\$?([A-Z]{1,3})\$?(\d+)")
 _BARE_REF = re.compile(r"(?<![A-Za-z0-9_!'])\$?([A-Z]{1,3})\$?(\d+)")
 
@@ -250,6 +257,14 @@ def translate_excel_formula(
     """
     result = TranslationResult()
     body = formula[1:] if formula.startswith("=") else formula
+    # openpyxl prefixes newer functions: =_xlfn.COT(...), =_xlfn._xlws.X(...)
+    body = re.sub(r"_xlfn\.(?:_xlws\.)?", "", body)
+
+    # text / display formulas ("A"&B) are not calculations
+    if "&" in body or '"' in body:
+        result.unknown_funcs.append("TEXT")
+        result.expression = ""
+        return result
 
     for fn in _LOOKUP_FUNCS:
         if re.search(rf"\b{fn}\s*\(", body, re.IGNORECASE):
@@ -290,6 +305,16 @@ def translate_excel_formula(
         result.check_expression = _clean_expr(cond)
 
     result.expression = _clean_expr(_apply_funcs(body))
+    # catch-all: any Excel function we could not translate remains as FUNC(
+    leftover = _unhandled_functions(result.expression)
+    for fn in leftover:
+        if fn not in result.unknown_funcs:
+            result.unknown_funcs.append(fn)
+    if result.is_check:
+        for fn in _unhandled_functions(_apply_funcs(result.check_expression)):
+            if fn not in result.unknown_funcs:
+                result.unknown_funcs.append(fn)
+        result.check_expression = _clean_expr(_apply_funcs(result.check_expression))
     return result
 
 
@@ -314,10 +339,24 @@ def _apply_funcs(body: str) -> str:
     out = re.sub(r"\bPOWER\s*\(([^,]+),([^)]+)\)", r"(\1)**(\2)",
                  out, flags=re.IGNORECASE)
     out = re.sub(r"\bPI\s*\(\s*\)", "pi", out, flags=re.IGNORECASE)
+    # rounding/truncation dropped for the symbolic form: F(x[,n]) -> (x)
+    out = re.sub(r"\b(?:ROUND(?:UP|DOWN)?|TRUNC|INT)\s*\(([^,()]+)(?:,[^)]*)?\)",
+                 r"(\1)", out, flags=re.IGNORECASE)
     for xl, py in _TRANSLATABLE_FUNCS.items():
-        if py:
-            out = re.sub(rf"\b{xl}\s*\(", f"{py}(", out, flags=re.IGNORECASE)
+        out = re.sub(rf"\b{xl}\s*\(", f"{py}(", out, flags=re.IGNORECASE)
     return out
+
+
+def _unhandled_functions(expression: str) -> list[str]:
+    """Any FUNC( left after translation is an Excel function we don't map —
+    return their names so the caller can raise a precise clarification
+    instead of emitting a broken expression."""
+    bad = []
+    for m in _FUNC_CALL.finditer(expression):
+        name = m.group(1)
+        if name.lower() not in _ALLOWED_MATH_FUNCS:
+            bad.append(name)
+    return bad
 
 
 def _clean_expr(text: str) -> str:

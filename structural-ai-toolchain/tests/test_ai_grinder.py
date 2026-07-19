@@ -62,6 +62,51 @@ def test_translate_flags_lookup_functions():
     assert not tr.ok
 
 
+def test_translate_trig_and_xlfn_prefix():
+    # real sheet used =...fcd/(_xlfn.COT(theta)+tan(theta))
+    cm = {"S!H17": "fcd", "S!K45": "theta"}
+    tr = translate_excel_formula("=H17/(_xlfn.COT(K45)+TAN(K45))", "S", cm)
+    assert tr.ok, tr.unknown_funcs
+    assert tr.expression == "fcd/(cot(theta)+tan(theta))"
+    # and it must actually evaluate in a sheet
+    from src.models.calculation import CalcSheet
+    s = CalcSheet(title="t")
+    s.define("fcd", 25.5)
+    s.define("theta", 0.7854)
+    assert s.calc("x", tr.expression).value == pytest.approx(25.5 / 2, rel=1e-3)
+
+
+def test_translate_text_formula_is_flagged_not_mangled():
+    # =+H14&"mm"  is a display string, not a calculation
+    tr = translate_excel_formula('=+H14& "mm"', "S", {"S!H14": "b"})
+    assert "TEXT" in tr.unknown_funcs
+    assert not tr.ok
+
+
+def test_translate_catchall_unknown_function():
+    # a function we don't map must be flagged, not left as broken FUNC(
+    tr = translate_excel_formula("=SUMX(A1,B2)", "S", {})
+    assert "SUMX" in tr.unknown_funcs
+
+
+def test_greek_and_symbol_labels_named():
+    from src.ingestion.interpret import _slug_ident
+
+    assert _slug_ident("ϴ") == "theta"
+    assert _slug_ident("αcw") == "alpha_cw" or _slug_ident("αcw").startswith("alpha")
+
+
+def test_messy_real_world_functions_do_not_crash():
+    # exercises the fingerprint hardening: exotic expressions must not raise
+    from src.knowledge_graph.fingerprint import (
+        fingerprint_if_matchable,
+        try_fingerprint,
+    )
+    for expr in ("_xlfn.COT(a)+b", 'H14& "mm"', "INDEX(A:A,2)*b", "@#$%"):
+        assert try_fingerprint(expr) is None or isinstance(try_fingerprint(expr), str)
+        fingerprint_if_matchable(expr)  # must not raise
+
+
 def test_translate_detects_check():
     cell_map = {"S!C7": "sigma", "S!F4": "fy"}
     tr = translate_excel_formula("=C7<=F4", "S", cell_map)
