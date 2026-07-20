@@ -126,6 +126,13 @@ def _units_scale_check(sheet: CalcSheet) -> list[ReviewFinding]:
         ratio = natural_scale / out_scale
         p = U.nearest_power_of_ten(ratio)
         if p is not None and abs(p - 1.0) > 0.5:
+            # A DELIBERATE manual conversion (e.g. M*1e6 to go kNm->Nmm)
+            # inflates the canonical recomputation by exactly its own
+            # factor — that is correct engineering, not a slip. Only flag
+            # when the mismatch is NOT explained by explicit power-of-ten
+            # literals present in the formula itself.
+            if _explained_by_conversion_literals(item.expression, p):
+                continue
             corrected = canon_value / out_scale
             findings.append(ReviewFinding(
                 "error", "unit-scale-mismatch", item.name,
@@ -135,6 +142,31 @@ def _units_scale_check(sheet: CalcSheet) -> list[ReviewFinding]:
                 suggested_fix=f"display {_fmt(corrected)} {out_unit}, or "
                               f"reconcile the input units"))
     return findings
+
+
+def _explained_by_conversion_literals(expression: str, ratio: float) -> bool:
+    """True when the flagged power-of-ten ratio matches an explicit
+    conversion literal (1000, 1e6, ...) written into the formula."""
+    import math
+    import re
+
+    literals = []
+    for tok in re.findall(r"\d+(?:\.\d+)?(?:[eE][+-]?\d+)?", expression):
+        try:
+            val = float(tok)
+        except ValueError:
+            continue
+        if val >= 1000 and U.nearest_power_of_ten(val):
+            literals.append(val)
+        elif 0 < val <= 1e-3 and U.nearest_power_of_ten(val):
+            literals.append(val)
+    if not literals:
+        return False
+    # single literal, its inverse, or the product of all of them
+    candidates = {lit for lit in literals}
+    candidates |= {1.0 / lit for lit in literals}
+    candidates.add(math.prod(literals))
+    return any(abs(ratio / c - 1.0) < 0.02 for c in candidates)
 
 
 def _resolved_check(sheet: CalcSheet) -> list[ReviewFinding]:

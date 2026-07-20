@@ -2,7 +2,7 @@
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-19 |
+| 0.1 | 2026-07-20 |
 
 Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.
 

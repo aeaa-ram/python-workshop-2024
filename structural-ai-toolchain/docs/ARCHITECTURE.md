@@ -64,6 +64,39 @@ internet, no MathJax CDN, works in locked-down corporate environments.
 The HTML route is the default for reviewers; the LaTeX route is for
 formal typeset deliverables once TeX Live is available in CI.
 
+## Agentic ingestion (src/ingestion/agent) — the thorough path
+
+`python main.py ingest <file>` runs the full agentic workflow — thorough
+over fast, convergence as the exit condition:
+
+```
+intake ─► [ decompose → research → clarify → reconstruct → verify ] ─loop─► reflect → deliver
+```
+
+- **intake** atomises the source into *fragments* (inputs, formulas,
+  checks, narrative, sketches — incl. Mathcad's BMP-in-.png images,
+  converted; header logos auto-flagged as noise).
+- **decompose** builds the dependency graph, finds unused inputs (noise
+  candidates), repetitive structures, orphans.
+- **research** attaches a code clause to every formula: citations found in
+  the source narrative, structural matches against the atom library, the
+  document-level standard, and an LLM pass when a backend is configured.
+- **clarify** asks the engineer **inline, while building** — governing
+  load case for vector inputs, values for untranslatable constructs
+  (never fabricated), keep/discard for noise, the final governing result
+  (e.g. UR) and its acceptance criterion, layout, sketch placement and
+  captions. Channels: console prompts, scripted answers (batch), or
+  defer-mode (never blocks, never silently drops).
+- **reconstruct** rebuilds a clean, compact, dependency-ordered tool.
+- **verify** recomputes everything, replicates source cached values,
+  runs the units reviewer, checks completeness — then the loop repeats
+  until clean or until only human-deferred items remain (it never spins
+  and never invents an answer to force progress).
+- **reflect** runs the per-value self-review checklist (units known,
+  clause present, checks pass) into the delivered audit trail.
+- **deliver** writes the tool + reports + `casefile.json` + `JOURNAL.md`
+  (every stage, question, answer and decision — no black box).
+
 ## The Grinder (src/ingestion)
 
 - `base.py` — parser registry; one class per format.

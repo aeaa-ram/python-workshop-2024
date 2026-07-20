@@ -7,14 +7,14 @@ source_format: native
 reference: "EN 1992-1-1:2004 \u00a73.1.2, \u00a73.1.3"
 status: native-unreviewed
 reviewed_by: null
-converted: 2026-07-19
+converted: 2026-07-20
 revision: '0.1'
 ---
 # Concrete Modulus at Age t (EN 1992-1-1 3.1.3)
 
 | Reference | Author | Revision | Date |
 |---|---|---|---|
-| EN 1992-1-1:2004 §3.1.2, §3.1.3 | Toolchain example | 0.1 | 2026-07-19 |
+| EN 1992-1-1:2004 §3.1.2, §3.1.3 | Toolchain example | 0.1 | 2026-07-20 |
 
 Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.
 

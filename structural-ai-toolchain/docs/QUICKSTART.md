@@ -4,12 +4,16 @@
 
 ### ① Put a legacy sheet IN  →  get a tool OUT
 ```
-python main.py gui                     # window: pick file → Investigate → Create
-# or, straight from the terminal:
-python main.py grind path/to/your_sheet.xlsx      # .xlsx .xlsm .csv .ipynb .py
+python main.py ingest path/to/sheet.mcdx    # THE thorough way (recommended):
+                                            # agent atomises the file, researches
+                                            # clauses, ASKS YOU inline (keep/discard,
+                                            # governing case, final UR, sketches),
+                                            # rebuilds, verifies, loops to convergence
+python main.py gui                          # window: pick file → Investigate → Create
+python main.py grind your_sheet.xlsx        # quick one-shot conversion
 ```
-Tidy sheets convert exactly; **messy sheets go through the AI Grinder** (reads scattered
-tables, multi-tab, formulas) and, if unsure, **asks you questions** instead of failing.
+Supports .mcdx (real Mathcad parser) .xlsx .xlsm .csv .ipynb .py. Every ingest
+leaves a full audit trail (`JOURNAL.md` + `casefile.json`) next to the tool.
 
 ### ② If it asks questions  →  answer them
 ```

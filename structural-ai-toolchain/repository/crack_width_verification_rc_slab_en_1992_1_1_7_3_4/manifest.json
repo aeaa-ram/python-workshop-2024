@@ -5,8 +5,8 @@
   "reference": "",
   "source_file": "crack_width_ec2.xlsx",
   "source_format": "xlsx",
-  "converted": "2026-07-19",
-  "status": "needs-clarification",
+  "converted": "2026-07-20",
+  "status": "converted-unreviewed",
   "interpreter": "convention",
   "variables": [
     {
@@ -241,13 +241,7 @@
     "w_k": 0.18068343430131523
   },
   "warnings": [],
-  "clarifications": [
-    {
-      "location": "sigma_s",
-      "issue": "unit-scale-mismatch",
-      "question": "'sigma_s' is shown as 184.1 MPa but the formula evaluates to 1.841e+08 MPa (off by x1.000e+06 \u2014 a units slip)."
-    }
-  ],
+  "clarifications": [],
   "formula_analysis": [
     {
       "name": "alpha_e",

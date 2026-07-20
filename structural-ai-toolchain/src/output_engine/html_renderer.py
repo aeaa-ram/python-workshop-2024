@@ -153,6 +153,13 @@ table.inputs td.ref {{ color: var(--muted); font-style: italic; font-size: 8.4pt
 .check .body2 .clause {{ color: var(--muted); font-style: italic; font-size: 8.2pt;
   margin-top: .8mm; }}
 
+/* ---- figures / sketches ---- */
+figure.fig {{ break-inside: avoid; margin: 3mm auto; text-align: center; }}
+figure.fig img {{ max-width: 100%; border: 0.6pt solid var(--rule);
+  border-radius: 3px; }}
+figure.fig figcaption {{ font-size: 8.4pt; color: var(--muted);
+  font-style: italic; margin-top: 1mm; }}
+
 /* machine-readable layer: in normal flow, painted white & tiny so it is
    extractable by pdftotext (reconstruct_from_pdf) yet visually silent.
    break-inside:avoid keeps the base64 on ONE page so the repeating header
@@ -334,6 +341,14 @@ def render_html(
         elif it.kind == "text":
             flush_inputs()
             p.append(f'<p class="note">{esc(it.text)}</p>')
+        elif it.kind == "image":
+            flush_inputs()
+            cap = f"<figcaption>{esc(it.text)}</figcaption>" if it.text else ""
+            p.append(
+                f'<figure class="fig">'
+                f'<img style="width:{it.image_width_mm}mm" '
+                f'src="data:{it.image_mime};base64,{it.image_b64}">{cap}'
+                f"</figure>")
         elif it.kind == "input":
             input_buffer.append(it)
         elif it.kind == "calc":

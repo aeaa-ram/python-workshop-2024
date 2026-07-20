@@ -282,13 +282,18 @@ def _translate_apply(node) -> str:
     if op == "id":
         fname = _slug("".join(kids[0].itertext())).lower()
         fargs = _flatten_args(args)
+        # rounding must be PRESERVED, not dropped — round(L/s)=7 is not 6.67
+        if fname == "round" and len(fargs) >= 1:
+            inner = _translate(fargs[0])
+            return f"floor(({inner})+1/2)"
+        if fname == "trunc" and len(fargs) >= 1:
+            return f"floor({_translate(fargs[0])})"
         _FUNC = {"min": "min", "max": "max", "abs": "abs", "sqrt": "sqrt",
-                 "round": "", "floor": "floor", "ceil": "ceiling",
-                 "trunc": "", "sin": "sin", "cos": "cos", "tan": "tan"}
+                 "floor": "floor", "ceil": "ceiling",
+                 "sin": "sin", "cos": "cos", "tan": "tan"}
         if fname in _FUNC:
             inner = ",".join(_translate(a) for a in fargs)
-            py = _FUNC[fname]
-            return f"({inner})" if py == "" else f"{py}({inner})"
+            return f"{_FUNC[fname]}({inner})"
     raise _Untranslatable(f"operator <{op}>")
 
 

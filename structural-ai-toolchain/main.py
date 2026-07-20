@@ -157,6 +157,35 @@ def cmd_qa(args) -> int:
     return 1 if errors else 0
 
 
+def cmd_ingest(args) -> int:
+    """The agentic ingestion workflow — thorough, interactive, auditable."""
+    import json as _json
+
+    from src.ingestion.agent import ingest
+
+    answers = None
+    if args.answers:
+        answers = _json.loads(Path(args.answers).read_text(encoding="utf-8"))
+    result = ingest(
+        args.file, REPO_DIR,
+        answers=answers,
+        interactive=not args.defer and answers is None,
+        render_pdf=not args.no_pdf,
+    )
+    print()
+    print(result.summary())
+    print("\nDeliverables:")
+    for kind, path in result.paths.items():
+        print(f"  {kind:>9}: {path}")
+    if result.deferred:
+        print(f"\n{len(result.deferred)} question(s) deferred — answer them "
+              "and re-run, or edit the tool directly (see JOURNAL.md).")
+    from src.knowledge_graph import build_index
+
+    build_index(REPO_DIR)
+    return 0 if result.converged else 2
+
+
 def cmd_review(args) -> int:
     from src.ingestion.native import load_sheet
     from src.qa import review
@@ -352,6 +381,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--prompt", action="store_true",
                    help="also export the AI review prompt")
     p.set_defaults(func=cmd_qa)
+
+    p = sub.add_parser(
+        "ingest",
+        help="AGENTIC ingestion: atomise → research → ask inline → "
+             "rebuild → verify → reflect, looping to convergence")
+    p.add_argument("file")
+    p.add_argument("--answers", default=None,
+                   help="JSON file of scripted answers (batch mode)")
+    p.add_argument("--defer", action="store_true",
+                   help="never prompt; defer open questions to JOURNAL.md")
+    p.add_argument("--no-pdf", action="store_true")
+    p.set_defaults(func=cmd_ingest)
 
     p = sub.add_parser("review", help="AI master reviewer: catch wrong "
                        "results (units, unresolved) before issue")

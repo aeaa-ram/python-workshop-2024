@@ -112,6 +112,9 @@ class CalcItem:
     atom_id: str = ""               # library atom this step reuses, if any
     reference: str = ""             # code clause, shown right-aligned italic
     intro: str = ""                 # narrative shown under a section heading
+    image_b64: str = ""             # 'image' items: base64 payload
+    image_mime: str = "image/png"
+    image_width_mm: int = 120
 
 
 class CalcSheetError(Exception):
@@ -195,6 +198,45 @@ class CalcSheet:
 
     def text(self, paragraph: str) -> CalcItem:
         item = CalcItem(kind="text", text=paragraph)
+        self.items.append(item)
+        return item
+
+    def image(
+        self,
+        data,
+        caption: str = "",
+        width_mm: int = 120,
+        mime: str = "image/png",
+    ) -> CalcItem:
+        """Embed a sketch/figure (bytes, base64 str, or a file path).
+
+        Rendered inline in the report at the position it is declared —
+        so drawings sit exactly where the engineer wants them.
+        """
+        import base64 as _b64
+        from pathlib import Path as _Path
+
+        def _is_path(s) -> bool:
+            if not isinstance(s, str) or len(s) > 400 or "\n" in s:
+                return False
+            try:
+                return _Path(s).exists()
+            except OSError:
+                return False
+
+        if isinstance(data, bytes):
+            payload = _b64.b64encode(data).decode("ascii")
+        elif _is_path(data):
+            raw = _Path(data).read_bytes()
+            payload = _b64.b64encode(raw).decode("ascii")
+            suffix = _Path(data).suffix.lower().lstrip(".")
+            mime = f"image/{'jpeg' if suffix in ('jpg', 'jpeg') else suffix}"
+        else:
+            payload = str(data)  # already base64
+        item = CalcItem(
+            kind="image", text=caption, image_b64=payload,
+            image_mime=mime, image_width_mm=width_mm,
+        )
         self.items.append(item)
         return item
 
@@ -512,6 +554,12 @@ class CalcSheet:
                     "atom_id": i.atom_id,
                     "reference": i.reference,
                     "intro": i.intro,
+                    # images: fingerprint only, so the in-PDF machine-readable
+                    # layer stays compact (payload lives in the HTML itself)
+                    **({"image_sha1": __import__("hashlib").sha1(
+                            i.image_b64.encode()).hexdigest()[:12],
+                        "image_bytes": len(i.image_b64) * 3 // 4}
+                       if i.kind == "image" and i.image_b64 else {}),
                 }
                 for i in self.items
             ],

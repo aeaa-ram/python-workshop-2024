@@ -2,7 +2,7 @@
 
 | Reference | Author | Revision | Date |
 |---|---|---|---|
-| EN 1992-1-1:2004 §3.1.2, §3.1.3 | Toolchain example | 0.1 | 2026-07-19 |
+| EN 1992-1-1:2004 §3.1.2, §3.1.3 | Toolchain example | 0.1 | 2026-07-20 |
 
 Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.
 
