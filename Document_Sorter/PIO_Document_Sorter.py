@@ -378,6 +378,24 @@ def resolve_placement(dest_root, stage, pkg, subpart):
     #     directly, or found below.  (?![\d.]) keeps it off the sub-part folder.
     code, path = find_folder_by_regex(dest_root, pkg_rx, include_self=True)
     if code:
+        pkg_level_len = len(stage_code) + PKG_SUFFIX_WIDTH
+        sub_level_len = pkg_level_len + SUBPART_WIDTH
+        # A sub-part "wrapper" folder legitimately reuses the package's own
+        # descriptive text (e.g. "400120 CP-35" before it becomes "CP-35.1"),
+        # so it matches pkg_rx just as well as the real package folder does -
+        # text alone can't tell them apart.  Its CODE can: it is always
+        # exactly one digit longer than the package's.  If what matched
+        # (often the folder the user selected directly) already sits at that
+        # depth and isn't itself a revision folder, it IS the sub-part level
+        # already - build straight into it, never re-derive from the package
+        # upwards or search past it.
+        if (len(code) == sub_level_len and not re.search(r"(?i)\bR\d", path.name)):
+            info["pkg_suffix"] = code[len(stage_code):pkg_level_len]
+            info["build_dir"] = str(path)
+            info["build_level"] = "subpart"
+            info["subpart_code"] = code
+            info["package_detected"] = True
+            return info
         info["pkg_suffix"] = _suffix_from_code(code, stage)
         info["build_dir"] = str(path)
         info["build_level"] = "package"
