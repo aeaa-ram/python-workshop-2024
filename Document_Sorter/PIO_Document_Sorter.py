@@ -27,14 +27,21 @@ The numbering scheme (your convention)
        400              Preliminaire        (top-level stage codes - fixed)
        401              Definitive
         40101           CD-23               (stage + a 2-digit package code)
-         4010103        CD-23.4             (package + sub-part, 0-indexed: .1→00 .2→01 .3→02 .4→03)
-          40101030      R00                 (one more digit per level below)
-           401010300    Reports
-            4010103000  Original
-            4010103001  Translated
-           401010301    Drawings
-            4010103010  Original
-            4010103011  Combined
+         401012         CD-23.4             (package + sub-part, 0-indexed as ONE digit: .1→0 .2→1 .3→2 .4→3)
+          4010120       R00                 (one more digit per level below)
+           40101200     Reports
+            401012000   Original
+            401012001   Translated
+           40101201     Drawings
+            401012010   Original
+            401012011   Combined
+
+  A package with no sub-parts skips that digit entirely - the revision sits
+  straight under the package (e.g. CP-26 -> 40004 -> 400040 R00 -> ...).  A
+  handful of packages (e.g. CP-35, CP-39) intentionally start as a single
+  unlabelled sub-part - a folder that still just has the package's own name,
+  not "<pkg>.1" yet - occupying that same digit; the script recognises and
+  builds into it rather than skipping past it (see _find_implicit_subpart).
 
 * The two stage codes (400 / 401) and the digit widths live in the CONFIG block
   below - change them there if your scheme ever differs.
@@ -171,7 +178,7 @@ STAGE_NAMES = {"CP": "Preliminaire", "CD": "Definitive"}
 
 # Digit widths for the two numbered levels under a stage.
 PKG_SUFFIX_WIDTH = 2   # CD-23   -> a 2-digit package code, e.g. "01" (40101)
-SUBPART_WIDTH = 2      # CD-23.4 -> the sub-part number as 2 digits  "04" (4010104)
+SUBPART_WIDTH = 1      # CD-23.4 -> the sub-part number as 1 digit, 0-indexed: "3" (401013)
 # Every level below that (revision, Reports/Drawings, Original/Translated/
 # Combined) adds exactly one digit.
 
@@ -250,6 +257,37 @@ def parse_source(source_path):
 #  FOLDER-CODE RESOLUTION  -  work out the 2-digit package code and where to
 #  put the new folders, preferring the folders you already have.
 # ===========================================================================
+
+
+def _lead(name):
+    """The leading run of digits in a folder name, or None."""
+    m = re.match(r"\s*(\d+)", name)
+    return m.group(1) if m else None
+
+
+def _find_implicit_subpart(package_dir, package_code):
+    """Detect a sub-part 'wrapper' folder that hasn't been renamed to
+    '<pkg>.N' yet - some packages (e.g. CP-35, CP-39) intentionally start as
+    a single sub-part that still just carries the package's own name, ready
+    to be split into ".1" / ".2" later.  It occupies the sub-part digit on
+    disk (package code + one digit) but isn't itself a revision folder.
+
+    Returns the Path of that folder if exactly one such child exists, else
+    None (no sub-part level - build the revision straight under the package,
+    or more than one candidate - ambiguous, leave it alone)."""
+    candidates = []
+    try:
+        for e in os.scandir(package_dir):
+            if not e.is_dir():
+                continue
+            code = _lead(e.name)
+            if (code and code.startswith(package_code)
+                    and len(code) == len(package_code) + SUBPART_WIDTH
+                    and not re.search(r"(?i)\bR\d", e.name)):
+                candidates.append(Path(e.path))
+    except OSError:
+        pass
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def find_folder_by_regex(root, pattern, max_depth=6, include_self=False):
@@ -344,6 +382,17 @@ def resolve_placement(dest_root, stage, pkg, subpart):
         info["build_dir"] = str(path)
         info["build_level"] = "package"
         info["package_detected"] = True
+        # The source path gave no explicit sub-part ("23.4"), so this package
+        # is normally built straight into (no sub-part level).  But some
+        # packages already have an un-numbered sub-part wrapper on disk
+        # (e.g. "CP-35" before it becomes "CP-35.1") - if so, build into
+        # that existing folder instead of skipping past it.
+        if not sub_rx:
+            implicit = _find_implicit_subpart(path, code)
+            if implicit:
+                info["build_dir"] = str(implicit)
+                info["build_level"] = "subpart"
+                info["subpart_code"] = _lead(implicit.name)
         return info
 
     # (C) Nothing yet - create under the stage folder (e.g. "401 Definitive")
@@ -386,14 +435,17 @@ def derive_codes(stage, pkg_code, subpart, rev_index, detected_subpart_code=None
 
     package_code = f"{stage_code}{pkg_code}"
     subpart_code = None
-    if subpart:
-        # Reuse the code of an existing sub-part folder if there is one, so the
-        # numbering on disk and in the script always agree.
+    if subpart or detected_subpart_code:
+        # Reuse the code of an existing sub-part folder if there is one - this
+        # also covers a package's "implicit" sub-part wrapper (e.g. CP-35
+        # before it becomes CP-35.1), whose code isn't derivable from a
+        # sub-part number at all - so the numbering on disk and in the
+        # script always agree.
         subpart_code = (
             detected_subpart_code
             or f"{package_code}{(int(subpart) - 1):0{SUBPART_WIDTH}d}"
         )
-    base = subpart_code if subpart else package_code
+    base = subpart_code if subpart_code else package_code
 
     codes = compute_codes(base, rev_index)
     codes["package"] = package_code
@@ -430,8 +482,9 @@ def build_structure(fields, codes, dry_run=False):
     else:  # "subpart": build_dir already IS the sub-part folder
         package_dir = build_dir.parent
 
-    # --- Sub-part folder (only when the package has sub-parts) ------------
-    if subpart and codes.get("subpart"):
+    # --- Sub-part folder (only when the package has sub-parts, including an
+    #     un-numbered "implicit" wrapper - see _find_implicit_subpart) -------
+    if codes.get("subpart"):
         if level == "subpart":
             rev_parent = build_dir
         else:
@@ -445,7 +498,7 @@ def build_structure(fields, codes, dry_run=False):
     drawings = rev_dir / f"{codes['drawings']} Drawings"
     folders = {
         "package": package_dir,
-        "subpart": rev_parent if (subpart and codes.get("subpart")) else None,
+        "subpart": rev_parent if codes.get("subpart") else None,
         "rev": rev_dir,
         "reports": reports,
         "drawings": drawings,
