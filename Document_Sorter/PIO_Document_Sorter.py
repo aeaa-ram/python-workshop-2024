@@ -69,7 +69,9 @@ Design notes / how the old flaws are fixed
 * PDF merge fails:  encrypted/damaged PDFs are repaired when possible and
                     otherwise skipped and listed for you.
 * Files in limbo:   anything a rule can't place is reported in a warnings list
-                    and kept in a clearly named folder, never silently dropped.
+                    and left loose at the revision root (never in its own
+                    folder, so it's easy to clear out by hand), never silently
+                    dropped.
 
 The job is non-destructive: it COPIES from the SharePoint source and never
 deletes anything there.
@@ -127,10 +129,17 @@ def _ensure_deps():
 # How files are sorted by their name.  Each rule is (list-of-substrings, key).
 # The keys map to folders built further down (see build_structure).  Matching
 # is case-insensitive and the FIRST matching rule wins.
+# "-PLA-"/"-BOA-" match any originator code (ODA-PLA, ADS-PLA, ...) - the
+# document-TYPE code (PLA/BOA) is what decides it's a drawing, not who made it.
 SORTING_RULES = [
-    (["ODA-PLA", "ODA-BOA"],                     "drawings_original"),
-    (["RPT", "SPC", "CER", "FIT", "MET"],        "reports_original"),
+    (["-PLA-", "-BOA-"],                          "drawings_original"),
+    (["RPT", "SPC", "CER", "FIT", "MET", "MOD"],  "reports_original"),
 ]
+
+# Drawing files whose name contains one of these are still copied into
+# Drawings/Original (matched by SORTING_RULES above like any other drawing),
+# but are left OUT of the merged Combined PDF.
+DRAWINGS_MERGE_EXCLUDE = ["ADS-PLA"]
 
 # A report whose name (without extension) ends with this is treated as the
 # translated (English) version and goes into the "Translated" sub-folder.
@@ -150,9 +159,12 @@ ROOT_EXTENSIONS = [".zip"]
 # submission, so they are skipped silently - not copied and not flagged.
 IGNORE_EXTENSIONS = [".xls", ".xlsx", ".xlsm"]
 
-# Anything the rules can't place is copied here, inside the revision folder, so
-# nothing is ever lost and it is obvious what still needs a human.
-UNSORTED_FOLDER_NAME = "_To_Sort_Manually"
+# Anything the rules can't place is left loose at the revision-folder root
+# (next to Reports/Drawings) rather than in its own sub-folder, so nothing is
+# ever lost - and since it's plain files, not a folder, it stays easy to
+# clear out even without folder-delete permissions.  A short text file
+# listing what needs a look is dropped alongside them - see write_unsorted_note.
+UNSORTED_NOTE_NAME = "_READ_ME_unsorted.txt"
 
 # Drawings are merged in ascending file-name order (sheet 1, 2, 3 ...).  Set
 # this to True if you ever want the old descending order back.
@@ -527,8 +539,9 @@ def build_structure(fields, codes, dry_run=False):
         # spreadsheets etc. sit at the revision root so the whole submission is
         # self-contained for the drag-and-drop into ProjectWise.
         "root": rev_dir,
-        # created lazily, only if something can't be sorted.
-        "unsorted": rev_dir / UNSORTED_FOLDER_NAME,
+        # files no rule could place are left loose at the revision root too -
+        # no sub-folder, so they stay easy to clear out by hand.
+        "unsorted": rev_dir,
     }
     if not dry_run:
         # parents=True creates the package and sub-part folders as needed.
@@ -545,7 +558,7 @@ def classify_file(name):
 
     Returns (key, note):
         key  - destination folder key, "ignore" to skip silently, or None if no
-               rule matched (file kept in _To_Sort_Manually and flagged).
+               rule matched (file left loose at the revision root and flagged).
         note - None, or a short string describing an ambiguity worth a warning.
 
     Edit the CONFIG block at the top of the file to change any of this.
@@ -594,7 +607,7 @@ def copy_and_sort(source, folders, dry_run=False):
     Returns (copied, skipped, unsorted, ambiguous, ignored):
         copied    - dict key -> [names]
         skipped   - [names] that already existed (left untouched, not overwritten)
-        unsorted  - [names] no rule could place (kept in the _To_Sort_Manually folder)
+        unsorted  - [names] no rule could place (left loose at the revision root)
         ambiguous - [(name, note)] that matched more than one category
         ignored   - [names] intentionally skipped (e.g. stray spreadsheets)
     """
@@ -714,20 +727,27 @@ def _merge_with_pypdf(pdf_paths, output_path):
 
 
 def merge_drawings(drawings_dir, output_path, dry_run=False):
-    """Merge every PDF in drawings_dir into output_path.
+    """Merge every PDF in drawings_dir into output_path, except any whose name
+    matches DRAWINGS_MERGE_EXCLUDE - those stay in Drawings/Original but are
+    left out of the combined PDF.
 
-    Returns (status, output_path, merged_count, failed) where failed is a list
-    of (file_name, reason) for files that could not be merged.
+    Returns (status, output_path, merged_count, failed, excluded) where
+    failed is a list of (file_name, reason) for files that could not be
+    merged, and excluded is a list of file names deliberately left out.
     """
-    pdfs = sorted(
+    all_pdfs = sorted(
         Path(drawings_dir).glob("*.pdf"),
         key=lambda p: p.name.lower(),
         reverse=DRAWINGS_SORT_DESCENDING,
     )
+    excluded = [p.name for p in all_pdfs
+                if any(kw.lower() in p.name.lower() for kw in DRAWINGS_MERGE_EXCLUDE)]
+    pdfs = [p for p in all_pdfs if p.name not in excluded]
+
     if not pdfs:
-        return "no-pdfs", None, 0, []
+        return "no-pdfs", None, 0, [], excluded
     if dry_run:
-        return "dry-run", output_path, len(pdfs), []
+        return "dry-run", output_path, len(pdfs), [], excluded
 
     output_path = _add_sequential_suffix(Path(output_path))
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -742,15 +762,15 @@ def merge_drawings(drawings_dir, output_path, dry_run=False):
         except ImportError:
             return "no-library", None, 0, [
                 (p.name, "no PDF library installed") for p in pdfs
-            ]
+            ], excluded
 
     merged = len(pdfs) - len(failed)
     if merged == 0:
         # nothing got in - remove the empty output so it isn't mistaken for OK
         if output_path.exists():
             output_path.unlink()
-        return "all-failed", None, 0, failed
-    return "ok", output_path, merged, failed
+        return "all-failed", None, 0, failed, excluded
+    return "ok", output_path, merged, failed, excluded
 
 
 # ===========================================================================
@@ -776,7 +796,7 @@ def run(source, dest_root, fields, dry_run=False):
 
     cdnr = f"{pkg}.{subpart}" if subpart else (str(pkg) if pkg else "")
     merged_name = f"PIO_{stage}_{cdnr}_Combined_Drawings.pdf"
-    merge_status, merged_path, merged_count, merge_failed = merge_drawings(
+    merge_status, merged_path, merged_count, merge_failed, merge_excluded = merge_drawings(
         folders["drawings_original"],
         folders["drawings_combined"] / merged_name,
         dry_run,
@@ -790,7 +810,7 @@ def run(source, dest_root, fields, dry_run=False):
 
     summary = _summary(
         source, folders, codes, fields, copied, skipped, ignored, merge_status,
-        merged_path, merged_count, warnings, dry_run,
+        merged_path, merged_count, merge_excluded, warnings, dry_run,
     )
     return summary, warnings
 
@@ -811,8 +831,8 @@ def collect_warnings(fields, skipped, unsorted, ambiguous, merge_status,
         )
     for name in unsorted:
         w.append(
-            f"NOT SORTED (no rule matched): {name}  ->  left in "
-            f"'{UNSORTED_FOLDER_NAME}'"
+            f"NOT SORTED (no rule matched): {name}  ->  left loose in the "
+            f"revision folder, see {UNSORTED_NOTE_NAME}"
         )
     for name, note in ambiguous:
         w.append(f"CHECK PLACEMENT: {name}  ->  {note}")
@@ -837,13 +857,13 @@ def collect_warnings(fields, skipped, unsorted, ambiguous, merge_status,
 
 
 def write_unsorted_note(unsorted_dir, unsorted):
-    """Drop a short readme next to the files that still need a human."""
+    """Drop a short readme next to the loose files that still need a human."""
     try:
         Path(unsorted_dir).mkdir(parents=True, exist_ok=True)
-        note = Path(unsorted_dir) / "_READ_ME_unsorted.txt"
+        note = Path(unsorted_dir) / UNSORTED_NOTE_NAME
         lines = [
-            "These files did not match any sorting rule, so they were left here",
-            "for you to place by hand:",
+            "These files did not match any sorting rule, so they were left loose",
+            "here (next to Reports/Drawings) for you to place by hand:",
             "",
         ] + [f"  - {n}" for n in unsorted] + [
             "",
@@ -857,7 +877,8 @@ def write_unsorted_note(unsorted_dir, unsorted):
 
 
 def _summary(source, folders, codes, fields, copied, skipped, ignored,
-             merge_status, merged_path, merged_count, warnings, dry_run):
+             merge_status, merged_path, merged_count, merge_excluded, warnings,
+             dry_run):
     lines = []
     head = "DRY RUN - nothing was written" if dry_run else "Done"
     lines.append(f"=== PIO Document Sorter - {head} ===")
@@ -889,7 +910,7 @@ def _summary(source, folders, codes, fields, copied, skipped, ignored,
         "reports_original": "Reports/Original",
         "reports_translated": "Reports/Translated",
         "root": "Revision root (doc list / zips)",
-        "unsorted": f"{UNSORTED_FOLDER_NAME} (needs a human)",
+        "unsorted": "Revision root, loose - needs a human (see " + UNSORTED_NOTE_NAME + ")",
     }
     for key, names in copied.items():
         lines.append(f"  - {pretty.get(key, key)}: {len(names)}")
@@ -912,6 +933,12 @@ def _summary(source, folders, codes, fields, copied, skipped, ignored,
         lines.append("Drawings merged: SKIPPED (no PDF library installed).")
     elif merge_status == "all-failed":
         lines.append("Drawings merged: FAILED (see warnings above).")
+    if merge_excluded:
+        shown = ", ".join(merge_excluded[:6]) + (" ..." if len(merge_excluded) > 6 else "")
+        lines.append(
+            f"Drawings excluded from merge by rule (kept in Drawings/Original "
+            f"only): {len(merge_excluded)} ({shown})"
+        )
     lines.append("")
     lines.append(
         "Tip: to teach the sorter a new file type, add its keyword to "
