@@ -61,6 +61,10 @@ def _load_tools(repo_dir: Path, repo_root: Path) -> list[dict]:
                               if v.get("role") == "derived"),
             "reused_atoms": sorted(set(reused)),
             "projects": data.get("projects", []),
+            "review": data.get("review") or {},
+            "corrections": len(data.get("review_log") or []),
+            "ai": data.get("ai", ""),
+            "revision": data.get("revision", ""),
             "edited_by": who,
             "edited_when": when,
             "report": str(report.relative_to(repo_dir.parent))
@@ -73,6 +77,19 @@ def _source_badge(fmt: str) -> str:
     native = fmt == "native"
     label = "NATIVE" if native else f"CONVERTED · {fmt.upper()}"
     color = "#6b46c1" if native else "#0f766e"
+    return f'<span class="badge" style="background:{color}">{label}</span>'
+
+
+def _review_badge(t: dict) -> str:
+    review = t.get("review") or {}
+    if not review:
+        return ""
+    if review.get("passed"):
+        label, color = "REVIEW ✓", "#1E7D32"
+    else:
+        label, color = "REVIEW ✗", "#C62828"
+    if t.get("corrections"):
+        label += f" · {t['corrections']} FIX"
     return f'<span class="badge" style="background:{color}">{label}</span>'
 
 
@@ -161,7 +178,9 @@ def generate_dashboard(repo_dir: str | Path, out_path: str | Path | None = None)
             f'<div class="card tool" data-s="{search_blob}">'
             f'<h3><a href="{esc(t["report"])}">{esc(t["title"])}</a></h3>'
             f'{_source_badge(t["source_format"])}{_status_badge(t["status"])}'
+            f'{_review_badge(t)}'
             f'<div class="meta">{esc(t["reference"] or "—")} · '
+            f'rev {esc(str(t["revision"] or "0.1"))} · '
             f'{t["n_inputs"]} inputs · {t["n_formulas"]} formulas · '
             f'last edit by <b>{esc(t["edited_by"])}</b> {esc(t["edited_when"])}'
             f'{projects} · {report_link}</div>'

@@ -80,6 +80,33 @@
       ]
     },
     {
+      "slug": "shear_resistance_of_headed_studs",
+      "title": "Shear resistance of headed studs",
+      "variables": [
+        "d",
+        "f_u",
+        "h_sc",
+        "f_ck",
+        "E_cm",
+        "gamma_V",
+        "P_Ed",
+        "alpha",
+        "P_Rd_1",
+        "P_Rd_2",
+        "P_Rd",
+        "h_eff",
+        "UR"
+      ],
+      "formulas": [
+        "Piecewise((1, (((h_sc)/(d)) >= (4))), (0.2*((h_sc)/(d)+1), True))",
+        "(0.8*f_u*pi*((d)**(2))/(4))/(gamma_V)",
+        "(0.29*alpha*(d)**(2)*sqrt(f_ck*E_cm))/(gamma_V)",
+        "min(P_Rd_1,P_Rd_2)",
+        "((h_sc)-(0.003*u__m))",
+        "(P_Ed)/(P_Rd)"
+      ]
+    },
+    {
       "slug": "simply_supported_steel_beam_quick_check",
       "title": "Simply Supported Steel Beam \u2014 quick check",
       "variables": [
@@ -88,9 +115,9 @@
         "Line_load_w",
         "Section_modulus_Wel",
         "Yield_fy",
+        "factors_b2",
         "Moment_M",
-        "Bending_stress_sigma",
-        "factors_b2"
+        "Bending_stress_sigma"
       ],
       "formulas": [
         "Line_load_w*Span_L**2/8",
@@ -107,6 +134,16 @@
       "shared_variables": [
         "b",
         "h"
+      ]
+    },
+    {
+      "tools": [
+        "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
+        "shear_resistance_of_headed_studs"
+      ],
+      "shared_variables": [
+        "E_cm",
+        "d"
       ]
     }
   ]

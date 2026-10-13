@@ -11,11 +11,11 @@ the **page content**: invisible sentinel-wrapped base64(gzip(json)) text
 handing someone only the PDF is enough — ``reconstruct_from_pdf`` gets the
 data back with pdftotext or any PDF text extractor, no attachment needed.
 
-Two extra belt-and-braces channels are also written by ``stamp_pdf``:
-1. an embedded-file attachment ``calcsheet.json`` (/EmbeddedFiles), and
-2. document metadata incl. a ``/CalcSheetSchema`` key.
-These help when a viewer surfaces attachments, but the system of record
-does NOT depend on them — the in-page layer and the sidecar/manifest do.
+``stamp_pdf`` always writes document metadata (title, author, a
+``/CalcSheetSchema`` key). An embedded-file attachment ``calcsheet.json``
+is OPT-IN only (``attach=True``): the in-page layer is the system of
+record, and a PDF that carries a second copy of the data invites the two
+to drift apart.
 """
 
 from __future__ import annotations
@@ -34,16 +34,18 @@ ATTACHMENT_NAME = "calcsheet.json"
 _MR_RE = re.compile(r"@@CALCSHEET/1@@(.*?)@@END@@", re.DOTALL)
 
 
-def stamp_pdf(pdf_path: str | Path, sheet: CalcSheet) -> Path:
-    """Embed the sheet's JSON payload + metadata into an existing PDF."""
+def stamp_pdf(pdf_path: str | Path, sheet: CalcSheet,
+              attach: bool = False) -> Path:
+    """Write document metadata (and, only if asked, an attachment)."""
     from pypdf import PdfReader, PdfWriter
 
     pdf_path = Path(pdf_path)
     reader = PdfReader(str(pdf_path))
     writer = PdfWriter(clone_from=reader)  # clone keeps pages AND outline
-    writer.add_attachment(
-        ATTACHMENT_NAME, sheet.to_json().encode("utf-8")
-    )
+    if attach:
+        writer.add_attachment(
+            ATTACHMENT_NAME, sheet.to_json().encode("utf-8")
+        )
     writer.add_metadata(
         {
             "/Title": sheet.title,
@@ -52,7 +54,7 @@ def stamp_pdf(pdf_path: str | Path, sheet: CalcSheet) -> Path:
             "/Creator": "Structural AI Toolchain output engine",
             "/Keywords": (
                 "structural-ai-toolchain, machine-readable, "
-                f"embedded:{ATTACHMENT_NAME}"
+                "in-page:@@CALCSHEET/1@@"
             ),
             "/CalcSheetSchema": CalcSheet.SCHEMA,
         }

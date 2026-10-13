@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Shear resistance of headed studs</title>
+<style>
+:root {
+  --primary: #13293D; --accent: #00A0DF; --light: #EAF1F6;
+  --ok: #1E7D32; --not-ok: #C62828;
+  --ink: #1c2530; --muted: #6b7686; --rule: #d7dee8;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #eef1f5; }
+body { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif;
+  color: var(--ink); font-size: 10.2pt; line-height: 1.4; }
+
+.sheet { width: 210mm; margin: 8mm auto; background: #fff;
+  border-collapse: collapse; box-shadow: 0 2px 12px rgba(0,0,0,.16); }
+.sheet > thead > tr > td { padding: 0; border: 1.4pt solid var(--primary); }
+.sheet > tbody > tr > td { padding: 0;
+  border: 1.4pt solid var(--primary); border-top: none; }
+
+/* ---- Mathcad-style title block (bounding-box grid), repeats each page ---- */
+table.tblock { width: 100%; border-collapse: collapse; }
+table.tblock td { border: 0.8pt solid var(--rule); padding: 1.6mm 3mm;
+  vertical-align: top; }
+.tb-logo { width: 42mm; text-align: center; vertical-align: middle;
+  background: #fff; }
+.tb-logo svg, .tb-logo .logo-img { height: 10mm; width: auto; max-width: 38mm; }
+.tb-k { font-size: 6.8pt; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); display: block; }
+.tb-v { font-size: 10pt; color: var(--primary); font-weight: 600; }
+.tb-title { }
+.tb-title .ttl { font-size: 12.5pt; font-weight: 700; color: var(--primary);
+  line-height: 1.15; }
+.tb-title .ref { font-size: 8.4pt; color: var(--accent); margin-top: .6mm; }
+.tb-people { width: 40mm; }
+.tb-people .row { display: flex; justify-content: space-between;
+  font-size: 8.6pt; padding: .3mm 0; }
+.tb-people .row b { color: var(--muted); font-weight: 600;
+  text-transform: uppercase; font-size: 6.8pt; letter-spacing: .4px;
+  align-self: center; }
+.tb-people .row span { color: var(--primary); font-weight: 600; }
+.tb-status { text-align: right; }
+.tb-status .badge { display: inline-block; padding: .6mm 2.4mm;
+  background: var(--accent); color: #fff; border-radius: 2px; font-weight: 700;
+  font-size: 7.6pt; letter-spacing: .5px; }
+
+.body { padding: 5mm 9mm 7mm; }
+h1.doctitle { font-size: 3px; line-height: 1; margin: 0; color: #fff;
+  font-weight: normal; }
+
+/* ---- narrative / abstract ---- */
+.abstract { background: var(--light); border-left: 3px solid var(--accent);
+  padding: 2.6mm 3.5mm; margin: 1mm 0 3mm; font-size: 9.8pt; }
+.abstract .lbl { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .6px;
+  color: var(--primary); font-weight: 700; display: block; margin-bottom: 1mm; }
+
+h2.section { color: var(--primary); font-size: 11.6pt; margin: 6mm 0 1mm;
+  padding-bottom: 1.2mm; border-bottom: 1.5px solid var(--primary);
+  display: flex; align-items: baseline; gap: 2.5mm; }
+h2.section .num { font-size: 9.5pt; background: var(--primary); color: #fff;
+  border-radius: 3px; padding: .3mm 2mm; }
+p.intro { color: #33404f; margin: 1.4mm 0 2.5mm; font-size: 9.7pt; }
+p.note { margin: 1.6mm 0; }
+
+/* ---- inputs ---- */
+table.inputs { border-collapse: collapse; width: 100%; margin: 1.5mm 0 2mm;
+  font-size: 9.4pt; }
+table.inputs th { background: var(--primary); color: #fff; text-align: left;
+  padding: 1.3mm 2.4mm; font-weight: 600; }
+table.inputs td { padding: 1.1mm 2.4mm; border: none;
+  border-bottom: 1px solid #e7ebf1; }
+table.inputs tr:nth-child(even) td { background: #f6f8fb; }
+table.inputs td.sym svg { vertical-align: middle; }
+table.inputs td.ref { color: var(--muted); font-style: italic; font-size: 8.4pt;
+  text-align: right; white-space: nowrap; }
+
+/* ---- calculation steps ---- */
+.step { break-inside: avoid; margin: 2.6mm 0; padding-left: 3mm;
+  border-left: 2.5px solid var(--accent); }
+.step .lead { font-weight: 600; color: var(--primary); font-size: 9.7pt;
+  margin-bottom: .6mm; }
+.eqrow { display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 6mm; }
+.eqrow .eq { flex: 1 1 auto; min-width: 0; }
+.eqrow .clause { flex: 0 0 auto; color: var(--muted); font-style: italic;
+  font-size: 8.4pt; text-align: right; max-width: 46mm; padding-top: 1mm; }
+.mline { margin: .5mm 0 .5mm 6mm; overflow-x: auto; }
+.mline.first { margin-left: 0; }
+.result svg { }
+.compact { break-inside: avoid; margin: 1.4mm 0; padding-left: 3mm;
+  border-left: 2.5px solid var(--accent); display: flex;
+  justify-content: space-between; gap: 6mm; }
+.fixnote { font-size: 8.2pt; color: #8a5a00; background: #fff6e0;
+  border-left: 2px solid #e0a100; padding: 0.6mm 2mm; margin: 0.8mm 0 1mm; }
+.compact .clause { color: var(--muted); font-style: italic; font-size: 8.4pt; }
+.mfallback { font-family: "Consolas",monospace; font-size: 9pt; color: #445; }
+
+/* invisible-but-selectable plain text of each equation (copy/paste + AI).
+   MUST stay in normal flow and painted (white, tiny) — off-screen/absolute
+   text is clipped out of the printed PDF and would not be extractable. */
+.sr { display: block; color: #fff; font-family: "Consolas",monospace;
+  font-size: 2px; line-height: 1; margin: 0; user-select: all;
+  white-space: pre-wrap; word-break: break-all; }
+
+/* ---- verification panels ---- */
+.checks-head { margin-top: 2mm; }
+.check { break-inside: avoid; margin: 2.4mm 0; border-radius: 5px;
+  border: 1px solid; display: flex; align-items: stretch; overflow: hidden; }
+.check.ok { border-color: var(--ok); background: #eaf6ec; }
+.check.no { border-color: var(--not-ok); background: #fcecec; }
+.check .verdict { display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; letter-spacing: .6px; padding: 0 4mm;
+  font-size: 11pt; min-width: 22mm; }
+.check.ok .verdict { background: var(--ok); }
+.check.no .verdict { background: var(--not-ok); }
+.check .body2 { padding: 2mm 3.5mm; flex: 1; }
+.check .body2 .desc { font-weight: 600; color: var(--primary); font-size: 9.6pt;
+  margin-bottom: .6mm; }
+.check .body2 .crit { overflow-x: auto; }
+.check .body2 .clause { color: var(--muted); font-style: italic; font-size: 8.2pt;
+  margin-top: .8mm; }
+
+/* ---- figures / sketches ---- */
+figure.fig { break-inside: avoid; margin: 3mm auto; text-align: center; }
+figure.fig img { max-width: 100%; border: 0.6pt solid var(--rule);
+  border-radius: 3px; }
+figure.fig figcaption { font-size: 8.4pt; color: var(--muted);
+  font-style: italic; margin-top: 1mm; }
+
+/* machine-readable layer: in normal flow, painted white & tiny so it is
+   extractable by pdftotext (reconstruct_from_pdf) yet visually silent.
+   break-inside:avoid keeps the base64 on ONE page so the repeating header
+   text can't interleave into it across a page break and corrupt it. */
+.mr-data { color: #fff; font-family: monospace; font-size: 3px;
+  line-height: 1.05; word-break: break-all; white-space: pre-wrap;
+  user-select: all; break-inside: avoid; page-break-inside: avoid; }
+
+@media print {
+  html, body { background: #fff; }
+  @page { size: A4; margin: 11mm 6mm 6mm;
+    @top-right { content: "Page " counter(page) " of " counter(pages);
+      font-family: "Segoe UI",Arial,sans-serif; font-size: 8pt;
+      color: #13293D; }
+    @top-left { content: "Ramboll"; font-family: "Segoe UI",Arial;
+      font-size: 8pt; color: #6b7686; }
+  }
+  .sheet { width: auto; margin: 0; box-shadow: none; }
+  .body { padding: 4mm 7mm; }
+}
+</style>
+</head><body>
+<table class="sheet"><thead><tr><td>
+<table class="tblock"><tr>
+<td class="tb-logo" rowspan="2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 56" role="img" aria-label="Ramboll">
+  <rect x="0" y="0" width="232" height="56" rx="10" fill="#00A0DF"/>
+  <text x="116" y="39" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="34" font-weight="800" letter-spacing="1.5" fill="#ffffff">RAMB&#216;LL</text>
+</svg>
+</td>
+<td><span class="tb-k">Project</span><span class="tb-v">—</span></td>
+<td><span class="tb-k">Project No.</span><span class="tb-v">—</span></td>
+<td class="tb-people" rowspan="2"><div class="row"><b>Prepared</b><span>—</span></div><div class="row"><b>Checked</b><span>—</span></div><div class="row"><b>Approved</b><span>—</span></div></td></tr>
+<tr><td class="tb-title" colspan="2"><div class="ttl">Shear resistance of headed studs</div><div class="ref">EN 1994-1-1 6.6.3.1</div></td></tr>
+<tr><td colspan="3"><span class="tb-k">Rev / Date</span><span class="tb-v">0.1 · 2026-10-13</span></td><td class="tb-status"><span class="badge">DRAFT</span></td></tr>
+</table></td></tr></thead>
+<tbody><tr><td><div class="body">
+<h1 class="doctitle">Shear resistance of headed studs</h1>
+<div class="abstract"><span class="lbl">Purpose</span>design resistance of a 19 mm headed stud welded through the deck, governed by stud shank failure or concrete crushing, checked against the design shear per stud.</div>
+<h2 class="section"><span class="num">1</span>Input Parameters</h2>
+<p class="intro">Given quantities as defined in the source document.</p>
+<table class="inputs"><thead><tr><th>Symbol</th><th>Value</th><th>Unit</th><th>Description</th></tr></thead><tbody>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="7pt" height="10pt" viewBox="0 0 7 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.142669</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 7 10 
+L 7 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $d$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.640625" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">d</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>19</td><td>mm</td><td>Stud diameter</td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="10pt" height="11pt" viewBox="0 0 10 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.149979</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 10 11 
+L 10 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $f_{u}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.640625" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="3.872559" y="1.00937" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">u</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>450</td><td>MPa</td><td>Ultimate tensile strength of the stud</td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="16pt" height="11pt" viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.158328</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 16 11 
+L 16 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $h_{sc}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.640625" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="6.97168" y="1.00937" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="10.98335" y="1.00937" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">c</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>100</td><td>mm</td><td></td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="13pt" height="11pt" viewBox="0 0 13 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.167148</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 13 11 
+L 13 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $f_{ck}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.640625" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="3.872559" y="1.00937" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="8.106055" y="1.00937" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">k</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>30</td><td>MPa</td><td></td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="19pt" height="11pt" viewBox="0 0 19 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.177308</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 19 11 
+L 19 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $E_{cm}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.984375" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">E</tspan>
+     <tspan x="6.950195" y="0.66562" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="11.183691" y="0.66562" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">m</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>33</td><td>GPa</td><td></td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="13pt" height="10pt" viewBox="0 0 13 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.187325</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 13 10 
+L 13 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $\gamma_{V}$ -->
+   <g transform="translate(0 7)">
+    <text>
+     <tspan x="0" y="-0.984375" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">γ</tspan>
+     <tspan x="6.509766" y="0.66562" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">V</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>1.25</td><td></td><td></td></tr>
+<tr><td class="sym"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="17pt" height="11pt" viewBox="0 0 17 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.196588</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 17 11 
+L 17 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $P_{Ed}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.984375" style="font-style: oblique; font-size: 11px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="6.633301" y="0.66562" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">E</tspan>
+     <tspan x="11.498437" y="0.66562" style="font-style: oblique; font-size: 7.7px; font-family: 'DejaVu Sans'">d</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</td><td>57.2</td><td>kN</td><td></td></tr>
+</tbody></table>
+<h2 class="section"><span class="num">2</span>Calculation</h2>
+<p class="intro">Derived step by step; each step cites its clause.</p>
+<div class="step"><div class="lead">Stud height factor</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="229pt" height="17pt" viewBox="0 0 229 17" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.220327</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 17 
+L 229 17 
+L 229 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $\alpha = 1 \;\mathrm{if}\; \frac{h_{sc}}{d} \geq 4,\;\; 0.2 \cdot \left(1 + \frac{h_{sc}}{d}\right) \;\mathrm{otherwise}$ -->
+   <g transform="translate(0 12)">
+    <text>
+     <tspan x="0" y="-0.143285" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">α</tspan>
+     <tspan x="10.248047" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="22.640625" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="33.522487" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="36.856471" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="60.015892" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">≥</tspan>
+     <tspan x="72.40847" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">4</tspan>
+     <tspan x="80.043236" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="92.689772" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="100.324537" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="104.138991" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="114.111647" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="125.518965" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="135.491621" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">+</tspan>
+     <tspan x="169.905619" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">o</tspan>
+     <tspan x="177.247416" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">t</tspan>
+     <tspan x="181.952494" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="189.557963" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">e</tspan>
+     <tspan x="196.940776" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">r</tspan>
+     <tspan x="201.874369" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">w</tspan>
+     <tspan x="211.688823" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="215.022807" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="221.27476" y="-0.143285" style="font-size: 12px; font-family: 'DejaVu Sans'">e</tspan>
+     <tspan x="45.078177" y="-5.6125" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="48.078177" y="4.369215" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="148.634199" y="-5.6125" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="151.634199" y="4.369215" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="50.402005" y="-4.352504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="53.465462" y="-4.352504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="153.958027" y="-4.352504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="157.021485" y="-4.352504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="120.263991" y="2.005152" style="font-size: 8.937161px; font-family: 'STIXSizeTwoSym'">(</tspan>
+     <tspan x="161.234024" y="2.005152" style="font-size: 8.937161px; font-family: 'STIXSizeTwoSym'">)</tspan>
+    </text>
+    <rect x="45.078177" y="-3.768285" width="11.849824" height="0.75"/>
+    <rect x="148.634199" y="-3.768285" width="11.849824" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="268pt" height="16pt" viewBox="0 0 268 16" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.275418</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 16 
+L 268 16 
+L 268 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= 1 \;\mathrm{if}\; \frac{100\ \mathrm{mm}}{19\ \mathrm{mm}} \geq 4,\;\; 0.2 \cdot \left(1 + \frac{100\ \mathrm{mm}}{19\ \mathrm{mm}}\right) \;\mathrm{otherwise}$ -->
+   <g transform="translate(0 11)">
+    <text>
+     <tspan x="2.337891" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="14.730469" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="25.612331" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="28.946315" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="75.381665" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">≥</tspan>
+     <tspan x="87.774243" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">4</tspan>
+     <tspan x="95.409009" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="108.055545" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="115.690311" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="119.504764" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="129.47742" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="141.318882" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="151.291538" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">+</tspan>
+     <tspan x="209.246084" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">o</tspan>
+     <tspan x="216.587881" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">t</tspan>
+     <tspan x="221.292959" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="228.898427" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">e</tspan>
+     <tspan x="236.28124" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">r</tspan>
+     <tspan x="241.214834" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">w</tspan>
+     <tspan x="251.029287" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="254.363271" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="260.615224" y="-0.520312" style="font-size: 12px; font-family: 'DejaVu Sans'">e</tspan>
+     <tspan x="37.168021" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="40.168021" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="42.512357" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="45.512357" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="47.856693" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="53.584204" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="55.92854" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="61.766822" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="64.111157" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="164.434116" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="167.434116" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="169.778452" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="172.778452" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="175.122788" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="180.8503" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="183.194636" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="189.032917" y="3.839063" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="191.377253" y="-4.765625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="135.629764" y="1.959375" style="font-size: 12.15746px; font-family: 'STIXSizeOneSym'">(</tspan>
+     <tspan x="200.30987" y="1.959375" style="font-size: 12.15746px; font-family: 'STIXSizeOneSym'">)</tspan>
+    </text>
+    <rect x="37.168021" y="-4.145313" width="35.125754" height="0.75"/>
+    <rect x="164.434116" y="-4.145313" width="35.125754" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="24pt" height="9pt" viewBox="0 0 24 9" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.320494</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 9 
+L 24 9 
+L 24 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{1}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="2.337891" y="-0.25" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="14.730469" y="-0.25" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">alpha = Piecewise((1, (((h_sc)/(d)) &gt;= (4))), (0.2*((h_sc)/(d)+1), True)) = 1</span></div><div class="clause">EN 1994-1-1:2004 §6.6.3.1(1), Eqs. (6.20)-(6.21)</div></div></div>
+<div class="step"><div class="lead">Design shear resistance of a headed stud — shank failure</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="98pt" height="20pt" viewBox="0 0 98 20" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.337055</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 20 
+L 98 20 
+L 98 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $P_{Rd,1} = \frac{0.8 \cdot \pi \cdot d^{2} \cdot f_{u}}{4 \cdot \gamma_{V}}$ -->
+   <g transform="translate(0 14)">
+    <text>
+     <tspan x="0" y="-0.697523" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="7.236328" y="1.102471" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="13.072852" y="1.102471" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="63.166406" y="-6.166738" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">π</tspan>
+     <tspan x="71.151953" y="3.552477" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">γ</tspan>
+     <tspan x="74.166797" y="-6.166738" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="90.038996" y="-6.166738" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="18.404883" y="1.102471" style="font-size: 8.4px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="22.711523" y="1.102471" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="43.864453" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="49.208789" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="51.878906" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="58.859766" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="59.864453" y="3.552477" style="font-size: 8.4px; font-family: 'DejaVu Sans'">4</tspan>
+     <tspan x="66.845313" y="3.552477" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="69.860156" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="85.732355" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="30.721875" y="-0.697523" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="80.125109" y="-9.635938" style="font-size: 5.88px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="76.123047" y="4.812473" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">V</tspan>
+     <tspan x="92.996223" y="-4.906742" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">u</tspan>
+    </text>
+    <rect x="43.864453" y="-4.322523" width="53.088137" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="130pt" height="19pt" viewBox="0 0 130 19" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.374638</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 19 
+L 130 19 
+L 130 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \frac{0.8 \cdot \pi \cdot \left(19\ \mathrm{mm}\right)^{2} \cdot 450\ \mathrm{MPa}}{4 \cdot 1.25}$ -->
+   <g transform="translate(0 14)">
+    <text>
+     <tspan x="2.337891" y="-0.93705" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="15.480469" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="20.824805" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="23.494922" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="30.475781" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="41.476172" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="45.782812" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+     <tspan x="49.059961" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="54.404297" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="56.480469" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">4</tspan>
+     <tspan x="62.476145" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="63.461328" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="67.767969" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="70.658762" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="73.112305" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="75.782422" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="78.841379" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+     <tspan x="81.126758" y="3.422325" style="font-size: 8.4px; font-family: 'DejaVu Sans'">5</tspan>
+     <tspan x="87.806164" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="92.112805" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">4</tspan>
+     <tspan x="97.457141" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">5</tspan>
+     <tspan x="102.801477" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="110.873324" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">M</tspan>
+     <tspan x="118.120785" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="123.186215" y="-6.166738" style="font-size: 8.4px; font-family: 'DejaVu Sans'">a</tspan>
+     <tspan x="34.782422" y="-6.166738" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">π</tspan>
+     <tspan x="82.198918" y="-9.635938" style="font-size: 5.88px; font-family: 'DejaVu Sans'">2</tspan>
+    </text>
+    <rect x="15.480469" y="-4.56205" width="112.853207" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="73pt" height="11pt" viewBox="0 0 73 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.409494</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 73 11 
+L 73 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{81.66}\ \mathrm{kN}$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="2.337891" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="56.583945" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="63.533164" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="14.730469" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="23.080078" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="31.429688" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="35.988281" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="44.337891" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">P_Rd_1 = (0.8*f_u*pi*((d)**(2))/(4))/(gamma_V) = 81.66 kN</span></div><div class="clause">EN 1994-1-1:2004 §6.6.3.1(1), Eq. (6.18)</div></div></div>
+<div class="step"><div class="lead">Design shear resistance of a headed stud — concrete crushing</div><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="135pt" height="20pt" viewBox="0 0 135 20" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.434400</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 20 
+L 135 20 
+L 135 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $P_{Rd,2} = \frac{0.29 \cdot \alpha \cdot d^{2} \cdot \sqrt{E_{cm} \cdot f_{ck}}}{\gamma_{V}}$ -->
+   <g transform="translate(0 15)">
+    <text>
+     <tspan x="0" y="-0.024125" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="7.236328" y="1.775869" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="13.072852" y="1.775869" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="68.510742" y="-5.49334" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">α</tspan>
+     <tspan x="79.991016" y="-5.49334" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="84.864453" y="3.125875" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">γ</tspan>
+     <tspan x="102.832336" y="-5.0875" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">E</tspan>
+     <tspan x="123.273293" y="-5.0875" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="18.404883" y="1.775869" style="font-size: 8.4px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="22.711523" y="1.775869" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="43.864453" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="49.208789" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="51.878906" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="57.223242" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="64.204102" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="75.684375" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="91.556574" y="-5.49334" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="118.966652" y="-5.0875" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="30.721875" y="-0.024125" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="85.949328" y="-8.96254" style="font-size: 5.88px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="95.863215" y="-5.800687" style="font-size: 5.605325px; font-family: 'STIXSizeOneSym'">√</tspan>
+     <tspan x="89.835547" y="4.385871" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">V</tspan>
+     <tspan x="108.139758" y="-3.827504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="111.372609" y="-3.827504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="126.230519" y="-3.827504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="129.463371" y="-3.827504" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">k</tspan>
+    </text>
+    <rect x="101.782336" y="-15.475" width="32.36584" height="0.525"/>
+    <rect x="43.864453" y="-3.649125" width="90.283722" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="173pt" height="20pt" viewBox="0 0 173 20" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.478534</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 20 
+L 173 20 
+L 173 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \frac{0.29 \cdot 1 \cdot \left(19\ \mathrm{mm}\right)^{2} \cdot \sqrt{33\ \mathrm{GPa} \cdot 30\ \mathrm{MPa}}}{1.25}$ -->
+   <g transform="translate(0 15)">
+    <text>
+     <tspan x="2.337891" y="-0.417875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="15.480469" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="20.824805" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="23.494922" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="28.839258" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="35.820117" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="40.126758" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="47.107617" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="51.414258" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">(</tspan>
+     <tspan x="54.691406" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="60.035742" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="68.10759" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="76.290207" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="84.472824" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">)</tspan>
+     <tspan x="84.480469" y="3.9415" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="89.824805" y="3.9415" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="92.494922" y="3.9415" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="93.437609" y="-5.647562" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="97.839258" y="3.9415" style="font-size: 8.4px; font-family: 'DejaVu Sans'">5</tspan>
+     <tspan x="103.927313" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="109.271649" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="117.343496" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">G</tspan>
+     <tspan x="123.852676" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="128.918106" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">a</tspan>
+     <tspan x="135.70209" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">⋅</tspan>
+     <tspan x="140.008731" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="145.353067" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="153.424915" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">M</tspan>
+     <tspan x="160.672375" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="165.737805" y="-5.240625" style="font-size: 8.4px; font-family: 'DejaVu Sans'">a</tspan>
+     <tspan x="87.830363" y="-9.116762" style="font-size: 5.88px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="97.74425" y="-6.960062" style="font-size: 4.860042px; font-family: 'STIXSizeOneSym'">√</tspan>
+    </text>
+    <rect x="102.877313" y="-15.475" width="69.057953" height="0.525"/>
+    <rect x="15.480469" y="-4.042875" width="156.454797" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="73pt" height="11pt" viewBox="0 0 73 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.515959</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 73 11 
+L 73 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{83.33}\ \mathrm{kN}$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="2.337891" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="56.583945" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="63.533164" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="14.730469" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="23.080078" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="31.429688" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="35.988281" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="44.337891" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">P_Rd_2 = (0.29*alpha*(d)**(2)*sqrt(f_ck*E_cm))/(gamma_V) = 83.33 kN</span></div><div class="clause">EN 1994-1-1:2004 §6.6.3.1(1), Eq. (6.19)</div></div></div>
+<div class="step"><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="131pt" height="13pt" viewBox="0 0 131 13" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.535281</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 13 
+L 131 13 
+L 131 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $P_{Rd} = \min\left(P_{Rd,1}, P_{Rd,2}\right)$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="0" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="62.722305" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="97.258633" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="7.236328" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="13.072852" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="69.958633" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="75.795156" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="104.494961" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="110.331484" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="21.070898" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="33.463477" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="45.15293" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="48.486914" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">n</tspan>
+     <tspan x="58.040664" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">(</tspan>
+     <tspan x="91.106289" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="125.642617" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">)</tspan>
+     <tspan x="81.127187" y="0.924994" style="font-size: 8.4px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="85.433828" y="0.924994" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="115.663516" y="0.924994" style="font-size: 8.4px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="119.970156" y="0.924994" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="164pt" height="12pt" viewBox="0 0 164 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.563203</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 12 
+L 164 12 
+L 164 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \min\left(81.66\ \mathrm{kN}, 83.33\ \mathrm{kN}\right)$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="2.337891" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="14.730469" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="26.419922" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">i</tspan>
+     <tspan x="29.753906" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">n</tspan>
+     <tspan x="39.307656" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">(</tspan>
+     <tspan x="43.989297" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="51.624062" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="59.258828" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="63.073281" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="70.708047" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="82.239258" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="89.188477" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="98.165039" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">,</tspan>
+     <tspan x="104.317383" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="111.952148" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="119.586914" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="123.401367" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="131.036133" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="142.567344" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="149.516563" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="158.493125" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">)</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="73pt" height="11pt" viewBox="0 0 73 11" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.409494</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 11 
+L 73 11 
+L 73 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{81.66}\ \mathrm{kN}$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="2.337891" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="56.583945" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="63.533164" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="14.730469" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="23.080078" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="31.429688" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="35.988281" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="44.337891" y="-0.875" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">6</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">P_Rd = min(P_Rd_1,P_Rd_2) = 81.66 kN</span></div><div class="clause">EN 1994-1-1 6.6.3.1</div></div></div>
+<div class="step"><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="116pt" height="12pt" viewBox="0 0 116 12" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.590557</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 12 
+L 116 12 
+L 116 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $h_{eff} = h_{sc} - 0.003\ \mathrm{m}$ -->
+   <g transform="translate(0 10)">
+    <text>
+     <tspan x="0" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="33.746484" y="-0.875" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">h</tspan>
+     <tspan x="7.605469" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">e</tspan>
+     <tspan x="12.773437" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="15.730664" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">f</tspan>
+     <tspan x="41.351953" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">s</tspan>
+     <tspan x="45.72832" y="0.924994" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">c</tspan>
+     <tspan x="21.353906" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="53.012695" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">−</tspan>
+     <tspan x="65.405273" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="73.040039" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="76.854492" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="84.489258" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="92.124023" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="103.655234" y="-0.875" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="130pt" height="10pt" viewBox="0 0 130 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.612162</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 130 10 
+L 130 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= 100\ \mathrm{mm} - 0.003\ \mathrm{m}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="2.337891" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="14.730469" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="22.365234" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="30" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="41.531211" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="53.220664" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="67.248008" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">−</tspan>
+     <tspan x="79.640586" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="87.275352" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="91.089805" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="98.72457" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="106.359336" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">3</tspan>
+     <tspan x="117.890547" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="59pt" height="10pt" viewBox="0 0 59 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.630298</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 59 10 
+L 59 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{97}\ \mathrm{mm}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="2.337891" y="-0.109375" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="35.326133" y="-0.109375" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="47.015586" y="-0.109375" style="font-size: 12px; font-family: 'DejaVu Sans'">m</tspan>
+     <tspan x="14.730469" y="-0.109375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">9</tspan>
+     <tspan x="23.080078" y="-0.109375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">7</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">h_eff = ((h_sc)-(0.003*u__m)) = 97 mm</span></div><div class="clause">EN 1994-1-1 6.6.3.1</div></div></div>
+<div class="step"><div class="eqrow"><div class="eq"><div class="mline first"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="47pt" height="18pt" viewBox="0 0 47 18" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.645809</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 18 
+L 47 18 
+L 47 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $UR = \frac{P_{Ed}}{P_{Rd}}$ -->
+   <g transform="translate(0 12)">
+    <text>
+     <tspan x="0" y="-0.405785" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">U</tspan>
+     <tspan x="8.783203" y="-0.405785" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="19.458984" y="-0.405785" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="32.601562" y="-5.875" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="32.601562" y="3.844215" style="font-style: oblique; font-size: 8.4px; font-family: 'DejaVu Sans'">P</tspan>
+     <tspan x="37.666992" y="-4.615004" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">E</tspan>
+     <tspan x="37.666992" y="5.104211" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="41.382188" y="-4.615004" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">d</tspan>
+     <tspan x="41.752559" y="5.104211" style="font-style: oblique; font-size: 5.88px; font-family: 'DejaVu Sans'">d</tspan>
+    </text>
+    <rect x="32.601562" y="-4.030785" width="13.113105" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="55pt" height="16pt" viewBox="0 0 55 16" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.668986</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 16 
+L 55 16 
+L 55 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \frac{57.2\ \mathrm{kN}}{81.66\ \mathrm{kN}}$ -->
+   <g transform="translate(0 11)">
+    <text>
+     <tspan x="2.337891" y="-0.367188" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="15.480469" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">8</tspan>
+     <tspan x="18.480469" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">5</tspan>
+     <tspan x="20.824805" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">1</tspan>
+     <tspan x="23.824805" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">7</tspan>
+     <tspan x="26.169141" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="28.839258" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="29.169141" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="31.839258" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">2</tspan>
+     <tspan x="34.183594" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">6</tspan>
+     <tspan x="39.911106" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="42.255441" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">k</tspan>
+     <tspan x="44.775559" y="-4.6125" style="font-size: 8.4px; font-family: 'DejaVu Sans'">N</tspan>
+     <tspan x="47.119895" y="4.145312" style="font-size: 8.4px; font-family: 'DejaVu Sans'">N</tspan>
+    </text>
+    <rect x="15.480469" y="-3.992188" width="37.92302" height="0.75"/>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><div class="mline"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="62pt" height="10pt" viewBox="0 0 62 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.689515</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 62 10 
+L 62 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $= \mathbf{0.7005}$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="2.337891" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="14.730469" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="23.080078" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="27.638672" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">7</tspan>
+     <tspan x="35.988281" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="44.337891" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="52.6875" y="-0.09375" style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'">5</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div><span class="sr">UR = (P_Ed)/(P_Rd) = 0.7005</span></div><div class="clause">EN 1994-1-1 6.6.3.1</div></div></div>
+<h2 class="section"><span class="num">3</span>Verification</h2>
+<p class="intro">Acceptance criteria for the governing results.</p>
+<div class="check ok"><div class="verdict">OK</div><div class="body2"><div class="crit"><svg xmlns:xlink="http://www.w3.org/1999/xlink" width="103pt" height="10pt" viewBox="0 0 103 10" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T07:56:38.706816</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 10 
+L 103 10 
+L 103 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="text_1">
+   <!-- $UR = 0.7005 \; \leq \; 1$ -->
+   <g transform="translate(0 9)">
+    <text>
+     <tspan x="0" y="-0.09375" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">U</tspan>
+     <tspan x="8.783203" y="-0.09375" style="font-style: oblique; font-size: 12px; font-family: 'DejaVu Sans'">R</tspan>
+     <tspan x="19.458984" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">=</tspan>
+     <tspan x="31.851562" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="39.486328" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">.</tspan>
+     <tspan x="43.300781" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">7</tspan>
+     <tspan x="50.935547" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="58.570312" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">0</tspan>
+     <tspan x="66.205078" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">5</tspan>
+     <tspan x="79.424831" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">≤</tspan>
+     <tspan x="95.064505" y="-0.09375" style="font-size: 12px; font-family: 'DejaVu Sans'">1</tspan>
+    </text>
+   </g>
+  </g>
+ </g>
+</svg>
+</div></div></div>
+<div class="mr-data">@@CALCSHEET/1@@H4sIADbkzWoC/81X2Y7bNhR991cQfpJcW9HiNW2KFs0g6EODQdLkpSkElrq2WGsLl5kUQf69l5Qsy7Ym7sykcV5sk7ykzzm8vMvHwVCyFHI6fEqGUgnNlBY0m1A+UWWZsZTy4gmjGZMpgPopGI4HQ7MQ88TuSIGKWIDkUtGCQVyuY5xKIIml0om05lxlYIxfG2OyNyblmtTGpDVOQDLBK8XLwmzBId8UR3soCVYkz7t7yS1k5rdKRak3KX4DSYBtx2RT3oAocOmvf2pLmdJiS9aUZ1rgcYKwsmACFBAmtEx5sRkTVIRtcQ/dIH2pmuMsFMuYVCDsaZ7BLGANAhCcQXz1EtGtppNgEpC5N/ciz2pGtUpLYQzMqBLl38DUbijghsuGsV/bIyKqwGoc+uF8EviTIDILXEEucfqPwcfBcMuL+hrwMLMf1wuaWxy/FpVW5JoKHCsQfeKaKV3wFsYNzbTZW+gswyF8qFB32TGuqJQWU2Oh4EO7maoyb5ziRBOLu1CiNIMX/AYK8l7TAh2DgyRUorZrbu6IF1ZqWWqBV52UTOdQKG84+DTu0uWGW5ds0sPutbnshNf0u1TzvEs2WHn+/0f2LPJ1rHuwv8kUz/H+iYJC8gwVUXj+RqXG/a1CSK7L6bdr2iU1nfkXZZXGkp1xuKNb8P0LXwPbngF8JHF0WcBXMcvPAH5xBDi6KOANzXMav71HGAq8cHZBwNfxVXIG7fZlF+9s4YVfD29PyP8F07TO6G76m4j2z0FgvDdJGqo6BUP1PQHK0nqKYT6ThCtJWEa1hJNYb2qPLkmaVSm9K9ynwDepwuTOVHkQ8yeHjnX6EK45MLjlEhwnGBPHcUwIc584ieuSH58RZ+q6Ls77XjjqrH0X4OTvQoPr3kMxYFPPFg8tl7sqiKeh70/JO+37dNEUE475y6v30iPO3At9d2K+AvezvnKs4XX8KomDHhGfd2uc46KrW26906EfTA9rqbtfxjLw5rN5uJiHszDwZ6vgRH4UdjnCXDiqOOqbuKORE7oo8dR8NKHjQRJbqhbmw3S2MgfLB+gbfgF9T0rTz2gceVEUBsvFMgpns2g+7dM4XI2sz412Eo/ke6Eck/1GJqN8EbV3oB8j+Or+gt8rVp/3yJwXTv1OxvV1uo+JiXd0Bf+ZYBrDen2vimq16IlyTeiaoCv4fjTScZy7F+X15tUZUgeB2/cW6DarRbhchFEQLFarU4YmbaMXmzv7qsx68vFbzH1rzr6thPwzY1DVUQfBYGvEKVljF2y6irpXxjBjYpPOlDzNxqYxPrxA8sMzEjyWXueYlqXCvPqIamnwp7WwPHAKSST7ds+0Xfs2ybYr+ybENgNthW8r7bZ83pWxbXlqy8S2+Ksz+q7EaPJsf7hpkkR/5LYBrX9fHQraB44vqO9hmHuz8ne4NxGi5r7rZxru7ZqlvltsuO9aiT15q3ZDvQmtO+r1k22pN6st2854P9pxalBYTnhOSyKmt1TA3iesG8r4wFUGn/4F6O2PHcwSAAA=@@END@@</div>
+</div></td></tr></tbody></table></body></html>

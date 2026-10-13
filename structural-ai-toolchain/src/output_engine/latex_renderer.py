@@ -124,7 +124,7 @@ def render_latex(sheet: CalcSheet) -> str:
         )
         for item in input_buffer:
             body.append(
-                f"{item.latex_lhs} & {fmt_number(item.value)} & "
+                f"{item.latex_lhs} & {fmt_number(item.value, style='latex')} & "
                 f"{_escape(item.unit)} & {_escape(item.description)} \\\\"
             )
         body.append(r"\end{tabular}\par\vspace{8pt}")
@@ -150,7 +150,7 @@ def render_latex(sheet: CalcSheet) -> str:
                 body.append(
                     r"\noindent\textbf{" + _escape(item.description) + r"}"
                 )
-            result = fmt_number(item.value)
+            result = fmt_number(item.value, style="latex")
             rendered_unit = unit_latex(item.unit)
             unit = f"\\ {rendered_unit}" if rendered_unit else ""
             body.append(r"\begin{align*}")

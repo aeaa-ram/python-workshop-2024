@@ -7,7 +7,7 @@
   "author": "",
   "project": "",
   "revision": "0.1",
-  "created": "2026-07-20",
+  "created": "2026-10-13",
   "items": [
     {
       "kind": "section",
@@ -122,8 +122,8 @@
       "expression": "b*h**2/6",
       "passed": null,
       "text": "",
-      "atom_id": "",
-      "reference": "",
+      "atom_id": "mech.section.W_el_rect",
+      "reference": "Section property (geometry)",
       "intro": ""
     },
     {
@@ -186,5 +186,6 @@
     "W": "mm^3",
     "sigma_m": "MPa"
   },
+  "unit_aware": false,
   "checks_passed": true
 }

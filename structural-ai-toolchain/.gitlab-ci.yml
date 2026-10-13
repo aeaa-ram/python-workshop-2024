@@ -9,6 +9,7 @@
 #   SHAREPOINT_SITE_ID / SHAREPOINT_DRIVE_ID
 #   WEBHOOK_NOTIFICATION_URL / WEBHOOK_CLIENT_STATE
 #   KG_EMBEDDING_ENDPOINT / KG_EMBEDDING_API_KEY
+#   ANTHROPIC_API_KEY (optional — enables the AI review; tests never call it)
 
 image: python:3.11-slim
 

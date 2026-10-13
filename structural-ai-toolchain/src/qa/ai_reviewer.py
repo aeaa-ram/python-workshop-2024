@@ -71,27 +71,40 @@ class AIReviewer(Protocol):
 
 
 class AnthropicReviewer:
-    """Claude-backed reviewer — skeleton until an API key is provisioned.
+    """Engineering-judgment review through the shared LLM client.
 
-    Intended implementation (requirements: ``pip install anthropic``,
-    env var ``ANTHROPIC_API_KEY``)::
+    Advisory: the findings go to the reviewing engineer; nothing is
+    changed here (``master_review.review_to_convergence`` is the loop that
+    applies verified corrections)."""
 
-        from anthropic import Anthropic
+    def __init__(self, client=None) -> None:
+        from src.llm import get_llm_client
 
-        client = Anthropic()
-        message = client.messages.create(
-            model="claude-sonnet-5",
-            max_tokens=4096,
-            messages=[{"role": "user",
-                       "content": build_review_prompt(sheet)}],
-        )
-        return message.content[0].text
-    """
+        self.client = client or get_llm_client()
+
+    def available(self) -> bool:
+        return self.client.available()
 
     def review(self, sheet: CalcSheet) -> str:
-        raise NotImplementedError(
-            "AI review API is not wired up yet. Use "
-            "`python main.py qa <slug> --prompt` to export the review "
-            "prompt and paste it into Claude, or implement "
-            "AnthropicReviewer per the docstring."
-        )
+        from src.llm import LLMError, schemas
+
+        if not self.client.available():
+            raise RuntimeError(
+                "No LLM configured (set ANTHROPIC_API_KEY or run `ant auth "
+                "login`). Use `python main.py qa <slug> --prompt` to export "
+                "the review prompt and paste it into Claude instead.")
+        try:
+            data = self.client.complete_json(
+                REVIEW_INSTRUCTIONS.format(
+                    schema=CalcSheet.SCHEMA,
+                    reference=sheet.reference or "the applicable standard"),
+                f"TOOL (machine-readable calcsheet JSON):\n{sheet.to_json()}",
+                schema=schemas.REVIEW, task="engineering-review")
+        except LLMError as exc:
+            return f"AI review failed: {exc}"
+        lines = [f"Verdict: {data['verdict']}"]
+        for f in data["findings"]:
+            fix = f" — fix: {f['suggested_fix']}" if f["suggested_fix"] else ""
+            lines.append(f"[{f['severity'].upper()}] {f['location']}: "
+                         f"{f['message']}{fix}")
+        return "\n".join(lines)

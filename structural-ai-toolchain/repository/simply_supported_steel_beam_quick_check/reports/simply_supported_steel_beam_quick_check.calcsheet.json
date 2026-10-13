@@ -7,7 +7,7 @@
   "author": "",
   "project": "",
   "revision": "0.1",
-  "created": "2026-07-20",
+  "created": "2026-10-13",
   "items": [
     {
       "kind": "section",
@@ -122,8 +122,8 @@
       "expression": "Line_load_w*Span_L**2/8",
       "passed": null,
       "text": "",
-      "atom_id": "",
-      "reference": "",
+      "atom_id": "mech.statics.M_max_udl",
+      "reference": "Statics: simply supported beam, UDL",
       "intro": ""
     },
     {
@@ -186,5 +186,6 @@
     "Moment_M": "kNm",
     "Bending_stress_sigma": "MPa"
   },
+  "unit_aware": false,
   "checks_passed": true
 }

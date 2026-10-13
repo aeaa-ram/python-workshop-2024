@@ -1,0 +1,218 @@
+{
+  "schema": "structural-ai-toolchain/manifest@2",
+  "tool_id": "shear_resistance_of_headed_studs",
+  "title": "Shear resistance of headed studs",
+  "description": "design resistance of a 19 mm headed stud welded through the deck, governed by stud shank failure or concrete crushing, checked against the design shear per stud.",
+  "reference": "EN 1994-1-1 6.6.3.1",
+  "revision": "0.1",
+  "source_file": "stud_resistance_ec4.mcdx",
+  "source_format": "mcdx",
+  "converted": "2026-10-13",
+  "converter": "agentic",
+  "interpreter": "agentic/mcdx",
+  "ai": "none (deterministic path)",
+  "status": "agent-converted-unreviewed",
+  "unit_aware": true,
+  "variables": [
+    {
+      "name": "d",
+      "role": "input",
+      "unit": "mm",
+      "description": "Stud diameter",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "f_u",
+      "role": "input",
+      "unit": "MPa",
+      "description": "Ultimate tensile strength of the stud",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "h_sc",
+      "role": "input",
+      "unit": "mm",
+      "description": "",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "f_ck",
+      "role": "input",
+      "unit": "MPa",
+      "description": "",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "E_cm",
+      "role": "input",
+      "unit": "GPa",
+      "description": "",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "gamma_V",
+      "role": "input",
+      "unit": "",
+      "description": "",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "P_Ed",
+      "role": "input",
+      "unit": "kN",
+      "description": "",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "alpha",
+      "role": "derived",
+      "unit": "-",
+      "description": "Stud height factor",
+      "expression": "Piecewise((1, (((h_sc)/(d)) >= (4))), (0.2*((h_sc)/(d)+1), True))",
+      "clause": "EN 1994-1-1:2004 \u00a76.6.3.1(1), Eqs. (6.20)-(6.21)",
+      "atom_id": "ec4.stud.alpha",
+      "fingerprint": "b7c572b3b5ae52c1"
+    },
+    {
+      "name": "P_Rd_1",
+      "role": "derived",
+      "unit": "kN",
+      "description": "Design shear resistance of a headed stud \u2014 shank failure",
+      "expression": "(0.8*f_u*pi*((d)**(2))/(4))/(gamma_V)",
+      "clause": "EN 1994-1-1:2004 \u00a76.6.3.1(1), Eq. (6.18)",
+      "atom_id": "ec4.stud.P_Rd_shank",
+      "fingerprint": "672112439bf6e176"
+    },
+    {
+      "name": "P_Rd_2",
+      "role": "derived",
+      "unit": "kN",
+      "description": "Design shear resistance of a headed stud \u2014 concrete crushing",
+      "expression": "(0.29*alpha*(d)**(2)*sqrt(f_ck*E_cm))/(gamma_V)",
+      "clause": "EN 1994-1-1:2004 \u00a76.6.3.1(1), Eq. (6.19)",
+      "atom_id": "ec4.stud.P_Rd_concrete",
+      "fingerprint": "015363840bd23ea6"
+    },
+    {
+      "name": "P_Rd",
+      "role": "derived",
+      "unit": "kN",
+      "description": "",
+      "expression": "min(P_Rd_1,P_Rd_2)",
+      "clause": "EN 1994-1-1 6.6.3.1",
+      "atom_id": "",
+      "fingerprint": "13040e350ab0dc61"
+    },
+    {
+      "name": "h_eff",
+      "role": "derived",
+      "unit": "mm",
+      "description": "",
+      "expression": "((h_sc)-(0.003*u__m))",
+      "clause": "EN 1994-1-1 6.6.3.1",
+      "atom_id": "",
+      "fingerprint": "c04794b893d2d681"
+    },
+    {
+      "name": "UR",
+      "role": "derived",
+      "unit": "-",
+      "description": "",
+      "expression": "(P_Ed)/(P_Rd)",
+      "clause": "EN 1994-1-1 6.6.3.1",
+      "atom_id": "",
+      "fingerprint": "06d0cfbf8df2d5e0"
+    }
+  ],
+  "checks": [
+    "UR <= 1"
+  ],
+  "checks_passed": true,
+  "results": {
+    "d": 19.0,
+    "f_u": 450.0,
+    "h_sc": 100.0,
+    "f_ck": 30.0,
+    "E_cm": 33.0,
+    "gamma_V": 1.25,
+    "P_Ed": 57.2,
+    "alpha": 1.0,
+    "P_Rd_1": 81.65627625210591,
+    "P_Rd_2": 83.33218783255364,
+    "P_Rd": 81.65627625210591,
+    "h_eff": 97.0,
+    "UR": 0.7004972872311799
+  },
+  "warnings": [],
+  "clarifications": [],
+  "formula_analysis": [
+    {
+      "name": "alpha",
+      "status": "matches_atom",
+      "match": "ec4.stud.alpha"
+    },
+    {
+      "name": "P_Rd_1",
+      "status": "matches_atom",
+      "match": "ec4.stud.P_Rd_shank"
+    },
+    {
+      "name": "P_Rd_2",
+      "status": "matches_atom",
+      "match": "ec4.stud.P_Rd_concrete"
+    },
+    {
+      "name": "P_Rd",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "h_eff",
+      "status": "new",
+      "match": ""
+    },
+    {
+      "name": "UR",
+      "status": "new",
+      "match": ""
+    }
+  ],
+  "gatekeeper": [],
+  "review": {
+    "passed": true,
+    "converged": true,
+    "iterations": 1,
+    "ai": "",
+    "verdict": "",
+    "fixes": [],
+    "findings": []
+  },
+  "review_log": [],
+  "final_result": "UR",
+  "verification": {
+    "errors": [],
+    "warnings": []
+  },
+  "decisions": 2
+}

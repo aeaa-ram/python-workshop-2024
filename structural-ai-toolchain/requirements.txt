@@ -11,9 +11,11 @@ pypdf>=4.0           # PDF bookmarks + embedded machine-readable calcsheet
 # Dev / CI
 pytest>=8.0
 
-# AI Grinder LLM backend (optional — heuristic fallback works without it)
-# anthropic>=0.40     # Claude for interpreting messy spreadsheets;
-#                     # set ANTHROPIC_API_KEY and GRINDER_LLM_MODEL
+# AI layer (Claude): spreadsheet interpretation, clause research, visual
+# master review. Imported lazily — without a key everything still runs on
+# the deterministic path. Configure via ANTHROPIC_API_KEY (or `ant auth
+# login`) and TOOLCHAIN_LLM_MODEL (default claude-opus-5-5).
+anthropic>=1.0
 
 # Future (uncomment when the SharePoint layer goes live)
 # msal>=1.28         # MS Graph client-credentials auth

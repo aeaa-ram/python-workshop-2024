@@ -3,6 +3,8 @@
 Each stage reads/updates the CaseFile and journals what it did:
 
   intake      — atomise the source into fragments (math, text, images)
+  gatekeep    — knowledge-base gate: is this already a tool? which
+                formulas are library atoms? revise / new tool / abort
   decompose   — dependency graph; find noise, repetition, orphans
   research    — code/standard identification per fragment (citations,
                 atom library, LLM knowledge when configured)
@@ -11,7 +13,9 @@ Each stage reads/updates the CaseFile and journals what it did:
                 final governing result, sketches & their placement
   reconstruct — rebuild a clean, compact, dependency-ordered tool
   verify      — recompute; compare against source values; units review
-  reflect     — per-value self-review checklist (units, clauses, sanity)
+  reflect     — per-value self-review checklist, then the master reviewer
+                loop (dimensions, scale, one-to-one vs the original, AI
+                visual review) — verified corrections are written back
   deliver     — write the repository tool + reports + audit trail
 
 The workflow (workflow.py) loops decompose→verify until convergence.
@@ -152,6 +156,75 @@ def _bmp_to_png(data: bytes):
 
 
 # ================================================================== #
+# GATEKEEP — the central knowledge base decides what is new
+# ================================================================== #
+def stage_gatekeep(case: CaseFile, ctx) -> None:
+    from src.ingestion.manifest import next_revision
+    from src.knowledge_graph.gatekeeper import check_submission
+    from src.knowledge_graph.indexer import ToolRecord
+    from src.knowledge_graph.reuse import analyze_expressions
+
+    repo = Path(ctx.repo_dir)
+    if (repo / ctx.slug / "manifest.json").exists():
+        ctx.revision = next_revision(repo / ctx.slug)
+        case.log("gatekeep", f"'{ctx.slug}' already exists — this run "
+                             f"becomes revision {ctx.revision}")
+    record = ToolRecord(
+        slug=ctx.slug, title=case.title, description=case.description,
+        reference=case.reference,
+        variables=[f.name for f in case.kept() if f.name],
+        formulas=[f.expression for f in case.kept("derived") if f.expression],
+        checks=[f.expression for f in case.kept("check")])
+    matches = check_submission(record, repo)
+    ctx.gatekeeper = matches
+    case.gatekeeper = [{"slug": m.slug, "title": m.title, "score": m.score,
+                        "verdict": m.verdict} for m in matches]
+
+    findings = analyze_expressions(
+        [(f.name, f.expression) for f in case.kept("derived") if f.expression],
+        repo, exclude_slug=ctx.slug)
+    ctx.reuse = findings
+    case.reuse = [{"name": f.name, "status": f.status, "match": f.match_id}
+                  for f in findings]
+    atoms = [f for f in findings if f.status == "matches_atom"]
+    shared = [f for f in findings if f.status == "matches_tool"]
+    case.log("gatekeep", f"{len(matches)} similar tool(s); formulas: "
+             f"{len(atoms)} library atom(s), {len(shared)} shared with other "
+             f"tools, {len(findings) - len(atoms) - len(shared)} new")
+
+    if not matches:
+        return
+    top = matches[0]
+    options = [f"revise {top.slug}", "new tool", "abort"]
+    question = Question(
+        qid="gatekeeper", stage="gatekeep",
+        prompt=(f"The knowledge base already holds "
+                + "; ".join(f"'{m.title}' [{m.slug}] ({m.verdict}, "
+                            f"{m.score:.2f})" for m in matches[:3])
+                + ". Make this a new revision of the closest one, keep it "
+                  "as a separate new tool, or abort?"),
+        options=options,
+        default=options[0] if top.verdict == "duplicate" else "new tool",
+        context="duplicate detection against every stored tool",
+        rationale="one source of truth: a duplicate should revise, not fork")
+    answer, by = ctx.interaction.ask(question)
+    case.decisions.append(Decision(
+        qid=question.qid, stage=question.stage, prompt=question.prompt,
+        options=options, answer=answer, answered_by=by,
+        context=question.context))
+    if answer.startswith("abort"):
+        ctx.aborted = True
+        case.log("gatekeep", "aborted by engineer — nothing will be written")
+    elif answer.startswith("revise"):
+        ctx.slug = top.slug
+        ctx.revision = next_revision(repo / top.slug)
+        case.log("gatekeep", f"will be written as revision {ctx.revision} "
+                             f"of '{top.slug}'")
+    else:
+        case.log("gatekeep", "kept as a separate new tool")
+
+
+# ================================================================== #
 # DECOMPOSE
 # ================================================================== #
 def stage_decompose(case: CaseFile, ctx) -> None:
@@ -223,6 +296,8 @@ def stage_research(case: CaseFile, ctx) -> None:
             f.atom_id = atom.atom_id
             f.clause = atom.clause
             f.clause_confidence = "atom"
+            if not f.description:
+                f.description = atom.description
             matched += 1
     # 3) document-level reference as fallback context
     if case.reference:
@@ -230,15 +305,75 @@ def stage_research(case: CaseFile, ctx) -> None:
             if not f.clause:
                 f.clause = case.reference
                 f.clause_confidence = "doc"
-    # 4) LLM deep research (engages when a backend is configured)
-    if ctx.llm is not None and getattr(ctx.llm, "available", lambda: False)():
-        case.log("research", "LLM clause research pass engaged")
-        # per-fragment prompt loop would run here (backend-specific)
+    # 4) AI research (once per run, when a model is configured)
+    if ctx.llm is not None and ctx.llm.available():
+        if not getattr(ctx, "ai_research_done", False):
+            _ai_research(case, ctx)
+            ctx.ai_research_done = True
     else:
-        case.log("research", "LLM research unavailable — deterministic "
+        case.log("research", "AI research unavailable — deterministic "
                              "knowledge base only (citations + atom library)")
     case.log("research", f"clauses: {cited} cited in source, "
              f"{matched} matched to library atoms")
+
+
+_RESEARCH_SYSTEM = """\
+You are a structural engineer researching a legacy calculation before it
+is rebuilt as a standard company tool. For every step, name the design
+code clause it implements (standard, clause and equation number, e.g.
+"EN 1994-1-1 6.6.3.1 (6.18)"), how sure you are, and in "note" any
+validity limit or pitfall that applies (one sentence, or empty). Then list
+steps the code requires for this verification that the calculation does
+not contain. Never invent a clause: when you do not know, say so with
+confidence "low"."""
+
+
+def _ai_research(case: CaseFile, ctx) -> None:
+    from src.llm import LLMError, schemas
+
+    steps = [f for f in case.kept("derived") if f.name]
+    lines = [f"- {f.name} = {f.expression} [{f.unit or '-'}]"
+             f"{' — ' + f.description if f.description else ''}"
+             f"{' (current: ' + f.clause + ')' if f.clause else ''}"
+             for f in steps]
+    inputs = [f"- {f.name} = {f.value} {f.unit}".rstrip()
+              for f in case.kept("input") if f.name]
+    user = (f"Tool: {case.title}\nDocument reference: {case.reference or '-'}"
+            f"\nPurpose: {case.description or '-'}\n\nInputs:\n"
+            + "\n".join(inputs) + "\n\nSteps:\n" + "\n".join(lines)
+            + "\n\nChecks:\n" + "\n".join(
+                f"- {c.expression}" for c in case.kept("check")))
+    try:
+        data = ctx.llm.complete_json(_RESEARCH_SYSTEM, user,
+                                     schema=schemas.RESEARCH, task="research")
+    except LLMError as exc:
+        case.log("research", f"AI research failed ({exc}); deterministic "
+                             "knowledge only")
+        return
+    by_name = {f.name: f for f in steps}
+    updated = 0
+    for r in data.get("fragments", []):
+        f = by_name.get(r.get("name", ""))
+        if f is None:
+            continue
+        conf = r.get("confidence", "low")
+        clause = (r.get("clause") or "").strip()
+        if r.get("note"):
+            f.evidence.append(f"AI note: {r['note']}")
+        if not clause or conf == "low":
+            continue
+        if f.clause_confidence in ("", "doc"):
+            f.clause, f.clause_confidence = clause, f"ai-{conf}"
+            updated += 1
+        elif clause not in f.clause:
+            f.evidence.append(f"AI suggests {clause} ({conf}); kept "
+                              f"{f.clause} [{f.clause_confidence}]")
+    ctx.missing_steps = [f"{m['description']} ({m['clause']})"
+                         for m in data.get("missing_steps", [])]
+    if data.get("standard") and not case.reference:
+        case.reference = data["standard"]
+    case.log("research", f"AI research: {updated} clause(s) assigned, "
+             f"{len(ctx.missing_steps)} possibly missing step(s) noted")
 
 
 # ================================================================== #
@@ -454,23 +589,22 @@ def stage_reconstruct(case: CaseFile, ctx) -> None:
 
 
 def _topo_order(case: CaseFile) -> list[Fragment]:
-    """Kahn's algorithm over the derived fragments: a step is placeable
-    once every derived quantity it references has been placed."""
+    """Stable dependency order: keep the author's sequence, moving a step
+    later only when it uses a quantity derived further down."""
     deriveds = [f for f in case.kept("derived") if f.name]
     derived_names = {f.name for f in deriveds}
     placed: list[Fragment] = []
     placed_names: set[str] = set()
     pending = list(deriveds)
     while pending:
-        ready = [f for f in pending
-                 if (f.depends_on() & derived_names) <= placed_names]
-        if not ready:            # cycle or missing deps: keep source order
+        nxt = next((f for f in pending
+                    if (f.depends_on() & derived_names) <= placed_names), None)
+        if nxt is None:          # cycle or missing deps: keep source order
             placed.extend(pending)
             break
-        for f in ready:
-            placed.append(f)
-            placed_names.add(f.name)
-            pending.remove(f)
+        placed.append(nxt)
+        placed_names.add(nxt.name)
+        pending.remove(nxt)
     return placed
 
 
@@ -492,12 +626,13 @@ def build_sheet_from_plan(case: CaseFile, ctx) -> CalcSheet:
                 f = op[1]
                 sheet.define(f.name, f.value if f.value is not None else 0.0,
                              unit=f.unit, description=f.description,
-                             reference=f.clause)
+                             reference=f.clause, note=f.review_note)
             elif kind == "calc":
                 f = op[1]
-                sheet.calc(f.name, f.expression, unit=f.unit,
-                           description=f.description or f.name,
-                           reference=f.clause)
+                step = sheet.calc(f.name, f.expression, unit=f.unit,
+                                  description=f.description,
+                                  reference=f.clause, note=f.review_note)
+                step.atom_id = f.atom_id
             elif kind == "check":
                 f = op[1]
                 sheet.check(f.expression, description=f.description,
@@ -510,6 +645,7 @@ def build_sheet_from_plan(case: CaseFile, ctx) -> CalcSheet:
             elif frag is not None:
                 # checks self-heal once their dependencies resolve — note it
                 frag.evidence.append(f"pending: {exc}")
+    sheet.review_log = list(case.review_log)
     return sheet
 
 
@@ -528,6 +664,8 @@ def stage_verify(case: CaseFile, ctx) -> dict:
     if not ctx.unit_aware:
         results = sheet.results()
         for f in case.kept("derived"):
+            if f.review_note:
+                continue    # corrected by the master reviewer, on record
             if f.name in results and isinstance(f.value, (int, float)) \
                     and f.value not in (0, None):
                 rec = results[f.name]
@@ -576,19 +714,90 @@ def stage_reflect(case: CaseFile, ctx) -> None:
                 f"clause {f.clause or '⚠ MISSING'} "
                 f"[{f.clause_confidence or '-'}]; unit "
                 f"'{f.unit or '—'}'{'' if unit_ok else ' UNKNOWN'}")
+    for step in getattr(ctx, "missing_steps", []) or []:
+        checklist.append(f"⚠ AI: the code may also require — {step}")
+
+    _master_review(case, ctx, checklist)
+
     if ctx.sheet is not None:
         for c in ctx.sheet.checks():
             checklist.append(
                 f"{'✓' if c.passed else '✗'} check {c.expression}: "
                 f"{'OK' if c.passed else 'NOT OK'}")
-    if ctx.llm is not None and getattr(ctx.llm, "available", lambda: False)():
-        case.log("reflect", "LLM engineering-judgment review engaged")
-    else:
-        case.log("reflect", "LLM judgment review unavailable — "
-                            "deterministic checklist only")
     case.reflection = checklist
-    flags = sum(1 for c in checklist if c.startswith("⚠") or c.startswith("✗"))
+    flags = sum(1 for c in checklist if c[:1] in ("⚠", "✗", "⛔"))
     case.log("reflect", f"{len(checklist)} items reviewed, {flags} flagged")
+
+
+def _source_values(case: CaseFile, ctx) -> dict:
+    """What the ORIGINAL shows: cached values of a unit-naive source
+    (Excel) plus anything read from a print of the original."""
+    out: dict = {}
+    if not ctx.unit_aware:
+        for f in case.kept("derived"):
+            if f.name and isinstance(f.value, (int, float)) \
+                    and not isinstance(f.value, bool):
+                out[f.name] = {"value": float(f.value), "unit": f.unit,
+                               "shown": ""}
+    out.update(getattr(ctx, "original_values", {}) or {})
+    return out
+
+
+def _master_review(case: CaseFile, ctx, checklist: list) -> None:
+    """Run the reviewer to convergence; write verified fixes back into the
+    fragments so the generated tool, the report and the audit agree."""
+    import tempfile
+
+    from src.ingestion.manifest import review_summary
+    from src.llm import describe
+    from src.qa.master_review import review_to_convergence
+
+    if ctx.sheet is None:
+        return
+    client = ctx.llm if (ctx.llm is not None and ctx.llm.available()) else None
+    original = _source_values(case, ctx)
+    with tempfile.TemporaryDirectory() as tmp:
+        render_dir = Path(tmp) if (client is not None and ctx.render_pdf) \
+            else None
+        fixed, report = review_to_convergence(
+            ctx.sheet, render_dir=render_dir, client=client,
+            original_values=original,
+            original_document=getattr(ctx, "original_document", None))
+    ctx.review_report = report
+    for fix in report.fixes:
+        f = case.frag(fix.name)
+        if f is None:
+            continue
+        if fix.expression and f.kind == "derived":
+            f.expression = fix.expression
+        if fix.unit:
+            f.unit = fix.unit
+        if fix.value is not None and f.kind == "input":
+            f.value = float(fix.value)
+        f.review_note = (f"Reviewer correction — {fix.reason} "
+                         f"({fix.before} → {fix.after}).")
+        f.evidence.append(f"master reviewer: {fix}")
+    case.review_log = list(fixed.review_log)
+    case.review = review_summary(report)
+    case.ai = describe(client)
+    if report.fixes:
+        stage_reconstruct(case, ctx)
+        stage_verify(case, ctx)
+    state = "✓" if report.passed() else "⛔"
+    checklist.append(
+        f"{state} master review: {len(report.errors())} error(s), "
+        f"{len(report.warnings())} warning(s) after {report.iterations} "
+        f"iteration(s); {len(report.fixes)} correction(s) applied; AI: "
+        f"{report.ai_model or 'none'}")
+    for fix in report.fixes:
+        checklist.append(f"🔧 {fix}")
+    for finding in report.findings:
+        if finding.severity in ("error", "warning"):
+            mark = "⛔" if finding.severity == "error" else "⚠"
+            checklist.append(f"{mark} {finding.code}: {finding.location} — "
+                             f"{finding.message}")
+    case.log("reflect", f"master review: passed={report.passed()}, "
+             f"{len(report.fixes)} fix(es), {report.iterations} iteration(s)")
 
 
 # ================================================================== #
@@ -596,15 +805,18 @@ def stage_reflect(case: CaseFile, ctx) -> None:
 # ================================================================== #
 def stage_deliver(case: CaseFile, ctx) -> dict:
     import base64
-    import datetime as _dt
-    import json as _json
 
     from src.ingestion.grinder import slugify
+    from src.ingestion.manifest import build_manifest, write_manifest
     from src.output_engine import render_all
 
     slug = ctx.slug or slugify(case.title)
     tool_dir = Path(ctx.repo_dir) / slug
     tool_dir.mkdir(parents=True, exist_ok=True)
+    (tool_dir / "source").mkdir(exist_ok=True)
+    src = Path(case.source_path)
+    if src.exists():
+        (tool_dir / "source" / src.name).write_bytes(src.read_bytes())
 
     # image assets on disk (the generated .py loads them relative to itself)
     assets = tool_dir / "assets"
@@ -616,45 +828,44 @@ def stage_deliver(case: CaseFile, ctx) -> dict:
             (assets / fname).write_bytes(base64.b64decode(f.image_b64))
             img_files[f.fid] = f"assets/{fname}"
 
+    revision = getattr(ctx, "revision", "0.1") or "0.1"
+    if ctx.sheet is not None:
+        ctx.sheet.revision = revision
     tool_py = tool_dir / f"{slug}.py"
-    tool_py.write_text(_emit_python(case, ctx, slug, img_files),
+    tool_py.write_text(_emit_python(case, ctx, slug, img_files, revision),
                        encoding="utf-8")
 
-    manifest = {
-        "tool_id": slug, "title": case.title, "description": case.description,
-        "reference": case.reference, "source_file": Path(case.source_path).name,
-        "source_format": case.source_format,
-        "converted": _dt.date.today().isoformat(),
-        "status": ("needs-clarification" if case.unresolved()
-                   or case.verification.get("errors")
-                   else "agent-converted-unreviewed"),
-        "interpreter": f"agentic/{ctx.parser_interpreter}",
-        "final_result": case.final_result,
-        "variables": [
-            {"name": f.name, "role": f.kind, "unit": f.unit,
-             "description": f.description, "expression": f.expression,
-             "clause": f.clause, "atom_id": f.atom_id}
-            for f in case.kept() if f.kind in ("input", "derived")],
-        "checks": [f.expression for f in case.kept("check")],
-        "results": ctx.sheet.results() if ctx.sheet else {},
-        "verification": case.verification,
-    }
-    (tool_dir / "manifest.json").write_text(
-        _json.dumps(manifest, indent=2, default=str), encoding="utf-8")
+    report = getattr(ctx, "review_report", None)
+    needs_input = bool(case.unresolved() or case.verification.get("errors")
+                       or (report is not None and not report.passed()))
+    manifest = build_manifest(
+        ctx.sheet, slug=slug, source_path=case.source_path,
+        source_format=case.source_format,
+        interpreter=f"agentic/{ctx.parser_interpreter}",
+        status="needs-clarification" if needs_input
+        else "agent-converted-unreviewed",
+        converter="agentic", revision=revision,
+        reuse_findings=getattr(ctx, "reuse", None),
+        gatekeeper=getattr(ctx, "gatekeeper", None),
+        review=report, ai=case.ai,
+        extra={"final_result": case.final_result,
+               "verification": case.verification,
+               "decisions": len(case.decisions)})
+    manifest_path = write_manifest(tool_dir, manifest)
 
     case.save(tool_dir)
-    paths = {"python": str(tool_py),
-             "manifest": str(tool_dir / "manifest.json"),
+    paths = {"python": str(tool_py), "manifest": str(manifest_path),
              "journal": str(tool_dir / "JOURNAL.md")}
     if ctx.sheet is not None:
         paths.update(render_all(
             ctx.sheet, tool_dir / "reports", basename=slug,
             pdf=ctx.render_pdf, meta=ctx.meta, mode=case.layout))
-    case.log("deliver", f"tool written to {tool_dir}")
+    case.log("deliver", f"tool written to {tool_dir} (rev {revision})")
     return paths
 
 
-def _emit_python(case: CaseFile, ctx, slug: str, img_files: dict) -> str:
+def _emit_python(case: CaseFile, ctx, slug: str, img_files: dict,
+                 revision: str = "0.1") -> str:
     lines = [f'"""{case.title}', "",
              f"Converted by the agentic ingestion workflow from "
              f"{Path(case.source_path).name}.",
@@ -668,10 +879,15 @@ def _emit_python(case: CaseFile, ctx, slug: str, img_files: dict) -> str:
              f"        title={case.title!r},",
              f"        description={case.description!r},",
              f"        reference={case.reference!r},",
-             f"        tool_id={slug!r},"]
+             f"        tool_id={slug!r},",
+             f"        revision={revision!r},"]
     if ctx.unit_aware:
         lines.append("        unit_aware=True,")
     lines.append("    )")
+
+    def note(f) -> str:
+        return f", note={f.review_note!r}" if f.review_note else ""
+
     for op in ctx.plan:
         kind = op[0]
         if kind == "section":
@@ -688,20 +904,23 @@ def _emit_python(case: CaseFile, ctx, slug: str, img_files: dict) -> str:
                 f"    sheet.define({f.name!r}, "
                 f"{f.value if f.value is not None else 0.0!r}, "
                 f"unit={f.unit!r}, description={f.description!r}, "
-                f"reference={f.clause!r})")
+                f"reference={f.clause!r}{note(f)})")
         elif kind == "calc":
             f = op[1]
             if f.status != "kept":
                 continue
+            atom = f".atom_id = {f.atom_id!r}" if f.atom_id else ""
             lines.append(
                 f"    sheet.calc({f.name!r}, {f.expression!r}, "
-                f"unit={f.unit!r}, description={(f.description or f.name)!r}, "
-                f"reference={f.clause!r})")
+                f"unit={f.unit!r}, description={f.description!r}, "
+                f"reference={f.clause!r}{note(f)}){atom}")
         elif kind == "check":
             f = op[1]
             lines.append(
                 f"    sheet.check({f.expression!r}, "
                 f"description={f.description!r}, reference={f.clause!r})")
+    if case.review_log:
+        lines.append(f"    sheet.review_log = {case.review_log!r}")
     lines += ["    return sheet", "", "",
               'if __name__ == "__main__":',
               "    from src.output_engine import render_all",

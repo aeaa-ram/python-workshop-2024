@@ -1,12 +1,18 @@
 {
+  "schema": "structural-ai-toolchain/manifest@2",
   "tool_id": "concrete_modulus_at_age_t_ec2",
   "title": "Concrete Modulus at Age t (EN 1992-1-1 3.1.3)",
   "description": "Time-development of the concrete secant modulus of elasticity, from cement class and mean 28-day strength. Shared upstream of crack-width, deflection and bending-stiffness calculations.",
   "reference": "EN 1992-1-1:2004 \u00a73.1.2, \u00a73.1.3",
+  "revision": "0.1",
   "source_file": "concrete_modulus_at_age_t_ec2.py",
   "source_format": "native",
-  "converted": "2026-07-20",
+  "converted": "2026-10-13",
+  "converter": "native",
+  "interpreter": "native",
+  "ai": "none (deterministic path)",
   "status": "native-unreviewed",
+  "unit_aware": false,
   "variables": [
     {
       "name": "s_cem",
@@ -14,6 +20,8 @@
       "unit": "-",
       "description": "Cement class coefficient (0.20 R / 0.25 N / 0.38 S)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -22,6 +30,8 @@
       "unit": "days",
       "description": "Concrete age at loading",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -30,6 +40,8 @@
       "unit": "MPa",
       "description": "Mean compressive strength at 28 days (C30/37)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -38,6 +50,8 @@
       "unit": "MPa",
       "description": "Secant modulus at 28 days (C30/37)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -46,8 +60,9 @@
       "unit": "-",
       "description": "Concrete strength development coefficient at age t",
       "expression": "exp(s_cem*(1 - sqrt(28/t)))",
-      "fingerprint": "aafe6104cd4613c0",
-      "atom_id": "ec2.concrete.beta_cc_t"
+      "clause": "EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.2)",
+      "atom_id": "ec2.concrete.beta_cc_t",
+      "fingerprint": "aafe6104cd4613c0"
     },
     {
       "name": "f_cm_t",
@@ -55,8 +70,9 @@
       "unit": "MPa",
       "description": "Mean concrete compressive strength at age t",
       "expression": "beta_cc_t * f_cm",
-      "fingerprint": "3ebb460220df110f",
-      "atom_id": "ec2.concrete.f_cm_t"
+      "clause": "EN 1992-1-1:2004 \u00a73.1.2(6), Eq. (3.1)",
+      "atom_id": "ec2.concrete.f_cm_t",
+      "fingerprint": "3ebb460220df110f"
     },
     {
       "name": "E_cm_t",
@@ -64,13 +80,15 @@
       "unit": "MPa",
       "description": "Secant modulus of elasticity at age t",
       "expression": "(f_cm_t / f_cm)**0.3 * E_cm",
-      "fingerprint": "2c3b9210a919d617",
-      "atom_id": "ec2.concrete.E_cm_t"
+      "clause": "EN 1992-1-1:2004 \u00a73.1.3(3), Eq. (3.5)",
+      "atom_id": "ec2.concrete.E_cm_t",
+      "fingerprint": "2c3b9210a919d617"
     }
   ],
   "checks": [
     "E_cm_t <= E_cm"
   ],
+  "checks_passed": true,
   "results": {
     "s_cem": 0.25,
     "t": 7.0,
@@ -81,5 +99,17 @@
     "E_cm_t": 30464.31286057069
   },
   "warnings": [],
-  "formula_analysis": []
+  "clarifications": [],
+  "formula_analysis": [],
+  "gatekeeper": [],
+  "review": {
+    "passed": true,
+    "converged": false,
+    "iterations": 1,
+    "ai": "",
+    "verdict": "",
+    "fixes": [],
+    "findings": []
+  },
+  "review_log": []
 }

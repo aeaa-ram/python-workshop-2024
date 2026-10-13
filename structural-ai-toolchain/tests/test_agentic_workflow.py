@@ -127,3 +127,127 @@ def test_bmp_to_png_conversion():
                           len(pixels), 2835, 2835, 0, 0))
     png = _bmp_to_png(header + pixels)
     assert png is not None and png[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+# ------------------------------------------- reviewer fixes reach the tool
+def _slipped_stud_xlsx(tmp_path):
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Stud"
+    ws["B1"] = "Headed stud resistance"
+    ws["B2"] = "Ultimate strength f_u (MPa)"; ws["C2"] = 450
+    ws["B3"] = "Stud diameter d (mm)"; ws["C3"] = 19
+    ws["B4"] = "Partial factor gamma_V (-)"; ws["C4"] = 1.25
+    ws["B5"] = "Design shear P_Ed (kN)"; ws["C5"] = 57.2
+    # computed in N but labelled kN: the classic slip
+    ws["B6"] = "Resistance P_Rd (kN)"; ws["C6"] = "=0.8*C2*PI()*C3^2/4/C4"
+    ws["B7"] = "Check"; ws["C7"] = "=C5<=C6"
+    path = tmp_path / "stud_slip.xlsx"
+    wb.save(path)
+    return path
+
+
+def test_reviewer_correction_is_written_into_the_generated_tool(tmp_path):
+    import json
+
+    res = ingest(_slipped_stud_xlsx(tmp_path), tmp_path / "repo",
+                 answers={"final-result": "Resistance_P_Rd"}, render_pdf=False)
+    data = json.loads(open(res.paths["json"]).read())
+    assert data["results"]["Resistance_P_Rd"] == pytest.approx(81.66, abs=0.01)
+    assert data["review_log"][0]["action"] == "convert"
+    code = open(res.paths["python"]).read()
+    assert "/1000" in code and "Reviewer correction" in code
+    # the generated tool rebuilds the corrected sheet on its own
+    ns: dict = {"__file__": res.paths["python"]}
+    exec(code, ns)
+    rebuilt = ns["build_sheet"]()
+    assert rebuilt.results()["Resistance_P_Rd"] == pytest.approx(81.66, abs=0.01)
+    assert rebuilt.review_log
+    assert res.review is not None and res.review.passed()
+
+
+# ------------------------------------------------- knowledge-base gate
+def test_reconversion_becomes_a_new_revision(tmp_path):
+    import json
+
+    xlsx = make_crack_width_xlsx(tmp_path)
+    repo = tmp_path / "repo"
+    ingest(xlsx, repo, answers={"final-result": "w_k"}, render_pdf=False)
+    res = ingest(xlsx, repo, answers={"final-result": "w_k"}, render_pdf=False)
+    manifest = json.loads(open(res.paths["manifest"]).read())
+    assert manifest["revision"] == "0.2"
+    assert manifest["schema"] == "structural-ai-toolchain/manifest@2"
+
+
+def _renamed_copy(xlsx, tmp_path):
+    from openpyxl import load_workbook
+
+    wb = load_workbook(xlsx)
+    wb.active["A1"] = "Crack width check (copy from old project)"
+    out = tmp_path / "copy.xlsx"
+    wb.save(out)
+    return out
+
+
+def test_duplicate_is_stopped_at_the_gate(tmp_path):
+    xlsx = make_crack_width_xlsx(tmp_path)
+    repo = tmp_path / "repo"
+    ingest(xlsx, repo, answers={"final-result": "w_k"}, render_pdf=False)
+    copy = _renamed_copy(xlsx, tmp_path)
+    res = ingest(copy, repo, answers={"gatekeeper": "abort"},
+                 render_pdf=False)
+    assert res.aborted and res.paths == {}
+    assert res.case.gatekeeper and res.case.gatekeeper[0]["verdict"] in (
+        "duplicate", "similar")
+    assert len(list(repo.glob("*/manifest.json"))) == 1
+
+
+def test_duplicate_can_be_merged_as_a_revision(tmp_path):
+    import json
+
+    xlsx = make_crack_width_xlsx(tmp_path)
+    repo = tmp_path / "repo"
+    first = ingest(xlsx, repo, answers={"final-result": "w_k"},
+                   render_pdf=False)
+    copy = _renamed_copy(xlsx, tmp_path)
+    res = ingest(copy, repo, answers={"gatekeeper": "revise",
+                                      "final-result": "w_k"},
+                 render_pdf=False)
+    assert res.paths["manifest"] == first.paths["manifest"]
+    assert json.loads(open(res.paths["manifest"]).read())["revision"] == "0.2"
+
+
+# ------------------------------------------------------------ AI research
+def test_ai_research_assigns_clauses_and_flags_missing_steps(tmp_path):
+    from src.llm import ScriptedLLMClient
+
+    xlsx = make_messy_beam_xlsx(tmp_path)
+    research = {
+        "standard": "EN 1993-1-1",
+        "fragments": [{"name": "Bending_stress_sigma",
+                       "clause": "EN 1993-1-1 6.2.5 (6.12)",
+                       "confidence": "high",
+                       "note": "elastic check; class 3 section assumed"},
+                      {"name": "Moment_M", "clause": "EN 1993-1-1 6.2.5",
+                       "confidence": "high", "note": ""}],
+        "missing_steps": [{"description": "lateral-torsional buckling",
+                           "clause": "EN 1993-1-1 6.3.2"}],
+    }
+    review = {"verdict": "APPROVE_WITH_COMMENTS", "findings": [],
+              "corrections": []}
+    llm = ScriptedLLMClient({"research": research, "review": review})
+    res = ingest(xlsx, tmp_path / "repo", llm=llm, render_pdf=False,
+                 answers={"final-result": "Bending_stress_sigma",
+                          "layout": "detailed"})
+    sigma = res.case.frag("Bending_stress_sigma")
+    assert sigma.clause == "EN 1993-1-1 6.2.5 (6.12)"
+    assert sigma.clause_confidence == "ai-high"
+    # a library atom outranks the model; the disagreement is on record
+    moment = res.case.frag("Moment_M")
+    assert moment.clause_confidence == "atom"
+    assert any("AI suggests" in e for e in moment.evidence)
+    assert any("lateral-torsional" in r for r in res.case.reflection)
+    assert res.case.ai.startswith("scripted")
+    assert [c.task for c in llm.calls][:1] == ["research"]

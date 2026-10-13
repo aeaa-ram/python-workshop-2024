@@ -37,7 +37,7 @@ def build_sheet() -> CalcSheet:
     sheet.calc('sigma_s', 'M_qp*1000000/(z*A_s)', unit='MPa', description='Steel stress under quasi-permanent loads')
     sheet.calc('h_c_eff', 'min(2.5*(h-d),(h-x)/3,h/2)', unit='mm', description='Effective tension zone height')
     sheet.calc('rho_p_eff', 'A_s/(b*h_c_eff)', unit='-', description='Effective reinforcement ratio')
-    sheet.calc('s_r_max', 'k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff', unit='mm', description='Maximum crack spacing')
+    sheet.calc('s_r_max', 'k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff', unit='mm', description='Maximum crack spacing', reference='EN 1992-1-1:2004 §7.3.4(3), Eq. (7.11)').atom_id = 'ec2.crack.s_r_max'
     sheet.calc('eps_diff', 'max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s)', unit='-', description='Mean strain difference (eps_sm - eps_cm)')
     sheet.calc('w_k', 's_r_max*eps_diff', unit='mm', description='Characteristic crack width')
     sheet.section("Verification")

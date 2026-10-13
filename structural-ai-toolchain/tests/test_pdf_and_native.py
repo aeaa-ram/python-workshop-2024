@@ -5,7 +5,11 @@ import pytest
 from src.models.calculation import CalcSheet
 from src.output_engine import find_chromium, render_html
 from src.output_engine.html_renderer import render_pdf_browser
-from src.output_engine.pdf_stamp import read_embedded_calcsheet, stamp_pdf
+from src.output_engine.pdf_stamp import (
+    read_embedded_calcsheet,
+    reconstruct_from_pdf,
+    stamp_pdf,
+)
 
 
 def _demo_sheet() -> CalcSheet:
@@ -30,7 +34,7 @@ def test_calcsheet_json_roundtrip():
 
 
 @pytest.mark.skipif(find_chromium() is None, reason="no Chromium available")
-def test_pdf_has_bookmarks_and_embedded_json(tmp_path):
+def test_pdf_has_bookmarks_and_no_attachment_by_default(tmp_path):
     sheet = _demo_sheet()
     pdf = render_pdf_browser(sheet, tmp_path / "r.pdf")
     from pypdf import PdfReader
@@ -40,11 +44,20 @@ def test_pdf_has_bookmarks_and_embedded_json(tmp_path):
     # bookmarks present
     titles = _flat_outline(reader.outline)
     assert any("Stamp Demo" in t for t in titles)
-    # embedded machine-readable payload round-trips
-    data = read_embedded_calcsheet(pdf)
+    # the PDF alone carries the data, inside the page — no attachment
+    assert reader.attachments == {}
+    data = reconstruct_from_pdf(pdf)
     assert data["tool_id"] == sheet.tool_id
     assert data["results"]["sig"] == pytest.approx(3.6)
     assert reader.metadata.get("/CalcSheetSchema") == CalcSheet.SCHEMA
+
+
+@pytest.mark.skipif(find_chromium() is None, reason="no Chromium available")
+def test_pdf_attachment_is_opt_in(tmp_path):
+    sheet = _demo_sheet()
+    pdf = render_pdf_browser(sheet, tmp_path / "r.pdf", attach=True)
+    data = read_embedded_calcsheet(pdf)
+    assert data["results"]["sig"] == pytest.approx(3.6)
 
 
 def _flat_outline(items):

@@ -91,42 +91,38 @@ def _repository_fingerprints(
 
 
 def analyze_reuse(
-    tool: ParsedTool, repo_dir: str | Path = "repository"
+    tool: ParsedTool, repo_dir: str | Path = "repository",
+    exclude_slug: str = "",
 ) -> list[FormulaFinding]:
     """Classify every derived formula of a parsed tool."""
+    pairs = [(v.name, v.expression) for v in tool.variables
+             if v.role == "derived" and v.expression]
+    return analyze_expressions(pairs, repo_dir, exclude_slug)
+
+
+def analyze_expressions(
+    pairs: list[tuple[str, str]], repo_dir: str | Path = "repository",
+    exclude_slug: str = "",
+) -> list[FormulaFinding]:
+    """Classify (name, expression) pairs against atoms and stored tools.
+    ``exclude_slug`` skips the tool being re-converted itself."""
     atom_index = _atom_fingerprints()
-    repo_index = _repository_fingerprints(repo_dir)
+    repo_index = _repository_fingerprints(repo_dir, exclude_slug)
     findings: list[FormulaFinding] = []
-    for var in tool.variables:
-        if var.role != "derived" or not var.expression:
-            continue
-        fp = fingerprint_if_matchable(var.expression)
+    for name, expression in pairs:
+        fp = fingerprint_if_matchable(expression)
         if fp is None:
             # Either unparseable or too trivial to match structurally —
             # treat as new logic (record the full fingerprint if any).
-            findings.append(
-                FormulaFinding(
-                    var.name, var.expression, "new", "",
-                    try_fingerprint(var.expression) or "",
-                )
-            )
-            continue
-        if fp in atom_index:
-            findings.append(
-                FormulaFinding(
-                    var.name, var.expression, "matches_atom",
-                    atom_index[fp], fp,
-                )
-            )
+            findings.append(FormulaFinding(
+                name, expression, "new", "",
+                try_fingerprint(expression) or ""))
+        elif fp in atom_index:
+            findings.append(FormulaFinding(
+                name, expression, "matches_atom", atom_index[fp], fp))
         elif fp in repo_index:
-            findings.append(
-                FormulaFinding(
-                    var.name, var.expression, "matches_tool",
-                    repo_index[fp], fp,
-                )
-            )
+            findings.append(FormulaFinding(
+                name, expression, "matches_tool", repo_index[fp], fp))
         else:
-            findings.append(
-                FormulaFinding(var.name, var.expression, "new", "", fp)
-            )
+            findings.append(FormulaFinding(name, expression, "new", "", fp))
     return findings

@@ -5,9 +5,12 @@ from src.qa.ai_reviewer import (
     build_review_prompt,
 )
 from src.qa.master_review import (
+    Fix,
     ReviewFinding,
     ReviewReport,
+    ai_review,
     deterministic_review,
+    extract_original_values,
     review,
     review_to_convergence,
 )
@@ -23,4 +26,7 @@ __all__ = [
     "deterministic_review",
     "ReviewReport",
     "ReviewFinding",
+    "Fix",
+    "ai_review",
+    "extract_original_values",
 ]

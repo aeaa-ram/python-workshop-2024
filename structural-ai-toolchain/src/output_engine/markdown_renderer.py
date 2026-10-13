@@ -47,7 +47,7 @@ def render_markdown(sheet: CalcSheet, mode: str = "detailed") -> str:
         for item in input_buffer:
             symbol = f"${item.latex_lhs}$"
             lines.append(
-                f"| {symbol} | {fmt_number(item.value)} | {item.unit} "
+                f"| {symbol} | {fmt_number(item.value, style='unicode')} | {item.unit} "
                 f"| {item.description} |"
             )
         lines.append("")
@@ -67,7 +67,7 @@ def render_markdown(sheet: CalcSheet, mode: str = "detailed") -> str:
             input_buffer.append(item)
         elif item.kind == "calc":
             flush_inputs()
-            result = fmt_number(item.value)
+            result = fmt_number(item.value, style="latex")
             rendered_unit = unit_latex(item.unit)
             unit = f"\\ {rendered_unit}" if rendered_unit else ""
             if mode == "compact":

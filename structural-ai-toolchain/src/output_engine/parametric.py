@@ -80,8 +80,8 @@ class ParametricStudy:
                  "|" + "---|" * len(header)]
         for r in rows:
             cells = [r.label]
-            cells += [fmt_number(r.inputs.get(k, self.sheet.values.get(k, "")))
-                      if isinstance(r.inputs.get(k, self.sheet.values.get(k)), (int, float))
+            cells += [fmt_number(r.inputs.get(k, self.sheet.results().get(k, "")))
+                      if isinstance(r.inputs.get(k, self.sheet.results().get(k)), (int, float))
                       else str(r.inputs.get(k, "")) for k in cols_in]
             cells += [fmt_number(r.results.get(v, float("nan"))) for v in cols_out]
             badge = "✅ OK" if r.passed else ("❌ NOT OK" if r.passed is False else "—")
@@ -105,7 +105,7 @@ class ParametricStudy:
         for r in rows:
             p.append(f"<tr><td>{esc(r.label)}</td>")
             for k in cols_in:
-                val = r.inputs.get(k, self.sheet.values.get(k, ""))
+                val = r.inputs.get(k, self.sheet.results().get(k, ""))
                 p.append(f"<td>{fmt_number(val) if isinstance(val,(int,float)) else esc(str(val))}</td>")
             for v in cols_out:
                 p.append(f"<td>{fmt_number(r.results.get(v, float('nan')))}</td>")

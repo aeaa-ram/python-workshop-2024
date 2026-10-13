@@ -1,6 +1,8 @@
 # Structural AI Toolchain — 1-page starter
 
-> Everything runs locally. From `structural-ai-toolchain/`, once: `pip install -r requirements.txt`.
+> Everything runs locally. From `structural-ai-toolchain/`, once: `pip install -r requirements.txt`,
+> then `python main.py doctor` to see what's set up. AI is optional: add `ANTHROPIC_API_KEY`
+> (or `ant auth login`) and the agent also researches clauses and checks the PDF visually.
 
 ### ① Put a legacy sheet IN  →  get a tool OUT
 ```
@@ -12,8 +14,10 @@ python main.py ingest path/to/sheet.mcdx    # THE thorough way (recommended):
 python main.py gui                          # window: pick file → Investigate → Create
 python main.py grind your_sheet.xlsx        # quick one-shot conversion
 ```
-Supports .mcdx (real Mathcad parser) .xlsx .xlsm .csv .ipynb .py. Every ingest
-leaves a full audit trail (`JOURNAL.md` + `casefile.json`) next to the tool.
+Supports .mcdx .xlsx .xlsm .csv .ipynb .py. If a similar tool already exists it asks:
+revise it, keep a new one, or abort. Every ingest leaves a full audit trail
+(`JOURNAL.md` + `casefile.json`) next to the tool.
+Have a PDF print of the original? Add `--original print.pdf` for a value-by-value check.
 
 ### ② If it asks questions  →  answer them
 ```
@@ -21,26 +25,33 @@ repository/<your-tool>/CLARIFICATIONS.md     # e.g. "Cell H1 = 1.0 has no label 
 ```
 Fix the sheet (or the generated tool), then re-grind. Status shows `needs-clarification`.
 
-### ③ See the result  →  the report
+### ③ Double-check it  →  the master reviewer
+```
+python main.py review <your-tool>          # units, dimensions, slips, vs the original
+python main.py review <your-tool> --fix    # write the verified corrections into the tool
+```
+A corrected step shows a yellow "Reviewer correction" note in the report.
+
+### ④ See the result  →  the report
 ```
 python main.py render <your-tool> --pdf              # detailed Mathcad-style
 python main.py render <your-tool> --pdf --mode compact   # just the answers
 ```
 → `repository/<your-tool>/reports/<your-tool>.pdf` — branded A4, logo, OK / NOT OK, bookmarks.
 
-### ④ Print / share  →  it's a normal PDF
+### ⑤ Print / share  →  it's a normal PDF
 Open the PDF, **Ctrl+P**. It also hides a machine-readable copy *inside itself*, so later:
 ```
 python -c "from src.output_engine import reconstruct_from_pdf as r; print(r('file.pdf'))"
 ```
 
-### ⑤ Change the inputs  →  edit one file, re-render
+### ⑥ Change the inputs  →  edit one file, re-render
 ```
 repository/<your-tool>/<your-tool>.py    # edit the numbers in build_sheet(), then render again
 ```
 Every number in the report recomputes itself — never hand-typed.
 
-### ⑥ Build a NEW tool from scratch (no legacy file)
+### ⑦ Build a NEW tool from scratch (no legacy file)
 ```
 python main.py new "Punching Shear Check (EN 1992-1-1 6.4)"   # makes a starter file
 #  → edit build_sheet(),  then:
@@ -48,14 +59,14 @@ python main.py register <slug>      # make its doc + manifest
 python main.py render   <slug> --pdf
 ```
 
-### ⑦ Find a formula to reuse  →  don't retype code
+### ⑧ Find a formula to reuse  →  don't retype code
 ```
 python main.py atoms --search "crack width"     # search bar
 python main.py atoms --tree                      # drill down: country → code → chapter → clause
 python -c "from src.library import custom; print(custom.E_cm(f_cm=38))"   # call any formula
 ```
 
-### ⑧ See EVERYTHING (for non-coders)  →  the dashboard
+### ⑨ See EVERYTHING (for non-coders)  →  the dashboard
 ```
 python main.py dashboard      # → repository/dashboard.html  (open in a browser)
 ```

@@ -16,10 +16,13 @@ This parser walks the regions in worksheet order (top, then left) and:
 - text regions -> narrative (section intros / descriptions), pulled from
   the referenced XAML FlowDocument packages.
 
-Units are display-only in our model, so unit identifiers are recorded but
-stripped from expressions (Mathcad's automatic unit algebra is not
-reproduced — a value-mismatch, matrix, or unresolved construct becomes a
-human-in-the-loop clarification rather than a silent wrong number).
+Mathcad carries units through every formula, so the sheet is built in
+unit-aware mode: literal inputs are converted to canonical N/mm, a unit
+written inside a formula (``h - 30 mm``) becomes a unit symbol with its
+canonical scale, and each result is shown in the unit Mathcad displayed.
+Conditionals (the ``if`` function and ``if / otherwise`` programs) become
+``Piecewise`` expressions. A matrix, string, empty placeholder or unknown
+unit becomes a human-in-the-loop clarification, never a silent number.
 
 Consistent with the AI Grinder: anything that cannot be translated
 faithfully is reported as a Clarification, never fabricated.
@@ -186,15 +189,14 @@ class MathcadParser(BaseParser):
                 context=str(exc)))
 
     def _handle_eval(self, ev, tool: ParsedTool, used: set) -> None:
-        # only comparisons are meaningful to us as checks
-        for op, sym in ((f"{ML}lessThan", "<="), (f"{ML}greaterThan", ">=")):
-            cmp = ev.find(f".//{op}")
-            if cmp is None:
+        # a comparison is a check; "x = 81.66 kN" sets x's display unit
+        for tag, sym in _COMPARISON_TAGS.items():
+            op = f"{ML}{tag}"
+            if ev.find(f".//{op}") is None:
                 continue
             apply_node = _parent_apply(ev, op)
             if apply_node is None:
                 continue
-            operands = [c for c in apply_node if not c.tag.endswith("}"+op.split('}')[1])]
             operands = [c for c in apply_node if c.tag != op]
             if len(operands) < 2:
                 continue
@@ -205,6 +207,14 @@ class MathcadParser(BaseParser):
             except _Untranslatable:
                 pass
             return
+        kids = list(ev)
+        if kids and _local(kids[0].tag) == "id":
+            name = _ident_name(kids[0])
+            unit = _result_unit(ev)
+            for var in tool.variables:
+                if var.name == name and var.role == "derived" and unit \
+                        and not var.unit:
+                    var.unit = unit
 
 
 # ------------------------------------------------------------------ #
@@ -219,14 +229,17 @@ def _translate(node) -> str:
         if nm == "pi" or (node.get("labels") == "CONSTANT" and nm in ("pi",)):
             return "pi"
         if node.get("labels") == "UNIT":
-            return "1"  # units stripped from the numeric expression
+            return _unit_token("".join(node.itertext()).strip())
         return nm
     if tag == "str":
         raise _Untranslatable("string literal")
     if tag in ("matrix", "sequence"):
         raise _Untranslatable("matrix/vector")
     if tag == "placeholder":
-        raise _Untranslatable("empty placeholder")
+        raise _Untranslatable("an empty placeholder (left blank in the "
+                              "original)")
+    if tag == "program":
+        return _translate_program(node)
     if tag == "parens":
         return f"({_translate(node[0])})"
     if tag == "eval":
@@ -256,13 +269,13 @@ def _translate_apply(node) -> str:
     if op == "div":
         return f"({t(0)})/({t(1)})"
     if op == "plus":
-        return "+".join(t(i) for i in range(len(args)))
+        return "(" + "+".join(t(i) for i in range(len(args))) + ")"
     if op == "minus":
         if len(args) == 1:
-            return f"-({t(0)})"
-        return f"({t(0)})-({t(1)})"
+            return f"(-({t(0)}))"
+        return f"(({t(0)})-({t(1)}))"
     if op == "neg":
-        return f"-({t(0)})"
+        return f"(-({t(0)}))"
     if op == "pow":
         return f"({t(0)})**({t(1)})"
     if op == "nthRoot":
@@ -278,10 +291,24 @@ def _translate_apply(node) -> str:
         return f"({t(0)})"
     if op in ("scale", "unitOverride"):
         return t(0)
+    if op == "equal":
+        return f"Eq({t(0)}, {t(1)})"
+    if op == "notEqual":
+        return f"Ne({t(0)}, {t(1)})"
+    if op in _COMPARISON_TAGS:
+        return f"(({t(0)}) {_COMPARISON_TAGS[op]} ({t(1)}))"
+    if op in ("and", "or"):
+        joiner = " & " if op == "and" else " | "
+        return "(" + joiner.join(f"({t(i)})" for i in range(len(args))) + ")"
+    if op == "not":
+        return f"(~({t(0)}))"
     # function application: <apply><ml:id>min</ml:id><ml:sequence>a,b</...>
     if op == "id":
         fname = _slug("".join(kids[0].itertext())).lower()
         fargs = _flatten_args(args)
+        if fname == "if" and len(fargs) == 3:
+            cond, yes, no = (_translate(a) for a in fargs)
+            return f"Piecewise(({yes}, {cond}), ({no}, True))"
         # rounding must be PRESERVED, not dropped — round(L/s)=7 is not 6.67
         if fname == "round" and len(fargs) >= 1:
             inner = _translate(fargs[0])
@@ -294,7 +321,69 @@ def _translate_apply(node) -> str:
         if fname in _FUNC:
             inner = ",".join(_translate(a) for a in fargs)
             return f"{_FUNC[fname]}({inner})"
+    if op == "id":
+        name = "".join(kids[0].itertext()).strip()
+        raise _Untranslatable(f"function '{name}' (user-defined or "
+                              "unsupported)")
     raise _Untranslatable(f"operator <{op}>")
+
+
+_COMPARISON_TAGS = {
+    "lessOrEqual": "<=", "lessThanOrEqual": "<=", "le": "<=",
+    "greaterOrEqual": ">=", "greaterThanOrEqual": ">=", "ge": ">=",
+    "lessThan": "<", "greaterThan": ">", "equal": "==",
+}
+
+
+def _translate_program(node) -> str:
+    """``if / else if / otherwise`` program -> Piecewise. Programs with local
+    variables or loops are not translated (they become a clarification)."""
+    branches: list[str] = []
+    fallback = None
+    for child in node:
+        tag = _local(child.tag)
+        if tag in ("ifThen", "elseIf") and len(child) >= 2:
+            cond, value = _translate(child[0]), _translate(child[1])
+            branches.append(f"({value}, {cond})")
+        elif tag == "otherwise" and len(child) >= 1:
+            fallback = _translate(child[0])
+        else:
+            raise _Untranslatable(f"program statement <{tag}>")
+    if not branches:
+        raise _Untranslatable("program without conditions")
+    if fallback is not None:
+        branches.append(f"({fallback}, True)")
+    return "Piecewise(" + ", ".join(branches) + ")"
+
+
+def _unit_token(unit: str) -> str:
+    from src.models.calculation import unit_symbol
+    from src.qa.units import known
+
+    if not known(unit):
+        raise _Untranslatable(f"unit '{unit}' is not in the units table")
+    return unit_symbol(unit)
+
+
+def _unit_expr(node):
+    """Unit string ('kN', 'mm^2', 'kN/m') if the subtree is units only."""
+    tag = _local(node.tag)
+    if tag == "id" and node.get("labels") == "UNIT":
+        return "".join(node.itertext()).strip()
+    if tag == "parens" and len(node):
+        return _unit_expr(node[0])
+    if tag == "apply" and len(node) >= 2:
+        op, args = _local(node[0].tag), list(node)[1:]
+        if op == "pow" and len(args) == 2 and _local(args[1].tag) == "real":
+            base = _unit_expr(args[0])
+            return f"{base}^{(args[1].text or '').strip()}" if base else None
+        if op == "mult":
+            parts = [_unit_expr(a) for a in args]
+            return "·".join(parts) if all(parts) else None
+        if op == "div" and len(args) == 2:
+            num, den = _unit_expr(args[0]), _unit_expr(args[1])
+            return f"{num}/{den}" if num and den else None
+    return None
 
 
 def _flatten_args(args):
@@ -378,20 +467,24 @@ def _literal_and_unit(node):
         return _literal_and_unit(node[0])
     if tag == "apply":
         kids = list(node)
-        if kids and _local(kids[0].tag) == "mult":
+        op = _local(kids[0].tag) if kids else ""
+        if op == "neg" and len(kids) == 2:
+            value, unit = _literal_and_unit(kids[1])
+            return (-value, unit) if value is not None else (None, "")
+        if op == "mult":
             reals = [k for k in kids[1:] if _local(k.tag) == "real"]
-            units = [k for k in kids[1:]
-                     if _local(k.tag) == "id" and k.get("labels") == "UNIT"]
-            others = [k for k in kids[1:]
-                      if _local(k.tag) not in ("real",)
-                      and not (_local(k.tag) == "id"
-                               and k.get("labels") == "UNIT")]
-            if len(reals) == 1 and not others:
-                unit = "".join(u.text or "" for u in units)
+            rest = [k for k in kids[1:] if _local(k.tag) != "real"]
+            units = [_unit_expr(k) for k in rest]
+            if len(reals) == 1 and all(units):
                 try:
-                    return float(reals[0].text), unit
+                    return float(reals[0].text), "·".join(units)
                 except (TypeError, ValueError):
                     return None, ""
+        if op == "div" and len(kids) == 3:
+            value, unit = _literal_and_unit(kids[1])
+            den = _unit_expr(kids[2])
+            if value is not None and den:
+                return value, f"{unit}/{den}" if unit else f"1/{den}"
     return None, ""
 
 
@@ -548,14 +641,21 @@ def _split_title_ref(text: str) -> tuple[str, str]:
         m2 = re.search(r"(EN\s?\d{3,4}[\s\d\-:.]*)", text)
         if m2:
             ref = _clean_code_ref(m2.group(1))
-    return text.strip(" .-")[:120], ref
+            if text[: m2.start()].strip(" .-–"):
+                text = text[: m2.start()]
+    return text.strip(" .-–")[:120], ref
 
 
 def _clean_code_ref(ref: str) -> str:
     """'EN 199 4 -1-1' -> 'EN 1994-1-1' (XAML often splits the digits)."""
     ref = re.sub(r"\s+", " ", ref).strip(" .")
-    ref = re.sub(r"(?<=\d)\s+(?=\d)", "", ref)     # join split digits
     ref = re.sub(r"\s*-\s*", "-", ref)             # tighten dashes
+    # join split digits of the standard's NUMBER only (before its first
+    # part dash) — the clause after it ("6.6.3.1") keeps its space
+    m = re.match(r"(EN(?:\s*ISO)?)\s*([\d\s]+?)(?=[-:])", ref)
+    if m:
+        number = re.sub(r"\s", "", m.group(2))
+        ref = f"{m.group(1)} {number}{ref[m.end():]}"
     return ref
 
 

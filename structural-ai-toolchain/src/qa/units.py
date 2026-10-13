@@ -46,11 +46,18 @@ _UNITS: dict[str, tuple[tuple[int, int], float]] = {
 }
 
 
+_SUPERSCRIPTS = str.maketrans({"²": "2", "³": "3", "⁴": "4", "⁻": "-",
+                                "¹": "1"})
+
+
 def parse_unit(unit: str):
-    """Return (dim, scale) for a unit string, or None if unknown."""
+    """Return (dim, scale) for a unit string, or None if unknown.
+
+    Accepts the table spellings plus compounds such as ``kN/m``,
+    ``kN/m^2``, ``kN·m/m`` or ``N/mm²``."""
     if unit is None:
         return None
-    u = unit.strip()
+    u = unit.strip().translate(_SUPERSCRIPTS)
     key = u.replace("·", "").replace(" ", "")
     if key in _UNITS:
         return _UNITS[key]
@@ -58,6 +65,43 @@ def parse_unit(unit: str):
     key2 = key.replace("^", "")
     if key2 in _UNITS:
         return _UNITS[key2]
+    return _parse_compound(u)
+
+
+def _parse_compound(unit: str):
+    tokens = re.split(r"\s*([*/·])\s*", unit.replace(" ", "·"))
+    if len(tokens) < 3:
+        return None
+    force = length = 0
+    scale = 1.0
+    sign = 1
+    for tok in tokens:
+        if tok in ("*", "·"):
+            sign = 1
+            continue
+        if tok == "/":
+            sign = -1
+            continue
+        m = re.fullmatch(r"([A-Za-z%µ]+)\^?(-?\d+)?", tok)
+        if not m:
+            return None
+        base, exp = m.group(1), int(m.group(2) or 1)
+        entry = _UNITS.get(base)
+        if entry is None:
+            return None
+        (f, l), s = entry
+        force += sign * f * exp
+        length += sign * l * exp
+        scale *= s ** (sign * exp)
+    return ((force, length), scale)
+
+
+def unit_for(dim: tuple, scale: float) -> str | None:
+    """A table unit with this dimension and scale (e.g. force, 1 -> 'N')."""
+    for name, (d, s) in _UNITS.items():
+        if d == tuple(dim) and abs(s / scale - 1.0) < 1e-9 and "^" not in name \
+                and name not in ("", "-", "1", "rad", "%"):
+            return name
     return None
 
 

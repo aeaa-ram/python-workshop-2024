@@ -2,13 +2,15 @@
 
 Usage (run from the structural-ai-toolchain directory):
 
+    python main.py doctor                  # what is installed / configured
     python main.py demo                    # end-to-end trial run
-    python main.py grind <file> [--force]  # convert a legacy file
+    python main.py ingest <file>           # agentic conversion (asks inline)
+    python main.py grind <file> [--force]  # fast conversion
+    python main.py review <slug> [--fix]   # master reviewer to convergence
     python main.py check <file>            # gatekeeper dry-run on a file
     python main.py ask "<title>"           # gatekeeper check for an idea
-    python main.py render <slug> [--out DIR]
-    python main.py index                   # rebuild knowledge-graph index
-    python main.py list                    # list repository tools
+    python main.py render <slug> [--pdf]
+    python main.py dashboard | index | list | atoms
 """
 
 from __future__ import annotations
@@ -28,8 +30,13 @@ REPO_DIR = PROJECT_ROOT / "repository"
 def cmd_grind(args) -> int:
     from src.ingestion import DuplicateToolError, grind
 
+    client = None
+    if getattr(args, "ai", False):
+        from src.llm import get_llm_client
+
+        client = get_llm_client()
     try:
-        result = grind(args.file, REPO_DIR, force=args.force)
+        result = grind(args.file, REPO_DIR, force=args.force, client=client)
     except DuplicateToolError as exc:
         print(f"⛔ {exc}")
         return 1
@@ -45,6 +52,10 @@ def cmd_grind(args) -> int:
         print("  Atomic breakdown:")
         for finding in result.reuse_findings:
             print(f"    {finding}")
+    if result.review is not None and result.review.fixes:
+        print("  Master reviewer corrections:")
+        for fix in result.review.fixes:
+            print(f"    {fix}")
     if result.clarifications:
         print(f"  ❓ {len(result.clarifications)} clarification(s) needed "
               f"(status: needs-clarification) — see CLARIFICATIONS.md:")
@@ -171,6 +182,7 @@ def cmd_ingest(args) -> int:
         answers=answers,
         interactive=not args.defer and answers is None,
         render_pdf=not args.no_pdf,
+        original_document=(Path(args.original) if args.original else None),
     )
     print()
     print(result.summary())
@@ -187,21 +199,75 @@ def cmd_ingest(args) -> int:
 
 
 def cmd_review(args) -> int:
-    from src.ingestion.native import load_sheet
-    from src.qa import review
+    from src.ingestion.native import load_sheet, register_tool, sheet_to_python
+    from src.llm import get_llm_client
+    from src.qa import extract_original_values, review_to_convergence
 
     sheet = load_sheet(args.slug, REPO_DIR)
+    client = get_llm_client()
+    if not client.available():
+        client = None
     render_dir = (REPO_DIR / args.slug / "reports" / "_review") \
-        if args.visual else None
-    rep = review(sheet, render_dir=render_dir)
+        if (args.visual and client is not None) else None
+    original_doc = Path(args.original) if args.original else None
+    original_values = {}
+    if original_doc is not None and client is not None:
+        names = [i.name for i in sheet.items if i.kind in ("input", "calc")]
+        original_values = extract_original_values(client, original_doc, names)
+        print(f"Read {len(original_values)} value(s) from {original_doc.name}")
+    fixed, rep = review_to_convergence(
+        sheet, render_dir=render_dir, client=client,
+        original_values=original_values, original_document=original_doc)
     print(f"Master review of '{args.slug}' "
-          f"({'AI+deterministic' if rep.ai_used else 'deterministic'}):")
+          f"({'AI + deterministic: ' + rep.ai_model if rep.ai_used else 'deterministic'}"
+          f", {rep.iterations} iteration(s)):")
     print(rep)
+    if rep.fixes and args.fix:
+        tool_dir = REPO_DIR / args.slug
+        (tool_dir / f"{args.slug}.py").write_text(
+            sheet_to_python(fixed, tool_dir, args.slug,
+                            "Corrected by the master reviewer; see "
+                            "review_log for every change."),
+            encoding="utf-8")
+        register_tool(args.slug, REPO_DIR)
+        print(f"\n✔ Corrections written to {tool_dir / (args.slug + '.py')}")
+    elif rep.fixes:
+        print("\nRe-run with --fix to write these corrections into the tool.")
     if not rep.passed():
         print(f"\n⛔ {len(rep.errors())} error(s) — not ready to issue.")
     else:
         print("\n✔ No blocking issues found.")
     return 1 if not rep.passed() else 0
+
+
+def cmd_doctor(_args) -> int:
+    """What this installation can do: AI, PDF, browser."""
+    import shutil
+
+    from src.llm import DEFAULT_EFFORT, DEFAULT_MODEL, get_llm_client
+    from src.output_engine import find_chromium
+
+    client = get_llm_client()
+    ok = "✔"
+    print("Structural AI Toolchain — environment check")
+    if client.available():
+        print(f"  {ok} AI: {DEFAULT_MODEL} (effort {DEFAULT_EFFORT}) — "
+              "interpretation, clause research and visual review enabled")
+    else:
+        print("  – AI: not configured (set ANTHROPIC_API_KEY or run `ant auth "
+              "login`; pip install anthropic). Everything still runs on the "
+              "deterministic path.")
+    chromium = find_chromium()
+    print(f"  {ok if chromium else '–'} PDF printing: "
+          f"{chromium or 'no Chromium/Chrome (set CHROME_BIN)'}")
+    for tool, purpose in (("pdftotext", "read the in-page data layer"),
+                          ("pdftoppm", "page images for visual review")):
+        print(f"  {ok if shutil.which(tool) else '–'} {tool}: {purpose}")
+    for module in ("sympy", "openpyxl", "nbformat", "matplotlib", "pypdf",
+                   "anthropic"):
+        found = importlib.util.find_spec(module) is not None
+        print(f"  {ok if found else '–'} python package {module}")
+    return 0
 
 
 def cmd_atoms(args) -> int:
@@ -267,15 +333,44 @@ def cmd_demo(args) -> int:
     """End-to-end trial: fixtures -> grind -> gatekeeper -> reports."""
     from examples.make_fixtures import make_all
 
-    print("1) Generating example legacy files (dummy Excel + notebook)...")
+    print("1) Generating example legacy files (Excel, notebook, Mathcad)...")
     fixtures = make_all(PROJECT_ROOT / "examples")
     for path in fixtures:
         print(f"   {path}")
 
-    print("\n2) Grinding them into /repository ...")
+    print("\n2) Grinding the spreadsheets and the notebook (fast path) ...")
     for path in fixtures:
-        grind_args = argparse.Namespace(file=str(path), force=True)
+        if path.suffix == ".mcdx":
+            continue
+        grind_args = argparse.Namespace(file=str(path), force=True, ai=False)
         cmd_grind(grind_args)
+
+    print("\n2b) Agentic ingestion of the Mathcad sheet (scripted answers — "
+          "interactive by default):")
+    from src.ingestion.agent import ingest
+    mcdx = next(p for p in fixtures if p.suffix == ".mcdx")
+    result = ingest(mcdx, REPO_DIR, render_pdf=False,
+                    answers={"final-result": "UR", "layout": "detailed"})
+    print(result.summary())
+
+    print("\n2c) Master reviewer — a sheet that computes N but labels kN:")
+    from src.models.calculation import CalcSheet
+    from src.qa import review_to_convergence
+    bad = CalcSheet("Stud check (legacy, units slip)")
+    bad.define("f_u", 450, unit="MPa")
+    bad.define("d", 19, unit="mm")
+    bad.define("gamma_V", 1.25, unit="-")
+    bad.define("P_Ed", 87.97, unit="kN")
+    bad.calc("P_Rd", "0.8*f_u*pi*d**2/4/gamma_V", unit="kN")
+    bad.check("P_Ed <= P_Rd")
+    print(f"   as found: P_Rd = {bad.results()['P_Rd']:.0f} kN, check "
+          f"{'OK' if bad.all_passed() else 'NOT OK'}")
+    fixed, rep = review_to_convergence(bad)
+    for fix in rep.fixes:
+        print(f"   {fix}")
+    print(f"   after review: P_Rd = {fixed.results()['P_Rd']:.2f} kN, check "
+          f"{'OK' if fixed.all_passed() else 'NOT OK'} "
+          f"(converged: {rep.converged})")
 
     print("\n3) Gatekeeper trial — asking for a suspiciously familiar tool:")
     ask_args = argparse.Namespace(
@@ -340,6 +435,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("file")
     p.add_argument("--force", action="store_true",
                    help="override gatekeeper duplicate block")
+    p.add_argument("--ai", action="store_true",
+                   help="include the AI review in the master-review loop")
     p.set_defaults(func=cmd_grind)
 
     p = sub.add_parser("check", help="gatekeeper dry-run on a file")
@@ -392,14 +489,23 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--defer", action="store_true",
                    help="never prompt; defer open questions to JOURNAL.md")
     p.add_argument("--no-pdf", action="store_true")
+    p.add_argument("--original", default=None,
+                   help="PDF print of the original, for the one-to-one check")
     p.set_defaults(func=cmd_ingest)
 
-    p = sub.add_parser("review", help="AI master reviewer: catch wrong "
-                       "results (units, unresolved) before issue")
+    p = sub.add_parser("review", help="master reviewer: find, fix and "
+                       "re-check wrong results until converged")
     p.add_argument("slug")
     p.add_argument("--visual", action="store_true",
                    help="also render pages for the AI visual review")
+    p.add_argument("--original", default=None,
+                   help="PDF print of the original, for the one-to-one check")
+    p.add_argument("--fix", action="store_true",
+                   help="write verified corrections back into the tool")
     p.set_defaults(func=cmd_review)
+
+    p = sub.add_parser("doctor", help="show what is installed / configured")
+    p.set_defaults(func=cmd_doctor)
 
     p = sub.add_parser("atoms", help="browse the shared formula library")
     p.add_argument("--tree", action="store_true",

@@ -34,7 +34,9 @@ _ALLOWED = {
     "cot": sp.cot, "sec": sp.sec, "csc": sp.csc,
     "asin": sp.asin, "acos": sp.acos, "atan": sp.atan, "acot": sp.acot,
     "sinh": sp.sinh, "cosh": sp.cosh, "tanh": sp.tanh,
-    "floor": sp.floor, "ceiling": sp.ceiling,
+    "floor": sp.floor, "ceiling": sp.ceiling, "sign": sp.sign,
+    "Piecewise": sp.Piecewise, "True": sp.true, "False": sp.false,
+    "Eq": sp.Eq, "Ne": sp.Ne,
 }
 
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")

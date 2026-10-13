@@ -125,6 +125,8 @@ table.inputs td.ref {{ color: var(--muted); font-style: italic; font-size: 8.4pt
 .compact {{ break-inside: avoid; margin: 1.4mm 0; padding-left: 3mm;
   border-left: 2.5px solid var(--accent); display: flex;
   justify-content: space-between; gap: 6mm; }}
+.fixnote {{ font-size: 8.2pt; color: #8a5a00; background: #fff6e0;
+  border-left: 2px solid #e0a100; padding: 0.6mm 2mm; margin: 0.8mm 0 1mm; }}
 .compact .clause {{ color: var(--muted); font-style: italic; font-size: 8.4pt; }}
 .mfallback {{ font-family: "Consolas",monospace; font-size: 9pt; color: #445; }}
 
@@ -324,7 +326,7 @@ def render_html(
         for it in input_buffer:
             ref = f'<td class="ref">{esc(it.reference)}</td>' if any_ref else ""
             p.append(f'<tr><td class="sym">{inline(it.latex_lhs)}</td>'
-                     f"<td>{fmt_number(it.value)}</td>"
+                     f"<td>{esc(fmt_number(it.value, style='unicode'))}</td>"
                      f"<td>{esc(it.unit)}</td>"
                      f"<td>{esc(it.description)}</td>{ref}</tr>")
         p.append("</tbody></table>")
@@ -353,11 +355,13 @@ def render_html(
             input_buffer.append(it)
         elif it.kind == "calc":
             flush_inputs()
-            result = fmt_number(it.value)
+            result = fmt_number(it.value, style="latex")
             ru = unit_latex(it.unit)
             unit = f"\\ {ru}" if ru else ""
             lead = f'<div class="lead">{esc(it.description)}</div>' \
                 if it.description else ""
+            if it.note:
+                lead += f'<div class="fixnote">{esc(it.note)}</div>'
             clause = f'<div class="clause">{esc(it.reference)}</div>' \
                 if it.reference else ""
             sr = f'<span class="sr">{esc(_plain_eq(it))}</span>'
@@ -366,18 +370,17 @@ def render_html(
                 p.append(f'<div class="compact"><div>{lead}{eq}{sr}</div>'
                          f'{clause}</div>')
             else:
-                # Unit-aware sheets (Mathcad) carry units, so a
-                # substituted-numbers line can't be consistent once the
-                # result is converted to its display unit — show the clean
-                # two-line symbolic = result. Unit-naive sheets keep the
-                # full three-line Mathcad breakdown.
-                if getattr(sheet, "unit_aware", False):
-                    lines = [f"{it.latex_lhs} = {it.latex_symbolic}",
-                             f"= \\mathbf{{{result}}}{unit}"]
-                else:
-                    lines = [f"{it.latex_lhs} = {it.latex_symbolic}",
-                             f"= {it.latex_substituted}",
-                             f"= \\mathbf{{{result}}}{unit}"]
+                # Mathcad breakdown: symbolic, substituted, result. In
+                # unit-aware sheets every substituted value carries its own
+                # unit, so the middle line stays dimensionally honest. A
+                # step whose formula is a bare symbol or number skips it.
+                lines = [f"{it.latex_lhs} = {it.latex_symbolic}"]
+                trivial = re.fullmatch(r"\s*([A-Za-z_]\w*|[\d.eE+-]+)\s*",
+                                       it.expression or "")
+                if it.latex_substituted and not trivial and \
+                        it.latex_substituted != it.latex_symbolic:
+                    lines.append(f"= {it.latex_substituted}")
+                lines.append(f"= \\mathbf{{{result}}}{unit}")
                 p.append(
                     f'<div class="step">{lead}'
                     f'<div class="eqrow"><div class="eq">{display_lines(lines)}'
@@ -428,6 +431,7 @@ def render_pdf_browser(
     branding: Branding | None = None,
     meta: ReportMeta | None = None,
     mode: str = "detailed",
+    attach: bool = False,
 ) -> Path:
     """Print the HTML report to an A4 PDF with headless Chromium.
 
@@ -455,7 +459,7 @@ def render_pdf_browser(
     try:
         from src.output_engine.pdf_stamp import stamp_pdf
 
-        stamp_pdf(out_path, sheet)
+        stamp_pdf(out_path, sheet, attach=attach)
     except ImportError:
         pass
     return out_path

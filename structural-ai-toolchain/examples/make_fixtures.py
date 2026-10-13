@@ -5,6 +5,11 @@
   exercised for real.
 - ``beam_bending_check.ipynb`` — simple notebook following the line
   conventions (``name = expr  # unit | description``).
+- ``messy_beam.xlsx`` — a disorganised sheet for the AI Grinder.
+- ``stud_resistance_ec4.mcdx`` — a Mathcad Prime package (EN 1994-1-1
+  6.6.3.1 headed studs) using the worksheet XML layout of real Prime
+  files: units inside formulas, an ``if`` conditional, ``min``, a display
+  unit override, a less-or-equal check and narrative text regions.
 
 Run directly (``python examples/make_fixtures.py``) or via
 ``python main.py demo``.
@@ -157,7 +162,135 @@ def make_all(out_dir: str | Path) -> list[Path]:
         make_crack_width_xlsx(out_dir),   # tidy: convention fast-path
         make_beam_notebook(out_dir),
         make_messy_beam_xlsx(out_dir),    # messy: AI Grinder + clarifications
+        make_stud_mcdx(out_dir),          # Mathcad Prime, unit-aware
     ]
+
+
+# ---------------------------------------------------------------- Mathcad
+_WS_NS = "http://schemas.mathsoft.com/worksheet50"
+_ML_NS = "http://schemas.mathsoft.com/math50"
+
+
+def _ml_id(name: str, unit: bool = False) -> str:
+    return f'<ml:id labels="{"UNIT" if unit else "VARIABLE"}">{name}</ml:id>'
+
+
+def _ml_real(v) -> str:
+    return f"<ml:real>{v}</ml:real>"
+
+
+def _ml_apply(op: str, *args: str) -> str:
+    return f"<ml:apply><ml:{op}/>{''.join(args)}</ml:apply>"
+
+
+def _ml_call(fname: str, *args: str) -> str:
+    return (f'<ml:apply><ml:id labels="FUNCTION">{fname}</ml:id>'
+            f"<ml:sequence>{''.join(args)}</ml:sequence></ml:apply>")
+
+
+def _ml_define(name: str, value: str, display_unit: str = "") -> str:
+    if display_unit:
+        value = (f"<ml:eval>{value}<ml:unitOverride>"
+                 f"{_ml_id(display_unit, unit=True)}</ml:unitOverride></ml:eval>")
+    return f"<ml:define>{_ml_id(name)}{value}</ml:define>"
+
+
+def _qty(v, unit: str) -> str:
+    return _ml_apply("mult", _ml_real(v), _ml_id(unit, unit=True))
+
+
+def make_stud_mcdx(out_dir: Path) -> Path:
+    import io
+    import zipfile
+
+    v, u = _ml_id, _qty
+    texts = {
+        "rId1": "Shear resistance of headed studs - EN 1994-1-1 6.6.3.1",
+        "rId2": "Introduction: design resistance of a 19 mm headed stud "
+                "welded through the deck, governed by stud shank failure "
+                "or concrete crushing, checked against the design shear "
+                "per stud.",
+        "rId3": "Stud diameter",
+        "rId4": "Ultimate tensile strength of the stud",
+    }
+    math = [
+        _ml_define("d", u(19, "mm")),
+        _ml_define("f_u", u(450, "MPa")),
+        _ml_define("h_sc", u(100, "mm")),
+        _ml_define("f_ck", u(30, "MPa")),
+        _ml_define("E_cm", u(33, "GPa")),
+        _ml_define("γ_V", _ml_real(1.25)),
+        _ml_define("P_Ed", u(57.2, "kN")),
+        # alpha = if(h_sc/d >= 4, 1, 0.2 (h_sc/d + 1))   [eq. 6.20/6.21]
+        _ml_define("α", _ml_call(
+            "if",
+            _ml_apply("greaterOrEqual",
+                      _ml_apply("div", v("h_sc"), v("d")), _ml_real(4)),
+            _ml_real(1),
+            _ml_apply("mult", _ml_real(0.2), _ml_apply(
+                "plus", _ml_apply("div", v("h_sc"), v("d")), _ml_real(1))))),
+        # P_Rd,1 = 0.8 f_u pi d^2/4 / gamma_V   [eq. 6.18]
+        _ml_define("P_Rd_1", _ml_apply("div", _ml_apply(
+            "mult", _ml_real(0.8), v("f_u"), '<ml:id labels="CONSTANT">π</ml:id>',
+            _ml_apply("div", _ml_apply("pow", v("d"), _ml_real(2)),
+                      _ml_real(4))), v("γ_V")), display_unit="kN"),
+        # P_Rd,2 = 0.29 alpha d^2 sqrt(f_ck E_cm) / gamma_V   [eq. 6.19]
+        _ml_define("P_Rd_2", _ml_apply("div", _ml_apply(
+            "mult", _ml_real(0.29), v("α"),
+            _ml_apply("pow", v("d"), _ml_real(2)),
+            _ml_apply("sqrt", _ml_apply("mult", v("f_ck"), v("E_cm")))),
+            v("γ_V")), display_unit="kN"),
+        _ml_define("P_Rd", _ml_call("min", v("P_Rd_1"), v("P_Rd_2")),
+                   display_unit="kN"),
+        # effective height below the head (unit written inside the formula)
+        _ml_define("h_eff", _ml_apply("minus", v("h_sc"), u(0.003, "m")),
+                   display_unit="mm"),
+        _ml_define("UR", _ml_apply("div", v("P_Ed"), v("P_Rd"))),
+    ]
+    regions = [
+        '<region region-id="1" left="0" top="0"><text item-idref="rId1"/></region>',
+        '<region region-id="2" left="0" top="20"><text item-idref="rId2"/></region>',
+        '<region region-id="3" left="0" top="40"><text item-idref="rId3"/></region>',
+    ]
+    top = 50
+    for i, m in enumerate(math):
+        if i == 1:
+            regions.append(f'<region region-id="t{i}" left="0" top="{top}">'
+                           '<text item-idref="rId4"/></region>')
+            top += 5
+        regions.append(f'<region region-id="m{i}" left="0" top="{top}">'
+                       f"<math>{m}</math></region>")
+        top += 10
+    # the acceptance check: UR <= 1
+    regions.append(
+        f'<region region-id="chk" left="0" top="{top}"><math><ml:eval>'
+        + _ml_apply("lessOrEqual", v("UR"), _ml_real(1))
+        + "</ml:eval></math></region>")
+    worksheet = (
+        f'<?xml version="1.0" encoding="utf-8"?>'
+        f'<worksheet xmlns="{_WS_NS}" xmlns:ml="{_ML_NS}">'
+        f"<regions>{''.join(regions)}</regions></worksheet>")
+
+    def xaml_package(text: str) -> bytes:
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as inner:
+            inner.writestr("Xaml/Document.xaml",
+                           f'<Section><Paragraph><Run Text="{text}"/>'
+                           "</Paragraph></Section>")
+        return buf.getvalue()
+
+    rels = "".join(
+        f'<Relationship Target="/xaml/FlowDocument{rid[3:]}.XamlPackage" '
+        f'Id="{rid}" Type="urn:text"/>' for rid in texts)
+    out_path = out_dir / "stud_resistance_ec4.mcdx"
+    with zipfile.ZipFile(out_path, "w") as zf:
+        zf.writestr("mathcad/worksheet.xml", worksheet)
+        zf.writestr("mathcad/_rels/worksheet.xml.rels",
+                    f"<Relationships>{rels}</Relationships>")
+        for rid, text in texts.items():
+            zf.writestr(f"mathcad/xaml/FlowDocument{rid[3:]}.XamlPackage",
+                        xaml_package(text))
+    return out_path
 
 
 def make_messy_beam_xlsx(out_dir: Path) -> Path:

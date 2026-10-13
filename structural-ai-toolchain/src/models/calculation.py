@@ -50,13 +50,85 @@ _ALLOWED_FUNCTIONS = {
     "floor": sp.floor,
     "ceiling": sp.ceiling,
     "pi": sp.pi,
+    "sign": sp.sign,
+    "Eq": sp.Eq,
+    "Ne": sp.Ne,
+    "Piecewise": sp.Piecewise,
+    "True": sp.true,
+    "False": sp.false,
 }
 
 _COMPARATORS = ("<=", ">=", "==", "<", ">")
 
+# A unit written inside a formula (Mathcad: ``h - 30 mm``) becomes a
+# symbol ``u__mm`` whose value is the unit's canonical scale, so the
+# arithmetic stays correct and the report still prints "30 mm".
+UNIT_PREFIX = "u__"
+_UNIT_TOKEN = re.compile(r"\bu__([A-Za-z0-9]+)\b")
 
-def fmt_number(value: float, sig: int = 4) -> str:
-    """Format a number with sensible significant digits for reports."""
+
+def unit_symbol(unit: str) -> str:
+    """Identifier that stands for ``unit`` inside a formula string."""
+    return UNIT_PREFIX + re.sub(r"[^A-Za-z0-9]", "", unit)
+
+
+def _is_numeric_literal(text: str) -> bool:
+    try:
+        float(text)
+        return True
+    except ValueError:
+        return False
+
+
+def _make_printer():
+    from sympy.printing.latex import LatexPrinter
+
+    class _ReportLatex(LatexPrinter):
+        """sympy's LaTeX, restricted to what the offline renderer draws:
+        conditionals print on one line instead of a ``cases`` block."""
+
+        def _print_Piecewise(self, expr):
+            parts = []
+            for value, cond in expr.args:
+                v = self._print(value)
+                if cond is sp.true or cond == True:  # noqa: E712
+                    parts.append(f"{v} \\;\\mathrm{{otherwise}}")
+                else:
+                    parts.append(f"{v} \\;\\mathrm{{if}}\\; {self._print(cond)}")
+            return ",\\;\\; ".join(parts)
+
+        def _print_And(self, expr):
+            return " \\;\\mathrm{and}\\; ".join(self._print(a) for a in expr.args)
+
+        def _print_Or(self, expr):
+            return " \\;\\mathrm{or}\\; ".join(self._print(a) for a in expr.args)
+
+    return _ReportLatex
+
+
+_PRINTER_CLASS = None
+
+
+def report_latex(expr, symbol_names: dict) -> str:
+    global _PRINTER_CLASS
+    if _PRINTER_CLASS is None:
+        _PRINTER_CLASS = _make_printer()
+    out = _PRINTER_CLASS(
+        {"mul_symbol": "dot", "symbol_names": symbol_names}).doprint(expr)
+    # a number times a unit symbol reads "30 mm", not "30 · mm"
+    return re.sub(r"(\d)\s*\\cdot\s*(\\mathrm\{)", r"\1\\ \2", out)
+
+
+_SUPERSCRIPT = str.maketrans("0123456789-", "⁰¹²³⁴⁵⁶⁷⁸⁹⁻")
+
+
+def fmt_number(value: float, sig: int = 4, style: str = "plain") -> str:
+    """Format a number with sensible significant digits for reports.
+
+    Very large/small magnitudes use scientific notation, written the way
+    the chosen medium expects: ``plain`` -> ``1.583e+06`` (machine text),
+    ``latex`` -> ``1.583 \\cdot 10^{6}``, ``unicode`` -> ``1.583·10⁶``.
+    """
     import math
 
     if value is None or (isinstance(value, float) and not math.isfinite(value)):
@@ -64,7 +136,15 @@ def fmt_number(value: float, sig: int = 4) -> str:
     if value == 0:
         return "0"
     if abs(value) >= 1e6 or abs(value) < 1e-4:
-        return f"{value:.{sig - 1}e}"
+        mantissa, exp = f"{value:.{sig - 1}e}".split("e")
+        if style == "plain":
+            return f"{mantissa}e{exp}"
+        if "." in mantissa:
+            mantissa = mantissa.rstrip("0").rstrip(".")
+        n = int(exp)
+        if style == "latex":
+            return f"{mantissa} \\cdot 10^{{{n}}}"
+        return f"{mantissa}·10{str(n).translate(_SUPERSCRIPT)}"
     from math import floor, log10
 
     digits = sig - 1 - floor(log10(abs(value)))
@@ -75,12 +155,16 @@ def fmt_number(value: float, sig: int = 4) -> str:
     return text
 
 
+def is_dimensionless(unit: str) -> bool:
+    return not unit or unit.strip() in ("-", "–", "—", "1")
+
+
 def unit_latex(unit: str) -> str:
     """Render a plain unit string ('mm^2', 'kN/m') as LaTeX.
 
     Dash-only units mean 'dimensionless' and render as nothing.
     """
-    if not unit or unit.strip() in ("-", "–", "—"):
+    if is_dimensionless(unit):
         return ""
     out = unit
     # a trailing digit right after a letter is an exponent: mm2 -> mm^2
@@ -115,6 +199,7 @@ class CalcItem:
     image_b64: str = ""             # 'image' items: base64 payload
     image_mime: str = "image/png"
     image_width_mm: int = 120
+    note: str = ""                  # reviewer correction shown with the step
 
 
 class CalcSheetError(Exception):
@@ -168,8 +253,43 @@ class CalcSheet:
         self.units: dict[str, str] = {}
         self.latex_names: dict[str, str] = {}
         self.descriptions: dict[str, str] = {}
+        self.unit_symbols: dict[str, str] = {}    # u__kN -> "kN"
+        # what the master reviewer changed and why (machine-readable audit)
+        self.review_log: list[dict] = []
 
     # ------------------------------------------------------------------ #
+    def _register_unit_symbols(self, expression: str) -> None:
+        from src.qa.units import scale_of
+
+        for token in _UNIT_TOKEN.findall(expression):
+            name = UNIT_PREFIX + token
+            if name in self.unit_symbols:
+                continue
+            scale = scale_of(token)
+            if scale is None:
+                raise CalcSheetError(
+                    f"Unknown unit {token!r} inside formula {expression!r}")
+            self.unit_symbols[name] = token
+            self.values[name] = scale if self.unit_aware else 1.0
+            self.units[name] = token
+            self.latex_names[name] = unit_latex(token)
+
+    def _infer_unit(self, expr) -> str:
+        """Unit of an unlabelled result in a unit-aware sheet: '-' when
+        dimensionless, else the canonical unit of its dimension (N, mm,
+        MPa, Nmm...). Empty when the dimension can't be established."""
+        from src.qa.dimensions import DIMENSIONLESS, analyse, sheet_dims
+        from src.qa.units import unit_for
+
+        res = analyse(expr, sheet_dims(self))
+        if not res.homogeneous or res.dim is None:
+            return ""
+        if res.dim == DIMENSIONLESS:
+            return "-"
+        if any(x.denominator != 1 for x in res.dim):
+            return ""
+        return unit_for((int(res.dim[0]), int(res.dim[1])), 1.0) or ""
+
     def _to_canonical(self, value: float, unit: str) -> float:
         if not self.unit_aware:
             return value
@@ -248,8 +368,10 @@ class CalcSheet:
         description: str = "",
         latex: Optional[str] = None,
         reference: str = "",
+        note: str = "",
     ) -> CalcItem:
-        """Declare an input parameter."""
+        """Declare an input parameter. ``note`` records a reviewer
+        correction and is printed with the value."""
         canonical = self._to_canonical(float(value), unit)
         self._register(name, canonical, unit, description, latex)
         self.display_values[name] = float(value)
@@ -261,6 +383,7 @@ class CalcSheet:
             description=description,
             latex_lhs=self._latex_symbol(name),
             reference=reference,
+            note=note,
         )
         self.items.append(item)
         return item
@@ -273,6 +396,7 @@ class CalcSheet:
         description: str = "",
         latex: Optional[str] = None,
         reference: str = "",
+        note: str = "",
     ) -> CalcItem:
         """Declare a derived quantity from a formula string.
 
@@ -283,6 +407,8 @@ class CalcSheet:
         """
         expr = self._parse(expression)
         canonical = self._evaluate(expr, expression)   # in canonical units
+        if self.unit_aware and not unit:
+            unit = self._infer_unit(expr)
         display_value = self._from_canonical(canonical, unit)
         if latex is not None:
             self.latex_names[name] = latex
@@ -315,6 +441,7 @@ class CalcSheet:
             latex_symbolic=symbolic,
             latex_substituted=substituted,
             reference=reference,
+            note=note,
         )
         self.items.append(item)
         return item
@@ -338,18 +465,28 @@ class CalcSheet:
             ">": lhs > rhs,
         }[comparator]
         comp_latex = {"<=": r"\le", ">=": r"\ge", "==": "=", "<": "<", ">": ">"}
+        # an expression side (e.g. 0.8*P_Rd) is shown in the unit of the
+        # variable it is compared with — a valid comparison shares dimension
         lhs_unit = self.units.get(lhs_str, "")
         rhs_unit = self.units.get(rhs_str, "")
+        if lhs_str not in self.units and not _is_numeric_literal(lhs_str):
+            lhs_unit = rhs_unit
+        if rhs_str not in self.units and not _is_numeric_literal(rhs_str):
+            rhs_unit = lhs_unit
         # display numbers in their declared units (converted from canonical)
         lhs_disp = self._from_canonical(lhs, lhs_unit)
         rhs_disp = self._from_canonical(rhs, rhs_unit)
-        sym = (
-            f"{self._latex_expr(self._parse_display(lhs_str))} = "
-            f"{fmt_number(lhs_disp)}"
-            f"{self._unit_suffix(lhs_unit)} \\; {comp_latex[comparator]} \\; "
-            f"{self._latex_expr(self._parse_display(rhs_str))} = "
-            f"{fmt_number(rhs_disp)}{self._unit_suffix(rhs_unit)}"
-        )
+        def side(text: str, value: float, unit: str) -> str:
+            # a bare number needs no "= number" echo (e.g. "UR <= 1.0")
+            shown = self._latex_expr(self._parse_display(text))
+            num = fmt_number(value, style="latex")
+            if _is_numeric_literal(text):
+                return f"{num}{self._unit_suffix(unit)}"
+            return f"{shown} = {num}{self._unit_suffix(unit)}"
+
+        sym = (f"{side(lhs_str, lhs_disp, lhs_unit)} \\; "
+               f"{comp_latex[comparator]} \\; "
+               f"{side(rhs_str, rhs_disp, rhs_unit)}")
         item = CalcItem(
             kind="check",
             name=expression,
@@ -457,14 +594,15 @@ class CalcSheet:
         """Results in each quantity's DISPLAY unit (what the report shows).
         In unit-aware mode this differs from the internal canonical values;
         in the default mode the two are identical."""
+        out = {k: v for k, v in self.values.items()
+               if k not in self.unit_symbols}
         if self.unit_aware:
-            out = dict(self.values)
             out.update(self.display_values)
-            return out
-        return dict(self.values)
+        return out
 
     def canonical_results(self) -> dict[str, float]:
-        return dict(self.values)
+        return {k: v for k, v in self.values.items()
+                if k not in self.unit_symbols}
 
     def all_passed(self) -> bool:
         return all(i.passed for i in self.checks())
@@ -478,30 +616,84 @@ class CalcSheet:
         Reuses the stored formulas (no rebuild) — this powers parametric
         studies: run one tool over many load cases and tabulate. Returns
         ``{"values", "results", "checks":[(expr, passed)], "passed"}``.
+        Overrides and returned numbers are in each quantity's DISPLAY unit
+        (what the engineer reads in the report), in both unit modes.
         Unknown override names raise, so typos can't silently pass.
         """
-        unknown = [k for k in overrides if k not in self.values]
+        names = set(self.input_names())
+        unknown = [k for k in overrides if k not in names]
         if unknown:
             raise CalcSheetError(
                 f"recompute got unknown inputs {unknown}; "
                 f"inputs are {self.input_names()}"
             )
         vals = {n: self.values[n] for n in self.input_names()}
-        vals.update(overrides)
+        vals.update({n: self.values[n] for n in self.unit_symbols})
+        for k, v in overrides.items():
+            vals[k] = self._to_canonical(float(v), self.units.get(k, ""))
         results: dict[str, float] = {}
         for item in self.items:
             if item.kind == "calc":
                 vals[item.name] = self._eval_with(item.expression, vals)
-                results[item.name] = vals[item.name]
+                results[item.name] = self._from_canonical(
+                    vals[item.name], item.unit)
         checks: list[tuple[str, bool]] = []
         for item in self.checks():
             checks.append((item.expression, self._eval_check(item.expression, vals)))
+        shown = {k: self._from_canonical(v, self.units.get(k, ""))
+                 for k, v in vals.items() if k not in self.unit_symbols}
         return {
-            "values": vals,
+            "values": shown,
             "results": results,
             "checks": checks,
             "passed": all(p for _, p in checks) if checks else None,
         }
+
+    def replay(self, edit=None) -> "CalcSheet":
+        """Rebuild the sheet from its own items, optionally editing them.
+
+        ``edit(item) -> CalcItem | None`` may return a modified copy of an
+        item (new expression, unit, value...) or ``None`` to drop it. Every
+        downstream value, substituted line and check verdict is re-derived,
+        so a correction can never leave a stale number in the report. Used
+        by the master reviewer to apply and re-verify its fixes.
+        """
+        import copy
+
+        new = CalcSheet(self.title, self.description, self.reference,
+                        self.author, self.project, self.revision,
+                        self.tool_id, self.unit_aware)
+        new.created = self.created
+        new.review_log = list(self.review_log)
+        for original in self.items:
+            item = copy.copy(original)
+            if edit is not None:
+                item = edit(item)
+                if item is None:
+                    continue
+            latex = self.latex_names.get(item.name) \
+                if item.name in self.latex_names else None
+            if item.kind == "section":
+                new.section(item.name, intro=item.intro)
+            elif item.kind == "text":
+                new.text(item.text)
+            elif item.kind == "image":
+                new.image(item.image_b64, caption=item.text,
+                          width_mm=item.image_width_mm, mime=item.image_mime)
+            elif item.kind == "input":
+                new.define(item.name, item.value, unit=item.unit,
+                           description=item.description, latex=latex,
+                           reference=item.reference).note = item.note
+            elif item.kind == "calc":
+                step = new.calc(item.name, item.expression, unit=item.unit,
+                                description=item.description, latex=latex,
+                                reference=item.reference)
+                step.atom_id = item.atom_id
+                step.note = item.note
+            elif item.kind == "check":
+                new.check(item.expression, description=item.description,
+                          reference=item.reference)
+        return new
 
     def _eval_with(self, expression: str, vals: dict[str, float]) -> float:
         from src.knowledge_graph.fingerprint import parse_locals
@@ -554,6 +746,7 @@ class CalcSheet:
                     "atom_id": i.atom_id,
                     "reference": i.reference,
                     "intro": i.intro,
+                    **({"note": i.note} if i.note else {}),
                     # images: fingerprint only, so the in-PDF machine-readable
                     # layer stays compact (payload lives in the HTML itself)
                     **({"image_sha1": __import__("hashlib").sha1(
@@ -564,8 +757,11 @@ class CalcSheet:
                 for i in self.items
             ],
             "results": self.results(),
-            "units": dict(self.units),
+            "units": {k: v for k, v in self.units.items()
+                      if k not in self.unit_symbols},
+            "unit_aware": self.unit_aware,
             "checks_passed": self.all_passed() if self.checks() else None,
+            **({"review_log": self.review_log} if self.review_log else {}),
         }
 
     def to_json(self, indent: int = 2) -> str:
@@ -602,6 +798,7 @@ class CalcSheet:
         # override on top.
         from src.knowledge_graph.fingerprint import parse_locals
 
+        self._register_unit_symbols(expression)
         local = parse_locals(expression)
         local.update({n: sp.Symbol(n) for n in self.values})
         local.update(_ALLOWED_FUNCTIONS)
@@ -679,22 +876,48 @@ class CalcSheet:
         return {s: self._pretty(s.name) for s in expr.free_symbols}
 
     def _latex_expr(self, expr: sp.Expr) -> str:
-        return sp.latex(
-            expr, mul_symbol="dot", symbol_names=self._symbol_names(expr)
-        )
+        return report_latex(expr, self._symbol_names(expr))
+
+    def _value_latex(self, name: str, as_base: bool) -> str:
+        """One substituted operand. Unit-aware sheets show each value with
+        its own unit (Mathcad style: ``0.8·450 MPa·π·(19 mm)²``), which is
+        dimensionally honest whatever unit the result is shown in."""
+        if self.unit_aware:
+            value = self.display_values.get(name, self.values[name])
+            unit = unit_latex(self.units.get(name, ""))
+        else:
+            value, unit = self.values[name], ""
+        text = fmt_number(value, style="latex")
+        body = f"{text}\\ {unit}" if unit else text
+        if value < 0 or (as_base and (unit or "10^" in text)):
+            body = f"\\left({body}\\right)"
+        return body
 
     def _latex_substituted(self, expr: sp.Expr) -> str:
-        subs = {}
-        for name, value in self.values.items():
-            text = fmt_number(value)
-            if value < 0:
-                text = f"({text})"
-            subs[sp.Symbol(name)] = sp.Symbol(text)
-        # evaluate(False) so injecting the numbers does not re-trigger
-        # simplification and undo the faithful display structure.
+        half = sp.Rational(1, 2)
+        no_paren_exps = (half, -half, sp.Integer(-1))
+        names: dict = {}
+        base_subs: dict = {}
         with sp.evaluate(False):
-            replaced = expr.xreplace(subs)
-            return sp.latex(replaced, mul_symbol="dot")
+            for p in expr.atoms(sp.Pow):
+                b = p.base
+                if (isinstance(b, sp.Symbol) and b.name in self.values
+                        and b.name not in self.unit_symbols
+                        and p.exp not in no_paren_exps):
+                    ph = sp.Symbol(f"{b.name}__pbase")
+                    names[ph] = self._value_latex(b.name, as_base=True)
+                    base_subs[p] = sp.Pow(ph, p.exp, evaluate=False)
+            replaced = expr.xreplace(base_subs) if base_subs else expr
+            for s in replaced.free_symbols:
+                if s in names:
+                    continue
+                if s.name in self.unit_symbols:
+                    names[s] = self.latex_names[s.name]
+                elif s.name in self.values:
+                    names[s] = self._value_latex(s.name, as_base=False)
+            # evaluate(False) so injecting the numbers does not re-trigger
+            # simplification and undo the faithful display structure.
+            return report_latex(replaced, names)
 
     def _unit_suffix(self, unit: str) -> str:
         rendered = unit_latex(unit)
@@ -713,6 +936,9 @@ class ParsedVariable:
     expression: str = ""  # only for derived variables
     source_cell: str = ""     # provenance, e.g. "Sheet1!C7" (AI grinder)
     source_formula: str = ""  # original Excel formula, if any
+    note: str = ""            # reviewer correction, printed with the step
+    reference: str = ""       # code clause (e.g. from a matched atom)
+    atom_id: str = ""         # library atom this formula is
 
 
 @dataclass
@@ -754,6 +980,7 @@ class ParsedTool:
     clarifications: list[Clarification] = field(default_factory=list)
     interpreter: str = ""   # which interpreter produced this (llm/heuristic)
     unit_aware: bool = False  # source carries units (e.g. Mathcad)
+    review_log: list = field(default_factory=list)  # reviewer corrections
 
     def needs_clarification(self) -> bool:
         return bool(self.clarifications)
@@ -772,6 +999,7 @@ class ParsedTool:
             reference=self.reference,
             unit_aware=self.unit_aware,
         )
+        sheet.review_log = list(self.review_log)
         inputs = [v for v in self.variables if v.role == "input"]
         derived = [v for v in self.variables if v.role == "derived"]
         if inputs:
@@ -781,6 +1009,7 @@ class ParsedTool:
                     sheet.define(
                         var.name, var.value if var.value is not None else 0.0,
                         unit=var.unit, description=var.description,
+                        note=var.note,
                     )
                 except CalcSheetError as exc:
                     self.warnings.append(f"Input '{var.name}' skipped: {exc}")
@@ -790,8 +1019,9 @@ class ParsedTool:
                 try:
                     sheet.calc(
                         var.name, var.expression, unit=var.unit,
-                        description=var.description,
-                    )
+                        description=var.description, note=var.note,
+                        reference=var.reference,
+                    ).atom_id = var.atom_id
                 except CalcSheetError as exc:
                     self.warnings.append(
                         f"Formula '{var.name}' ({var.source_cell or '?'}) "

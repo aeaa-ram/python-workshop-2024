@@ -19,7 +19,8 @@ from pathlib import Path
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _FUNCS = {"sqrt", "min", "max", "abs", "exp", "log", "ln", "pi", "sin",
           "cos", "tan", "cot", "sec", "csc", "asin", "acos", "atan",
-          "floor", "ceiling"}
+          "floor", "ceiling", "sign", "Piecewise", "True", "False",
+          "Eq", "Ne"}
 
 
 @dataclass
@@ -42,11 +43,15 @@ class Fragment:
     evidence: list = field(default_factory=list)
     image_b64: str = ""
     image_mime: str = "image/png"
+    review_note: str = ""     # master-reviewer correction, shown in report
 
     def depends_on(self) -> set[str]:
         if not self.expression:
             return set()
-        return set(_IDENT.findall(self.expression)) - _FUNCS
+        from src.models.calculation import UNIT_PREFIX
+
+        return {n for n in _IDENT.findall(self.expression)
+                if n not in _FUNCS and not n.startswith(UNIT_PREFIX)}
 
 
 @dataclass
@@ -75,6 +80,11 @@ class CaseFile:
     reflection: list = field(default_factory=list)    # [str] final checklist
     final_result: str = ""    # the governing quantity (e.g. 'UR')
     layout: str = "detailed"  # user's presentation choice
+    ai: str = ""              # which AI took part ('none' = deterministic)
+    gatekeeper: list = field(default_factory=list)   # similar/duplicate tools
+    reuse: list = field(default_factory=list)        # formula reuse analysis
+    review_log: list = field(default_factory=list)   # reviewer corrections
+    review: dict = field(default_factory=dict)       # final review summary
 
     # -------------------------------------------------------------- #
     def log(self, stage: str, message: str) -> None:
@@ -137,6 +147,20 @@ class CaseFile:
             for d in self.decisions:
                 lines += [f"**[{d.stage}] {d.prompt}**",
                           f"→ `{d.answer}` ({d.answered_by})", ""]
+        if self.gatekeeper:
+            lines += ["", "## Knowledge-base gate", ""]
+            lines += [f"- {g['verdict']} of `{g['slug']}` (score "
+                      f"{g['score']:.2f}): {g['title']}" for g in self.gatekeeper]
+        if self.review_log:
+            lines += ["", "## Master-reviewer corrections", ""]
+            lines += [f"- `{r['name']}`: {r['before']} → {r['after']} — "
+                      f"{r['reason']} ({r['source']})" for r in self.review_log]
+        if self.review:
+            lines += ["", "## Master review", "",
+                      f"- passed: {self.review.get('passed')}, iterations: "
+                      f"{self.review.get('iterations')}, AI: "
+                      f"{self.review.get('ai') or 'none'}"]
+            lines += [f"- {f}" for f in self.review.get("findings", [])]
         if self.reflection:
             lines += ["", "## Self-reflection checklist", ""]
             lines += [f"- {r}" for r in self.reflection]

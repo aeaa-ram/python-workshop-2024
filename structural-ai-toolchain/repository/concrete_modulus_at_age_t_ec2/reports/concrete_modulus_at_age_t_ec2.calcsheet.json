@@ -7,7 +7,7 @@
   "author": "Toolchain example",
   "project": "",
   "revision": "0.1",
-  "created": "2026-07-20",
+  "created": "2026-10-13",
   "items": [
     {
       "kind": "section",
@@ -171,5 +171,6 @@
     "f_cm_t": "MPa",
     "E_cm_t": "MPa"
   },
+  "unit_aware": false,
   "checks_passed": true
 }

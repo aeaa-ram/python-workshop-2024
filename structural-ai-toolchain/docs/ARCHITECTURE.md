@@ -21,13 +21,23 @@ flowchart LR
     LIB[Atom library<br/>src/library] -->|single source of truth| REPO
     LIB -.fingerprints.-> KG
     G -->|standardized .py + .md + manifest| REPO[(/repository<br/>SSOT)]
-    REPO --> QA[QA + AI review<br/>src/qa]
+    REPO --> QA[Master reviewer<br/>src/qa: dimensions · scale ·<br/>one-to-one · AI visual]
+    QA -->|verified fixes| REPO
+    LLM[Claude<br/>src/llm] -.meaning · clauses · review.-> G
+    LLM -.-> QA
     REPO --> OE["Output Engine<br/>src/output_engine"]
     OE --> MD[Markdown w/ LaTeX math]
-    OE --> HTML[Print-ready A4 HTML → PDF<br/>bookmarks + embedded JSON]
+    OE --> HTML[Print-ready A4 HTML → PDF<br/>bookmarks + in-page data layer]
     OE --> TEX[.tex → pdflatex PDF]
-    OE --> JSON[calcsheet.json<br/>machine-readable stamp]
+    OE --> JSON[calcsheet.json<br/>machine-readable twin]
 ```
+
+**Principle throughout: AI proposes, deterministic code disposes.** The
+model assigns meaning, researches clauses and reviews the rendered report;
+every number is computed by the CalcSheet engine, and an AI correction is
+only kept when the deterministic re-check of the patched sheet is better.
+With no AI configured every stage still runs (heuristics, the atom
+library, deterministic review) and says so in the audit trail.
 
 ## Core Design Decision: Calculation IS Visualization
 
@@ -42,6 +52,24 @@ call simultaneously:
 Renderers never re-implement math: they only walk the sheet. Change an
 input, re-render, and every number in the Markdown/HTML/LaTeX report
 updates — exactly like a Mathcad worksheet, never a stale `print()`.
+
+**Units.** Sheets from unit-carrying sources (Mathcad) run in
+*unit-aware* mode: inputs are converted to canonical N/mm, a unit written
+inside a formula (`h - 30 mm`) becomes a unit symbol carrying its scale,
+results are shown in the unit the source displayed (or, when it showed
+none, the canonical unit of the result's dimension), and the substituted
+line prints every value with its own unit, Mathcad style:
+`P = 0.8·450 MPa·π·(19 mm)²/(4·1.25) = 81.66 kN`. Unit-naive sources
+(legacy Excel with hand conversions like `*1e6`) keep their numbers as
+written; the master reviewer checks their scale. Large/small numbers print
+as `1.584·10⁶`, never `1.584e+06`.
+
+**Conditionals and rounding** are part of the engineering result, so they
+are translated, never dropped: Mathcad `if` / `if…otherwise` programs and
+Excel `IF/AND/OR` become `Piecewise`; equality conditions become `Eq(…)`
+(sympy would otherwise fold `x == 1` to False at parse time); Mathcad
+`round` and Excel `ROUND/ROUNDUP/ROUNDDOWN/TRUNC/INT` keep their exact
+semantics (`ROUND(20/3, 0) = 7`, not 6.67).
 
 **Faithful display.** Numbers are computed from an evaluated parse, but
 the *displayed* formula comes from a separate non-evaluated parse
@@ -70,32 +98,48 @@ formal typeset deliverables once TeX Live is available in CI.
 over fast, convergence as the exit condition:
 
 ```
-intake ─► [ decompose → research → clarify → reconstruct → verify ] ─loop─► reflect → deliver
+intake ─► gatekeep ─► [ decompose → research → clarify → reconstruct → verify ] ─loop─► reflect (+ master review loop) → deliver
 ```
 
 - **intake** atomises the source into *fragments* (inputs, formulas,
   checks, narrative, sketches — incl. Mathcad's BMP-in-.png images,
   converted; header logos auto-flagged as noise).
+- **gatekeep** asks the central knowledge base first: is this already a
+  tool (duplicate / similar score)? Which formulas are library atoms or
+  live in other tools? If a near-duplicate exists the engineer chooses:
+  *revise* it (new revision of the existing tool), keep a *new tool*, or
+  *abort*. Re-converting the same tool bumps its revision.
 - **decompose** builds the dependency graph, finds unused inputs (noise
   candidates), repetitive structures, orphans.
 - **research** attaches a code clause to every formula: citations found in
-  the source narrative, structural matches against the atom library, the
-  document-level standard, and an LLM pass when a backend is configured.
+  the source narrative, structural matches against the atom library (which
+  outrank the model), the document-level standard, and — when an LLM is
+  configured — one structured research pass that assigns clauses and
+  equation numbers with a confidence, notes validity limits, and lists
+  steps the code requires that the sheet omits (surfaced in the
+  reflection checklist).
 - **clarify** asks the engineer **inline, while building** — governing
   load case for vector inputs, values for untranslatable constructs
   (never fabricated), keep/discard for noise, the final governing result
   (e.g. UR) and its acceptance criterion, layout, sketch placement and
   captions. Channels: console prompts, scripted answers (batch), or
   defer-mode (never blocks, never silently drops).
-- **reconstruct** rebuilds a clean, compact, dependency-ordered tool.
+- **reconstruct** rebuilds a clean, compact tool in a *stable* dependency
+  order (the author's sequence, moved only where a dependency demands).
 - **verify** recomputes everything, replicates source cached values,
   runs the units reviewer, checks completeness — then the loop repeats
   until clean or until only human-deferred items remain (it never spins
   and never invents an answer to force progress).
 - **reflect** runs the per-value self-review checklist (units known,
-  clause present, checks pass) into the delivered audit trail.
-- **deliver** writes the tool + reports + `casefile.json` + `JOURNAL.md`
-  (every stage, question, answer and decision — no black box).
+  clause present, checks pass), then the **master reviewer loop** (below)
+  against the original's values; every verified correction is written back
+  into the fragments, so the generated `.py`, the report, the manifest and
+  the journal agree — and the corrected step carries a visible
+  *Reviewer correction* note.
+- **deliver** writes the tool + reports + the shared `manifest.json` +
+  `casefile.json` + `JOURNAL.md` (every stage, question, answer, decision
+  and correction — no black box). `--original print.pdf` lets the AI read
+  the values the original shows, for the one-to-one check.
 
 ## The Grinder (src/ingestion)
 
@@ -107,11 +151,22 @@ intake ─► [ decompose → research → clarify → reconstruct → verify ] 
   (`translate_excel_formula`) and the CSV variant.
 - `notebook_parser.py` / `python_parser.py` — line-convention extraction
   (`name = expr  # unit | description`).
-- `mathcad_parser.py` — **mock**; documents the worksheet.xml translation
-  plan for .mcdx (OPC zip container).
-- `grinder.py` — pipeline: parse → gatekeeper check → reuse analysis →
+- `mathcad_parser.py` — Mathcad Prime `.mcdx` (OPC zip):
+  `mathcad/worksheet.xml` regions in reading order, the `ml:` operator tree
+  translated recursively (arithmetic, powers/roots, `min/max/round/…`,
+  `if` functions and `if/otherwise` programs, all comparison operators,
+  units inside formulas, display-unit overrides), text regions from the
+  XAML packages (title, clause, narrative), embedded sketches. Matrices,
+  strings, empty placeholders, user functions and unknown units become a
+  clarification. `examples/make_fixtures.py` builds a stud-resistance
+  `.mcdx` in the real worksheet layout for tests.
+- `grinder.py` — fast pipeline: parse → gatekeeper → reuse analysis (atom
+  clauses carried into the report margin) → master review to convergence →
   write `repository/<slug>/{<slug>.py, <slug>.md, manifest.json, source/}`
   (+ `CLARIFICATIONS.md` when the AI parser needs human input).
+- `manifest.py` — the one manifest format (schema `manifest@2`) written by
+  the grinder, the agentic workflow and native registration, built from the
+  final (reviewed) sheet.
 
 ### The AI Grinder (messy real-world sheets)
 
@@ -146,11 +201,17 @@ code disposes"** — the LLM only assigns *meaning*, never does arithmetic:
 6. **Assemble** → the same `ParsedTool` (now with `clarifications` and
    `interpreter`), consumed unchanged by the Knowledge Graph and writers.
 
-**LLM backend:** `AnthropicLLMClient` (needs `pip install anthropic` +
-`ANTHROPIC_API_KEY`; model via `GRINDER_LLM_MODEL`). With no key/package the
-pipeline transparently falls back to the heuristic interpreter, so the
-system and its tests run fully offline; the LLM simply does a better job on
-the messiest sheets when available.
+**LLM backend (`src/llm`):** one client for every AI step.
+`AnthropicLLMClient` uses the official SDK with streaming, adaptive
+thinking at an explicit effort, **schema-constrained JSON**
+(`output_config.format`, strict schemas in `src/llm/schemas.py`), image
+and PDF document blocks for the visual review, server-side refusal
+fallback, and typed errors (`LLMError`, `LLMRefusal`) that every caller
+turns into its deterministic fallback. Default model `claude-opus-5-5`
+(`TOOLCHAIN_LLM_MODEL`, `TOOLCHAIN_LLM_EFFORT`, `TOOLCHAIN_LLM=off`);
+credentials from `ANTHROPIC_API_KEY` or an `ant auth login` profile.
+`ScriptedLLMClient` answers by task for tests and dry runs; `python main.py
+doctor` shows what is configured.
 
 **Human-in-the-loop:** anything ambiguous (magic number with no label,
 lookup that needs external data, circular/undeducible logic, value
@@ -195,7 +256,7 @@ everywhere:
   only the changed coefficients.
 
 **Seeding strategy.** The library ships with a hand-written EC2 seed set
-(`atoms_ec2.py`). The intended bulk source is the
+(`atoms_ec2.py`, plus EN 1994-1-1 headed-stud atoms in `atoms_ec4.py`). The intended bulk source is the
 [`structuralcodes`](https://github.com/fib-international/structuralcodes)
 project (fib / university effort implementing Eurocode & fib Model Code
 clauses in Python, Apache-2.0): adapt its functions into atoms — keeping
@@ -203,26 +264,55 @@ clause references and verifying license/attribution — so that when a new
 legacy sheet is ingested there is already a large corpus to fingerprint
 and match against. This is the "compare against everything" starting point.
 
-## Machine-readable PDF stamp (src/output_engine/pdf_stamp.py)
+## Machine-readable layer INSIDE the PDF (src/output_engine/pdf_stamp.py)
 
-Every generated PDF is **AI-proof**: the complete calculation is embedded
-as a `calcsheet.json` attachment plus a `/CalcSheetSchema` metadata key,
-and written as a sidecar `.calcsheet.json`. A future model reads exact
-inputs, formulas, values and check verdicts from the file instead of
-OCR-ing typeset math. PDFs also carry a **document outline (bookmarks)**
-generated from the section headings. `read_embedded_calcsheet()` is the
-round-trip reader.
+Every generated PDF is **AI-proof on its own**: the complete calculation
+(inputs, formulas, values, units, verdicts, reviewer corrections) is baked
+into the page content as an invisible sentinel-wrapped
+`base64(gzip(json))` block. Hand someone only the PDF and
+`reconstruct_from_pdf()` gets the calculation back with any text
+extractor — no attachment, no sidecar. Metadata carries a
+`/CalcSheetSchema` key; an embedded-file attachment is **opt-in only**
+(`render_pdf_browser(..., attach=True)`), because a second copy invites
+drift. PDFs carry a document outline (bookmarks) from the section headings.
 
-## QA (src/qa) — optional AI-assisted review
+## Master reviewer (src/qa) — find, fix, re-check
 
-- `checks.py` — deterministic, offline lint: unused inputs, missing
-  verification, hidden unit-conversion magic numbers, missing metadata,
-  and **library-bypass** (a formula that re-implements an existing atom).
-- `ai_reviewer.py` — engineering-judgment review against the cited code
-  (Eurocode etc.): wrong clause/coefficient, validity ranges, unstated
-  assumptions, pitfalls. `build_review_prompt()` works **today** with no
-  API (paste into Claude); `AnthropicReviewer` is the API skeleton. AI
-  output is always advisory — the human stays the approver.
+`review_to_convergence(sheet, client=…, original_values=…)` loops
+*review → plan fixes → apply to a replayed copy → keep only if strictly
+better → repeat* until clean, stalled, or `max_iter`:
+
+- **dimensional analysis** (`dimensions.py`) of every formula and check:
+  non-homogeneous sums, a stress labelled kN, a force compared with a
+  length. Empirical code formulas (`1 + √(200/d)`) are recognised and
+  noted, not flagged; a bare number carrying a hidden unit (`45e6` = a
+  moment in Nmm) is reported as a magic number.
+- **scale consistency** (unit-naive sheets): recompute in canonical N/mm;
+  a power-of-ten mismatch not explained by the formula's own conversion
+  literals (`*1e6`, `(L/1000)**2`) is a units slip — also in checks, where
+  a slip flips the verdict. Fix candidates (add the conversion / relabel
+  the unit) are each replayed; the one that leaves the whole sheet
+  consistent wins — e.g. relabelling would leave `P_Ed [kN] <= P_Rd [N]`
+  wrong, so the conversion is chosen and the verdict correctly becomes
+  NOT OK.
+- **one-to-one correspondence** with the original's values (Excel cached
+  values, or values the AI reads from a print of the original), at the
+  printed precision; a power-of-ten disagreement where the converted
+  value is dimensionally verified is reported as the ORIGINAL's slip.
+- **AI review** (when configured): rendered page images + the calc JSON +
+  the original document go to the model, which returns findings and
+  concrete corrections; each correction is applied only if the
+  deterministic re-check improves.
+
+Every applied fix lands in `sheet.review_log` (embedded in the PDF and the
+manifest) and as a note under the corrected step. `python main.py review
+<slug> [--original print.pdf] [--fix]`.
+
+Also in `src/qa`: `checks.py` (deterministic lint: unused inputs, missing
+verification, magic numbers, metadata, **library-bypass**) and
+`ai_reviewer.py` (`build_review_prompt()` for paste-into-any-LLM, and
+`AnthropicReviewer` for an advisory engineering-judgment review through
+the shared client).
 
 ## Ingestion GUI (src/gui) & native authoring (src/ingestion/native)
 
@@ -250,9 +340,10 @@ variables (see `.env.example`).
 - **Production:** enterprise GitLab. `.gitlab-ci.yml` (kept in this folder,
   move to repo root on migration) mirrors the same stages so the pipeline
   is a copy, not a rewrite: `test` → `gatekeeper-index` → `render-docs`.
-- Secrets (MS Graph, embedding API) are **CI/CD variables**, never files:
-  identical variable names on both platforms (`MSGRAPH_*`, `KG_*`,
-  `WEBHOOK_*`) so migration is configuration-only.
+- Secrets (MS Graph, embedding API, `ANTHROPIC_API_KEY`) are **CI/CD
+  variables**, never files: identical variable names on both platforms
+  (`MSGRAPH_*`, `KG_*`, `WEBHOOK_*`, `TOOLCHAIN_LLM_*`) so migration is
+  configuration-only. Tests never call the API (scripted client).
 - Webhook receiver deploys as a small always-on service (Azure Function /
   container) — CI only builds it; it is *not* a CI job.
 
@@ -263,8 +354,9 @@ repository/
   <tool_slug>/
     <tool_slug>.py     # executable CalcSheet builder — THE tool
     <tool_slug>.md     # standardized doc (template + live-rendered calc)
-    manifest.json      # knowledge-graph metadata (+ per-formula fingerprints,
-                       #   formula_analysis reuse breakdown)
+    manifest.json      # manifest@2: metadata, per-formula fingerprints and
+                       #   clauses, reuse breakdown, gatekeeper matches,
+                       #   master-review summary, review_log, revision
     source/<original>  # legacy file kept for provenance/audit (converted tools)
     reports/           # generated md/html/tex/pdf/calcsheet.json (rebuildable)
   .index.json          # knowledge-graph cache (rebuildable)

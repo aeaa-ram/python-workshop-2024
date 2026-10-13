@@ -1,13 +1,18 @@
 {
+  "schema": "structural-ai-toolchain/manifest@2",
   "tool_id": "rectangular_beam_bending_check",
   "title": "Rectangular Beam Bending Check",
   "description": "Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.",
   "reference": "",
+  "revision": "0.1",
   "source_file": "beam_bending_check.ipynb",
   "source_format": "ipynb",
-  "converted": "2026-07-20",
+  "converted": "2026-10-13",
+  "converter": "grinder",
+  "interpreter": "convention",
+  "ai": "none (deterministic path)",
   "status": "converted-unreviewed",
-  "interpreter": "",
+  "unit_aware": false,
   "variables": [
     {
       "name": "b",
@@ -15,6 +20,8 @@
       "unit": "mm",
       "description": "Section width",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -23,6 +30,8 @@
       "unit": "mm",
       "description": "Section depth",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -31,6 +40,8 @@
       "unit": "mm",
       "description": "Span",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -39,6 +50,8 @@
       "unit": "kN/m",
       "description": "Distributed load (design)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -47,6 +60,8 @@
       "unit": "MPa",
       "description": "Design bending strength",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -55,6 +70,8 @@
       "unit": "kNm",
       "description": "Maximum bending moment",
       "expression": "q*(L/1000)**2/8",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "a5d4427ca6014829"
     },
     {
@@ -63,6 +80,8 @@
       "unit": "mm^3",
       "description": "Elastic section modulus",
       "expression": "b*h**2/6",
+      "clause": "Section property (geometry)",
+      "atom_id": "mech.section.W_el_rect",
       "fingerprint": "c90ad4dba6f367ab"
     },
     {
@@ -71,12 +90,15 @@
       "unit": "MPa",
       "description": "Maximum bending stress",
       "expression": "M_max*1000000/W",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "91f725590d543e9e"
     }
   ],
   "checks": [
     "sigma_m <= f_m"
   ],
+  "checks_passed": true,
   "results": {
     "b": 200.0,
     "h": 400.0,
@@ -105,5 +127,23 @@
       "status": "new",
       "match": ""
     }
-  ]
+  ],
+  "gatekeeper": [
+    {
+      "slug": "rectangular_beam_bending_check",
+      "title": "Rectangular Beam Bending Check",
+      "score": 1.0,
+      "verdict": "duplicate"
+    }
+  ],
+  "review": {
+    "passed": true,
+    "converged": true,
+    "iterations": 1,
+    "ai": "",
+    "verdict": "",
+    "fixes": [],
+    "findings": []
+  },
+  "review_log": []
 }

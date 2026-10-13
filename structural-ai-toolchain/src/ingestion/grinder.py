@@ -1,6 +1,7 @@
 """The Grinder — ingestion & conversion pipeline.
 
-parse -> gatekeeper duplicate check -> standardize -> write to /repository
+parse -> gatekeeper duplicate check -> master review (fix to convergence)
+      -> standardize -> write to /repository
 
 Every ground tool lands as a folder:
 
@@ -40,6 +41,7 @@ class GrindResult:
     clarifications: list = field(default_factory=list)
     interpreter: str = ""
     review_findings: list = field(default_factory=list)
+    review: object = None
 
 
 def slugify(title: str) -> str:
@@ -52,12 +54,15 @@ def grind(
     repo_dir: str | Path = "repository",
     force: bool = False,
     skip_gatekeeper: bool = False,
+    client=None,
 ) -> GrindResult:
     """Convert one legacy file into a standardized repository tool.
 
     Raises DuplicateToolError when the gatekeeper flags a near-duplicate,
     unless ``force=True`` (the report is still attached to the result so
-    reviewers can see what it collided with).
+    reviewers can see what it collided with). ``client`` (an LLM client)
+    adds the AI review to the master-review loop; without it the loop is
+    deterministic.
     """
     source_path = Path(source_path)
     repo_dir = Path(repo_dir)
@@ -83,19 +88,18 @@ def grind(
     # atoms or in other tools (single-source-of-truth enforcement).
     from src.knowledge_graph.reuse import analyze_reuse
 
-    reuse_findings = analyze_reuse(parsed, repo_dir)
+    reuse_findings = analyze_reuse(parsed, repo_dir,
+                                   exclude_slug=slugify(parsed.title))
+    _annotate_from_atoms(parsed, reuse_findings)
 
-    # Master reviewer (deterministic pass): catch "looks right but wrong"
-    # results — chiefly units-scale slips — before the tool is trusted.
-    review_findings: list = []
-    try:
-        from src.qa.master_review import deterministic_review
-
-        review_findings = deterministic_review(parsed.to_sheet())
-    except Exception:
-        review_findings = []
-    for f in review_findings:
-        if f.severity == "error" and f.code == "unit-scale-mismatch":
+    # Master reviewer: catch "looks right but wrong" results (units
+    # slips, dimension errors, values that no longer match the source),
+    # FIX what can be proven, and hand the rest to a human.
+    review = _review_and_fix(parsed, client)
+    review_findings = review.findings
+    asked = {c.location for c in parsed.clarifications}
+    for f in review.errors():
+        if f.location not in asked:
             parsed.clarifications.append(Clarification(
                 location=f.location, issue=f.code,
                 question=f.message, context=f.suggested_fix))
@@ -110,7 +114,8 @@ def grind(
         "python": str(_write_python(parsed, tool_dir, slug)),
         "markdown": str(_write_markdown(parsed, tool_dir, slug)),
         "manifest": str(
-            _write_manifest(parsed, tool_dir, slug, reuse_findings)
+            _write_manifest(parsed, tool_dir, slug, reuse_findings,
+                            report, review)
         ),
     }
     if parsed.clarifications:
@@ -127,7 +132,55 @@ def grind(
         clarifications=parsed.clarifications,
         interpreter=parsed.interpreter,
         review_findings=review_findings,
+        review=review,
     )
+
+
+def _annotate_from_atoms(parsed: ParsedTool, findings: list) -> None:
+    """A formula that IS a library atom inherits the atom's clause (shown
+    in the report margin) and, if it had none, its description."""
+    from src.library import get_atom
+
+    by_name = {v.name: v for v in parsed.variables}
+    for f in findings:
+        if f.status != "matches_atom" or f.name not in by_name:
+            continue
+        atom = get_atom(f.match_id)
+        var = by_name[f.name]
+        var.atom_id = atom.atom_id
+        var.reference = var.reference or atom.clause
+        if not var.description:
+            var.description = atom.description
+
+
+def _review_and_fix(parsed: ParsedTool, client=None):
+    """Run the master reviewer to convergence on the parsed tool and write
+    every verified correction back into its variables (so the generated
+    .py, the docs and the manifest all carry the corrected calculation)."""
+    from src.qa.master_review import review_to_convergence
+
+    original = {
+        v.name: {"value": float(v.value), "unit": v.unit, "shown": ""}
+        for v in parsed.variables
+        if v.role == "derived" and isinstance(v.value, (int, float))
+        and not isinstance(v.value, bool) and not parsed.unit_aware}
+    fixed, report = review_to_convergence(
+        parsed.to_sheet(), client=client, original_values=original)
+    by_name = {v.name: v for v in parsed.variables}
+    for fix in report.fixes:
+        var = by_name.get(fix.name)
+        if var is None:
+            continue
+        if fix.expression and var.role == "derived":
+            var.expression = fix.expression
+        if fix.unit:
+            var.unit = fix.unit
+        if fix.value is not None and var.role == "input":
+            var.value = float(fix.value)
+        var.note = (f"Reviewer correction — {fix.reason} "
+                    f"({fix.before} → {fix.after}).")
+    parsed.review_log = list(fixed.review_log)
+    return report
 
 
 def _write_clarifications(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
@@ -203,7 +256,8 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
             val = var.value if var.value is not None else 0.0
             lines.append(
                 f"    sheet.define({var.name!r}, {val!r}, "
-                f"unit={var.unit!r}, description={var.description!r})"
+                f"unit={var.unit!r}, description={var.description!r}"
+                f"{_note_arg(var)})"
             )
             try:
                 probe.define(var.name, val, unit=var.unit)
@@ -218,9 +272,12 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
             except CalcSheetError:
                 ok = False
             if ok:
+                ref = f", reference={var.reference!r}" if var.reference else ""
+                atom = f".atom_id = {var.atom_id!r}" if var.atom_id else ""
                 lines.append(
                     f"    sheet.calc({var.name!r}, {var.expression!r}, "
-                    f"unit={var.unit!r}, description={var.description!r})"
+                    f"unit={var.unit!r}, description={var.description!r}"
+                    f"{ref}{_note_arg(var)}){atom}"
                 )
             else:
                 note = (var.description + " [unresolved formula: "
@@ -246,6 +303,9 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
             lines.append('    sheet.section("Verification")')
             for chk in emitted:
                 lines.append(f"    sheet.check({chk!r})")
+    review_log = getattr(parsed, "review_log", None)
+    if review_log:
+        lines.append(f"    sheet.review_log = {review_log!r}")
     lines.append("    return sheet")
     lines.append("")
     lines.append("")
@@ -257,6 +317,10 @@ def _write_python(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
     path = tool_dir / f"{slug}.py"
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
+
+
+def _note_arg(var) -> str:
+    return f", note={var.note!r}" if getattr(var, "note", "") else ""
 
 
 def _write_markdown(parsed: ParsedTool, tool_dir: Path, slug: str) -> Path:
@@ -300,50 +364,21 @@ def _write_manifest(
     tool_dir: Path,
     slug: str,
     reuse_findings: list | None = None,
+    gatekeeper: list | None = None,
+    review=None,
 ) -> Path:
-    from src.knowledge_graph.fingerprint import try_fingerprint
+    from src.ingestion.manifest import build_manifest, write_manifest
 
     sheet = parsed.to_sheet()
-    manifest = {
-        "tool_id": slug,
-        "title": parsed.title,
-        "description": parsed.description,
-        "reference": parsed.reference,
-        "source_file": Path(parsed.source_path).name,
-        "source_format": parsed.source_format,
-        "converted": _dt.date.today().isoformat(),
-        "status": ("needs-clarification" if parsed.clarifications
-                   else "converted-unreviewed"),
-        "interpreter": parsed.interpreter,
-        "variables": [
-            {
-                "name": v.name,
-                "role": v.role,
-                "unit": v.unit,
-                "description": v.description,
-                "expression": v.expression,
-                "fingerprint": (
-                    try_fingerprint(v.expression) if v.expression else None
-                ),
-            }
-            for v in parsed.variables
-        ],
-        "checks": parsed.checks,
-        "results": sheet.results(),
-        "warnings": parsed.warnings,
-        "clarifications": [
-            {"location": c.location, "issue": c.issue, "question": c.question}
-            for c in parsed.clarifications
-        ],
-        "formula_analysis": [
-            {
-                "name": f.name,
-                "status": f.status,
-                "match": f.match_id,
-            }
-            for f in (reuse_findings or [])
-        ],
-    }
-    path = tool_dir / "manifest.json"
-    path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return path
+    sheet.review_log = list(getattr(parsed, "review_log", []) or [])
+    manifest = build_manifest(
+        sheet, slug=slug, source_path=parsed.source_path,
+        source_format=parsed.source_format,
+        interpreter=parsed.interpreter or "convention",
+        status=("needs-clarification" if parsed.clarifications
+                else "converted-unreviewed"),
+        converter="grinder", warnings=parsed.warnings,
+        clarifications=parsed.clarifications,
+        reuse_findings=reuse_findings, gatekeeper=gatekeeper, review=review,
+        ai=review.ai_model if review is not None else "")
+    return write_manifest(tool_dir, manifest)

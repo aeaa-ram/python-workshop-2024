@@ -177,3 +177,44 @@ def test_no_llm_available_falls_back_cleanly():
     # with no API key configured, the pipeline uses the heuristic
     interp = choose_interpreter(prefer_client="null")
     assert isinstance(interp, HeuristicInterpreter)
+
+
+# ------------------------------------------- rounding & conditionals (Excel)
+def test_excel_rounding_is_kept_not_dropped():
+    from src.models.calculation import CalcSheet
+
+    tr = translate_excel_formula("=ROUND(A1/A2,0)", "S",
+                                 {"S!A1": "L", "S!A2": "s"})
+    assert tr.ok
+    s = CalcSheet("round")
+    s.define("L", 20)
+    s.define("s", 3)
+    assert s.calc("n", tr.expression).value == 7           # not 6.67
+    up = translate_excel_formula("=ROUNDUP(A1/A2,1)", "S",
+                                 {"S!A1": "L", "S!A2": "s"})
+    assert s.calc("m", up.expression).value == pytest.approx(6.7)
+
+
+def test_excel_if_becomes_a_conditional_value():
+    from src.models.calculation import CalcSheet
+
+    cm = {"S!A1": "h_sc", "S!A2": "d"}
+    tr = translate_excel_formula("=IF(A1/A2>=4,1,0.2*(A1/A2+1))", "S", cm)
+    assert tr.ok and not tr.is_check
+    s = CalcSheet("alpha")
+    s.define("h_sc", 60, unit="mm")
+    s.define("d", 19, unit="mm")
+    assert s.calc("alpha", tr.expression).value == pytest.approx(
+        0.2 * (60 / 19 + 1))
+    # an IF that only returns 1/0 is a pass/fail flag -> a check
+    flag = translate_excel_formula("=IF(A1<=A2,1,0)", "S", cm)
+    assert flag.is_check and flag.check_expression == "h_sc<=d"
+
+
+def test_excel_equality_condition_is_evaluated_not_folded():
+    from src.models.calculation import CalcSheet
+
+    tr = translate_excel_formula("=IF(A1=1,10,20)", "S", {"S!A1": "k"})
+    s = CalcSheet("eq")
+    s.define("k", 1)
+    assert s.calc("v", tr.expression).value == 10

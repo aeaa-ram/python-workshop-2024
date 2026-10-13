@@ -190,17 +190,7 @@ class ConventionExcelParser(BaseParser):
             return coord
 
         out = _CELL_REF.sub(repl, formula)
-        out = out.replace("^", "**")
-        for excel_fn, py_fn in _FUNCTION_MAP.items():
-            out = re.sub(
-                rf"\b{re.escape(excel_fn)}\b", py_fn, out,
-                flags=re.IGNORECASE,
-            )
-        # POWER(a, b) -> (a)**(b)
-        out = re.sub(
-            r"\bpow\(([^,]+),([^)]+)\)", r"(\1)**(\2)", out
-        )
-        return out.strip(), unresolved
+        return _apply_funcs(out).strip(), unresolved
 
 
 # Back-compat alias: tests and other modules import ``ExcelParser`` and use
@@ -222,7 +212,8 @@ _TRANSLATABLE_FUNCS = {
 }
 # sympy-safe function names allowed to remain after translation (the
 # catch-all uses this to spot Excel functions we did NOT handle).
-_ALLOWED_MATH_FUNCS = set(_TRANSLATABLE_FUNCS.values()) | {"pi"}
+_ALLOWED_MATH_FUNCS = set(_TRANSLATABLE_FUNCS.values()) | {
+    "pi", "floor", "ceiling", "sign", "piecewise", "eq", "ne"}
 # Functions that need external data / lookups — cannot be translated to a
 # closed-form expression; trigger human-in-the-loop clarification.
 _LOOKUP_FUNCS = ("INDEX", "VLOOKUP", "HLOOKUP", "MATCH", "OFFSET", "INDIRECT",
@@ -293,11 +284,12 @@ def translate_excel_formula(
 
     body = _BARE_REF.sub(repl_bare, body)
 
-    # a check? (top-level comparison, or IF(cond, ...))
+    # a check? (top-level comparison, or IF(cond, 1, 0)-style flag)
     if_match = re.match(r"\s*IF\s*\((.+)\)\s*$", body, re.IGNORECASE)
     cond = None
     if if_match:
-        cond = _split_if_condition(if_match.group(1))
+        if _is_flag_if(if_match.group(1)):
+            cond = _split_if_condition(if_match.group(1))
     elif any(op in body for op in ("<=", ">=", "<", ">")):
         cond = body
     if cond and any(op in cond for op in ("<=", ">=", "<", ">")):
@@ -318,6 +310,29 @@ def translate_excel_formula(
     return result
 
 
+def _is_flag_if(inner: str) -> bool:
+    """IF(cond, 1, 0) / IF(cond, TRUE, FALSE) encodes a pass/fail flag."""
+    parts = _rewrite_args(inner)
+    if len(parts) != 3:
+        return False
+    flags = {"1", "0", "TRUE", "FALSE"}
+    return parts[1].strip().upper() in flags and parts[2].strip().upper() in flags
+
+
+def _rewrite_args(inner: str) -> list[str]:
+    out, depth, start = [], 0, 0
+    for i, ch in enumerate(inner):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            out.append(inner[start:i])
+            start = i + 1
+    out.append(inner[start:])
+    return out
+
+
 def _split_if_condition(inner: str) -> str:
     """Extract the condition from an IF(cond, a, b) argument list."""
     depth = 0
@@ -332,19 +347,94 @@ def _split_if_condition(inner: str) -> str:
 
 
 def _apply_funcs(body: str) -> str:
-    out = body.replace("^", "**")
-    # ROUND(x, n) -> x  (drop rounding for the symbolic form)
-    out = re.sub(r"\bROUND(?:UP|DOWN)?\s*\(([^,]+),[^)]*\)", r"(\1)",
-                 out, flags=re.IGNORECASE)
-    out = re.sub(r"\bPOWER\s*\(([^,]+),([^)]+)\)", r"(\1)**(\2)",
-                 out, flags=re.IGNORECASE)
+    out = body.replace("^", "**").replace("<>", "!=")
+    # Excel's comparison "=" (inside IF/AND/OR) is Python's "=="
+    out = re.sub(r"(?<![<>=!])=(?!=)", "==", out)
     out = re.sub(r"\bPI\s*\(\s*\)", "pi", out, flags=re.IGNORECASE)
-    # rounding/truncation dropped for the symbolic form: F(x[,n]) -> (x)
-    out = re.sub(r"\b(?:ROUND(?:UP|DOWN)?|TRUNC|INT)\s*\(([^,()]+)(?:,[^)]*)?\)",
-                 r"(\1)", out, flags=re.IGNORECASE)
+    out = re.sub(r"\bTRUE\b", "True", out, flags=re.IGNORECASE)
+    out = re.sub(r"\bFALSE\b", "False", out, flags=re.IGNORECASE)
+    # rounding is part of the engineering result (ROUND(L/s,0) = 7, not
+    # 6.67): translate it faithfully, never drop it
+    out = _rewrite_calls(out, "ROUND", _excel_round)
+    out = _rewrite_calls(out, "ROUNDUP", lambda a: _excel_round(a, "up"))
+    out = _rewrite_calls(out, "ROUNDDOWN", lambda a: _excel_round(a, "down"))
+    out = _rewrite_calls(out, "TRUNC", lambda a: _excel_round(a or ["0"], "down"))
+    out = _rewrite_calls(out, "INT", lambda a: f"floor({a[0]})")
+    out = _rewrite_calls(out, "POWER", lambda a: f"({a[0]})**({a[1]})")
+    out = _rewrite_calls(out, "IF", _excel_if)
+    out = _rewrite_calls(out, "AND", lambda a: "(" + " & ".join(
+        f"({_relational(x)})" for x in a) + ")")
+    out = _rewrite_calls(out, "OR", lambda a: "(" + " | ".join(
+        f"({_relational(x)})" for x in a) + ")")
+    out = _rewrite_calls(out, "NOT", lambda a: f"(~({a[0]}))")
     for xl, py in _TRANSLATABLE_FUNCS.items():
         out = re.sub(rf"\b{xl}\s*\(", f"{py}(", out, flags=re.IGNORECASE)
     return out
+
+
+def _excel_round(args: list[str], mode: str = "half") -> str:
+    """Excel ROUND family (round half away from zero; n digits)."""
+    x = args[0]
+    n = args[1].strip() if len(args) > 1 else "0"
+    scale = "" if n in ("0", "") else f"*10**({n})"
+    unscale = "" if n in ("0", "") else f"/10**({n})"
+    if mode == "up":
+        core = f"ceiling(abs({x}){scale})"
+    elif mode == "down":
+        core = f"floor(abs({x}){scale})"
+    else:
+        core = f"floor(abs({x}){scale}+1/2)"
+    return f"(sign({x})*{core}{unscale})"
+
+
+def _relational(cond: str) -> str:
+    """'a==b' / 'a!=b' at top level -> Eq(a, b) / Ne(a, b): sympy would
+    otherwise decide '==' structurally at parse time (always False)."""
+    depth = 0
+    for i, ch in enumerate(cond):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        elif depth == 0 and cond[i:i + 2] in ("==", "!="):
+            fn = "Eq" if cond[i:i + 2] == "==" else "Ne"
+            return f"{fn}({cond[:i].strip()}, {cond[i + 2:].strip()})"
+    return cond
+
+
+def _excel_if(args: list[str]) -> str:
+    cond = _relational(args[0])
+    yes = args[1] if len(args) > 1 else "True"
+    no = args[2] if len(args) > 2 else "False"
+    return f"Piecewise(({yes}, {cond}), ({no}, True))"
+
+
+def _rewrite_calls(text: str, name: str, build) -> str:
+    """Replace every NAME(arg, ...) call (case-insensitive, nested-safe)
+    with ``build(args)``; innermost calls are rewritten first."""
+    pattern = re.compile(rf"\b{name}\s*\(", re.IGNORECASE)
+    while True:
+        matches = list(pattern.finditer(text))
+        if not matches:
+            return text
+        m = matches[-1]                      # innermost / last first
+        depth, i, args, start = 1, m.end(), [], m.end()
+        while i < len(text) and depth:
+            ch = text[i]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    args.append(text[start:i].strip())
+                    break
+            elif ch == "," and depth == 1:
+                args.append(text[start:i].strip())
+                start = i + 1
+            i += 1
+        if depth:                            # unbalanced: leave untouched
+            return text
+        text = text[: m.start()] + build(args) + text[i + 1:]
 
 
 def _unhandled_functions(expression: str) -> list[str]:

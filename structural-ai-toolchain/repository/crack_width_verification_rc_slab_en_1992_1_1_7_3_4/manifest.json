@@ -1,13 +1,18 @@
 {
+  "schema": "structural-ai-toolchain/manifest@2",
   "tool_id": "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
   "title": "Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)",
   "description": "Characteristic crack width for a reinforced concrete slab under quasi-permanent loading.",
   "reference": "",
+  "revision": "0.1",
   "source_file": "crack_width_ec2.xlsx",
   "source_format": "xlsx",
-  "converted": "2026-07-20",
-  "status": "converted-unreviewed",
+  "converted": "2026-10-13",
+  "converter": "grinder",
   "interpreter": "convention",
+  "ai": "none (deterministic path)",
+  "status": "converted-unreviewed",
+  "unit_aware": false,
   "variables": [
     {
       "name": "b",
@@ -15,6 +20,8 @@
       "unit": "mm",
       "description": "Section width (per metre strip)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -23,6 +30,8 @@
       "unit": "mm",
       "description": "Section depth",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -31,6 +40,8 @@
       "unit": "mm",
       "description": "Effective depth",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -39,6 +50,8 @@
       "unit": "mm",
       "description": "Nominal concrete cover",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -47,6 +60,8 @@
       "unit": "mm",
       "description": "Bar diameter",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -55,6 +70,8 @@
       "unit": "mm^2",
       "description": "Tension reinforcement area (5 H16)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -63,6 +80,8 @@
       "unit": "kNm",
       "description": "Quasi-permanent bending moment",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -71,6 +90,8 @@
       "unit": "MPa",
       "description": "Steel modulus of elasticity",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -79,6 +100,8 @@
       "unit": "MPa",
       "description": "Concrete secant modulus",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -87,6 +110,8 @@
       "unit": "MPa",
       "description": "Effective concrete tensile strength",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -95,6 +120,8 @@
       "unit": "-",
       "description": "Load duration factor (long term)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -103,6 +130,8 @@
       "unit": "-",
       "description": "Bond factor (high-bond bars)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -111,6 +140,8 @@
       "unit": "-",
       "description": "Strain distribution factor (bending)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -119,6 +150,8 @@
       "unit": "-",
       "description": "Code coefficient",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -127,6 +160,8 @@
       "unit": "-",
       "description": "Code coefficient",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -135,6 +170,8 @@
       "unit": "mm",
       "description": "Allowable crack width (XC exposure)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -143,6 +180,8 @@
       "unit": "-",
       "description": "Modular ratio E_s/E_cm",
       "expression": "E_s/E_cm",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "06d0cfbf8df2d5e0"
     },
     {
@@ -151,6 +190,8 @@
       "unit": "mm",
       "description": "Neutral axis depth (cracked section)",
       "expression": "(alpha_e*A_s/b)*(sqrt(1+2*b*d/(alpha_e*A_s))-1)",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "0d78008124eed41b"
     },
     {
@@ -159,6 +200,8 @@
       "unit": "mm",
       "description": "Internal lever arm",
       "expression": "d-x/3",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "f73b2874e7eb6be5"
     },
     {
@@ -167,6 +210,8 @@
       "unit": "MPa",
       "description": "Steel stress under quasi-permanent loads",
       "expression": "M_qp*1000000/(z*A_s)",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "b918ddf9cf29e452"
     },
     {
@@ -175,6 +220,8 @@
       "unit": "mm",
       "description": "Effective tension zone height",
       "expression": "min(2.5*(h-d),(h-x)/3,h/2)",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "95647c0c017bb019"
     },
     {
@@ -183,6 +230,8 @@
       "unit": "-",
       "description": "Effective reinforcement ratio",
       "expression": "A_s/(b*h_c_eff)",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "3c403083934a28b6"
     },
     {
@@ -191,6 +240,8 @@
       "unit": "mm",
       "description": "Maximum crack spacing",
       "expression": "k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff",
+      "clause": "EN 1992-1-1:2004 \u00a77.3.4(3), Eq. (7.11)",
+      "atom_id": "ec2.crack.s_r_max",
       "fingerprint": "6c3099e1f1e07133"
     },
     {
@@ -199,6 +250,8 @@
       "unit": "-",
       "description": "Mean strain difference (eps_sm - eps_cm)",
       "expression": "max((sigma_s-k_t*f_ct_eff/rho_p_eff*(1+alpha_e*rho_p_eff))/E_s,0.6*sigma_s/E_s)",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "f76a2ee9d0f4ccf1"
     },
     {
@@ -207,12 +260,15 @@
       "unit": "mm",
       "description": "Characteristic crack width",
       "expression": "s_r_max*eps_diff",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "3ebb460220df110f"
     }
   ],
   "checks": [
     "w_k <= w_max"
   ],
+  "checks_passed": true,
   "results": {
     "b": 1000.0,
     "h": 300.0,
@@ -288,5 +344,23 @@
       "status": "new",
       "match": ""
     }
-  ]
+  ],
+  "gatekeeper": [
+    {
+      "slug": "crack_width_verification_rc_slab_en_1992_1_1_7_3_4",
+      "title": "Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)",
+      "score": 1.0,
+      "verdict": "duplicate"
+    }
+  ],
+  "review": {
+    "passed": true,
+    "converged": true,
+    "iterations": 1,
+    "ai": "",
+    "verdict": "",
+    "fixes": [],
+    "findings": []
+  },
+  "review_log": []
 }

@@ -140,19 +140,19 @@ def _missing_metadata(sheet: CalcSheet) -> list[QAFinding]:
 
 def _library_bypass(sheet: CalcSheet) -> list[QAFinding]:
     """Formulas that re-implement a library atom instead of apply()ing it."""
-    from src.knowledge_graph.fingerprint import try_fingerprint
+    from src.knowledge_graph.fingerprint import fingerprint_if_matchable
     from src.library import all_atoms
 
     atom_fps = {}
     for atom in all_atoms():
-        fp = try_fingerprint(atom.expression)
+        fp = fingerprint_if_matchable(atom.expression)
         if fp:
             atom_fps[fp] = atom.atom_id
     out = []
     for item in sheet.calcs():
         if item.atom_id:
             continue  # already reusing the library
-        fp = try_fingerprint(item.expression)
+        fp = fingerprint_if_matchable(item.expression)
         if fp and fp in atom_fps:
             out.append(
                 QAFinding(

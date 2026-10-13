@@ -83,12 +83,20 @@ def run_ai_pipeline(path: str | Path,
         tr = translate_excel_formula(spec.formula, sheet, cell_map)
 
         if tr.unknown_funcs:
+            from src.ingestion.excel_parser import _LOOKUP_FUNCS
+
+            funcs = [f.upper() for f in tr.unknown_funcs]
+            if "TEXT" in funcs:
+                why = "builds display text rather than a number"
+            elif any(f in _LOOKUP_FUNCS for f in funcs):
+                why = "reads a table / lookup range"
+            else:
+                why = "uses Excel functions the translator does not support"
             tool.clarifications.append(Clarification(
                 location=spec.cell, issue="untranslatable-function",
-                question=(f"'{spec.name}' at {spec.cell} uses "
-                          f"{tr.unknown_funcs} which reads external/lookup "
-                          "data. Confirm the intended value or provide the "
-                          "underlying formula."),
+                question=(f"'{spec.name}' at {spec.cell} {why} "
+                          f"({', '.join(tr.unknown_funcs)}). Confirm the "
+                          "intended value or provide the underlying formula."),
                 options=([f"freeze at cached value {spec.value}"]
                          if _is_number(spec.value) else []),
                 context=spec.formula,

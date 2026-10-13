@@ -19,7 +19,7 @@ def build_sheet() -> CalcSheet:
     sheet.define('Yield_fy', 355.0, unit='MPa', description='Yield fy (MPa)')
     sheet.define('factors_b2', 1.0, unit='', description='factors_b2')
     sheet.section("Calculation")
-    sheet.calc('Moment_M', 'Line_load_w*Span_L**2/8', unit='kNm', description='Moment M (kNm)')
+    sheet.calc('Moment_M', 'Line_load_w*Span_L**2/8', unit='kNm', description='Moment M (kNm)', reference='Statics: simply supported beam, UDL').atom_id = 'mech.statics.M_max_udl'
     sheet.calc('Bending_stress_sigma', 'Moment_M*1000/Section_modulus_Wel*factors_b2', unit='MPa', description='Bending stress sigma (MPa)')
     sheet.section("Verification")
     sheet.check('Bending_stress_sigma<=Yield_fy')

@@ -7,7 +7,7 @@
   "author": "",
   "project": "",
   "revision": "0.1",
-  "created": "2026-07-20",
+  "created": "2026-10-13",
   "items": [
     {
       "kind": "section",
@@ -330,8 +330,8 @@
       "expression": "k_3*c_nom+k_1*k_2*k_4*phi/rho_p_eff",
       "passed": null,
       "text": "",
-      "atom_id": "",
-      "reference": "",
+      "atom_id": "ec2.crack.s_r_max",
+      "reference": "EN 1992-1-1:2004 \u00a77.3.4(3), Eq. (7.11)",
       "intro": ""
     },
     {
@@ -441,5 +441,6 @@
     "eps_diff": "-",
     "w_k": "mm"
   },
+  "unit_aware": false,
   "checks_passed": true
 }

@@ -8,14 +8,14 @@ reference: ""
 status: needs-clarification
 interpreter: heuristic
 reviewed_by: null
-converted: 2026-07-20
+converted: 2026-10-13
 revision: '0.1'
 ---
 # Simply Supported Steel Beam — quick check
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-20 |
+| 0.1 | 2026-10-13 |
 
 ## 1. Input Parameters
 
@@ -65,4 +65,3 @@ The AI Grinder could not confidently resolve these — see `CLARIFICATIONS.md`:
 
 - **Beam!H1** (magic-number): Cell Beam!H1 = 1 has no adjacent label. What quantity is it?
 - **Factors!B2** (magic-number): Cell Factors!B2 = 1 has no adjacent label. What quantity is it?
-- **Beam!C9** (untranslatable-function): 'Utilisation_check' at Beam!C9 uses ['IF'] which reads external/lookup data. Confirm the intended value or provide the underlying formula.

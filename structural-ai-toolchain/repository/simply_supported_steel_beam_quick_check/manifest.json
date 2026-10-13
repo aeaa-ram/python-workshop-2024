@@ -1,13 +1,18 @@
 {
+  "schema": "structural-ai-toolchain/manifest@2",
   "tool_id": "simply_supported_steel_beam_quick_check",
   "title": "Simply Supported Steel Beam \u2014 quick check",
   "description": "",
   "reference": "",
+  "revision": "0.1",
   "source_file": "messy_beam.xlsx",
   "source_format": "xlsx",
-  "converted": "2026-07-20",
-  "status": "needs-clarification",
+  "converted": "2026-10-13",
+  "converter": "grinder",
   "interpreter": "heuristic",
+  "ai": "none (deterministic path)",
+  "status": "needs-clarification",
+  "unit_aware": false,
   "variables": [
     {
       "name": "beam_h1",
@@ -15,6 +20,8 @@
       "unit": "",
       "description": "beam_h1",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -23,6 +30,8 @@
       "unit": "m",
       "description": "Span L (m)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -31,6 +40,8 @@
       "unit": "kN/m",
       "description": "Line load w (kN/m)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -39,6 +50,8 @@
       "unit": "cm3",
       "description": "Section modulus Wel (cm3)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -47,6 +60,18 @@
       "unit": "MPa",
       "description": "Yield fy (MPa)",
       "expression": "",
+      "clause": "",
+      "atom_id": "",
+      "fingerprint": null
+    },
+    {
+      "name": "factors_b2",
+      "role": "input",
+      "unit": "",
+      "description": "factors_b2",
+      "expression": "",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": null
     },
     {
@@ -55,6 +80,8 @@
       "unit": "kNm",
       "description": "Moment M (kNm)",
       "expression": "Line_load_w*Span_L**2/8",
+      "clause": "Statics: simply supported beam, UDL",
+      "atom_id": "mech.statics.M_max_udl",
       "fingerprint": "7f257a8710840a98"
     },
     {
@@ -63,20 +90,15 @@
       "unit": "MPa",
       "description": "Bending stress sigma (MPa)",
       "expression": "Moment_M*1000/Section_modulus_Wel*factors_b2",
+      "clause": "",
+      "atom_id": "",
       "fingerprint": "5d4b35430a41cd83"
-    },
-    {
-      "name": "factors_b2",
-      "role": "input",
-      "unit": "",
-      "description": "factors_b2",
-      "expression": "",
-      "fingerprint": null
     }
   ],
   "checks": [
     "Bending_stress_sigma<=Yield_fy"
   ],
+  "checks_passed": true,
   "results": {
     "beam_h1": 1.0,
     "Span_L": 6.0,
@@ -98,11 +120,6 @@
       "location": "Factors!B2",
       "issue": "magic-number",
       "question": "Cell Factors!B2 = 1 has no adjacent label. What quantity is it?"
-    },
-    {
-      "location": "Beam!C9",
-      "issue": "untranslatable-function",
-      "question": "'Utilisation_check' at Beam!C9 uses ['IF'] which reads external/lookup data. Confirm the intended value or provide the underlying formula."
     }
   ],
   "formula_analysis": [
@@ -116,5 +133,23 @@
       "status": "new",
       "match": ""
     }
-  ]
+  ],
+  "gatekeeper": [
+    {
+      "slug": "simply_supported_steel_beam_quick_check",
+      "title": "Simply Supported Steel Beam \u2014 quick check",
+      "score": 1.0,
+      "verdict": "duplicate"
+    }
+  ],
+  "review": {
+    "passed": true,
+    "converged": true,
+    "iterations": 1,
+    "ai": "",
+    "verdict": "",
+    "fixes": [],
+    "findings": []
+  },
+  "review_log": []
 }

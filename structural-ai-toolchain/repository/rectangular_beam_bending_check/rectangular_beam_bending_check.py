@@ -21,7 +21,7 @@ def build_sheet() -> CalcSheet:
     sheet.define('f_m', 24.0, unit='MPa', description='Design bending strength')
     sheet.section("Calculation")
     sheet.calc('M_max', 'q*(L/1000)**2/8', unit='kNm', description='Maximum bending moment')
-    sheet.calc('W', 'b*h**2/6', unit='mm^3', description='Elastic section modulus')
+    sheet.calc('W', 'b*h**2/6', unit='mm^3', description='Elastic section modulus', reference='Section property (geometry)').atom_id = 'mech.section.W_el_rect'
     sheet.calc('sigma_m', 'M_max*1000000/W', unit='MPa', description='Maximum bending stress')
     sheet.section("Verification")
     sheet.check('sigma_m <= f_m')

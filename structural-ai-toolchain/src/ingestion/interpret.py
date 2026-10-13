@@ -81,25 +81,20 @@ Workbook digest:
 
 {digest}
 
-Return JSON with this shape:
-{{
-  "title": "...",
-  "reference": "code clause if evident, else ''",
-  "cell_map": {{"Sheet1!B6": "b", "Sheet1!B7": "h", ...}},
-  "variables": [
-    {{"name":"b","role":"input","cell":"Sheet1!B6","value":300,
-      "unit":"mm","description":"Section width"}},
-    {{"name":"A","role":"derived","cell":"Sheet1!B10","unit":"mm^2",
-      "description":"Area","formula":"=B6*B7"}},
-    {{"name":"util","role":"check","cell":"Sheet1!B20",
-      "description":"Utilisation","formula":"=B18<=B19"}}
-  ],
-  "clarifications": [
-    {{"location":"Sheet2!D14","issue":"magic-number",
-      "question":"Cell D14 = 1.35 has no label. Is this a load factor?",
-      "options":["load factor gamma_G","dead load","other"]}}
-  ]
-}}
+Fill the schema. Example of the expected content (not of these values):
+- cell_map: [{{"cell":"Sheet1!B6","name":"b"}}, {{"cell":"Sheet1!B7","name":"h"}}]
+- variables:
+    {{"name":"b","role":"input","cell":"Sheet1!B6","value":300,"unit":"mm",
+     "description":"Section width","formula":""}}
+    {{"name":"A","role":"derived","cell":"Sheet1!B10","value":null,
+     "unit":"mm^2","description":"Area","formula":"=B6*B7"}}
+    {{"name":"util","role":"check","cell":"Sheet1!B20","value":null,"unit":"",
+     "description":"Utilisation","formula":"=B18<=B19"}}
+- clarifications:
+    {{"location":"Sheet2!D14","issue":"magic-number","question":"Cell D14 = 1.35
+     has no label. Is this a load factor?","options":["gamma_G","other"],
+     "context":"1.35"}}
+Use "" for an unknown reference or unit and null for a value you cannot read.
 """
 
 
@@ -117,8 +112,20 @@ class LLMInterpreter:
         self.client = client
 
     def interpret(self, digest: WorkbookDigest) -> Interpretation:
+        from src.llm import LLMError, schemas
+
         system, user = build_prompt(digest)
-        data = self.client.complete_json(system, user)
+        try:
+            data = self.client.complete_json(
+                system, user, schema=schemas.INTERPRETATION, task="interpret")
+        except LLMError as exc:
+            fallback = HeuristicInterpreter().interpret(digest)
+            fallback.interpreter = f"heuristic (LLM unavailable: {exc})"
+            return fallback
+        cell_map = data.get("cell_map", {})
+        if isinstance(cell_map, list):
+            cell_map = {e["cell"]: e["name"] for e in cell_map
+                        if e.get("cell") and e.get("name")}
         variables = [
             VarSpec(
                 name=v["name"], role=v.get("role", "input"),
@@ -132,7 +139,7 @@ class LLMInterpreter:
             title=data.get("title", "") or digest.title_guess,
             reference=data.get("reference", ""),
             variables=variables,
-            cell_map=dict(data.get("cell_map", {})),
+            cell_map=dict(cell_map),
             clarifications=list(data.get("clarifications", [])),
             interpreter=f"llm:{getattr(self.client, 'name', '?')}",
         )

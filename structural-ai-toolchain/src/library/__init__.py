@@ -39,6 +39,7 @@ from src.library.registry import (
 )
 from src.library.discovery import catalog, catalog_lines, search
 from src.library import atoms_ec2  # noqa: F401 — registers the seed atoms
+from src.library import atoms_ec4  # noqa: F401
 
 custom = CustomNamespace()
 

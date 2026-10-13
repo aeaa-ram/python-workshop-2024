@@ -21,7 +21,7 @@
 
 \fancyhead[L]{\textcolor{BrandPrimary}{\textbf{—}}}
 \fancyhead[R]{\textcolor{BrandPrimary}{Crack Width Verification - RC Slab (EN 1992-1-1 7.3.4)}}
-\fancyfoot[L]{\small\textcolor{BrandPrimary}{Rev. 0.1 — 2026-07-20}}
+\fancyfoot[L]{\small\textcolor{BrandPrimary}{Rev. 0.1 — 2026-10-13}}
 \fancyfoot[C]{\small\textcolor{BrandPrimary}{Structural AI Toolchain}}
 \fancyfoot[R]{\small\textcolor{BrandPrimary}{Page \thepage\ of \pageref{LastPage}}}
 \begin{document}
@@ -91,13 +91,13 @@ h_{c,eff} &= \min\left(\frac{h}{2}, \frac{h - x}{3}, 2.5 \cdot \left(- d + h\rig
 \noindent\textbf{Maximum crack spacing}
 \begin{align*}
 s_{r,max} &= c_{nom} \cdot k_{3} + \frac{k_{1} \cdot k_{2} \cdot k_{4} \cdot \phi}{\rho_{p,eff}} \\
-&= 3.4 \cdot 30 + \frac{0.425 \cdot 0.5 \cdot 0.8 \cdot 16}{0.01208} \\
+&= 30 \cdot 3.4 + \frac{0.8 \cdot 0.5 \cdot 0.425 \cdot 16}{0.01208} \\
 &= \mathbf{327.1}\ \mathrm{mm}
 \end{align*}
 \noindent\textbf{Mean strain difference (eps\_sm - eps\_cm)}
 \begin{align*}
 \varepsilon_{diff} &= \max\left(\frac{0.6 \cdot \sigma_{s}}{E_{s}}, \frac{- \frac{f_{ct,eff} \cdot k_{t} \cdot \left(\alpha_{e} \cdot \rho_{p,eff} + 1\right)}{\rho_{p,eff}} + \sigma_{s}}{E_{s}}\right) \\
-&= \max\left(\frac{0.6 \cdot 184.1}{200000}, \frac{184.1 - \frac{0.4 \cdot 2.9 \cdot \left(0.01208 \cdot 6.061 + 1\right)}{0.01208}}{200000}\right) \\
+&= \max\left(\frac{0.6 \cdot 184.1}{200000}, \frac{- \frac{2.9 \cdot 0.4 \cdot \left(6.061 \cdot 0.01208 + 1\right)}{0.01208} + 184.1}{200000}\right) \\
 &= \mathbf{0.0005524}
 \end{align*}
 \noindent\textbf{Characteristic crack width}

@@ -8,14 +8,14 @@ reference: ""
 status: converted-unreviewed
 interpreter: convention
 reviewed_by: null
-converted: 2026-07-20
+converted: 2026-10-13
 revision: '0.1'
 ---
 # Rectangular Beam Bending Check
 
 | Revision | Date |
 |---|---|
-| 0.1 | 2026-07-20 |
+| 0.1 | 2026-10-13 |
 
 Elastic bending stress verification for a simply supported rectangular timber beam under uniform load.
 
@@ -47,7 +47,7 @@ $$
 \begin{aligned}
 W &= \frac{b \cdot h^{2}}{6} \\
 &= \frac{200 \cdot 400^{2}}{6} \\
-&= \mathbf{5.333e+06}\ \mathrm{mm}^{3}
+&= \mathbf{5.333 \cdot 10^{6}}\ \mathrm{mm}^{3}
 \end{aligned}
 $$
 
@@ -56,7 +56,7 @@ $$
 $$
 \begin{aligned}
 \sigma_{m} &= M_{max} \cdot 1000000 \cdot \frac{1}{W} \\
-&= 14.06 \cdot 1000000 \cdot \frac{1}{5.333e+06} \\
+&= 14.06 \cdot 1000000 \cdot \frac{1}{5.333 \cdot 10^{6}} \\
 &= \mathbf{2.637}\ \mathrm{MPa}
 \end{aligned}
 $$

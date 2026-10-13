@@ -1,8 +1,9 @@
 # Pitfalls database
 
 A growing catalogue of the mistakes this toolchain is designed to catch —
-both the mechanical ones (caught today by `src/qa/checks.py`) and the
-engineering-judgment ones (for the future AI reviewer / human review).
+the mechanical ones (caught by `src/qa/checks.py` and the master reviewer
+in `src/qa/master_review.py`) and the engineering-judgment ones (the AI
+review pass and the human checker).
 Each entry: what goes wrong, why, and how the toolchain helps.
 
 This is deliberately a living document — add a row every time a real tool
@@ -12,21 +13,35 @@ surprises someone.
 
 | # | Pitfall | Example | Toolchain help |
 |---|---|---|---|
-| A1 | Hidden unit conversion baked into a magic number | `sigma = M*1e6/(A*z)` silently converts kNm→Nmm | QA `unit-conversion-smell` flags `1e6`; units are display-only today — dimensional checking (pint) is the planned fix |
-| A2 | Mixing MPa and kPa / N and kN across a formula | E in MPa, load in kN, area in mm² | No auto-catch yet; keep the unit column truthful, flagged as a top bottleneck |
-| A3 | Angle in degrees vs radians | `tan(theta)` with theta in degrees | `sin/cos/tan` here are radians (sympy); document the input unit |
-| A4 | Second moment of area units (mm⁴) vs deflection (mm) | `delta = 5qL⁴/384EI` with L in m | Keep L, I, E in a consistent set; A2 applies |
+| A1 | Hidden unit conversion baked into a magic number | `sigma = 45e6/W` — 45e6 is a moment in Nmm | reviewer `hidden-unit-literal`: names the dimension the number must carry; deliberate conversions on labelled inputs (`M*1e6`, `(L/1000)**2`) are recognised as correct |
+| A2 | Result computed in one unit, labelled another | `P_Rd` in N shown as "81656 kN" | reviewer `unit-scale-mismatch` → **fixed** (explicit conversion or relabel, whichever keeps the sheet consistent); unit-aware Mathcad sheets convert by construction |
+| A3 | A units slip that flips a verdict | `P_Ed [kN] <= P_Rd [N]` reads OK, is NOT OK | reviewer `check-verdict-units` re-evaluates both sides in N, mm |
+| A4 | Formula of the wrong dimension | a stress formula declared in kN; force + length | reviewer `dimension-mismatch`, `check-dimension-mismatch` (sympy dimensional analysis) |
+| A5 | Empirical code formula fed in the wrong units | `k = 1 + √(200/d)` with d in m | reviewer `empirical-formula` (noted) / `empirical-formula-units` (warned when inputs are not N, mm, MPa) |
+| A6 | Unit written inside a formula ignored | Mathcad `h − 0.003 m` computed as `h − 0.003` | unit symbols carry their scale: 100 mm − 0.003 m = 97 mm |
+| A7 | Angle in degrees vs radians | `tan(theta)` with theta in degrees | `sin/cos/tan` here are radians (sympy); document the input unit |
+
+## A′. Translation pitfalls (legacy file → Python)
+
+| # | Pitfall | Example | Toolchain help |
+|---|---|---|---|
+| T1 | Rounding dropped | `ROUND(L/s, 0)` → 6.67 instead of 7 studs | Excel `ROUND/ROUNDUP/ROUNDDOWN/TRUNC/INT` and Mathcad `round/trunc` translated exactly |
+| T2 | Conditional dropped or turned into a check | `IF(h/d>=4, 1, 0.2(h/d+1))` | becomes `Piecewise`; only `IF(cond,1,0)` flags become checks |
+| T3 | Equality condition folded at parse time | `IF(k=1, …)` always false in sympy | conditions use `Eq(…)` / `Ne(…)` |
+| T4 | Lost parentheses in nested sums | `0.2·(h/d + 1)` read as `0.2·h/d + 1` | sums/differences always keep their brackets in the Mathcad translator |
+| T5 | Converted value silently differs from the original | wrong cell mapped | correspondence check against cached / printed values at printed precision; AI corrections only kept if the re-check improves |
 
 ## B. Code-application pitfalls (Eurocode)
 
 | # | Pitfall | Example | Toolchain help |
 |---|---|---|---|
 | B1 | Using recommended values instead of the National Annex | crack `k_3` = 3.4 vs NA value | National-annex system: `resolve(concept, "EN-XX")` overrides only the coefficient; `params` make code coefficients explicit |
-| B2 | `f_ctm` formula valid only ≤ C50/60 | using `0.30·f_ck^(2/3)` for C60 | atom `notes` record the validity limit; AI reviewer target |
+| B2 | `f_ctm` formula valid only ≤ C50/60 | using `0.30·f_ck^(2/3)` for C60 | atom `notes` record the validity limit; AI research notes validity limits per step |
 | B3 | Wrong strength class basis (cylinder vs cube) | `f_ck` cube used in a cylinder formula | synonym map distinguishes `f_ck` vs `f_ck_cube` |
 | B4 | Effective tension area `A_c,eff` wrong (min of three) | crack width `h_c,eff` | keep the `min(...)` explicit in the formula so it is auditable |
 | B5 | Long-term vs short-term modulus confusion | using `E_cm` where `E_cm(t)` / effective modulus needed | shared atoms `E_cm`, `E_cm_t` are distinct and named |
-| B6 | Partial factors omitted or double-counted | `f_yd = f_yk/γ_s` applied twice | make γ an explicit input; AI reviewer target |
+| B6 | Partial factors omitted or double-counted | `f_yd = f_yk/γ_s` applied twice | make γ an explicit input; AI review target |
+| B7 | A verification the code requires is missing | bending checked, lateral-torsional buckling not | AI research lists "steps the code requires that the sheet omits" in the reflection checklist |
 
 ## C. Structural-logic pitfalls
 

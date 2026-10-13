@@ -1,141 +1,122 @@
 # Structural AI Toolchain
 
-Foundation for an AI-augmented ecosystem that converts legacy structural
-engineering files (Mathcad, Excel, Python, Jupyter) into a centralized,
-version-controlled repository of standardized Python tools with
-Mathcad-style, print-ready documentation.
+Converts legacy structural calculations (Mathcad Prime, Excel, Jupyter,
+Python) into one version-controlled library of standardized Python tools,
+checked against a central knowledge base, verified by a master reviewer,
+and printed as Mathcad-style A4 reports with every formula written out.
 
-**New here? Read the 1-page [docs/QUICKSTART.md](docs/QUICKSTART.md)**
-(also as [QUICKSTART.pdf](docs/QUICKSTART.pdf)) — it navigates the whole
-thing without the deep docs.
+**New here? Read the 1-page [docs/QUICKSTART.md](docs/QUICKSTART.md).**
+Design: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · writing tools by
+hand: [docs/AUTHORING_GUIDE.md](docs/AUTHORING_GUIDE.md) · doc format:
+[docs/TOOL_TEMPLATE.md](docs/TOOL_TEMPLATE.md) · known traps:
+[docs/PITFALLS.md](docs/PITFALLS.md) · workshop brief:
+[docs/workshop/WORKSHOP_EMAIL.md](docs/workshop/WORKSHOP_EMAIL.md).
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design (incl.
-the **AI Grinder** for messy spreadsheets),
-[docs/TOOL_TEMPLATE.md](docs/TOOL_TEMPLATE.md) for the standardized doc
-format, [docs/AUTHORING_GUIDE.md](docs/AUTHORING_GUIDE.md) for writing new
-tools by hand, and [docs/PITFALLS.md](docs/PITFALLS.md) for the pitfalls
-database the QA layer targets.
-
-## The AI Grinder (messy sheets)
-
-`grind` auto-dispatches: tidy convention sheets convert exactly; **messy
-real-world sheets** (scattered tables, multi-tab, named ranges, lookups)
-go through an LLM pipeline that reads the workbook, names the variables,
-translates the formulas, and — crucially — **recomputes everything and
-checks it against the sheet's own cached values**, so nothing is silently
-wrong. Anything it can't deduce (a magic number, a `VLOOKUP`, circular
-logic) is written to `CLARIFICATIONS.md` as a precise question, not a
-failure. Works offline via a deterministic heuristic; set
-`ANTHROPIC_API_KEY` (+ `pip install anthropic`) to use Claude for the
-hardest sheets. See the pipeline in `src/ingestion/{workbook_extract,
-interpret,llm_client,ai_pipeline}.py`.
-
-## Quickstart
+## Try it
 
 ```bash
 cd structural-ai-toolchain
 pip install -r requirements.txt
-
-# End-to-end trial: builds a dummy crack-width Excel workbook and a beam
-# notebook, grinds both into /repository, runs the gatekeeper + atomic
-# reuse analysis, renders md/html/tex/json and bookmarked PDF reports.
-python main.py demo
-pytest
+python main.py doctor        # what is installed / whether the AI is configured
+python main.py demo          # Excel + notebook + Mathcad -> repository -> PDFs
+pytest -q
 ```
 
-## Two ways to add a tool
+The AI (Claude) is optional. Without `ANTHROPIC_API_KEY` (or an `ant auth
+login` profile) every stage runs on its deterministic path and says so in
+the audit trail; with it, the toolchain also interprets messy spreadsheets,
+researches code clauses and reviews the rendered PDF visually.
 
-**A) Grind a legacy file** (Excel/Jupyter/Python/CSV; Mathcad mocked):
+## The pipeline
+
+```
+legacy file ──► parse ──► knowledge-base gate ──► rebuild in Python ──► master review ──► repository + PDF
+ .mcdx .xlsx     atoms,      duplicate? atom?       CalcSheet: symbolic,   dimensions, scale,     .py  .md  manifest
+ .ipynb .py      units,      revise / new / abort   substituted, result    one-to-one vs original, reports/*.pdf
+                 checks                                                    AI visual — fix & loop
+```
+
+Two converters share every stage:
+
+| Command | Use it for |
+|---|---|
+| `python main.py ingest <file>` | **Agentic** conversion: atomises the file, researches clauses, asks you inline (governing case, unresolved values, noise, final result, sketches), loops until converged, writes a full `JOURNAL.md` |
+| `python main.py grind <file>` | **Fast** conversion for tidy sheets; questions go to `CLARIFICATIONS.md` |
+
+Both write the same `manifest.json` (schema `manifest@2`) and run the same
+master reviewer.
+
+### What "correct" means here
+
+- **Units are honoured.** Mathcad sheets evaluate in canonical N/mm, units
+  written inside formulas count, results show in the unit Mathcad showed,
+  and the substituted line carries units:
+  `P_Rd,1 = 0.8·π·(19 mm)²·450 MPa/(4·1.25) = 81.66 kN`.
+- **Nothing is quietly simplified.** Rounding (`ROUND`, Mathcad `round`) and
+  conditionals (`IF`, Mathcad `if/otherwise`) are translated exactly.
+- **The master reviewer fixes, not just flags.** A force computed in N but
+  labelled kN is corrected (and the corrected step carries a visible note);
+  when relabelling would leave a check comparing kN with N, the reviewer
+  picks the fix that keeps the whole sheet consistent — the verdict flips
+  to NOT OK if that is the truth. An AI correction is kept only if the
+  deterministic re-check improves.
+- **One-to-one with the original.** Excel cached values (or values the AI
+  reads from a PDF print via `--original`) are compared at their printed
+  precision.
 
 ```bash
-python main.py gui                        # drag-in GUI: investigate -> create/merge
-python main.py check examples/crack_width_ec2.xlsx   # CLI dry-run (dupes + reuse)
-python main.py grind examples/crack_width_ec2.xlsx   # convert into /repository
+python main.py review <slug> [--original original.pdf] [--fix]
 ```
 
-**B) Author a new tool from scratch** (see the authoring guide):
+## Reports
 
-```bash
-python main.py atoms                      # list reusable library formulas
-python main.py ask "Punching shear check" # is it a duplicate?
-python main.py new  "Punching Shear Check (EN 1992-1-1 6.4)"   # scaffold
-# ...edit build_sheet()...
-python main.py register punching_shear_check_en_1992_1_1_6_4   # doc + manifest
-python main.py qa       punching_shear_check_en_1992_1_1_6_4 --prompt   # QA (+AI prompt)
-```
+`python main.py render <slug> --pdf` prints a branded A4 report via
+headless Chromium: Mathcad-style title block on every page (logo, project,
+project no., prepared / checked / approved, rev / date, page X of Y),
+narrative leads, clause references right-aligned in italic, bold results,
+green OK / red NOT OK panels, selectable equations, bookmarks. Large
+numbers print as `1.584·10⁶`. Branding lives in
+`src/output_engine/branding.py`.
 
-Then render the report (all tools, both origins, work identically):
-
-```bash
-python main.py render <slug> --pdf        # A4 PDF: bookmarks + embedded JSON
-```
-
-## Reports: branded, self-contained, AI-proof
-
-`render --pdf` prints a **branded A4 report** via headless Chromium —
-company logo, black Mathcad-style page frame, prepared/checked/approved
-cartouche, OK / NOT OK verdicts, repeated header/footer. Math is
-pre-rendered to inline SVG, so **no internet or LaTeX install** is needed.
-Swap the company look in one place (`src/output_engine/branding.py`);
-point `logo_path` at your official logo (the default is a placeholder).
-
-Every PDF has **document bookmarks** and — baked into the **page content,
-not as an attachment** — a self-contained machine-readable layer. Hand
-someone only the PDF and they reconstruct the whole calculation, immune to
-the attachment-stripping that loses data in modern PDF round-trips:
+The complete calculation is baked **inside the page content** — hand
+someone only the PDF and they can rebuild it:
 
 ```python
 from src.output_engine import reconstruct_from_pdf
-data = reconstruct_from_pdf("report.pdf")   # inputs, formulas, results — no attachment
+data = reconstruct_from_pdf("report.pdf")   # inputs, formulas, results, reviewer log
 ```
 
-(Reconstruction uses `pdftotext` if present, else pypdf. `apt install
-poppler-utils` for the most robust extraction.)
+No attachment by default (`attach=True` is opt-in). `--mode compact`
+prints one line per step; `src/output_engine/parametric.py` tabulates many
+load cases with OK / NOT OK and flags the governing one.
 
-**Render modes:** `--mode detailed` (Mathcad three-line) or `--mode
-compact` (`E_cm = 30464 MPa`). For many load cases, a **parametric study**
-tabulates every varying input + result with OK / NOT OK and flags the
-governing case — see `src/output_engine/parametric.py`.
+## Single source of truth
 
-## Single source of truth (the atom library)
-
-Shared formulas live once in `src/library` and are reused everywhere —
-the EN 1992-1-1 E-modulus-in-time chain feeds crack-width, deflection and
-bending tools from the same code. Tools `sheet.apply()` an atom instead of
-re-typing it; the knowledge graph **fingerprints formulas structurally**
-(name-independent) so it recognizes reused math inside freshly ingested
-sheets and reports an atomic breakdown of what is reused vs. genuinely new.
-
-```python
-from src.library import custom, resolve, search, catalog
-custom.E_cm_t(E_cm=33000, f_cm_t=30.3, f_cm=38)   # call any formula directly
-search("crack width")                             # free-text find
-catalog()                                         # drill-down tree
-```
-
-**National annexes are a sub-group, not a new silo.** A coefficient that
-differs by country (e.g. crack-spacing `k_3`) stays the same symbol in the
-same formula — only its value changes: `resolve("crack.max_spacing",
-"EN-GB")`, or `sheet.apply(..., jurisdiction="EN-GB")` which auto-injects
-the annex coefficient. When the *whole method* changes, register a
-separate atom sharing the same `concept` with a different `jurisdiction`.
+Shared formulas live once in `src/library` (EN 1992-1-1 seed set, EN
+1994-1-1 headed studs, mechanics). The knowledge graph fingerprints
+formulas structurally (name-independent), so it recognises library math
+inside an ingested sheet, carries the atom's clause into the report, and
+reports what is reused vs. new. National annexes are a sub-group: same
+formula, different coefficient (`resolve("crack.max_spacing", "EN-GB")`),
+or a separate atom sharing the concept when the method itself differs.
 
 ```bash
-python main.py atoms --tree              # jurisdiction → code → chapter → clause
-python main.py atoms --search "crack width"
-python main.py dashboard                 # human-readable: hosted/recycled/source/edits
+python main.py atoms --tree | --search "crack width"
+python main.py ask "Punching shear check"     # does it exist already?
+python main.py dashboard                      # hosted / recycled / reviewed / edits
 ```
 
 ## Module overview
 
 | Path | Role |
 |---|---|
-| `src/models` | `CalcSheet` — self-evaluating, self-documenting, faithful-display calculation model + JSON serialization |
-| `src/library` | Atomic formula library (single source of truth), `custom.*` accessor, EC2 seed atoms |
-| `src/ingestion` | "The Grinder": xlsx/xlsm/csv/ipynb/py parsers, mcdx mock, pipeline, native authoring |
-| `src/knowledge_graph` | Gatekeeper duplicate detection, repo index, structural fingerprint + atomic reuse analysis |
-| `src/output_engine` | Markdown / print-ready HTML / LaTeX renderers, PDF bookmark + machine-readable stamp |
-| `src/qa` | Deterministic QA checks + AI-review prompt export (Eurocode QA seam) |
-| `src/gui` | tkinter ingestion front door (investigate → create/merge) |
+| `src/models` | `CalcSheet`: self-evaluating, unit-aware, faithful-display calculation model; `replay()` for reviewer fixes |
+| `src/llm` | One Claude client (structured JSON, vision, refusal fallback) + scripted client for tests |
+| `src/ingestion` | Parsers (mcdx, xlsx/xlsm/csv, ipynb, py), AI Grinder, agentic workflow (`agent/`), shared manifest |
+| `src/knowledge_graph` | Gatekeeper duplicate detection, index, structural fingerprints, reuse analysis |
+| `src/library` | Formula atoms with clauses and national-annex variants |
+| `src/qa` | Master reviewer (dimensions, scale, correspondence, AI review, fix loop), lint checks |
+| `src/output_engine` | Markdown / HTML / PDF / LaTeX renderers, in-page data layer, parametric tables |
+| `src/dashboard`, `src/gui` | HTML dashboard; tkinter front door (investigate → create / merge) |
 | `src/sharepoint_sync` | MS Graph client + webhook placeholders |
-| `repository/` | SSOT of tools (`.py` + `.md` + manifest + source + reports) |
+| `repository/` | The tools (`.py` + `.md` + manifest + source + reports) |

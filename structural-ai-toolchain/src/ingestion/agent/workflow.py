@@ -6,13 +6,13 @@ result converges — every value replicated, every unit consistent, every
 open point either answered or explicitly deferred to a human. Thorough
 over fast, by design: convergence is the exit condition, not a timer.
 
-    intake ──► ┌────────────────────────────────────────────┐
-               │ decompose → research → clarify →           │
-               │ reconstruct → verify                       │◄─ loop until
-               └────────────────────────────────────────────┘   converged
-                             │ clean / stable
-                             ▼
-                    reflect → deliver (+ audit trail)
+    intake ──► gatekeep ──► ┌───────────────────────────────┐
+     (knowledge base:       │ decompose → research →        │
+      duplicate? atoms?)    │ clarify → reconstruct → verify│◄─ loop until
+                            └───────────────────────────────┘   converged
+                                          │ clean / stable
+                                          ▼
+                 reflect + master review loop → deliver (+ audit trail)
 
 Convergence: no verification errors AND no newly-answerable questions.
 If an iteration changes nothing (same errors, same open items), the loop
@@ -47,6 +47,15 @@ class WorkflowContext:
     plan: list = field(default_factory=list)
     sheet: object = None
     noise_candidates: list = field(default_factory=list)
+    revision: str = "0.1"
+    aborted: bool = False
+    gatekeeper: list = field(default_factory=list)
+    reuse: list = field(default_factory=list)
+    ai_research_done: bool = False
+    missing_steps: list = field(default_factory=list)
+    original_document: object = None     # PDF print of the original
+    original_values: dict = field(default_factory=dict)
+    review_report: object = None
 
 
 @dataclass
@@ -57,8 +66,13 @@ class IngestionResult:
     iterations: int
     errors: list
     deferred: list
+    review: object = None
+    aborted: bool = False
 
     def summary(self) -> str:
+        if self.aborted:
+            return (f"[ABORTED] '{self.case.title}' — stopped at the "
+                    "knowledge-base gate; nothing written")
         state = "CONVERGED" if self.converged else "NEEDS INPUT"
         lines = [f"[{state}] '{self.case.title}' after "
                  f"{self.iterations} iteration(s)"]
@@ -69,6 +83,13 @@ class IngestionResult:
             f"{sum(1 for f in kept if f.kind == 'check')} checks · "
             f"{sum(1 for f in kept if f.kind == 'image')} figures · "
             f"{len(self.case.decisions)} decisions taken")
+        if self.review is not None:
+            lines.append(
+                f"  master review: {'passed' if self.review.passed() else 'NOT passed'}"
+                f" · {len(self.review.fixes)} correction(s) · AI: "
+                f"{self.review.ai_model or 'none'}")
+            for fix in self.review.fixes:
+                lines.append(f"  {fix}")
         for e in self.errors:
             lines.append(f"  ⛔ {e}")
         for q in self.deferred:
@@ -87,17 +108,18 @@ class AgenticIngestion:
         render_pdf: bool = True,
         meta: object = None,
         slug: str = "",
+        original_document: object = None,
     ) -> None:
         self.source_path = Path(source_path)
         self.max_iterations = max_iterations
         if llm is None:
-            from src.ingestion.llm_client import get_llm_client
+            from src.llm import get_llm_client
 
             llm = get_llm_client()
         self.ctx = WorkflowContext(
             interaction=interaction or ConsoleInteraction(),
             repo_dir=Path(repo_dir), llm=llm, render_pdf=render_pdf,
-            meta=meta, slug=slug)
+            meta=meta, slug=slug, original_document=original_document)
         self.case = CaseFile(
             source_path=str(self.source_path),
             source_format=self.source_path.suffix.lstrip(".").lower())
@@ -110,6 +132,24 @@ class AgenticIngestion:
             from src.ingestion.grinder import slugify
 
             ctx.slug = slugify(case.title)
+        from src.llm import describe
+
+        case.ai = describe(ctx.llm)
+        case.log("intake", f"AI: {case.ai}")
+        stages.stage_gatekeep(case, ctx)
+        if ctx.aborted:
+            return IngestionResult(
+                case=case, paths={}, converged=False, iterations=0,
+                errors=["aborted at the knowledge-base gate"], deferred=[],
+                aborted=True)
+        if ctx.original_document is not None and ctx.llm.available():
+            from src.qa.master_review import extract_original_values
+
+            ctx.original_values = extract_original_values(
+                ctx.llm, ctx.original_document,
+                [f.name for f in case.kept() if f.name])
+            case.log("intake", f"{len(ctx.original_values)} value(s) read "
+                               "from the original document")
 
         previous_state = None
         converged = False
@@ -137,11 +177,14 @@ class AgenticIngestion:
         paths = stages.stage_deliver(case, ctx)
 
         deferred = list(getattr(ctx.interaction, "deferred", []))
+        review = ctx.review_report
+        converged = converged and (review is None or review.passed()) \
+            and not case.verification.get("errors")
         return IngestionResult(
             case=case, paths=paths, converged=converged,
             iterations=case.iterations,
             errors=case.verification.get("errors", []),
-            deferred=deferred)
+            deferred=deferred, review=review)
 
     def _state_fingerprint(self, verification: dict) -> tuple:
         return (tuple(sorted(verification.get("errors", []))),
