@@ -3,9 +3,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
-/* Layout: a drawing sheet. Page one = title block, problem, objective and
-   the workflow. Below it: stage details, open questions, worked example.
-   Four phase colours run through the diagram, the stage cards and the example. */
+/* Layout: a drawing sheet. Page one = title block, problem, objective and the
+   flowchart (one row per phase, flowing down). Then one card per component:
+   what to build, how, difficulty. Worked example at the end. */
 :root {
   --bg: #eef1f4;
   --sheet: #ffffff;
@@ -15,7 +15,7 @@
   --tint: #f3f6f9;
   --p1: #2563a8; --p1t: #e7eff9;   /* collect */
   --p2: #1f7a52; --p2t: #e4f2ea;   /* extract and unify */
-  --p3: #6a4bb3; --p3t: #efebfa;   /* store */
+  --p3: #6a4bb3; --p3t: #efebfa;   /* build and host */
   --p4: #a35a00; --p4t: #f9efe1;   /* use */
   --ok: #1f7a52; --warn: #a35a00; --bad: #b3261e;
   --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
@@ -57,10 +57,7 @@ h2 { font-size: 28px; line-height: 1.1; }
 h3 { font-size: 22px; line-height: 1.1; }
 p { margin: 0; }
 ul { margin: 0; padding-left: 1.1em; display: grid; gap: 3px; }
-.label {
-  font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--muted);
-}
+.label { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 a { color: var(--p1); }
 a:focus-visible, .node:focus-visible { outline: 2px solid var(--p1); outline-offset: 3px; }
 
@@ -76,7 +73,6 @@ a:focus-visible, .node:focus-visible { outline: 2px solid var(--p1); outline-off
   .tblock > div { border-top: 1px solid var(--rule); }
   .tblock > div:nth-child(2) { border-left: 0; }
 }
-
 .band { padding: 26px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--rule); display: grid; gap: 16px; }
 .band:last-child { border-bottom: 0; }
 
@@ -87,90 +83,77 @@ a:focus-visible, .node:focus-visible { outline: 2px solid var(--p1); outline-off
 @media (max-width: 760px) { .po { grid-template-columns: 1fr; } }
 
 figure { margin: 0; display: grid; gap: 8px; }
-.drawing { overflow-x: auto; border: 1px solid var(--rule); background: var(--tint); }
-.drawing svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--ink); }
+.drawing { overflow-x: auto; }
+.drawing svg { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
 figcaption { color: var(--muted); font-size: 13.5px; }
-.t-title { font-family: var(--f-display); font-size: 20px; font-weight: 600; fill: var(--ink); }
-.t-kw { font-family: var(--f-body); font-size: 14px; fill: var(--muted); }
-.t-num { font-family: var(--f-mono); font-size: 15px; font-weight: 500; fill: var(--sheet); }
-.t-phase { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; }
-.t-loop { font-family: var(--f-body); font-size: 14px; fill: var(--ink); }
-.wire { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.t-phase { font-family: var(--f-mono); font-size: 13px; font-weight: 500; letter-spacing: .08em; }
+.t-no { font-family: var(--f-mono); font-size: 15px; font-weight: 500; }
+.t-title { font-family: var(--f-display); font-size: 21px; font-weight: 600; fill: var(--ink); }
+.t-build { font-family: var(--f-body); font-size: 14.5px; fill: var(--ink); }
+.t-diff { font-family: var(--f-mono); font-size: 12px; fill: var(--muted); }
+.t-ic { font-family: var(--f-mono); font-size: 13px; font-weight: 500; }
+.t-loop { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; fill: var(--ink); }
+.wire { fill: none; stroke: var(--ink); stroke-width: 1.6; }
 .wire-loop { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-dasharray: 6 4; }
 .head { fill: var(--ink); }
-.ph1 { stroke: var(--p1); fill: var(--p1t); } .ph1s { fill: var(--p1); } .ph1l { stroke: var(--p1); fill: none; } .ph1t { fill: var(--p1); }
-.ph2 { stroke: var(--p2); fill: var(--p2t); } .ph2s { fill: var(--p2); } .ph2l { stroke: var(--p2); fill: none; } .ph2t { fill: var(--p2); }
-.ph3 { stroke: var(--p3); fill: var(--p3t); } .ph3s { fill: var(--p3); } .ph3l { stroke: var(--p3); fill: none; } .ph3t { fill: var(--p3); }
-.ph4 { stroke: var(--p4); fill: var(--p4t); } .ph4s { fill: var(--p4); } .ph4l { stroke: var(--p4); fill: none; } .ph4t { fill: var(--p4); }
 .box { stroke-width: 1.6; }
 .node:hover .box { stroke-width: 3; }
-.loopbadge { fill: var(--ink); }
+.disc { fill: var(--sheet); }
+.dot-off { fill: none; stroke-width: 1.4; }
+.k1 { stroke: var(--p1); } .f1 { fill: var(--p1); } .b1 { fill: var(--p1t); stroke: var(--p1); }
+.k2 { stroke: var(--p2); } .f2 { fill: var(--p2); } .b2 { fill: var(--p2t); stroke: var(--p2); }
+.k3 { stroke: var(--p3); } .f3 { fill: var(--p3); } .b3 { fill: var(--p3t); stroke: var(--p3); }
+.k4 { stroke: var(--p4); } .f4 { fill: var(--p4); } .b4 { fill: var(--p4t); stroke: var(--p4); }
+.ic { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* stage cards */
-.stages { display: grid; gap: 12px; }
-.stage {
-  border: 1px solid var(--rule);
-  border-top: 4px solid var(--c);
+/* component cards */
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 820px) { .cards { grid-template-columns: 1fr; } }
+.card {
+  border: 1.5px solid var(--c);
+  border-radius: 14px;
   background: var(--sheet);
-  padding: 14px clamp(14px, 2.5vw, 22px) 16px;
-  display: grid; gap: 10px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
   scroll-margin-top: 16px;
+  min-width: 0;
 }
-.stage-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.num {
-  display: inline-grid; place-items: center; width: 30px; height: 30px; flex: none;
-  background: var(--c); color: var(--sheet);
-  font-family: var(--f-mono); font-size: 15px; font-weight: 500; align-self: center;
-}
-.stage-head p { color: var(--muted); flex: 1 1 320px; min-width: 0; }
-.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 26px; }
-.cols > div { display: grid; gap: 4px; align-content: start; min-width: 0; }
-@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
-.ch { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
-.ch-solve { color: var(--ink); }
-.ch-block { color: var(--bad); }
-.ch-opt { color: var(--ok); }
-.c-block li::marker { color: var(--bad); }
-.c-opt li::marker { color: var(--ok); }
-.extra { display: grid; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--rule); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font-family: var(--f-mono); font-size: 12px; padding: 2px 9px; border: 1px solid var(--rule); background: var(--tint); }
-.scale { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); }
-.scale > div { padding: 9px 12px; border-top: 4px solid var(--z); display: grid; gap: 2px; min-width: 0; }
-.scale > div + div { border-left: 1px solid var(--rule); }
-.scale b { font-family: var(--f-display); font-size: 18px; font-weight: 600; color: var(--z); }
-.scale small { color: var(--muted); font-size: 13px; }
-@media (max-width: 760px) { .scale { grid-template-columns: 1fr; } .scale > div + div { border-left: 0; } }
-.ladder { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; list-style: none; padding: 0; }
-.ladder li { font-family: var(--f-mono); font-size: 12.5px; padding: 3px 10px; border: 1px solid var(--rule); background: var(--tint); }
-.ladder li + li::before { content: "→"; margin-right: 10px; color: var(--muted); }
-.ladder li:last-child { border-color: var(--p4); }
-.open { border: 1.5px solid var(--bad); padding: 10px 14px; display: grid; gap: 4px; }
-.open .label { color: var(--bad); }
-
-/* questions + concerns */
-.qa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
-.qa > div { display: grid; gap: 8px; align-content: start; min-width: 0; }
-@media (max-width: 760px) { .qa { grid-template-columns: 1fr; } }
-.qlist { list-style: none; padding: 0; counter-reset: q; display: grid; gap: 0; border-top: 1.5px solid var(--ink); }
-.qlist li { counter-increment: q; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
-.qlist li::before { content: counter(q, upper-alpha); font-family: var(--f-display); font-size: 19px; font-weight: 700; color: var(--p1); line-height: 1.2; }
+.card-head { background: var(--ct); padding: 12px 16px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; }
+.card-head svg { width: 40px; height: 40px; color: var(--c); }
+.card-head .label { color: var(--c); }
+.card-body { padding: 12px 16px; display: grid; gap: 10px; align-content: start; }
+.build { font-weight: 600; }
+.card-foot { padding: 10px 16px; border-top: 1px solid var(--rule); display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 4px 12px; align-items: center; }
+.meter { display: inline-flex; gap: 4px; }
+.meter i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--c); display: inline-block; }
+.meter i.on { background: var(--c); }
+.card-foot b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.card-foot > span:last-child { color: var(--muted); font-size: 14px; min-width: 0; }
+@media (max-width: 480px) { .card-foot { grid-template-columns: auto minmax(0, 1fr); } .card-foot > span:last-child { grid-column: 1 / -1; } }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font-family: var(--f-mono); font-size: 12px; padding: 2px 9px; border: 1px solid var(--rule); border-radius: 999px; background: var(--tint); }
+.zones { display: grid; gap: 4px; }
+.zones div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 14px; }
+.zones b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--z); color: var(--z); text-align: center; }
 
 /* worked example */
-.files { overflow-x: auto; border: 1px solid var(--rule); }
-table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 14px; }
+.files { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 14px; }
 th, td { text-align: left; vertical-align: top; padding: 7px 12px; border-bottom: 1px solid var(--rule); }
 th { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--tint); }
 tr:last-child td { border-bottom: 0; }
 td:first-child { font-weight: 600; }
 .timeline { list-style: none; padding: 0; display: grid; gap: 0; }
-.timeline li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 14px; }
-.timeline li::after { content: ""; position: absolute; left: 14px; top: 30px; bottom: 0; border-left: 2px solid var(--rule); }
+.timeline li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 14px; }
+.timeline li::after { content: ""; position: absolute; left: 15px; top: 32px; bottom: 0; border-left: 2px solid var(--rule); }
 .timeline li:last-child::after { display: none; }
-.timeline li > div { display: grid; gap: 3px; min-width: 0; padding-top: 3px; }
+.timeline .n { width: 32px; height: 32px; border-radius: 50%; background: var(--c); color: var(--sheet); display: grid; place-items: center; font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
+.timeline li > div { display: grid; gap: 3px; min-width: 0; padding-top: 4px; }
 .timeline b { font-family: var(--f-display); font-size: 19px; font-weight: 600; color: var(--c); }
-.timeline ul { margin-top: 2px; }
-.res { display: inline-block; font-family: var(--f-mono); font-size: 12px; padding: 0 7px; border: 1px solid var(--z); color: var(--z); margin-right: 4px; }
+.timeline ul { margin-top: 2px; gap: 4px; }
+.res { display: inline-block; font-family: var(--f-mono); font-size: 12px; padding: 0 8px; border-radius: 999px; border: 1.5px solid var(--z); color: var(--z); margin-right: 6px; }
+.concerns { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 
@@ -181,292 +164,347 @@ td:first-child { font-weight: 600; }
       <p class="label">Workshop basis</p>
       <h1>Calculation Knowledge Architecture</h1>
     </div>
-    <div><span class="label">Status</span><span class="val">For discussion</span></div>
-    <div><span class="label">Revision</span><span class="val">B</span></div>
+    <div><span class="label">Status</span><span class="val">Issued for workshop</span></div>
+    <div><span class="label">Revision</span><span class="val">C</span></div>
     <div><span class="label">Date</span><span class="val">2026-10-13</span></div>
   </header>
 
-  <!-- ============ page one ============ -->
+  <!-- ================= page one ================= -->
   <section class="band" id="basis">
     <div class="po">
       <div>
         <h2>Problem</h2>
         <ul>
-          <li>Thousands of calculation files on servers, project folders and personal drives, in many formats.</li>
-          <li>The same design checks are rebuilt on every project; copies diverge and corrections do not propagate.</li>
+          <li>Thousands of calculation files on servers and project folders, in many formats.</li>
+          <li>The same checks are rebuilt on every project; copies diverge, corrections do not propagate.</li>
           <li>Origin, author, code edition and quality are often unknown.</li>
-          <li>Excel and Mathcad are readable but hard to version, test and reuse; code is reusable but does not read as a calculation.</li>
+          <li>Excel and Mathcad are readable but hard to version and reuse; code is reusable but does not read as a calculation.</li>
         </ul>
       </div>
       <div>
         <h2>Objective</h2>
-        <p>Collect every calculation we own, extract its design logic, and consolidate it into one version-controlled library that maps structural engineering topic by topic. Tools and calculation reports are produced from that library, and every use feeds corrections back into it.</p>
         <ul>
-          <li>A catalogue of all calculation files and the topics they cover, including gaps.</li>
-          <li>One unified, modular design logic per topic; alternative methods kept where they are valid.</li>
-          <li>Calculation reports generated from the code, as readable as a Mathcad sheet.</li>
+          <li>Extract the design logic from every calculation we own.</li>
+          <li>Merge it into one version-controlled library, organised by structural engineering topic, with gaps visible.</li>
+          <li>Produce tools and Mathcad-quality reports from that library.</li>
+          <li>Feed every correction and addition from projects back into it.</li>
         </ul>
       </div>
     </div>
 
     <figure>
       <div class="drawing">
-        <svg viewBox="0 0 1180 290" role="img" aria-label="Workflow in seven stages and a feedback loop. Collect: 1 retrieval and identification, 2 conversion to machine-readable format. Extract and unify: 3 decomposition into modular units and topic map, 4 consolidation. Store: 5 central repository. Use: 6 library and tools, 7 reports and QA. Stage 8, feedback, returns from reports and QA to consolidation and produces a new version.">
+        <svg viewBox="0 0 1110 720" role="img" aria-label="Flowchart in four phases, flowing down. Collect: 1 retrieval and identification, an agent that catalogues every file; 2 conversion, a parser that makes the content machine-readable. Extract and unify: 3 decomposition, an LLM that splits files into modular logic and maps design topics; 4 consolidation, AI that tests and merges the logic. Build and host: 5 tool generation, an LLM that turns unified logic into tested Python tools; 6 central repository, a secure version-controlled server with a searchable library. Use: 7 calculation reports, a framework that prints Python calculations like Mathcad; 8 review and feedback. Feedback returns from stage 8 to consolidation as a new version.">
           <defs>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
           </defs>
 
-          <!-- phase brackets -->
-          <path d="M20 40 V32 H324 V40" class="ph1l" stroke-width="1.6"/>
-          <text x="172" y="24" text-anchor="middle" class="t-phase ph1t">COLLECT</text>
-          <path d="M348 40 V32 H652 V40" class="ph2l" stroke-width="1.6"/>
-          <text x="500" y="24" text-anchor="middle" class="t-phase ph2t">EXTRACT AND UNIFY</text>
-          <path d="M676 40 V32 H816 V40" class="ph3l" stroke-width="1.6"/>
-          <text x="746" y="24" text-anchor="middle" class="t-phase ph3t">STORE</text>
-          <path d="M840 40 V32 H1144 V40" class="ph4l" stroke-width="1.6"/>
-          <text x="992" y="24" text-anchor="middle" class="t-phase ph4t">USE</text>
+          <!-- phase labels -->
+          <rect x="20" y="40" width="4" height="120" rx="2" class="f1"/>
+          <text x="36" y="96" class="t-phase f1">COLLECT</text>
+          <rect x="20" y="215" width="4" height="120" rx="2" class="f2"/>
+          <text x="36" y="262" class="t-phase f2">EXTRACT</text>
+          <text x="36" y="280" class="t-phase f2">AND UNIFY</text>
+          <rect x="20" y="390" width="4" height="120" rx="2" class="f3"/>
+          <text x="36" y="437" class="t-phase f3">BUILD</text>
+          <text x="36" y="455" class="t-phase f3">AND HOST</text>
+          <rect x="20" y="565" width="4" height="120" rx="2" class="f4"/>
+          <text x="36" y="621" class="t-phase f4">USE</text>
 
-          <!-- 1 -->
-          <a href="#stage-1" class="node">
-            <rect x="20" y="50" width="140" height="150" class="box ph1"/>
-            <rect x="20" y="50" width="140" height="30" class="ph1s"/>
-            <text x="32" y="71" class="t-num">1</text>
-            <text x="90" y="108" text-anchor="middle" class="t-title">Retrieval and</text>
-            <text x="90" y="130" text-anchor="middle" class="t-title">identification</text>
-            <text x="90" y="166" text-anchor="middle" class="t-kw">find · tag</text>
-            <text x="90" y="185" text-anchor="middle" class="t-kw">select</text>
+          <!-- ===== row 1 ===== -->
+          <a href="#c1" class="node">
+            <rect x="170" y="40" width="380" height="120" rx="16" class="box b1"/>
+            <circle cx="220" cy="100" r="30" class="disc"/>
+            <g transform="translate(200 80)" class="ic k1">
+              <rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/>
+              <circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/>
+            </g>
+            <text x="266" y="74" class="t-title"><tspan class="t-no f1">1 </tspan>Retrieval and identification</text>
+            <text x="266" y="99" class="t-build">Agent that scans the servers and</text>
+            <text x="266" y="118" class="t-build">catalogues every calculation file</text>
+            <circle cx="271" cy="140" r="5" class="f1"/><circle cx="285" cy="140" r="5" class="f1"/><circle cx="299" cy="140" r="5" class="f1"/><circle cx="313" cy="140" r="4.3" class="dot-off k1"/><circle cx="327" cy="140" r="4.3" class="dot-off k1"/>
+            <text x="342" y="144" class="t-diff">medium</text>
           </a>
-          <path d="M163 125 H181" class="wire" marker-end="url(#ah)"/>
-          <!-- 2 -->
-          <a href="#stage-2" class="node">
-            <rect x="184" y="50" width="140" height="150" class="box ph1"/>
-            <rect x="184" y="50" width="140" height="30" class="ph1s"/>
-            <text x="196" y="71" class="t-num">2</text>
-            <text x="254" y="119" text-anchor="middle" class="t-title">Conversion</text>
-            <text x="254" y="166" text-anchor="middle" class="t-kw">machine-readable</text>
-            <text x="254" y="185" text-anchor="middle" class="t-kw">format</text>
+          <path d="M550 100 H628" class="wire" marker-end="url(#ah)"/>
+          <a href="#c2" class="node">
+            <rect x="630" y="40" width="380" height="120" rx="16" class="box b1"/>
+            <circle cx="680" cy="100" r="30" class="disc"/>
+            <g transform="translate(660 80)" class="ic k1">
+              <path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/>
+              <text x="19" y="31" text-anchor="middle" class="t-ic f1" stroke="none">{ }</text>
+            </g>
+            <text x="726" y="74" class="t-title"><tspan class="t-no f1">2 </tspan>Conversion</text>
+            <text x="726" y="99" class="t-build">Parser that converts every format</text>
+            <text x="726" y="118" class="t-build">into machine-readable content</text>
+            <circle cx="731" cy="140" r="5" class="f1"/><circle cx="745" cy="140" r="5" class="f1"/><circle cx="759" cy="140" r="5" class="f1"/><circle cx="773" cy="140" r="5" class="f1"/><circle cx="787" cy="140" r="4.3" class="dot-off k1"/>
+            <text x="802" y="144" class="t-diff">high</text>
           </a>
-          <path d="M327 125 H345" class="wire" marker-end="url(#ah)"/>
-          <!-- 3 -->
-          <a href="#stage-3" class="node">
-            <rect x="348" y="50" width="140" height="150" class="box ph2"/>
-            <rect x="348" y="50" width="140" height="30" class="ph2s"/>
-            <text x="360" y="71" class="t-num">3</text>
-            <text x="418" y="119" text-anchor="middle" class="t-title">Decomposition</text>
-            <text x="418" y="166" text-anchor="middle" class="t-kw">modular units</text>
-            <text x="418" y="185" text-anchor="middle" class="t-kw">topic map</text>
+          <path d="M820 160 V187 H360 V213" class="wire" marker-end="url(#ah)"/>
+
+          <!-- ===== row 2 ===== -->
+          <a href="#c3" class="node">
+            <rect x="170" y="215" width="380" height="120" rx="16" class="box b2"/>
+            <circle cx="220" cy="275" r="30" class="disc"/>
+            <g transform="translate(200 255)" class="ic k2">
+              <rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="25" y="25" width="15" height="15" rx="3"/>
+            </g>
+            <text x="266" y="249" class="t-title"><tspan class="t-no f2">3 </tspan>Decomposition</text>
+            <text x="266" y="274" class="t-build">LLM that splits files into modular</text>
+            <text x="266" y="293" class="t-build">logic and maps the design topics</text>
+            <circle cx="271" cy="315" r="5" class="f2"/><circle cx="285" cy="315" r="5" class="f2"/><circle cx="299" cy="315" r="5" class="f2"/><circle cx="313" cy="315" r="5" class="f2"/><circle cx="327" cy="315" r="4.3" class="dot-off k2"/>
+            <text x="342" y="319" class="t-diff">high</text>
           </a>
-          <path d="M491 125 H509" class="wire" marker-end="url(#ah)"/>
-          <!-- 4 -->
-          <a href="#stage-4" class="node">
-            <rect x="512" y="50" width="140" height="150" class="box ph2"/>
-            <rect x="512" y="50" width="140" height="30" class="ph2s"/>
-            <text x="524" y="71" class="t-num">4</text>
-            <text x="582" y="119" text-anchor="middle" class="t-title">Consolidation</text>
-            <text x="582" y="166" text-anchor="middle" class="t-kw">compare · unify</text>
-            <text x="582" y="185" text-anchor="middle" class="t-kw">flag disagreement</text>
+          <path d="M550 275 H628" class="wire" marker-end="url(#ah)"/>
+          <a href="#c4" class="node">
+            <rect x="630" y="215" width="380" height="120" rx="16" class="box b2"/>
+            <circle cx="680" cy="275" r="30" class="disc"/>
+            <g transform="translate(660 255)" class="ic k2">
+              <path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/>
+            </g>
+            <text x="726" y="249" class="t-title"><tspan class="t-no f2">4 </tspan>Consolidation</text>
+            <text x="726" y="274" class="t-build">AI that tests the extracted logic</text>
+            <text x="726" y="293" class="t-build">and merges it into one method</text>
+            <circle cx="731" cy="315" r="5" class="f2"/><circle cx="745" cy="315" r="5" class="f2"/><circle cx="759" cy="315" r="5" class="f2"/><circle cx="773" cy="315" r="5" class="f2"/><circle cx="787" cy="315" r="5" class="f2"/>
+            <text x="802" y="319" class="t-diff">very high</text>
           </a>
-          <path d="M655 125 H673" class="wire" marker-end="url(#ah)"/>
-          <!-- 5 -->
-          <a href="#stage-5" class="node">
-            <rect x="676" y="50" width="140" height="150" class="box ph3"/>
-            <rect x="676" y="50" width="140" height="30" class="ph3s"/>
-            <text x="688" y="71" class="t-num">5</text>
-            <text x="746" y="108" text-anchor="middle" class="t-title">Central</text>
-            <text x="746" y="130" text-anchor="middle" class="t-title">repository</text>
-            <text x="746" y="166" text-anchor="middle" class="t-kw">versioned</text>
-            <text x="746" y="185" text-anchor="middle" class="t-kw">governed</text>
+          <path d="M820 335 V362 H360 V388" class="wire" marker-end="url(#ah)"/>
+
+          <!-- ===== row 3 ===== -->
+          <a href="#c5" class="node">
+            <rect x="170" y="390" width="380" height="120" rx="16" class="box b3"/>
+            <circle cx="220" cy="450" r="30" class="disc"/>
+            <g transform="translate(200 430)" class="ic k3">
+              <rect x="3" y="6" width="34" height="28" rx="5"/>
+              <text x="20" y="25" text-anchor="middle" class="t-ic f3" stroke="none">&lt;/&gt;</text>
+            </g>
+            <text x="266" y="424" class="t-title"><tspan class="t-no f3">5 </tspan>Tool generation</text>
+            <text x="266" y="449" class="t-build">LLM that turns the unified logic</text>
+            <text x="266" y="468" class="t-build">into tested Python tools</text>
+            <circle cx="271" cy="490" r="5" class="f3"/><circle cx="285" cy="490" r="5" class="f3"/><circle cx="299" cy="490" r="5" class="f3"/><circle cx="313" cy="490" r="4.3" class="dot-off k3"/><circle cx="327" cy="490" r="4.3" class="dot-off k3"/>
+            <text x="342" y="494" class="t-diff">medium</text>
           </a>
-          <path d="M819 125 H837" class="wire" marker-end="url(#ah)"/>
-          <!-- 6 -->
-          <a href="#stage-6" class="node">
-            <rect x="840" y="50" width="140" height="150" class="box ph4"/>
-            <rect x="840" y="50" width="140" height="30" class="ph4s"/>
-            <text x="852" y="71" class="t-num">6</text>
-            <text x="910" y="108" text-anchor="middle" class="t-title">Library</text>
-            <text x="910" y="130" text-anchor="middle" class="t-title">and tools</text>
-            <text x="910" y="166" text-anchor="middle" class="t-kw">search · reuse</text>
-            <text x="910" y="185" text-anchor="middle" class="t-kw">assemble</text>
+          <path d="M550 450 H628" class="wire" marker-end="url(#ah)"/>
+          <a href="#c6" class="node">
+            <rect x="630" y="390" width="380" height="120" rx="16" class="box b3"/>
+            <circle cx="680" cy="450" r="30" class="disc"/>
+            <g transform="translate(660 430)" class="ic k3">
+              <ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/>
+            </g>
+            <text x="726" y="424" class="t-title"><tspan class="t-no f3">6 </tspan>Central repository</text>
+            <text x="726" y="449" class="t-build">Secure, version-controlled server</text>
+            <text x="726" y="468" class="t-build">with a searchable library</text>
+            <circle cx="731" cy="490" r="5" class="f3"/><circle cx="745" cy="490" r="5" class="f3"/><circle cx="759" cy="490" r="4.3" class="dot-off k3"/><circle cx="773" cy="490" r="4.3" class="dot-off k3"/><circle cx="787" cy="490" r="4.3" class="dot-off k3"/>
+            <text x="802" y="494" class="t-diff">low</text>
           </a>
-          <path d="M983 125 H1001" class="wire" marker-end="url(#ah)"/>
-          <!-- 7 -->
-          <a href="#stage-7" class="node">
-            <rect x="1004" y="50" width="140" height="150" class="box ph4"/>
-            <rect x="1004" y="50" width="140" height="30" class="ph4s"/>
-            <text x="1016" y="71" class="t-num">7</text>
-            <text x="1074" y="108" text-anchor="middle" class="t-title">Reports</text>
-            <text x="1074" y="130" text-anchor="middle" class="t-title">and QA</text>
-            <text x="1074" y="166" text-anchor="middle" class="t-kw">readable</text>
-            <text x="1074" y="185" text-anchor="middle" class="t-kw">checked</text>
+          <path d="M820 510 V537 H360 V563" class="wire" marker-end="url(#ah)"/>
+
+          <!-- ===== row 4 ===== -->
+          <a href="#c7" class="node">
+            <rect x="170" y="565" width="380" height="120" rx="16" class="box b4"/>
+            <circle cx="220" cy="625" r="30" class="disc"/>
+            <g transform="translate(200 605)" class="ic k4">
+              <rect x="7" y="3" width="26" height="34" rx="3"/>
+              <text x="15" y="20" text-anchor="middle" class="t-ic f4" stroke="none">Σ</text>
+              <path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/>
+            </g>
+            <text x="266" y="599" class="t-title"><tspan class="t-no f4">7 </tspan>Calculation reports</text>
+            <text x="266" y="624" class="t-build">Framework that prints Python</text>
+            <text x="266" y="643" class="t-build">calculations like a Mathcad sheet</text>
+            <circle cx="271" cy="665" r="5" class="f4"/><circle cx="285" cy="665" r="5" class="f4"/><circle cx="299" cy="665" r="5" class="f4"/><circle cx="313" cy="665" r="5" class="f4"/><circle cx="327" cy="665" r="4.3" class="dot-off k4"/>
+            <text x="342" y="669" class="t-diff">high</text>
+          </a>
+          <path d="M550 625 H628" class="wire" marker-end="url(#ah)"/>
+          <a href="#c8" class="node">
+            <rect x="630" y="565" width="380" height="120" rx="16" class="box b4"/>
+            <circle cx="680" cy="625" r="30" class="disc"/>
+            <g transform="translate(660 605)" class="ic k4">
+              <path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/>
+              <path d="M15 20 L19 24 L26 16"/>
+            </g>
+            <text x="726" y="599" class="t-title"><tspan class="t-no f4">8 </tspan>Review and feedback</text>
+            <text x="726" y="624" class="t-build">Checking, corrections and new</text>
+            <text x="726" y="643" class="t-build">components fed back as versions</text>
+            <circle cx="731" cy="665" r="5" class="f4"/><circle cx="745" cy="665" r="5" class="f4"/><circle cx="759" cy="665" r="5" class="f4"/><circle cx="773" cy="665" r="4.3" class="dot-off k4"/><circle cx="787" cy="665" r="4.3" class="dot-off k4"/>
+            <text x="802" y="669" class="t-diff">medium</text>
           </a>
 
-          <!-- 8 feedback loop -->
-          <a href="#stage-8" class="node">
-            <path d="M1074 200 V248 H582 V204" class="wire-loop" marker-end="url(#ah)"/>
-            <circle cx="700" cy="248" r="13" class="loopbadge"/>
-            <text x="700" y="253" text-anchor="middle" class="t-num">8</text>
-            <text x="722" y="275" class="t-loop">Feedback: corrections and extensions → new version</text>
-          </a>
+          <!-- feedback loop: 8 back to 4 -->
+          <path d="M1010 625 H1062 V275 H1013" class="wire-loop" marker-end="url(#ah)"/>
+          <text x="1086" y="450" text-anchor="middle" transform="rotate(-90 1086 450)" class="t-loop">FEEDBACK → NEW VERSION</text>
         </svg>
       </div>
-      <figcaption>Stages 1–4 build the library, 5 stores it, 6–7 use it. Findings from use return to consolidation (8). Select a stage for its details.</figcaption>
+      <figcaption>Each box names the component that has to be built. Dots show the estimated difficulty. Select a box for how it could be achieved.</figcaption>
     </figure>
   </section>
 
-  <!-- ============ stage details ============ -->
-  <section class="band" id="stages">
-    <h2>Stages: what has to be solved</h2>
-    <div class="stages">
+  <!-- ================= components ================= -->
+  <section class="band" id="components">
+    <h2>What has to be built, and how</h2>
+    <div class="cards">
 
-      <article class="stage" id="stage-1" style="--c: var(--p1)">
-        <div class="stage-head"><span class="num">1</span><h3>Retrieval and identification</h3><p>Find and catalogue every calculation file. New files and new calculations enter the same way.</p></div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Crawling servers and project folders</li><li>Tagging: project, department, author, date, code, topics</li><li>Duplicates and versions</li><li>Intake for new files</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Privacy, NDAs</li><li>Access rights</li><li>Volume</li><li>Poor metadata</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Read-only crawler with AI classification</li><li>Project register for metadata</li><li>Pilot on one topic first</li></ul></div>
+      <article class="card" id="c1" style="--c: var(--p1); --ct: var(--p1t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/><circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/></g></svg>
+          <div><span class="label">Collect · 1</span><h3>Retrieval and identification</h3></div>
         </div>
-        <div class="extra">
-          <span class="label">Selection criteria</span>
-          <div class="chips"><span class="chip">Relevant design topic</span><span class="chip">Current code edition</span><span class="chip">Complete: inputs, checks, results</span><span class="chip">Known origin</span><span class="chip">Checked or used on issued work</span><span class="chip">Not a duplicate</span><span class="chip">Fills a gap in the topic map</span></div>
+        <div class="card-body">
+          <p class="build">An agent that scans the company servers and catalogues every calculation file.</p>
+          <ul>
+            <li>Read-only access to servers and document systems</li>
+            <li>AI tags each file: project, department, author, date, code, design topics</li>
+            <li>New files and new calculations enter the same way</li>
+          </ul>
+          <div class="chips"><span class="chip">relevant topic</span><span class="chip">current code</span><span class="chip">complete</span><span class="chip">known origin</span><span class="chip">checked</span><span class="chip">not a duplicate</span><span class="chip">fills a gap</span></div>
         </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Known technology; access rights, NDAs and volume are the hard part.</span></div>
       </article>
 
-      <article class="stage" id="stage-2" style="--c: var(--p1)">
-        <div class="stage-head"><span class="num">2</span><h3>Conversion to machine-readable format</h3><p>Translate every format into one structured representation, checked against the original.</p></div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>A converter per format</li><li>Capture the logic, not only the results</li><li>Recalculate and compare with the original</li><li>Link back to the source</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Choice of conversion tool</li><li>Closed and legacy formats</li><li>Scanned hand calculations</li><li>Conversion reliability</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Existing readers for each format</li><li>AI-assisted interpretation, verified by recalculation</li><li>One common intermediate format</li></ul></div>
+      <article class="card" id="c2" style="--c: var(--p1); --ct: var(--p1t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/></g><text x="19" y="31" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">{ }</text></svg>
+          <div><span class="label">Collect · 2</span><h3>Conversion</h3></div>
         </div>
-        <div class="extra">
-          <span class="label">Formats in scope</span>
-          <div class="chips"><span class="chip">Excel</span><span class="chip">Mathcad</span><span class="chip">Python</span><span class="chip">Jupyter</span><span class="chip">MATLAB</span><span class="chip">SMath</span><span class="chip">PDF and scanned hand calculations</span></div>
-          <span class="label">Target format (open)</span>
-          <div class="chips"><span class="chip">Python (working assumption)</span><span class="chip">Structured data (JSON)</span><span class="chip">Database (SQL)</span><span class="chip">Notebooks</span></div>
+        <div class="card-body">
+          <p class="build">A reliable parser that converts each format into machine-readable content.</p>
+          <ul>
+            <li>One reader per format: Excel, Mathcad, Python, Jupyter, MATLAB</li>
+            <li>AI to interpret unstructured sheets</li>
+            <li>Recalculate and compare with the original before accepting</li>
+          </ul>
         </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>Many formats and legacy files; reliability has to be proven.</span></div>
       </article>
 
-      <article class="stage" id="stage-3" style="--c: var(--p2)">
-        <div class="stage-head"><span class="num">3</span><h3>Decomposition and topic mapping</h3><p>Split each file into modular units of design logic and place them on a map of structural engineering topics.</p></div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Separate design logic from project data</li><li>Unit size: equation, clause or design check</li><li>Classification: topic, element, code clause</li><li>Topic map with coverage and gaps</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Several topics mixed in one file</li><li>Inconsistent notation</li><li>Defining the taxonomy</li><li>Misclassification</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Dependency analysis of formulas</li><li>AI classification against a fixed taxonomy</li><li>Eurocode notation as the naming standard</li></ul></div>
+      <article class="card" id="c3" style="--c: var(--p2); --ct: var(--p2t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="22" y="22" width="15" height="15" rx="3"/></g></svg>
+          <div><span class="label">Extract and unify · 3</span><h3>Decomposition</h3></div>
         </div>
-        <div class="extra">
-          <p>Every topic found is mapped, whatever the accuracy of its source. One unverified wind or foundation sheet still marks a topic as present and to be developed. Topics with many sources, such as bending design, are where consolidation pays off; topics with none are visible gaps.</p>
+        <div class="card-body">
+          <p class="build">An LLM that understands calculation logic, splits it into modular units and maps each unit to a design topic.</p>
+          <ul>
+            <li>Design logic separated from project data</li>
+            <li>One taxonomy: topic, element, code clause</li>
+            <li>A topic map of structural engineering: what is covered, what is missing</li>
+          </ul>
         </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>Needs engineering understanding and a consistent taxonomy.</span></div>
       </article>
 
-      <article class="stage" id="stage-4" style="--c: var(--p2)">
-        <div class="stage-head"><span class="num">4</span><h3>Consolidation</h3><p>Merge units that cover the same design concept into one unified logic, according to how closely they agree.</p></div>
-        <div class="scale">
-          <div style="--z: var(--ok)"><b>High agreement</b><small>Same results on common test cases. Cluster and merge; record minor parameter differences.</small></div>
-          <div style="--z: var(--warn)"><b>Partial agreement</b><small>Differences in parameters, assumptions or algorithm. Review the differences.</small></div>
-          <div style="--z: var(--bad)"><b>Strong disagreement</b><small>Error or a different assumption. An engineer decides; valid alternative methods are kept side by side.</small></div>
+      <article class="card" id="c4" style="--c: var(--p2); --ct: var(--p2t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/></g></svg>
+          <div><span class="label">Extract and unify · 4</span><h3>Consolidation</h3></div>
         </div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Common test cases for comparison</li><li>Agreement thresholds</li><li>Keeping valid alternatives</li><li>Recording every decision</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Reviewer capacity</li><li>Disagreement is not proof of error</li><li>Differing code interpretations</li><li>Low-quality early sources</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Supervision set by agreement: none, partial, full</li><li>Benchmark library</li><li>One structured specification per module (Markdown template)</li></ul></div>
+        <div class="card-body">
+          <p class="build">An AI process that tests the extracted logic and merges units covering the same concept into one design method.</p>
+          <p>Every version is run over the same range of parameters, and the agreement decides how they are merged:</p>
+          <div class="zones">
+            <div style="--z: var(--ok)"><b>similar</b><span>merged automatically</span></div>
+            <div style="--z: var(--warn)"><b>partly</b><span>differences blended in, engineer confirms</span></div>
+            <div style="--z: var(--bad)"><b>different</b><span>engineer decides; valid methods kept as alternatives</span></div>
+          </div>
         </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>Very high</b><span>The core of the system. Agreement alone does not prove correctness.</span></div>
       </article>
 
-      <article class="stage" id="stage-5" style="--c: var(--p3)">
-        <div class="stage-head"><span class="num">5</span><h3>Central repository</h3><p>Store the unified logic and its code: secure, versioned, with written rules for contributors and for the AI.</p></div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Version control</li><li>Access control</li><li>Rules for AI and contributors</li><li>Automatic tests on every change</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>IT security approval</li><li>Data residency</li><li>Cost, licences</li><li>Governance overhead</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Enterprise GitLab</li><li>Company-hosted AI</li><li>Released library versions for project use</li></ul></div>
+      <article class="card" id="c5" style="--c: var(--p3); --ct: var(--p3t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="6" width="34" height="28" rx="5"/></g><text x="20" y="25" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="currentColor">&lt;/&gt;</text></svg>
+          <div><span class="label">Build and host · 5</span><h3>Tool generation</h3></div>
         </div>
+        <div class="card-body">
+          <p class="build">An LLM that turns each unified method into a tested Python tool.</p>
+          <ul>
+            <li>Written from a structured specification per module</li>
+            <li>Tested against benchmark cases and the original files</li>
+            <li>Engineer approves before release</li>
+          </ul>
+        </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Code generation is mature; the test cases are the real work.</span></div>
       </article>
 
-      <article class="stage" id="stage-6" style="--c: var(--p4)">
-        <div class="stage-head"><span class="num">6</span><h3>Library and tools</h3><p>Search by design topic and assemble project calculations from verified modules.</p></div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Search by topic, code and element</li><li>Each module shows its specification, code, sources and QA status</li><li>Tools that reference modules instead of copying them</li><li>Validity limits</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Adoption</li><li>Choice of user interface</li><li>Use outside the validity range</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Web catalogue</li><li>Excel or notebook front end calling the library</li><li>Batch runs with the governing case reported</li></ul></div>
+      <article class="card" id="c6" style="--c: var(--p3); --ct: var(--p3t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/></g></svg>
+          <div><span class="label">Build and host · 6</span><h3>Central repository</h3></div>
         </div>
+        <div class="card-body">
+          <p class="build">A secure, version-controlled server with a searchable library.</p>
+          <ul>
+            <li>Enterprise GitLab: versions, access rights, approvals</li>
+            <li>Written rules for contributors and for the AI</li>
+            <li>Search by topic, code and element</li>
+          </ul>
+        </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Standard practice; needs IT approval.</span></div>
       </article>
 
-      <article class="stage" id="stage-7" style="--c: var(--p4)">
-        <div class="stage-head"><span class="num">7</span><h3>Reports and QA</h3><p>A calculation report produced from the same run as the numbers, then checked.</p></div>
-        <div class="open">
-          <span class="label">Main open problem</span>
-          <p>Code is modular and efficient but does not read as a calculation. The report must be generated from the executed code, one-to-one: typeset equations in symbolic form, then with values substituted, then the result and the clause reference, as in Mathcad. It must not be written separately afterwards.</p>
+      <article class="card" id="c7" style="--c: var(--p4); --ct: var(--p4t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="7" y="3" width="26" height="34" rx="3"/><path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/></g><text x="15" y="20" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">Σ</text></svg>
+          <div><span class="label">Use · 7</span><h3>Calculation reports</h3></div>
         </div>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Report generated from the executed code</li><li>Typeset equations: symbolic, substituted, result</li><li>Company template</li><li>QA status shown on the report</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Readability versus modularity</li><li>Acceptance by checkers and clients</li><li>Liability, sign-off</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Symbolic rendering libraries</li><li>Literate documents (text and live code) to PDF</li><li>Automated checks, then a human checker</li></ul></div>
+        <div class="card-body">
+          <p class="build">A framework that prints Python calculations as readably as a Mathcad sheet.</p>
+          <ul>
+            <li>Each step: equation, substituted values, result, clause</li>
+            <li>Generated by the same run that computes the numbers</li>
+            <li>Company template; QA status on the report</li>
+          </ul>
         </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>The least solved part; partial solutions exist.</span></div>
       </article>
 
-      <article class="stage" id="stage-8" style="--c: var(--ink)">
-        <div class="stage-head"><span class="num">8</span><h3>Feedback</h3><p>Every finding from use becomes a reviewed change and a new version.</p></div>
-        <ol class="ladder"><li>Harvested</li><li>Converted</li><li>Consolidated</li><li>Verified</li><li>Approved</li></ol>
-        <div class="cols">
-          <div><span class="ch ch-solve">To solve</span><ul><li>Reporting issues from a report back to its module</li><li>Same review as any other change</li><li>Notifying affected projects</li><li>Tracking maturity</li></ul></div>
-          <div class="c-block"><span class="ch ch-block">Blockers</span><ul><li>Time to report</li><li>Errors in issued work</li><li>Ownership</li></ul></div>
-          <div class="c-opt"><span class="ch ch-opt">Options</span><ul><li>Issue log per module</li><li>Module owners per discipline</li></ul></div>
+      <article class="card" id="c8" style="--c: var(--p4); --ct: var(--p4t)">
+        <div class="card-head">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/><path d="M15 20 L19 24 L26 16"/></g></svg>
+          <div><span class="label">Use · 8</span><h3>Review and feedback</h3></div>
         </div>
+        <div class="card-body">
+          <p class="build">A review process that feeds corrections and new components back into the library.</p>
+          <ul>
+            <li>Users and checkers report errors or add components</li>
+            <li>Changes pass consolidation and testing again</li>
+            <li>Maturity: harvested → converted → consolidated → verified → approved</li>
+          </ul>
+        </div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Mostly process, ownership and discipline.</span></div>
       </article>
     </div>
+    <div class="concerns"><span class="label">Across all stages</span><span class="chip">privacy, NDAs</span><span class="chip">liability</span><span class="chip">code copyright</span><span class="chip">IT security</span><span class="chip">traceability</span><span class="chip">cost</span><span class="chip">adoption</span><span class="chip">ownership</span></div>
   </section>
 
-  <!-- ============ questions + concerns ============ -->
-  <section class="band" id="questions">
-    <div class="qa">
-      <div>
-        <h2>Open questions for the workshop</h2>
-        <ol class="qlist">
-          <li>Crawl everything or select files by criteria?</li>
-          <li>Target format: Python, or a combination?</li>
-          <li>Size of a calculation unit?</li>
-          <li>Agreement thresholds and level of supervision?</li>
-          <li>Hosting platform and who approves changes?</li>
-          <li>How to generate a readable report from code?</li>
-          <li>Pilot topic and files?</li>
-        </ol>
-      </div>
-      <div>
-        <h2>Cross-cutting concerns</h2>
-        <div class="chips"><span class="chip">Privacy, NDAs</span><span class="chip">Liability, sign-off</span><span class="chip">Code copyright</span><span class="chip">IT security</span><span class="chip">Traceability</span><span class="chip">Cost</span><span class="chip">Adoption</span><span class="chip">Training</span><span class="chip">Ownership</span><span class="chip">Measuring benefit</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ worked example ============ -->
+  <!-- ================= worked example ================= -->
   <section class="band" id="example">
-    <h2>Worked example</h2>
-    <p>Four calculations of a reinforced concrete beam to EN 1992-1-1, from four projects and four departments.</p>
+    <h2>Worked example: four bridge calculations</h2>
+    <p>Four calculation files from four different bridge projects, each checking a reinforced concrete deck beam to EN 1992-1-1 and EN 1992-2.</p>
     <div class="files">
       <table>
-        <thead><tr><th>File</th><th>Format</th><th>Origin</th><th>Topics found</th></tr></thead>
+        <thead><tr><th>File</th><th>Format</th><th>Source</th><th>Topics found</th></tr></thead>
         <tbody>
-          <tr><td>A</td><td>Python script</td><td>Bridges, project 1</td><td>Moment resistance, shear, crack width</td></tr>
-          <tr><td>B</td><td>Jupyter notebook</td><td>Buildings, project 2</td><td>Moment resistance, shear, crack width</td></tr>
-          <tr><td>C</td><td>Excel workbook</td><td>Industry, project 3</td><td>Moment resistance, shear, crack width</td></tr>
-          <tr><td>D</td><td>Mathcad sheet</td><td>Foundations, project 4</td><td>Moment resistance, shear (strut-and-tie), crack width, pile cap</td></tr>
+          <tr><td>A</td><td>Python script</td><td>Bridge project 1</td><td>Moment resistance, shear, crack width</td></tr>
+          <tr><td>B</td><td>Jupyter notebook</td><td>Bridge project 2</td><td>Moment resistance, shear, crack width</td></tr>
+          <tr><td>C</td><td>Excel workbook</td><td>Bridge project 3</td><td>Moment resistance, shear, crack width</td></tr>
+          <tr><td>D</td><td>Mathcad sheet</td><td>Bridge project 4</td><td>Moment resistance, shear, crack width, pier pile cap</td></tr>
         </tbody>
       </table>
     </div>
     <ol class="timeline">
-      <li style="--c: var(--p1)"><span class="num">1</span><div><b>Retrieval and identification</b><p>Found on four project servers and tagged with project, department, author, date, code edition and topics. All four meet the selection criteria; D is marked as unchecked.</p></div></li>
-      <li style="--c: var(--p1)"><span class="num">2</span><div><b>Conversion</b><p>Each file is converted to the common machine-readable format. Recalculated values match each original.</p></div></li>
-      <li style="--c: var(--p2)"><span class="num">3</span><div><b>Decomposition and topic mapping</b><p>Each file is split into units for moment resistance (6.1), shear (6.2) and crack width (7.3.4). D also contains a pile cap design, so foundation design is added to the topic map, as unverified.</p></div></li>
-      <li style="--c: var(--p2)"><span class="num">4</span><div><b>Consolidation</b><p>All units are run on the same test cases.</p>
+      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Retrieval and identification</b><p>The agent finds the four files on four project servers and tags them with project, author, date, code and topics. All four meet the selection criteria.</p></div></li>
+      <li style="--c: var(--p1)"><span class="n">2</span><div><b>Conversion</b><p>The parser converts each file to machine-readable content. Recalculated values match the originals.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">3</span><div><b>Decomposition</b><p>Each file is split into units for moment resistance, shear and crack width. D's pile cap design adds foundation design to the topic map.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">4</span><div><b>Consolidation</b><p>The four files check crack width for different scenarios (load cases, cover, bar sizes), so their results cannot be compared directly. The AI extracts each version's logic and runs all four over the same range of parameters.</p>
         <ul>
-          <li><span class="res" style="--z: var(--ok)">agree</span>Moment resistance: all four within 1 %. Merged.</li>
-          <li><span class="res" style="--z: var(--bad)">disagree</span>Crack width: A, B and C agree; D is 40 % higher. An engineer finds that D assumes long-term loading. Recorded as an input parameter, not an error.</li>
-          <li><span class="res" style="--z: var(--warn)">alternative</span>Shear: A, B and C agree; D uses strut-and-tie for deep beams. Kept as a second method with its own validity range.</li>
+          <li><span class="res" style="--z: var(--ok)">similar</span>Moment resistance: same results across the whole range. Merged.</li>
+          <li><span class="res" style="--z: var(--warn)">partly</span>Crack width: A, B and D agree. C differs only for widely spaced bars, where it applies the alternative crack spacing rule of 7.3.4(3). Added to the unified logic as a branch; an engineer confirms.</li>
+          <li><span class="res" style="--z: var(--bad)">different</span>Shear: D uses a strut-and-tie model near the supports. Kept as an alternative method.</li>
         </ul>
-        <p>The AI writes one structured specification per topic (Markdown template: scope, inputs, equations, clauses, validity limits, sources, test cases). An engineer reviews it.</p></div></li>
-      <li style="--c: var(--p3)"><span class="num">5</span><div><b>Central repository</b><p>The specification is implemented in Python, tested against the test cases and committed to GitLab as version 0.1, status "consolidated".</p></div></li>
-      <li style="--c: var(--p4)"><span class="num">6</span><div><b>Library and tools</b><p>An engineer searches for "shear design, RC beam" and finds the module with its specification, code, sources, test results and QA status.</p></div></li>
-      <li style="--c: var(--p4)"><span class="num">7</span><div><b>Reports and QA</b><p>The engineer runs it with project inputs. The same run produces the calculation report with typeset equations, substituted values, results and clause references. A checker reviews and approves it.</p></div></li>
-      <li style="--c: var(--ink)"><span class="num">8</span><div><b>Feedback</b><p>The checker adds a national annex parameter and supporting documentation. The change is reviewed, the tests pass, and the module becomes version 0.2. The next project starts from 0.2.</p></div></li>
+        <p>The result is one structured specification per topic.</p></div></li>
+      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Tool generation</b><p>The LLM writes a Python tool from each specification. It is tested over the same parameter range against the four originals and against benchmark cases.</p></div></li>
+      <li style="--c: var(--p3)"><span class="n">6</span><div><b>Central repository</b><p>Stored on GitLab as version 0.1, searchable under "crack width, concrete deck".</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Calculation reports</b><p>An engineer on a fifth bridge project runs the tool. The report shows every step as equation, values, result and clause, like a Mathcad sheet. A checker reviews it.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">8</span><div><b>Review and feedback</b><p>The checker adds a new component, the minimum reinforcement check of 7.3.2. It passes consolidation and testing and is released as version 0.2. The next project starts from 0.2.</p></div></li>
     </ol>
   </section>
 
