@@ -102,12 +102,13 @@ figcaption { color: var(--muted); font-size: 13.5px; }
 .k3 { stroke: var(--p3); } .f3 { fill: var(--p3); } .b3 { fill: var(--p3t); stroke: var(--p3); }
 .k4 { stroke: var(--p4); } .f4 { fill: var(--p4); } .b4 { fill: var(--p4t); stroke: var(--p4); }
 .ic { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.gate { fill: var(--ink); stroke: var(--sheet); stroke-width: 2.5; }
-.t-gate { font-family: var(--f-mono); font-size: 13px; font-weight: 500; fill: var(--sheet); }
-.gates table td:first-child { font-family: var(--f-mono); }
-.gates .note { color: var(--muted); max-width: 90ch; }
-.gem { display: inline-block; width: 10px; height: 10px; background: var(--ink); transform: rotate(45deg); margin: 0 6px 1px 2px; }
+.hr-c { fill: var(--ink); stroke: var(--sheet); stroke-width: 2.5; }
+.hr-p { fill: var(--sheet); }
+.t-hr { font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: .06em; fill: var(--ink); }
 .start { --c: var(--ink); display: grid; gap: 8px; }
+.human { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 10px; }
+.human svg { width: 22px; height: 22px; }
+.inline-person { display: inline-block; width: 15px; height: 15px; vertical-align: -3px; margin-right: 4px; }
 
 /* component cards */
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -122,7 +123,6 @@ figcaption { color: var(--muted); font-size: 13.5px; }
   scroll-margin-top: 16px;
   min-width: 0;
 }
-.card.wide { grid-column: 1 / -1; }
 .card-head { background: var(--ct); padding: 12px 16px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; }
 .card-head svg { width: 40px; height: 40px; color: var(--c); }
 .card-head .label { color: var(--c); }
@@ -138,16 +138,6 @@ figcaption { color: var(--muted); font-size: 13.5px; }
 .card-foot b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
 .card-foot > span:last-child { color: var(--muted); font-size: 14px; min-width: 0; }
 @media (max-width: 480px) { .card-foot { grid-template-columns: auto minmax(0, 1fr); } .card-foot > span:last-child { grid-column: 1 / -1; } }
-.consensus { display: grid; gap: 0; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
-.consensus > div { padding: 10px 14px; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 14px; align-items: baseline; }
-.consensus > div + div { border-top: 1px solid var(--rule); }
-.consensus b { font-family: var(--f-display); font-size: 18px; font-weight: 600; }
-.consensus span { font-size: 14px; color: var(--muted); }
-@media (max-width: 560px) { .consensus > div { grid-template-columns: 1fr; } }
-.wide .two { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px 28px; align-items: start; }
-.wide .two > div { display: grid; gap: 10px; min-width: 0; }
-@media (max-width: 820px) { .wide .two { grid-template-columns: 1fr; } }
-
 /* worked example */
 .files { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; }
 table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
@@ -332,40 +322,36 @@ td.c { text-align: center; }
             <text x="802" y="669" class="t-diff">low</text>
           </a>
 
-          <!-- engineer review gates -->
-          <rect x="-11" y="-11" width="22" height="22" rx="3" transform="translate(589 275) rotate(45)" class="gate"/>
-          <text x="589" y="280" text-anchor="middle" class="t-gate">A</text>
-          <rect x="-11" y="-11" width="22" height="22" rx="3" transform="translate(590 362) rotate(45)" class="gate"/>
-          <text x="590" y="367" text-anchor="middle" class="t-gate">B</text>
-          <rect x="-11" y="-11" width="22" height="22" rx="3" transform="translate(589 450) rotate(45)" class="gate"/>
-          <text x="589" y="455" text-anchor="middle" class="t-gate">C</text>
-          <rect x="-11" y="-11" width="22" height="22" rx="3" transform="translate(589 625) rotate(45)" class="gate"/>
-          <text x="589" y="630" text-anchor="middle" class="t-gate">D</text>
+          <!-- human review: curation, block sign-off, review and feedback -->
+          <g>
+            <circle cx="589" cy="100" r="16" class="hr-c"/>
+            <circle cx="589" cy="96" r="4.5" class="hr-p"/>
+            <path d="M581 110 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
+            <text x="589" y="133" text-anchor="middle" class="t-hr">HUMAN</text>
+            <text x="589" y="145" text-anchor="middle" class="t-hr">REVIEW</text>
+          </g>
+          <g>
+            <circle cx="589" cy="450" r="16" class="hr-c"/>
+            <circle cx="589" cy="446" r="4.5" class="hr-p"/>
+            <path d="M581 460 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
+            <text x="589" y="483" text-anchor="middle" class="t-hr">HUMAN</text>
+            <text x="589" y="495" text-anchor="middle" class="t-hr">REVIEW</text>
+          </g>
+          <g>
+            <circle cx="589" cy="625" r="16" class="hr-c"/>
+            <circle cx="589" cy="621" r="4.5" class="hr-p"/>
+            <path d="M581 635 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
+            <text x="589" y="658" text-anchor="middle" class="t-hr">HUMAN</text>
+            <text x="589" y="670" text-anchor="middle" class="t-hr">REVIEW</text>
+          </g>
 
           <!-- feedback loop: 8 back to 4 -->
           <path d="M1010 625 H1062 V275 H1013" class="wire-loop" marker-end="url(#ah)"/>
           <text x="1086" y="450" text-anchor="middle" transform="rotate(-90 1086 450)" class="t-loop">FEEDBACK → NEW VERSION</text>
         </svg>
       </div>
-      <figcaption>Each box names a component to be built; dots show the estimated difficulty. <span class="gem"></span>A–D are engineer review gates. Select a box for how it could be achieved.</figcaption>
+      <figcaption>Each box names a component to be built; dots show the estimated difficulty. <svg class="inline-person" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg>marks where human review is required. Select a box for how it could be achieved.</figcaption>
     </figure>
-  </section>
-
-  <!-- ================= review gates ================= -->
-  <section class="band gates" id="gates">
-    <h2>Engineer review gates</h2>
-    <div class="files">
-      <table>
-        <thead><tr><th>Gate</th><th>Position</th><th>Role</th><th>Checks</th></tr></thead>
-        <tbody>
-          <tr><td>A</td><td>After decomposition</td><td>Discipline reviewer</td><td>Objects, classification and granularity are correct</td></tr>
-          <tr><td>B</td><td>No or partial consensus</td><td>Topic owner</td><td>Which method enters the unified design logic, or which alternatives are kept</td></tr>
-          <tr><td>C</td><td>Before release of an object</td><td>Release approver</td><td>Benchmarks against independent references; approves the version</td></tr>
-          <tr><td>D</td><td>Calculation sign-off</td><td>Project engineer and checker</td><td>The project calculation, as today</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="note">Distilled objects that have not passed the gates stay in a staging area as drafts and never enter the knowledge base. Review starts at 100 % at every gate and moves to sampling once pass rates justify it.</p>
   </section>
 
   <!-- ================= components ================= -->
@@ -385,6 +371,7 @@ td.c { text-align: center; }
             <li>Curation criteria: relevance, completeness, known origin, current code edition</li>
             <li>New files and new calculations enter through the same route</li>
           </ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Engineers approve the curated selection before it enters the pipeline.</p></div>
           <div class="qs"><p>How broad should the scraping be, and how much should be curated by hand?</p></div>
         </div>
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Known technology; access rights, NDAs and volume are the work.</span></div>
@@ -406,50 +393,36 @@ td.c { text-align: center; }
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Mostly solved by existing file readers.</span></div>
       </article>
 
-      <article class="card wide" id="c3" style="--c: var(--p2); --ct: var(--p2t)">
+      <article class="card" id="c3" style="--c: var(--p2); --ct: var(--p2t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="22" y="22" width="15" height="15" rx="3"/></g></svg>
           <div><span class="label">Distillation · 3</span><h3>Decomposition</h3></div>
         </div>
         <div class="card-body">
-          <div class="two">
-            <div>
-              <p class="build">An AI that reads a calculation, distils its logic into modular calculation objects and maps each object to a topic of structural engineering.</p>
-              <ul>
-                <li>Design logic separated from project data</li>
-                <li>One taxonomy: topic, element, code clause</li>
-                <li>A topic map: what is covered, what is missing, where sources are many</li>
-                <li>Draft objects held in staging until reviewed at gate A</li>
-              </ul>
-            </div>
-            <div class="qs"><p>How reliable is the AI at reading engineering logic?</p><p>What granularity: one equation, one clause or one design check?</p></div>
-          </div>
+          <p class="build">An AI that reads a calculation, distils its logic into modular calculation objects and maps each object to a topic of structural engineering.</p>
+          <ul>
+            <li>Design logic separated from project data</li>
+            <li>One taxonomy: topic, element, code clause</li>
+            <li>A topic map: what is covered, what is missing, where sources are many</li>
+          </ul>
+          <div class="qs"><p>How reliable is the AI at reading engineering logic?</p><p>What granularity: one equation, one clause or one design check?</p></div>
         </div>
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>Very high</b><span>Turning an existing file into logic requires engineering understanding.</span></div>
       </article>
 
 
-      <article class="card wide" id="c4" style="--c: var(--p2); --ct: var(--p2t)">
+      <article class="card" id="c4" style="--c: var(--p2); --ct: var(--p2t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/></g></svg>
           <div><span class="label">Distillation · 4</span><h3>Consolidation by consensus</h3></div>
         </div>
         <div class="card-body">
-          <div class="two">
-            <div>
-              <p class="build">Deterministic acceptance criteria that let the AI judge what enters the unified design logic.</p>
-              <p>The AI cannot rely on its own judgement to accept or reject engineering logic. It needs a rule that is the same every time. The proposed rule is consensus between independent implementations, similar to a distributed ledger, which accepts an entry only when independent parties agree. Each calculation object is executed over a common parameter domain and the results are compared within a defined tolerance.</p>
-              <p>Consensus is a consistency filter, not proof of correctness: three sources copied from the same template can agree and still be wrong. Its purpose is to focus supervision. Where sources agree, one merged logic is reviewed instead of many; where they disagree, review concentrates on the difference, which is either a minor adjustment or a serious error. Correctness is established against independent references (code worked examples, hand calculations, FE results) before release.</p>
-              <div class="qs"><p>What tolerance, and how many agreeing sources, constitute consensus?</p><p>What level of human supervision does each stage require?</p></div>
-            </div>
-            <div class="consensus">
-              <div><b>Consensus</b><span>Sources agree within tolerance over the whole domain. Merged; the unified logic is reviewed once at gate C.</span></div>
-              <div><b>Partial consensus</b><span>Agreement on part of the domain. Common logic merged; the divergence isolated for the topic owner at gate B.</span></div>
-              <div><b>No consensus</b><span>Adjudication by the topic owner at gate B. Valid alternative methods retained side by side.</span></div>
-            </div>
-          </div>
+          <p class="build">Deterministic rules that cluster logic from many sources into one unified design logic with little human effort.</p>
+          <p>Each calculation object is run over a common parameter domain. Sources that agree within tolerance are clustered and merged, so one logic is reviewed instead of many, much as a distributed ledger accepts an entry when independent parties agree. Where sources disagree, the difference goes to an engineer.</p>
+          <p>Consensus is a clustering method, not proof of correctness. Accuracy comes from benchmarks, independent references, sampling and engineer review.</p>
+          <div class="qs"><p>What tolerance, and how many agreeing sources, constitute consensus?</p><p>What level of human supervision does each stage require?</p></div>
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>A new method; tolerances, test domains and independent references have to be defined per topic.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>A new method; tolerances and test domains have to be defined per topic.</span></div>
       </article>
 
       <article class="card" id="c5" style="--c: var(--p3); --ct: var(--p3t)">
@@ -462,8 +435,8 @@ td.c { text-align: center; }
           <ul>
             <li>Written from a structured specification per object</li>
             <li>Benchmarked against the original files, other checked projects and independent references</li>
-            <li>Released only after approval at gate C</li>
           </ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer signs off each block before it enters the knowledge base; full review at first, sampling once confidence is established.</p></div>
           <div class="qs"><p>How do we set up the benchmarks?</p></div>
         </div>
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Code generation is mature; the benchmarks are the work.</span></div>
@@ -498,7 +471,7 @@ td.c { text-align: center; }
             <li>Each step typeset: equation, substituted values, result, clause</li>
             <li>Produced by the same run that computes the numbers</li>
             <li>Company template; QA status on the document</li>
-            <li>Signed off by the project engineer and checker at gate D</li>
+            <li>Signed off by the project engineer and checker, as today</li>
           </ul>
           <div class="qs"><p>How do we make modular code human-readable?</p></div>
         </div>
@@ -517,6 +490,7 @@ td.c { text-align: center; }
             <li>Changes pass consolidation and testing again</li>
             <li>Maturity: harvested, converted, consolidated, verified, approved</li>
           </ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Engineers review calculations in use and approve every correction and new component.</p></div>
           <div class="qs"><p>How many people and departments should be involved?</p></div>
         </div>
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Process and ownership more than technology.</span></div>
@@ -551,13 +525,13 @@ td.c { text-align: center; }
       </table>
     </div>
     <ol class="timeline">
-      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Ingestion</b><p>The four files are retrieved, tagged and converted. Recalculated values match the originals.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">2</span><div><b>Decomposition</b><p>Six draft calculation objects: three for bending (A, B, D) and three for shear (A, C, D). The discipline reviewer confirms them at gate A.</p></div></li>
+      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Ingestion</b><p>The four files are retrieved and tagged; an engineer approves the selection. The files are converted and recalculated values match the originals.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">2</span><div><b>Decomposition</b><p>Six draft calculation objects: three for bending (A, B, D) and three for shear (A, C, D).</p></div></li>
       <li style="--c: var(--p2)"><span class="n">3</span><div><b>Consensus on bending</b><p>National annex coefficients are separated out as parameters. The three objects then agree within tolerance over the whole domain, giving one unified bending object with the national annex as an input.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">4</span><div><b>No consensus on shear</b><p>The objects assume different lever arms: one uses an approximate value, the other calculates it precisely. The rest of the logic agrees and is merged; the topic owner decides which lever arm is correct at gate B.</p></div></li>
-      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Object generation</b><p>Python objects are generated and benchmarked against the four original files, other checked bridge projects and a code worked example. After approval at gate C they are released as version 0.1.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>An engineer on a fifth bridge searches for shear design. The search engine returns the unified object; the engineer runs it and receives a self-documenting calculation, which the engineer and checker sign off at gate D.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>A torsion calculation is submitted. The search engine identifies it as a new component, not yet covered. It passes the consensus rules and the benchmarks and is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">4</span><div><b>No consensus on shear</b><p>The objects assume different lever arms: one uses an approximate value, the other calculates it precisely. The rest of the logic agrees and is merged; an engineer decides which lever arm is correct.</p></div></li>
+      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Object generation</b><p>Python objects are generated and benchmarked against the four original files, other checked bridge projects and a code worked example. An engineer signs off each block and they are released as version 0.1.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>An engineer on a fifth bridge searches for shear design. The search engine returns the unified object; the engineer runs it and receives a self-documenting calculation.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>A torsion calculation is submitted. The search engine identifies it as a new component, not yet covered. It passes the consensus rules and the benchmarks, an engineer signs it off, and it is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
     </ol>
   </section>
 
