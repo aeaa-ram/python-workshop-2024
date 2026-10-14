@@ -288,11 +288,11 @@ td.c { text-align: center; }
             <g transform="translate(660 430)" class="ic k3">
               <ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/>
             </g>
-            <text x="726" y="424" class="t-title"><tspan class="t-no f3">6 </tspan>Central repository</text>
-            <text x="726" y="449" class="t-build">Secure, version-controlled</text>
-            <text x="726" y="468" class="t-build">knowledge base with search</text>
-            <circle cx="731" cy="490" r="5" class="f3"/><circle cx="745" cy="490" r="5" class="f3"/><circle cx="759" cy="490" r="4.3" class="dot-off k3"/><circle cx="773" cy="490" r="4.3" class="dot-off k3"/><circle cx="787" cy="490" r="4.3" class="dot-off k3"/>
-            <text x="802" y="494" class="t-diff">low</text>
+            <text x="726" y="424" class="t-title"><tspan class="t-no f3">6 </tspan>Repository and search</text>
+            <text x="726" y="449" class="t-build">Knowledge base with an AI-curated</text>
+            <text x="726" y="468" class="t-build">search engine</text>
+            <circle cx="731" cy="490" r="5" class="f3"/><circle cx="745" cy="490" r="5" class="f3"/><circle cx="759" cy="490" r="5" class="f3"/><circle cx="773" cy="490" r="4.3" class="dot-off k3"/><circle cx="787" cy="490" r="4.3" class="dot-off k3"/>
+            <text x="802" y="494" class="t-diff">medium</text>
           </a>
           <path d="M820 510 V537 H360 V563" class="wire" marker-end="url(#ah)"/>
 
@@ -306,8 +306,8 @@ td.c { text-align: center; }
               <path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/>
             </g>
             <text x="266" y="599" class="t-title"><tspan class="t-no f4">7 </tspan>Self-documenting calculations</text>
-            <text x="266" y="624" class="t-build">Framework that prints every step:</text>
-            <text x="266" y="643" class="t-build">equation, values, result, clause</text>
+            <text x="266" y="624" class="t-build">Human-readable calculations at the</text>
+            <text x="266" y="643" class="t-build">quality of our existing ones</text>
             <circle cx="271" cy="665" r="5" class="f4"/><circle cx="285" cy="665" r="5" class="f4"/><circle cx="299" cy="665" r="5" class="f4"/><circle cx="313" cy="665" r="5" class="f4"/><circle cx="327" cy="665" r="5" class="f4"/>
             <text x="342" y="669" class="t-diff">very high</text>
           </a>
@@ -368,7 +368,7 @@ td.c { text-align: center; }
             <li>Readers exist for Excel, Mathcad, Python, Jupyter and MATLAB</li>
             <li>Recalculated values compared with the original before acceptance</li>
           </ul>
-          <div class="qs"><p>How do we convert each format reliably?</p><p>How are units kept consistent between formats?</p></div>
+          <div class="qs"><p>How do we convert each format reliably?</p></div>
         </div>
         <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Mostly solved by existing file readers.</span></div>
       </article>
@@ -437,18 +437,19 @@ td.c { text-align: center; }
       <article class="card" id="c6" style="--c: var(--p3); --ct: var(--p3t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/></g></svg>
-          <div><span class="label">Knowledge base · 6</span><h3>Central repository</h3></div>
+          <div><span class="label">Knowledge base · 6</span><h3>Repository and search</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">A secure, version-controlled knowledge base with a searchable library of calculation objects.</p>
+          <p class="build">A secure, version-controlled knowledge base with an AI-curated search engine.</p>
           <ul>
-            <li>Versions, access rights and approvals</li>
-            <li>Written rules for contributors and for the AI</li>
-            <li>Search by topic, code and element</li>
+            <li>Finds the relevant calculation object for a design task</li>
+            <li>Checks every new calculation: already covered, an extension, or a new design topic</li>
+            <li>Versions, access rights, approvals and written rules for contributors and the AI</li>
           </ul>
+          <p>In this way most topics of structural engineering can be mapped.</p>
           <div class="qs"><p>What is the ideal hosting platform?</p><p>How scalable is the system?</p></div>
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Standard practice; needs IT approval.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Hosting is standard; classifying new entries reliably is the work.</span></div>
       </article>
 
       <article class="card" id="c7" style="--c: var(--p4); --ct: var(--p4t)">
@@ -457,7 +458,7 @@ td.c { text-align: center; }
           <div><span class="label">Use and maintenance · 7</span><h3>Self-documenting calculations</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">A framework that makes every Python calculation print itself as a readable calculation document.</p>
+          <p class="build">A framework that makes every Python calculation print itself as a human-readable calculation document, at the same quality as our existing calculations.</p>
           <ul>
             <li>Each step typeset: equation, substituted values, result, clause</li>
             <li>Produced by the same run that computes the numbers</li>
@@ -506,10 +507,10 @@ td.c { text-align: center; }
       <li style="--c: var(--p1)"><span class="n">1</span><div><b>Ingestion</b><p>The four files are retrieved, tagged and converted. Recalculated values match the originals.</p></div></li>
       <li style="--c: var(--p2)"><span class="n">2</span><div><b>Decomposition</b><p>Six calculation objects: three for bending (A, B, D) and three for shear (A, C, D).</p></div></li>
       <li style="--c: var(--p2)"><span class="n">3</span><div><b>Consensus on bending</b><p>National annex coefficients are separated out as parameters. The three objects then agree within tolerance over the whole domain, giving one unified bending object with the national annex as an input.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">4</span><div><b>Partial consensus on shear</b><p>A and C agree. D agrees with them only at zero axial force, because it includes the axial force term. The common logic is merged; the axial force term is kept as an extension after an engineer confirms it.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">4</span><div><b>No consensus on shear</b><p>The objects assume different lever arms: one uses an approximate value, the other calculates it precisely. The rest of the logic agrees and is merged; an engineer decides which lever arm is correct.</p></div></li>
       <li style="--c: var(--p3)"><span class="n">5</span><div><b>Object generation</b><p>Python objects are generated and benchmarked first against the four original files, then against other checked bridge projects. They are released as version 0.1.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>An engineer on a fifth bridge searches for shear design, runs the object and receives a self-documenting calculation.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>Torsion is added as a new component. It passes the consensus rules and the benchmarks and is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>An engineer on a fifth bridge searches for shear design. The search engine returns the unified object; the engineer runs it and receives a self-documenting calculation.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>A torsion calculation is submitted. The search engine identifies it as a new component, not yet covered. It passes the consensus rules and the benchmarks and is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
     </ol>
   </section>
 
