@@ -131,9 +131,9 @@ def decompose(doc: SourceDocument, tax: Taxonomy) -> Decomposition:
             continue
         concept, how = hit
         value = canonical_value(st, concept)
-        if isinstance(value, (int, float)):
-            out.observations.setdefault(concept.id, []).append(value)
         factor, assumed, dims = unit_factor(st, concept)
+        if isinstance(value, (int, float)) and (dims is None or tuple(dims) == tuple(concept.dims)):
+            out.observations.setdefault(concept.id, []).append(value)     # per-unit-width values excluded
 
         if st.kind == "printed":
             inst = Instance(concept.id, doc.id, st.id, "printed", value, unit=st.unit or concept.unit,
