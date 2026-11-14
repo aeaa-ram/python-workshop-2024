@@ -3,7 +3,9 @@
     1 retrieval and curation   find the files, drop exact duplicates, recognise a print of another source
     2 conversion               every file becomes machine-readable statements (and a Python script)
     3 decomposition            statements are mapped to the quantities of the code
-    4 consolidation            variants of one quantity are merged into a unified formula
+    4 consolidation            each source formula is compared with the code expression (applied as
+                               written, simplified, different); without a code expression the sources
+                               are merged among themselves
     5 object generation        one small calculation object per quantity, with its evidence
     6 repository               objects, generated code blocks and the search index are written
 
@@ -23,6 +25,7 @@ from . import units as U
 from .convert import ConversionError, convert_file, kind_of
 from .distill import benchmarks as B
 from .distill import reference as R
+from .distill.baseline import classify, reassign
 from .distill.consolidate import Consolidation, consolidate
 from .distill.decompose import LOCAL, Decomposition, canonical_value, decompose
 from .distill.taxonomy import Taxonomy, load as load_taxonomy
@@ -148,112 +151,72 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
     out.observed = observed
     independent = {d.id for d in out.docs if not d.meta.get("print_of")}
 
-    # ---- 4: consolidation ---------------------------------------------------
+    # ---- 4: compare with the code; merge where there is no code expression --------
+    moved = reassign(by_concept, tax, observed)
+    if moved:
+        log(f"[4] {moved} formula(s) re-read as another quantity whose code expression they match")
     for c in tax.concepts.values():
-        if c.kind != "derived" or c.id not in by_concept:
+        if c.kind != "derived":
             continue
-        cons = consolidate(c.id, by_concept[c.id], tax, observed)
-        if cons.variants:
-            out.consolidations[c.id] = cons
+        insts = by_concept.get(c.id, [])
+        if c.formula:
+            cons = classify(c, insts, tax, observed)
+        elif insts:
+            cons = consolidate(c.id, insts, tax, observed)
+            if not cons.variants:
+                continue
+        else:
+            continue
+        out.consolidations[c.id] = cons
     name = lambda s: tax.concepts[s].text if s in tax.concepts else s.lstrip(LOCAL)   # noqa: E731
     out.benchmarks = B.run(out.consolidations, out.decs, tax, observed, name)
     for cid, cons in out.consolidations.items():
-        if cons.unified is not None:
-            log(f"[4] {name(cid):14} {cons.status:14} {len(cons.merged)} variant(s) merged"
-                + (f", {len(cons.conflicts)} not merged" if cons.conflicts else ""))
+        if not cons.variants:
+            continue
+        rel = Counter(v.relation or ("merged" if v.merged else "not merged") for v in cons.variants)
+        log(f"[4] {name(cid):14} " + ", ".join(f"{n} {k}" for k, n in rel.items()))
 
     # ---- 5: objects ---------------------------------------------------------
     kb = KnowledgeBase()
     label = {d.id: d.label for d in out.docs}
-    formulas = {cid: c.unified for cid, c in out.consolidations.items() if c.unified is not None}
-    typical = B.typical_values(observed)
-    ref_name, _ = R.library()
+    formulas = {c.id: c.tree for c in tax.concepts.values() if c.formula}
+    formulas.update({cid: c.unified for cid, c in out.consolidations.items() if c.unified is not None})
     for cid, cons in out.consolidations.items():
         if cons.unified is None:
             continue
-        c = tax.concepts[cid]
-        merged_instances = [i for v in cons.merged for i in v.instances]
-        srcs = sorted({i.doc for i in merged_instances} & independent) or sorted({i.doc for i in merged_instances})
-        rows = out.benchmarks.get(cid, [])
-        counts = Counter(b.status for b in rows)
-        obj = CalcObject(
-            id=cid, name=c.name, formula=X.to_python(cons.unified), params=X.symbols(cons.unified),
-            var=c.var, symbol=c.symbol, unit=c.unit, code=tax.code, branch=tax.branch, topic=c.topic,
-            topic_path=[f"{t['id']} {t['title']}" for t in tax.topic_path(c.topic)],
-            clause=c.clause, eq=c.eq, check=c.check, notes=list(c.notes), neutral=dict(cons.neutral))
-        # the status counts independent sources only (a print of a worksheet is not a second opinion)
-        if any(v.publishable for v in cons.conflicts):
-            obj.status = "disagreement"
-        elif len(srcs) < 2:
-            obj.status = "single source"
-        else:
-            obj.status = "consensus" if len(cons.merged) == 1 else "unified"
-        obj.support = {"sources": len(srcs), "source_ids": srcs, "formula_instances": len(merged_instances),
-                       "variants_merged": len(cons.merged),
-                       "printed_values": sum(b.kind == "printed" for b in rows)}
-        for v in cons.variants:
-            obj.variants.append({
-                "formula": X.to_python(v.formula, lambda s: s.lstrip(LOCAL)),
-                "text": X.to_text(v.formula, name),
-                "instances": len(v.instances),
-                "sources": [label[s] for s in v.sources],
-                "merged": v.merged,
-                "differences": [d.describe(name) for d in v.diffs],
-                **({"reason": v.reason} if v.reason else {}),
-            })
-        obj.benchmarks = {"total": len(rows), "agree": counts.get("agree", 0),
-                          "deviation": counts.get("deviation", 0),
-                          "not_comparable": counts.get("not comparable", 0), "items": []}
-        for b in rows:
-            item = {"source": label[b.doc], "where": _anonymise(b.loc) if anonymous else b.loc,
-                    "kind": b.kind, "expected": b.expected, "got": b.got, "status": b.status}
-            if b.case and (not anonymous or re.fullmatch(r"phase \d+", b.case)):
-                item["case"] = b.case
-            if b.detail:
-                item["detail"] = b.detail
-            if b.tolerance:
-                item["tolerance"] = b.tolerance
-            item["inputs"] = {k: v for k, v in b.inputs.items() if not k.startswith(LOCAL)}
-            if b.per_width:
-                item["per_width"] = True
-            obj.benchmarks["items"].append(item)
-        obj.reference = R.check(cid, formulas, tax)
-        # ---- warnings an engineer must see before using the object ----------
-        if obj.status == "single source":
-            obj.warnings.append("Seen in one source only: not yet confirmed by a second, independent calculation.")
-        real_conflicts = [v for v in cons.conflicts if v.publishable]
-        if real_conflicts:
-            obj.warnings.append(
-                f"Sources disagree: {len(real_conflicts)} other formula(s) for this quantity could not be merged "
-                "with the one shown. The one shown has the most support; an engineer has to decide.")
-        if obj.reference.get("status") == "differs":
-            obj.warnings.append(f"Differs from the independent reference ({obj.reference['library']}, "
-                                f"{obj.reference['function']}) in {obj.reference['samples'] - obj.reference['agreeing_samples']} "
-                                f"of {obj.reference['samples']} samples.")
-        # what the unified logic revealed about the sources themselves
-        reasons = Counter(b.detail for b in rows if b.status == "deviation")
-        for reason, n in reasons.most_common():
-            obj.findings.append(f"{n} source value(s) differ from the unified logic: {reason}.")
-        obj.version = obj.fingerprint()
-        kb.objects[cid] = obj
+        kb.objects[cid] = _object(cid, cons, out.benchmarks.get(cid, []), tax, formulas, observed,
+                                  label, independent, anonymous)
 
     # ---- quantities (parameters) --------------------------------------------
-    needed = {p for o in kb.objects.values() for p in o.params} | {o.check for o in kb.objects.values() if o.check}
-    for qid in needed:
+    needed: set[str] = set()
+    for o in kb.objects.values():
+        needed |= set(o.params) | set(o.fixed)
+        if o.check:
+            needed.add(o.check)
+        for chk in o.checks:
+            needed |= set(X.symbols(X.parse(chk["when"])))
+    for qid in sorted(needed):
         if qid in kb.objects or qid not in tax.concepts:
             continue
         c = tax.concepts[qid]
+        seen = Counter(float(f"{v:.6g}") for v in observed.get(qid, []) if isinstance(v, (int, float)))
         kb.quantities[qid] = Quantity(
-            id=qid, name=c.name, var=c.var, symbol=c.symbol, unit=c.unit, kind=c.kind, topic=c.topic,
-            clause=c.clause, typical=typical.get(qid),
+            id=qid, name=c.name, var=c.var, symbol=c.symbol, unit=c.unit,
+            kind="coefficient" if c.kind == "coefficient" else "input", code=c.code, topic=c.topic,
+            clause=c.clause, value=c.canonical_value, example=c.canonical_example, ndp=c.ndp,
+            choices=[{"value": ch["value"] * c.factor, "label": ch.get("label", "")} for ch in c.choices],
             range=list(c.canonical_range) if c.canonical_range else None,
-            observed=len(observed.get(qid, [])))
-    _examples(out, kb, tax, label, anonymous)
+            seen=[[v, n] for v, n in seen.most_common(8)],
+            background=[_background(b, tax) for b in c.background])
 
     # ---- 6: repository ------------------------------------------------------
-    kb.meta = {"code": tax.code, "branch": tax.branch, "title": tax.title, "reference_library": ref_name,
-               "units": "N, mm, MPa (N/mm²), rad"}
-    kb.topics = [{"id": t["id"], "title": t["title"]} for t in tax.topics.values()]
+    ref_name, _ = R.library()
+    kb.meta = {"reference_library": ref_name, "units": "N, mm, MPa (N/mm²), rad",
+               "built_from": f"{len(out.docs)} source file(s)"}
+    kb.references = dict(tax.references)
+    for code in tax.codes:
+        topics = [{"id": tid, "title": t["title"]} for (cd, tid), t in tax.topics.items() if cd == code["code"]]
+        kb.codes.append(dict(code, topics=topics, fixed=tax.fixed_for(code["code"])))
     for doc, dec in zip(out.docs, out.decs):
         s, d = doc.summary(), dec.summary()
         kb.sources.append({
@@ -273,135 +236,167 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
     write_package(kb, kb_dir / "python")
     out.kb = kb
     _write_report(out, workspace, label)
-    log(f"[5] {len(kb.objects)} calculation objects, {len(kb.quantities)} parameters -> {kb_dir}")
+    lv = Counter(o.confidence.get("level") for o in kb.objects.values())
+    log(f"[5] {len(kb.objects)} calculation objects ({lv.get('high', 0)} checked, {lv.get('medium', 0)} not yet "
+        f"checked, {lv.get('low', 0)} need review), {len(kb.quantities)} parameters -> {kb_dir}")
     return out
 
 
 # --------------------------------------------------------------------------
-def _examples(out: Build, kb: KnowledgeBase, tax: Taxonomy, label: dict, anonymous: bool) -> None:
-    """Real cases from the sources that the calculators can load.
+def _background(b: dict, tax: Taxonomy) -> dict:
+    """A background note with its references resolved to full citations."""
+    refs = []
+    for r in b.get("refs", []):
+        rid = max((k for k in tax.references if r == k or r.startswith(k + ":")), key=len, default="")
+        refs.append({"id": rid or r, "at": r[len(rid) + 1:] if rid else "", "text": tax.references.get(rid, "")})
+    return {"kind": b.get("kind", "guidance"), "text": b["text"], "refs": refs}
 
-    The inputs of a case are read off the source's own dependency graph: the
-    statement that fed ``ρ_l`` in that source is the one that gives ``A_sl``.
-    """
-    ctx = {dec.doc.id: B.Context(dec, tax) for dec in out.decs}
-    inst_of = {dec.doc.id: {i.stmt: i for i in dec.instances if i.kind == "formula"} for dec in out.decs}
-    merged_ids = {id(i) for c in out.consolidations.values() for v in c.merged for i in v.instances}
-    for cid, cons in out.consolidations.items():
-        obj = kb.objects.get(cid)
-        if obj is None:
+
+def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonymous) -> CalcObject:
+    from .distill.baseline import explain
+    c = tax.concepts[cid]
+    name = lambda s: tax.concepts[s].text if s in tax.concepts else s.lstrip(LOCAL)   # noqa: E731
+    path = [f"{t['id']} {t['title']}" for t in tax.topic_path(c.topic, c.code)]
+    deps = set(tax.dependencies(cid))
+    fixed = {k: v for k, v in tax.fixed_for(c.code).items() if k in deps}
+    obj = CalcObject(
+        id=cid, name=c.name, formula=X.to_python(cons.unified), params=X.symbols(cons.unified),
+        var=c.var, symbol=c.symbol, unit=c.unit, code=c.code or "", topic=c.topic, topic_path=path,
+        clause=c.clause, eq=c.eq, basis=c.basis if cons.baseline else "sources", ndp=c.ndp, sense=c.sense,
+        check=c.check, refs=[r for r in c.refs if r.get("how") != "defined here"], fixed=fixed,
+        alternatives=list(c.alternatives), checks=list(c.checks),
+        background=[_background(b, tax) for b in c.background])
+
+    # ---- how the sources applied it ------------------------------------------------
+    by_inst = {(b.doc, b.loc): b for b in rows if b.kind == "formula"}
+    variants, practice = [], []
+    n_inst = sum(len(v.instances) for v in cons.variants)
+    srcs = sorted({i.doc for v in cons.variants for i in v.instances} & independent)
+    for v in cons.variants:
+        rel = v.relation or ("merged" if v.merged else "kept apart")
+        benches = [by_inst.get((i.doc, i.loc)) for i in v.instances]
+        benches = [b for b in benches if b is not None]
+        first_env = next((b.inputs for b in benches if b.inputs), {})
+        diffs = []
+        for d in v.diffs:
+            if d.kind == "alias":
+                continue
+            diffs.append(explain(d, tax, first_env, any(i.per_width for i in v.instances), name))
+        agree = sum(b.status == "agree" for b in benches)
+        dev = [b for b in benches if b.status == "deviation"]
+        item = {"formula": X.to_python(v.formula, lambda s: s.lstrip(LOCAL)), "text": X.to_text(v.formula, name),
+                "relation": rel, "instances": len(v.instances), "sources": [label[s] for s in v.sources],
+                "merged": v.merged, "differences": diffs, "reproduced": agree, "compared": len(benches)}
+        if v.reason:
+            item["reason"] = v.reason
+        if v.alternative:
+            item["alternative"] = v.alternative.get("when", "")
+        if dev:
+            item["deviations"] = Counter(b.detail for b in dev).most_common(3)
+        variants.append(item)
+        # one practice sentence per variant
+        where = f"{len(v.instances)} formula(s) in {', '.join(label[s].split(' ')[0] for s in v.sources)}"
+        if rel == "as code":
+            practice.append(f"{where}: as in the code.")
+        elif rel == "alternative":
+            practice.append(f"{where}: the permitted alternative {X.to_text(v.formula, name)} "
+                            f"({v.alternative.get('when', '')}).")
+        elif rel == "simplified":
+            text = "; ".join(diffs) if diffs else "a special case"
+            tail = f" The result differs in {len(dev)} of {len(benches)} cases: {dev[0].detail}." if dev else ""
+            practice.append(f"{where}: simplified - {text}.{tail}")
+        elif rel == "differs":
+            practice.append(f"{where}: {X.to_text(v.formula, name)} - not the code expression; to be reviewed.")
+        elif rel == "project-specific":
+            practice.append(f"{where}: written with project-specific quantities ({v.reason.split(': ')[-1]}).")
+        else:
+            practice.append(f"{where}: {rel}.")
+    # coefficient values the sources used, against the recommended value
+    values_seen = {}
+    for q in sorted(deps) if cons.variants else []:
+        qc = tax.concepts.get(q)
+        if qc is None or qc.kind != "coefficient" or not observed.get(q):
             continue
-        cands = [(v, i) for v in cons.merged for i in v.instances]
-        cands.sort(key=lambda p: (p[1].per_width, p[1].doc, p[1].loc))
-        per_doc: Counter = Counter()
-        found, seen_sets = [], set()
-        for v, inst in cands:
-            if per_doc[inst.doc] >= 40:
-                continue
-            vals: dict = {}
-            given: dict = {}
-            ok = True
+        seen = Counter(float(f"{x:.6g}") for x in observed[q] if isinstance(x, (int, float)))
+        values_seen[q] = {"recommended": qc.canonical_value, "seen": [[v, n] for v, n in seen.most_common(6)]}
+        other = [(v, n) for v, n in seen.items() if qc.canonical_value is None or abs(v - qc.canonical_value) > 1e-9]
+        if other:
+            practice.append(f"{qc.text}: the sources use " + ", ".join(
+                f"{X._short(U.from_canonical(v, qc.unit))} ({n}×)" for v, n in sorted(other, key=lambda t: -t[1]))
+                + (f" against the recommended {X._short(U.from_canonical(qc.canonical_value, qc.unit))}"
+                   if qc.canonical_value is not None else "") + ".")
+    obj.evidence = {"sources": len(srcs), "source_ids": srcs, "formula_instances": n_inst,
+                    "printed_values": sum(b.kind == "printed" for b in rows),
+                    "variants": variants, "practice": practice, "values_seen": values_seen}
 
-            def walk(i, depth=0):
-                nonlocal ok
-                for sym, a in i.args.items():
-                    if sym.startswith(LOCAL) or not ok:
-                        continue
-                    if sym in kb.objects:
-                        sub = inst_of[i.doc].get(a["stmt"])
-                        if sub is not None and sub.concept == sym and id(sub) in merged_ids and depth < 12:
-                            walk(sub, depth + 1)
-                        elif isinstance(a["value"], (int, float)):
-                            given[sym] = a["value"]      # the source gets this value some other way
-                        else:
-                            ok = False
-                    elif isinstance(a["value"], (int, float)):
-                        if sym in vals and abs(vals[sym] - a["value"]) > 1e-9 * abs(a["value"]):
-                            ok = False          # one quantity, two values: not one consistent case
-                        vals[sym] = a["value"]
-                    else:
-                        ok = False
+    # ---- benchmarks, reference, confidence -------------------------------------------------
+    counts = Counter(b.status for b in rows)
+    obj.benchmarks = {"total": len(rows), "agree": counts.get("agree", 0), "deviation": counts.get("deviation", 0),
+                      "not_comparable": counts.get("not comparable", 0), "items": []}
+    for b in rows:
+        it = {"source": label[b.doc], "where": _anonymise(b.loc) if anonymous else b.loc, "kind": b.kind,
+              "expected": b.expected, "got": b.got, "status": b.status}
+        if b.case and (not anonymous or re.fullmatch(r"(phase|case|stage|lc)\s*\d+", b.case, re.I)):
+            it["case"] = b.case
+        if b.detail:
+            it["detail"] = b.detail
+        if b.tolerance:
+            it["tolerance"] = b.tolerance
+        if b.per_width:
+            it["per_width"] = True
+        it["inputs"] = {k: v for k, v in b.inputs.items() if not k.startswith(LOCAL)}
+        obj.benchmarks["items"].append(it)
+    obj.reference = R.check(cid, formulas, tax)
+    obj.confidence = _confidence(obj, cons, rows, tax)
+    obj.version = obj.fingerprint()
+    return obj
 
-            walk(inst)
-            if not ok:
-                continue
-            try:
-                steps, inputs = kb.plan(cid, given=tuple(given))
-            except Exception:                                    # noqa: BLE001
-                continue
-            vals.update(given)
-            neutral = {p: v for s2 in steps for p, v in kb.objects[s2].neutral.items()}
-            c = ctx[inst.doc]
-            st = c.by_id[inst.stmt]
-            for p in inputs:
-                if p in vals:
-                    continue
-                q = tax.concepts.get(p)
-                if q is not None and q.strip and inst.per_width:
-                    vals[p] = 1.0
-                elif p in neutral:
-                    r = c.find(p, tax.concepts[cid].topic, st, same_group_only=True)
-                    vals[p] = canonical_value(r, q) if r is not None else neutral[p]
-                elif q is not None and q.kind == "coefficient" and kb.quantities.get(p) and kb.quantities[p].typical is not None:
-                    r = c.find(p, tax.concepts[cid].topic, st, same_group_only=True)
-                    vals[p] = canonical_value(r, q) if r is not None else kb.quantities[p].typical
-            if len(vals) < len(inputs) or not all(isinstance(vals.get(p), (int, float)) for p in inputs):
-                continue
-            vals = {p: vals[p] for p in inputs}
-            expected = inst.value
-            if inst.per_width:
-                # show a per-metre calculation as a 1 m strip, if the logic scales with the width
-                scaled = {p: (x * 1000.0 if (tax.concepts[p].strip or tax.concepts[p].dims == (0, 2, 0, 0)) else x)
-                          for p, x in vals.items()}
-                try:
-                    r1, _ = kb.evaluate(cid, vals, given=tuple(given))
-                    r2, _ = kb.evaluate(cid, scaled, given=tuple(given))
-                except Exception:                                # noqa: BLE001
-                    continue
-                scales = isinstance(r1, float) and abs(r2 - 1000.0 * r1) <= 1e-9 * abs(r2)
-                same = isinstance(r1, float) and abs(r2 - r1) <= 1e-9 * abs(r2)
-                if not (scales or same):
-                    continue
-                vals = scaled
-                if scales and isinstance(expected, (int, float)):
-                    expected = expected * 1000.0
-            try:
-                got, _ = kb.evaluate(cid, vals, given=tuple(given))
-            except Exception:                                    # noqa: BLE001
-                continue
-            key = tuple(round(x, 9) for x in vals.values())
-            if key in seen_sets:
-                continue
-            seen_sets.add(key)
-            per_doc[inst.doc] += 1
-            where = _anonymise(inst.loc) if anonymous else inst.loc
-            case = inst.case if (inst.case and (not anonymous or re.fullmatch(r"phase \d+", inst.case))) else ""
-            match = isinstance(got, (int, float)) and isinstance(expected, (int, float)) \
-                and abs(got - expected) <= 1e-6 * abs(expected)
-            found.append({
-                "label": f"{label[inst.doc]} - {where}" + (f" - {case}" if case else "")
-                         + (" (1 m strip)" if inst.per_width else ""),
-                "doc": inst.doc, "inputs": vals, "expected": expected, "result": got, "matches_source": match,
-                **({"given": sorted(given)} if given else {}),
-            })
-        # a few cases per source: those the object reproduces first, then one it does not
-        picked = []
-        for doc_id in sorted({f["doc"] for f in found}):
-            mine = [f for f in found if f["doc"] == doc_id]
-            good = [f for f in mine if f["matches_source"]][:3]
-            bad = [f for f in mine if not f["matches_source"]][:1]
-            picked += good + bad
-        for f in picked[:8]:
-            f.pop("doc")
-            obj.examples.append(f)
+
+def _confidence(obj: CalcObject, cons, rows, tax) -> dict:
+    """How much the object can be trusted, and why."""
+    reasons = []
+    ref = obj.reference.get("status")
+    merged_agree = sum(1 for b in rows if b.status == "agree")
+    n_src = obj.evidence.get("sources", 0)
+    if cons.baseline:
+        what = {"code": "the code's expression", "mechanics": "standard section analysis used with the code",
+                "definition": "a definition"}.get(obj.basis, "the code baseline")
+        reasons.append(f"Logic: {what} ({obj.reference_text}).")
+        if ref == "agrees":
+            reasons.append(f"Agrees with {obj.reference['library']} over {obj.reference['samples']} samples.")
+        elif ref == "differs":
+            reasons.append(f"Differs from {obj.reference['library']} in some samples.")
+        else:
+            reasons.append("No independent implementation available to compare with.")
+        if merged_agree:
+            reasons.append(f"Reproduces {merged_agree} value(s) from {n_src} independent source(s).")
+        elif rows:
+            reasons.append("Not reproduced by any source value yet.")
+        else:
+            reasons.append("Not yet seen in any source calculation.")
+        if ref == "differs":
+            level = "low"
+        elif ref == "agrees" or merged_agree:
+            level = "high"
+        else:
+            level = "medium"
+    else:
+        reasons.append("Logic distilled from the sources only: the registry has no code expression for it.")
+        disagree = any(v.publishable and not v.merged for v in cons.variants)
+        if disagree:
+            reasons.append("The sources disagree.")
+        level = "medium" if n_src >= 2 and not disagree else "low"
+        reasons.append(f"Seen in {n_src} independent source(s).")
+    if any(v.relation == "differs" for v in cons.variants):
+        reasons.append("Some source formulas differ from the code: see how the sources applied it.")
+    label = {"high": "checked", "medium": "not yet checked", "low": "review needed"}[level]
+    return {"level": level, "label": label, "reasons": reasons}
 
 
 def _write_report(out: Build, workspace: Path, label: dict) -> None:
     """A plain-text account of the run (for the engineer reviewing the distillation)."""
-    tax, kb = out.tax, out.kb
-    name = kb.name
-    L = ["# Distillation report", ""]
-    L += ["## Sources", ""]
+    kb = out.kb
+    L = ["# Distillation report", "", "## Sources", ""]
     for s in kb.sources:
         line = f"- **{s['label']}** - {s['converter']}: {s['statements']} statements"
         if s["formulas"]:
@@ -411,51 +406,35 @@ def _write_report(out: Build, workspace: Path, label: dict) -> None:
         if s["printed_values"]:
             line += f", {s['printed_values']} printed quantities"
         if s.get("print_of"):
-            line += f" - recognised as a print of {s['print_of']} (benchmark only, not an independent source)"
+            line += f" - a print of {s['print_of']} (benchmark only, not an independent source)"
         L.append(line)
         L.append(f"  - {s['recognised']} quantities recognised; {s['instances']} formulas of code quantities; "
-                 f"{s['not_recognised']} calculated values not recognised (project-specific or outside the taxonomy)")
+                 f"{s['not_recognised']} calculated values not recognised")
     for s in out.skipped:
         L.append(f"- skipped: {s['file']} - {s['reason']}")
-    L += ["", "## Calculation objects", ""]
+    L += ["", "## How the sources applied the code", ""]
     for o in kb.objects.values():
-        L.append(f"### {o.text} - {o.name}")
-        L.append(f"{o.reference_text} - {' > '.join(o.topic_path)}")
-        L.append("")
-        L.append(f"    {o.text} = {X.to_text(o.tree, name)}")
-        L.append("")
-        sup = o.support
-        L.append(f"- status: **{o.status}** - {sup['formula_instances']} formula instance(s) in {sup['sources']} "
-                 f"independent source(s), {sup['variants_merged']} variant(s) merged")
-        for v in o.variants:
-            tag = "merged" if v["merged"] else "NOT merged"
-            L.append(f"  - {tag}: `{v['text']}` - {v['instances']} instance(s) in {', '.join(v['sources'])}")
-            for d in v["differences"]:
-                L.append(f"    - {d}")
-            if v.get("reason"):
-                L.append(f"    - {v['reason']}")
+        ev = o.evidence
+        if not ev.get("variants") and not o.benchmarks.get("total"):
+            continue
+        L.append(f"### {o.text} - {o.name} ({o.reference_text})")
+        L.append(f"    {o.text} = {X.to_text(o.tree, kb.name)}")
+        L.append(f"- confidence: **{o.confidence['label']}** - " + " ".join(o.confidence["reasons"]))
+        for p in ev.get("practice", []):
+            L.append(f"- {p}")
         b = o.benchmarks
         L.append(f"- benchmarks: {b['agree']} of {b['total']} source values reproduced"
-                 + (f", {b['deviation']} deviation(s)" if b["deviation"] else "")
+                 + (f", {b['deviation']} differ" if b["deviation"] else "")
                  + (f", {b['not_comparable']} not comparable" if b["not_comparable"] else ""))
-        shown = 0
-        for it in b["items"]:
-            if it["status"] == "deviation" and shown < 4:
-                k, unit = (1000.0, o.unit + "/m") if it.get("per_width") else (1.0, o.unit)
-                L.append(f"  - deviation at {it['source']} {it['where']}: source "
-                         f"{U.fmt(kb.to_display(o.id, it['expected']) * k)}, unified "
-                         f"{U.fmt(kb.to_display(o.id, it['got']) * k)} {unit} - {it.get('detail', '')}")
-                shown += 1
-        if o.reference:
-            r = o.reference
-            L.append(f"- reference: {r['status']} with {r['library']} `{r['function']}` "
-                     f"({r['agreeing_samples']}/{r['samples']} samples, max. relative difference {r['max_relative_difference']})")
-        for w in o.warnings:
-            L.append(f"- warning: {w}")
-        for w in o.findings:
-            L.append(f"- finding: {w}")
+        for it in [i for i in b["items"] if i["status"] == "deviation"][:4]:
+            k, unit = (1000.0, o.unit + "/m") if it.get("per_width") else (1.0, o.unit)
+            L.append(f"  - {it['source']} {it['where']}: source {U.fmt(kb.to_display(o.id, it['expected']) * k)}, "
+                     f"code {U.fmt(kb.to_display(o.id, it['got']) * k)} {unit} - {it.get('detail', '')}")
         L.append("")
-    L += ["## Not distilled", ""]
+    L += ["## Objects from the code not yet seen in any source", ""]
+    L.append(", ".join(f"{o.text} ({o.reference_text})" for o in kb.objects.values()
+                       if not o.evidence.get("variants") and not o.benchmarks.get("total")) or "none")
+    L += ["", "## Not distilled", ""]
     for doc, dec in zip(out.docs, out.decs):
         names = Counter(s.name for s in dec.unmapped)
         if names:
@@ -463,10 +442,7 @@ def _write_report(out: Build, workspace: Path, label: dict) -> None:
                      + (" ..." if len(names) > 25 else ""))
         glue = Counter(dec.producer[s.id][0].text for s in dec.glue)
         if glue:
-            L.append(f"  - project-specific formulas for input quantities: " + ", ".join(f"{n} (x{k})" for n, k in glue.most_common()))
-    proj = [c for c in out.consolidations.values() if c.unified is None]
-    if proj:
-        L.append("- quantities found only with project-specific formulas: " + ", ".join(name(c.concept) for c in proj))
+            L.append("  - project-specific formulas for input quantities: " + ", ".join(f"{n} (x{k})" for n, k in glue.most_common()))
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / "distillation_report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
     (workspace / "instances.json").write_text(json.dumps(

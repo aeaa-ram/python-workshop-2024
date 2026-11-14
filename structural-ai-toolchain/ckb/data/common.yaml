@@ -1,0 +1,299 @@
+# Quantities that belong to no single design code: geometry, material grades, actions.
+#
+# Every design code file (codes/*.yaml) refers to these by id.  A quantity is described,
+# never calculated, here.
+#
+#   id        identifier used in formulas (must be a valid Python name)
+#   symbol    display form, subscript in braces: "b_{w}"
+#   kind      input        geometry, material grade, action (the engineer enters it)
+#             coefficient  a value the code recommends or a National Annex sets
+#             derived      calculated from other quantities (only in code files)
+#   unit      usual unit; also assumed when a source states no unit
+#   range     sensible range in that unit (used to sample formulas when comparing them)
+#   example   value the calculators open with (an illustration, not a recommendation)
+#   aliases   spellings met in calculations; separators and subscript case are ignored
+#   words     phrases in a descriptive label that identify the quantity
+#   strip     a width: a calculation per unit width leaves it out (b_w = 1)
+#   context   clauses where this is the usual reading of an ambiguous symbol (A_s is A_sl in shear)
+
+references:
+  - id: EN1992-1-1
+    text: "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+  - id: EN1992-1-1:2023
+    text: "EN 1992-1-1:2023. Eurocode 2: Design of concrete structures. Part 1-1 (second generation)."
+  - id: EN1994-1-1
+    text: "EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1: General rules and rules for buildings."
+  - id: EN1990
+    text: "EN 1990:2002 + A1:2005. Eurocode: Basis of structural design."
+  - id: EC2-Commentary
+    text: "European Concrete Platform. Eurocode 2 Commentary. Brussels, 2008."
+  - id: DG-EC2
+    text: "Beeby, A.W. and Narayanan, R.S. Designers' Guide to EN 1992-1-1 and EN 1992-1-2. Thomas Telford, 2005."
+  - id: HowTo-EC2
+    text: "The Concrete Centre. How to design concrete structures using Eurocode 2. 2006 and later editions."
+  - id: UK-NA-EC2
+    text: "NA to BS EN 1992-1-1:2004+A1:2014. UK National Annex to Eurocode 2 Part 1-1."
+  - id: DG-EC4
+    text: "Johnson, R.P. Designers' Guide to Eurocode 4: Design of composite steel and concrete structures, EN 1994-1-1. 2nd edition, ICE Publishing, 2012."
+
+quantities:
+  # ---- material grades -------------------------------------------------------
+  - id: f_ck
+    name: Characteristic compressive cylinder strength of concrete at 28 days
+    kind: input
+    unit: MPa
+    range: [12, 90]
+    example: 30
+    aliases: [fck, f_ck, fc.k]
+    words: [concrete strength, characteristic compressive strength, cylinder strength, concrete grade]
+  - id: f_yk
+    name: Characteristic yield strength of reinforcement
+    context: ["3.2", "6.1", "7"]
+    kind: input
+    unit: MPa
+    range: [400, 600]
+    example: 500
+    aliases: [fyk, f_yk, fy.k, f_sk, fsk, fy, f_y]
+    words: [reinforcement strength, yield strength of reinforcement, characteristic yield strength of reinforcement]
+  - id: f_ywk
+    name: Characteristic yield strength of the shear reinforcement
+    context: ["6.2.3"]
+    kind: input
+    unit: MPa
+    range: [400, 600]
+    example: 500
+    aliases: [fywk, f_ywk, fyk, f_yk, fy, f_y]
+    words: [yield strength of shear reinforcement, yield strength of links]
+  - id: f_y
+    symbol: "f_{y}"
+    name: Nominal yield strength of structural steel
+    kind: input
+    unit: MPa
+    range: [235, 460]
+    example: 355
+    aliases: [fy, f_y, fya, f_ya]
+    words: [structural steel yield strength, yield strength of structural steel, steel grade]
+  - id: f_u
+    symbol: "f_{u}"
+    name: Specified ultimate tensile strength of the stud material
+    kind: input
+    unit: MPa
+    range: [400, 500]
+    example: 450
+    aliases: [fu, f_u]
+    words: [ultimate tensile strength]
+
+  # ---- geometry ----------------------------------------------------------------
+  - id: h
+    name: Overall depth of the cross-section
+    kind: input
+    unit: mm
+    range: [150, 3000]
+    example: 500
+    aliases: [h, D, hc, h_c, tslab, t_slab, h_slab]
+    words: [overall depth, height of element, section height, section depth, slab thickness]
+  - id: b
+    name: Width of the cross-section
+    context: ["6.1", "7"]
+    kind: input
+    unit: mm
+    range: [150, 3000]
+    example: 300
+    strip: true
+    aliases: [b, bc, b_c]
+    words: [width of element, section width, width of the cross-section]
+  - id: b_w
+    symbol: "b_{w}"
+    name: Smallest width of the cross-section in the tensile area
+    context: ["6.2"]
+    kind: input
+    unit: mm
+    range: [100, 3000]
+    example: 300
+    strip: true
+    aliases: [bw, b_w, b, bc, b_c]
+    words: [web width, smallest width, width]
+  - id: d
+    name: Effective depth of the cross-section
+    kind: input
+    unit: mm
+    range: [100, 2900]
+    example: 450
+    aliases: [d, dc, d_c, deff, d_eff]
+    words: [effective depth, eff. depth, reinforcement depth]
+  - id: c
+    name: Clear cover to the longitudinal reinforcement
+    kind: input
+    unit: mm
+    range: [20, 120]
+    example: 35
+    aliases: [c, "c.", cnom, c_nom]
+    words: [cover]
+  - id: phi_bar
+    var: phi
+    symbol: "ϕ"
+    name: Bar diameter (equivalent diameter for mixed sizes)
+    kind: input
+    unit: mm
+    range: [8, 40]
+    example: 20
+    aliases: [ϕ, Ø, φ_s, D_eq, Deq, ϕ_eq, phi_eq, φeq, D_s]
+    words: [bar diameter, equivalent reinforcement diameter, equivalent diameter]
+  - id: A_s
+    symbol: "A_{s}"
+    name: Area of tension reinforcement
+    context: ["6.1", "7", "6.7"]
+    kind: input
+    unit: "mm²"
+    range: [200, 20000]
+    example: 942
+    aliases: [As, A_s, As1, A_s1, Ast]
+    words: [total reinforcement area, area of tension reinforcement, reinforcement area]
+  - id: A_sl
+    symbol: "A_{sl}"
+    name: Area of tensile reinforcement extending at least l_bd + d beyond the section
+    context: ["6.2"]
+    kind: input
+    unit: "mm²"
+    range: [100, 20000]
+    example: 942
+    aliases: [Asl, A_sl, As, A_s]
+    words: [tensile reinforcement area, longitudinal tension reinforcement]
+  - id: A_sw
+    symbol: "A_{sw}"
+    name: Cross-sectional area of the shear reinforcement
+    kind: input
+    unit: "mm²"
+    range: [50, 2000]
+    example: 157
+    aliases: [Asw, A_sw]
+    words: [shear reinforcement area, area of links, link area]
+  - id: s
+    name: Spacing of the stirrups
+    kind: input
+    unit: mm
+    range: [50, 400]
+    example: 200
+    aliases: [s, sw, s_w, slinks, s_links]
+    words: [link spacing, stirrup spacing, spacing of links]
+  - id: theta
+    symbol: "θ"
+    name: Angle between the concrete strut and the member axis
+    kind: input
+    unit: "°"
+    range: [21.8, 45]
+    example: 21.8
+    aliases: [θ, theta, θf, θ_f, theta_f]
+    words: [strut angle, compressive strut angle, strut inclination]
+  - id: cot_theta
+    symbol: "cot θ"
+    name: Cotangent of the strut angle
+    kind: derived
+    basis: definition
+    unit: "-"
+    range: [1.0, 2.5]
+    formula: cot(theta)
+    inverse: {theta: "atan(1 / cot_theta)"}
+    aliases: [cotθ, cot_theta, cottheta, "cot θ"]
+    words: [cot theta]
+  - id: alpha
+    symbol: "α"
+    name: Angle between the shear reinforcement and the member axis
+    kind: input
+    unit: "°"
+    range: [45, 90]
+    example: 90
+    aliases: [α, alpha]
+  - id: A_a
+    symbol: "A_{a}"
+    name: Cross-sectional area of the structural steel section
+    kind: input
+    unit: "mm²"
+    range: [1000, 60000]
+    example: 7800
+    aliases: [Aa, A_a]
+    words: [steel section area, area of structural steel]
+  - id: A_c
+    symbol: "A_{c}"
+    name: Cross-sectional area of concrete
+    kind: input
+    unit: "mm²"
+    range: [10000, 2000000]
+    example: 82000
+    aliases: [Ac, A_c]
+    words: [concrete area, area of concrete]
+  - id: d_s
+    symbol: "d"
+    name: Diameter of the shank of the stud
+    kind: input
+    unit: mm
+    range: [16, 25]
+    example: 19
+    aliases: [d_stud, dstud, d_s, ds]
+    words: [stud diameter, shank diameter]
+  - id: h_sc
+    symbol: "h_{sc}"
+    name: Overall nominal height of the stud
+    kind: input
+    unit: mm
+    range: [50, 200]
+    example: 100
+    aliases: [hsc, h_sc]
+    words: [stud height]
+
+  # ---- actions and section properties --------------------------------------------
+  - id: sigma_cp
+    symbol: "σ_{cp}"
+    name: Concrete stress from axial load or prestress (compression positive)
+    kind: input
+    unit: MPa
+    range: [-2.0, 6.0]
+    example: 0
+    aliases: [σcp, σ_cp, sigma_cp, sigmacp, scp]
+    words: [axial stress, mean compressive stress]
+  - id: V_Ed
+    symbol: "V_{Ed}"
+    name: Design shear force
+    kind: input
+    unit: kN
+    range: [10, 10000]
+    example: 150
+    aliases: [VEd, V_Ed, Ved, VULS, V_ULS]
+    words: [design shear force, shear force]
+  - id: M_Ed
+    symbol: "M_{Ed}"
+    name: Design bending moment
+    kind: input
+    unit: kNm
+    range: [10, 20000]
+    example: 150
+    aliases: [MEd, M_Ed, MULS, M_ULS]
+    words: [design moment, design bending moment]
+  - id: N_Ed
+    symbol: "N_{Ed}"
+    name: Design axial force
+    kind: input
+    unit: kN
+    range: [10, 50000]
+    example: 1500
+    aliases: [NEd, N_Ed]
+    words: [design axial force, axial load]
+  - id: M_SLS
+    symbol: "M_{SLS}"
+    name: Bending moment in the serviceability combination considered
+    kind: input
+    unit: kNm
+    range: [5, 20000]
+    example: 100
+    aliases: [MSLS, M_SLS, M_QP, MQP, M_qp, Mqp, M_SLS.QP, MSLS.QP, M_char, M_k]
+    words: [quasi-permanent moment, serviceability moment, sls moment]
+  - id: phi_creep
+    var: phi_t
+    symbol: "φ(∞,t_{0})"
+    name: Final creep coefficient
+    kind: input
+    unit: "-"
+    range: [0.5, 3.5]
+    example: 2.0
+    aliases: [φ_c, φc, phi_c, "φ(∞,t0)", φ, phi_inf]
+    words: [creep factor, creep coefficient]

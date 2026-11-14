@@ -128,7 +128,7 @@ def _page_statements(page, page_no: int, doc: SourceDocument, section: list[str]
                 rest = m.group(3)
                 decimals = len(num.split(".")[1]) if "." in num else 0
                 value = float(num)
-                prec = 0.5 * 10 ** (-decimals) if eqs else 0.0     # a typed input is exact
+                prec = 0.5 * 10 ** (-decimals)
                 if m.group(2):
                     scale = 10 ** int(m.group(2).replace("−", "-"))
                     value, prec = float(f"{value * scale:.12g}"), prec * scale

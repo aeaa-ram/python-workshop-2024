@@ -1,0 +1,841 @@
+# Code baseline: EN 1992-1-1 (Eurocode 2, first generation), recommended values.
+#
+# The formulas below restate the expressions of the code in consistent units (N, mm, MPa,
+# rad) so the knowledge base starts from the code itself.  Source calculations are then
+# compared with them: applied as written, simplified (and with what effect), or different.
+# Text is written for this knowledge base; it summarises and does not reproduce the code.
+#
+#   formula       the expression, using quantity ids (Python syntax; min, max, sqrt, cot, ...)
+#   basis         code (an expression of the code) | mechanics (standard section analysis
+#                 used with the code) | definition
+#   ndp           a Nationally Determined Parameter: a National Annex may change it
+#   value         recommended value of a coefficient (in its unit)
+#   choices       the values the code allows, with their meaning
+#   alternatives  other expressions the code permits, and when
+#   checks        conditions for the expression to apply; evaluated with every calculation
+#   sense         resistance: a higher value is less safe to overstate
+#                 effect: a lower value is less safe to understate
+#   check         the quantity it is verified against (V_Ed for a resistance)
+#   background    design background: scope | limitation | pitfall | guidance | history,
+#                 with references "<reference id>:<locator>" (references in common.yaml)
+#   ref           key of an independent open-source implementation (distill/reference.py)
+
+code: EN 1992-1-1
+title: "Eurocode 2: Design of concrete structures, Part 1-1"
+edition: "2004 + AC:2010 + A1:2014"
+values: recommended values (no National Annex)
+order: 1
+
+topics:
+  - {id: "2",     title: "Basis of design"}
+  - {id: "2.4",   title: "Verification by the partial factor method"}
+  - {id: "3",     title: "Materials", keywords: [material, concrete properties]}
+  - {id: "3.1",   title: "Concrete", keywords: [concrete]}
+  - {id: "3.2",   title: "Reinforcing steel", keywords: [reinforcing steel, reinforcement steel]}
+  - {id: "6",     title: "Ultimate limit states (ULS)", keywords: [uls, ultimate]}
+  - {id: "6.1",   title: "Bending with or without axial force", keywords: [bending, moment, flexur]}
+  - {id: "6.2",   title: "Shear", keywords: [shear]}
+  - {id: "6.2.2", title: "Members not requiring design shear reinforcement", keywords: [without shear reinforcement, unreinforced for shear, without links]}
+  - {id: "6.2.3", title: "Members requiring design shear reinforcement", keywords: [shear link, reinforced for shear, shear reinforcement, stirrup]}
+  - {id: "7",     title: "Serviceability limit states (SLS)", keywords: [sls, serviceability]}
+  - {id: "7.2",   title: "Stress limitation", keywords: [stress limit, compressive stress, tensile stress]}
+  - {id: "7.3",   title: "Crack control", keywords: [crack]}
+  - {id: "7.3.4", title: "Calculation of crack widths", keywords: [crack width, crack-width]}
+  - {id: "7.4",   title: "Deflection control", keywords: [deflection]}
+
+quantities:
+  # ---- 2.4 partial factors ----------------------------------------------------------
+  - id: gamma_C
+    symbol: "γ_{C}"
+    name: Partial factor for concrete
+    topic: "2.4"
+    clause: "2.4.2.4(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.5
+    choices: [{value: 1.5, label: persistent and transient design situations}, {value: 1.2, label: accidental design situations}]
+    unit: "-"
+    range: [1.0, 1.6]
+    aliases: [γc, γC, γ_c, γ_C, γ_Mc, γMc, gamma_c, gammac, γm.c]
+    words: [safety factor concrete, partial factor for concrete, partial factor concrete]
+    background:
+      - kind: guidance
+        text: "Table 2.1N gives 1.5 for persistent and transient design situations and 1.2 for accidental ones. Annex A allows reduced factors where geometric deviations or material properties are controlled more tightly; a National Annex may set other values."
+        refs: ["EN1992-1-1:2.4.2.4, Table 2.1N, Annex A"]
+  - id: gamma_S
+    symbol: "γ_{S}"
+    name: Partial factor for reinforcing steel
+    topic: "2.4"
+    clause: "2.4.2.4(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.15
+    choices: [{value: 1.15, label: persistent and transient design situations}, {value: 1.0, label: accidental design situations}]
+    unit: "-"
+    range: [1.0, 1.25]
+    aliases: [γs, γS, γ_s, γ_S, γ_Ms, γMs, gamma_s, gammas]
+    words: [safety factor reinforcement, safety factor steel, partial factor for steel]
+
+  # ---- 3.1 concrete ---------------------------------------------------------------
+  - id: alpha_cc
+    symbol: "α_{cc}"
+    name: Coefficient for long-term effects on the compressive strength
+    topic: "3.1"
+    clause: "3.1.6(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.0
+    unit: "-"
+    range: [0.8, 1.0]
+    aliases: [αcc, α_cc, alpha_cc, acc]
+    words: [long-term effects, long term effects]
+    background:
+      - kind: guidance
+        text: "The recommended value is 1.0; it should lie between 0.8 and 1.0. Several National Annexes use 0.85 for flexure and axial load (the UK Annex uses 0.85 for compression in flexure and axial loading and 1.0 otherwise). A calculation that leaves α_cc out has assumed 1.0."
+        refs: ["EN1992-1-1:3.1.6(1)", "UK-NA-EC2:NA.2"]
+  - id: alpha_ct
+    symbol: "α_{ct}"
+    name: Coefficient for long-term effects on the tensile strength
+    topic: "3.1"
+    clause: "3.1.6(2)"
+    kind: coefficient
+    ndp: true
+    value: 1.0
+    unit: "-"
+    range: [0.8, 1.0]
+    aliases: [αct, α_ct, alpha_ct]
+  - id: f_cm
+    symbol: "f_{cm}"
+    name: Mean compressive cylinder strength of concrete at 28 days
+    topic: "3.1"
+    clause: "3.1.2, Table 3.1"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [20, 98]
+    formula: f_ck + 8
+    aliases: [fcm, f_cm]
+    words: [mean compressive strength]
+  - id: f_ctm
+    symbol: "f_{ctm}"
+    name: Mean axial tensile strength of concrete
+    topic: "3.1"
+    clause: "3.1.2, Table 3.1"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [1.6, 5.0]
+    formula: "0.30 * f_ck ** (2 / 3) if f_ck <= 50 else 2.12 * ln(1 + f_cm / 10)"
+    aliases: [fctm, f_ctm]
+    words: [concrete tensile strength, mean tensile strength]
+    background:
+      - kind: limitation
+        text: "Table 3.1 gives two expressions: 0.30 f_ck^(2/3) up to C50/60 and 2.12 ln(1 + f_cm/10) above. Tensile strength scatters widely; use the 5 % fractile f_ctk,0.05 = 0.7 f_ctm where a low value is unfavourable."
+        refs: ["EN1992-1-1:3.1.2, Table 3.1"]
+  - id: f_ctk_005
+    symbol: "f_{ctk,0.05}"
+    name: Characteristic axial tensile strength of concrete (5 % fractile)
+    topic: "3.1"
+    clause: "3.1.2, Table 3.1"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [1.1, 3.5]
+    formula: 0.7 * f_ctm
+    aliases: [fctk0.05, fctk.0.05, "fctk,0.05", fctk005, f_ctk.0.05]
+    words: [characteristic tensile strength]
+  - id: E_cm
+    symbol: "E_{cm}"
+    name: Secant modulus of elasticity of concrete
+    topic: "3.1"
+    clause: "3.1.3, Table 3.1"
+    kind: derived
+    basis: code
+    unit: GPa
+    range: [27, 44]
+    formula: 22000 * (f_cm / 10) ** 0.3
+    aliases: [Ecm, E_cm, Ec, E_c]
+    words: [concrete e-modulus, modulus of elasticity of concrete, concrete modulus]
+    background:
+      - kind: limitation
+        text: "The expression applies to quartzite aggregates. Reduce by 10 % for limestone and 30 % for sandstone aggregates and increase by 20 % for basalt (3.1.3(2)). For deflections and long-term stresses an effective modulus is used instead (see E_c,eff)."
+        refs: ["EN1992-1-1:3.1.3(2)"]
+  - id: f_cd
+    symbol: "f_{cd}"
+    name: Design compressive strength of concrete
+    topic: "3.1"
+    clause: "3.1.6(1)"
+    eq: "(3.15)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [8, 60]
+    formula: alpha_cc * f_ck / gamma_C
+    sense: resistance
+    ref: fcd
+    aliases: [fcd, f_cd]
+    words: [design compressive strength]
+    background:
+      - kind: pitfall
+        text: "α_cc is a Nationally Determined Parameter. Spreadsheets often write f_ck/γ_C, which is the recommended value α_cc = 1.0; with a National Annex value of 0.85 the same sheet overstates f_cd by 18 %."
+        refs: ["EN1992-1-1:3.1.6(1)"]
+  - id: f_ctd
+    symbol: "f_{ctd}"
+    name: Design tensile strength of concrete
+    topic: "3.1"
+    clause: "3.1.6(2)"
+    eq: "(3.16)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [0.6, 2.5]
+    formula: alpha_ct * f_ctk_005 / gamma_C
+    sense: resistance
+    aliases: [fctd, f_ctd]
+  - id: lam
+    symbol: "λ"
+    name: Factor for the effective height of the compression zone
+    topic: "3.1"
+    clause: "3.1.7(3)"
+    eq: "(3.19), (3.20)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.7, 0.8]
+    formula: "0.8 if f_ck <= 50 else 0.8 - (f_ck - 50) / 400"
+    aliases: [λ, lambda, lambda_, lam]
+    words: [effective compression depth zone factor, effective height of the compression zone]
+  - id: eta
+    symbol: "η"
+    name: Factor for the effective strength of the compression zone
+    topic: "3.1"
+    clause: "3.1.7(3)"
+    eq: "(3.21), (3.22)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.8, 1.0]
+    formula: "1.0 if f_ck <= 50 else 1.0 - (f_ck - 50) / 200"
+    aliases: [η, eta]
+    words: [effective strength]
+
+  # ---- 3.2 reinforcing steel --------------------------------------------------------
+  - id: E_s
+    symbol: "E_{s}"
+    name: Design modulus of elasticity of reinforcing steel
+    topic: "3.2"
+    clause: "3.2.7(4)"
+    kind: coefficient
+    value: 200
+    unit: GPa
+    range: [190, 210]
+    aliases: [Es, E_s]
+    words: [steel e-modulus, modulus of elasticity of steel, reinforcement modulus]
+  - id: f_yd
+    symbol: "f_{yd}"
+    name: Design yield strength of reinforcement
+    topic: "3.2"
+    clause: "3.2.7(2)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [300, 520]
+    formula: f_yk / gamma_S
+    sense: resistance
+    ref: fyd
+    aliases: [fyd, f_yd]
+    words: [design yield strength]
+
+  # ---- 6.1 bending -----------------------------------------------------------------
+  - id: x
+    name: Depth of the neutral axis at the ultimate limit state
+    topic: "6.1"
+    clause: "3.1.7(3), 6.1"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [10, 1500]
+    formula: A_s * f_yd / (eta * f_cd * lam * b)
+    aliases: [x, xu, x_u, yM, y_M]
+    words: [depth of compression zone, neutral axis depth, compression zone depth]
+    checks:
+      - when: "x <= 0.0035 / (0.0035 + f_yd / E_s) * d"
+        text: "the reinforcement yields (x/d within the limit for ε_cu3 = 3.5 ‰); otherwise the expression overstates the steel force"
+        clause: "3.1.7, 6.1(2)"
+    background:
+      - kind: scope
+        text: "Rectangular section with tension reinforcement only, rectangular stress block of depth λx and stress η f_cd, steel yielding. For flanged sections the compression zone may lie in the flange or reach the web; compression reinforcement and axial force are not included."
+        refs: ["EN1992-1-1:3.1.7(3)", "HowTo-EC2:Beams"]
+      - kind: guidance
+        text: "Where moment redistribution or plastic analysis is used, x/d is further limited (5.5, 5.6.3) to ensure rotation capacity."
+        refs: ["EN1992-1-1:5.5(4), 5.6.3(2)"]
+  - id: z
+    name: Lever arm of internal forces in bending
+    topic: "6.1"
+    clause: "3.1.7(3), 6.1"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [80, 2800]
+    formula: d - lam * x / 2
+    aliases: [z]
+    words: [lever arm, inner lever arm]
+    background:
+      - kind: guidance
+        text: "Design aids commonly limit z to 0.95 d for lightly reinforced sections."
+        refs: ["HowTo-EC2:Beams"]
+  - id: M_Rd
+    symbol: "M_{Rd}"
+    name: Design moment resistance
+    topic: "6.1"
+    clause: "6.1"
+    kind: derived
+    basis: mechanics
+    unit: kNm
+    range: [10, 20000]
+    formula: A_s * f_yd * z
+    sense: resistance
+    check: M_Ed
+    aliases: [MRd, M_Rd, MRd.y, M_Rd.y, MRdy]
+    words: [moment resistance, bending resistance, moment capacity]
+
+  # ---- 6.2.2 shear without shear reinforcement ------------------------------------------
+  - id: k
+    name: Size factor for shear
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [1.0, 2.0]
+    formula: min(1 + sqrt(200 / d), 2)
+    aliases: [k]
+    words: [factor k, size factor, size effect]
+    background:
+      - kind: pitfall
+        text: "The expression is empirical and not dimensionally consistent: d must be in millimetres. k reaches its cap of 2.0 for d ≤ 200 mm."
+        refs: ["EN1992-1-1:6.2.2(1)"]
+  - id: rho_l
+    symbol: "ρ_{l}"
+    name: Longitudinal reinforcement ratio
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.0005, 0.03]
+    formula: min(A_sl / (b_w * d), 0.02)
+    aliases: [ρl, ρ_l, ρ1, ρ_1, rho_l, rhol, rho1, ρ]
+    words: [longitudinal reinforcement ratio]
+    background:
+      - kind: pitfall
+        text: "Only bars anchored at least l_bd + d beyond the section count (Figure 6.3). Near a support or a curtailment this is often less than the reinforcement at mid-span."
+        refs: ["EN1992-1-1:6.2.2(1), Figure 6.3"]
+  - id: C_Rd_c
+    symbol: "C_{Rd,c}"
+    name: Coefficient for the shear resistance of concrete
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [0.08, 0.2]
+    formula: 0.18 / gamma_C
+    aliases: [CRd.c, "CRd,c", CRdc, C_Rd.c, "C_Rd,c"]
+    words: [factor crd.c]
+  - id: k_1
+    symbol: "k_{1}"
+    name: Coefficient for the effect of axial stress on shear resistance
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    kind: coefficient
+    ndp: true
+    value: 0.15
+    unit: "-"
+    range: [0.1, 0.2]
+    aliases: [k1, k_1]
+  - id: v_min
+    symbol: "v_{min}"
+    name: Minimum shear strength
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    eq: "(6.3N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: MPa
+    range: [0.2, 1.2]
+    formula: 0.035 * k ** 1.5 * f_ck ** 0.5
+    aliases: [vmin, v_min, νmin, ν_min]
+    words: [factor vmin, minimum shear strength]
+  - id: V_Rd_c_min
+    symbol: "V_{Rd,c,min}"
+    name: Minimum shear resistance of a member without shear reinforcement
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    eq: "(6.2.b)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 2000]
+    formula: (v_min + k_1 * sigma_cp) * b_w * d
+    sense: resistance
+    aliases: [VRd.c.min, "VRd,c,min", VRdcmin, V_Rd.c.min, "VRd.c min", VRdc.min]
+    words: [minimum concrete shear resistance]
+  - id: V_Rd_c
+    symbol: "V_{Rd,c}"
+    name: Shear resistance of a member without shear reinforcement
+    topic: "6.2.2"
+    clause: "6.2.2(1)"
+    eq: "(6.2.a), (6.2.b)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 5000]
+    formula: max((C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) + k_1 * sigma_cp) * b_w * d, V_Rd_c_min)
+    sense: resistance
+    check: V_Ed
+    ref: VRdc
+    aliases: [VRd.c, "VRd,c", VRdc, V_Rd.c, "V_Rd,c"]
+    words: [concrete shear resistance, shear resistance without shear reinforcement]
+    checks:
+      - when: "sigma_cp <= 0.2 * f_cd"
+        text: "σ_cp = N_Ed/A_c is limited to 0.2 f_cd"
+        clause: "6.2.2(1)"
+    background:
+      - kind: scope
+        text: "Members in which no shear reinforcement is required by calculation: slabs, and beams that still receive minimum links. For beams, 6.2.1(4) requires minimum shear reinforcement (9.2.2) even when V_Ed ≤ V_Rd,c; slabs where loads can redistribute transversely may omit it."
+        refs: ["EN1992-1-1:6.2.1(3), 6.2.1(4), 9.2.2"]
+      - kind: history
+        text: "The expression is empirical, calibrated on tests of members without shear reinforcement; C_Rd,c = 0.18/γ_C comes from a statistical evaluation of those tests. The second-generation EN 1992-1-1:2023 uses a different expression that includes the aggregate size, so objects from the two generations are kept apart."
+        refs: ["EC2-Commentary:6.2.2", "EN1992-1-1:2023:8.2.2"]
+      - kind: pitfall
+        text: "Units: the bracket (100 ρ_l f_ck)^(1/3) is in MPa; per-metre calculations with b_w = 1000 mm give kN/m, not kN."
+        refs: ["EN1992-1-1:6.2.2(1)"]
+      - kind: pitfall
+        text: "σ_cp is positive for compression. Axial tension makes k_1 σ_cp negative and reduces both expressions (6.2.a) and (6.2.b); leaving the term out in tension is unsafe."
+        refs: ["EN1992-1-1:6.2.2(1)"]
+      - kind: guidance
+        text: "For loads applied within 2d of a support, the contribution of the load to V_Ed may be reduced by β = a_v/2d (6.2.2(6)); this reduces the action, not V_Rd,c. V_Ed must still not exceed 0.5 b_w d ν f_cd (6.5)."
+        refs: ["EN1992-1-1:6.2.2(6)"]
+  - id: nu
+    symbol: "ν"
+    name: Strength reduction factor for concrete cracked in shear
+    topic: "6.2.2"
+    clause: "6.2.2(6)"
+    eq: "(6.6N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [0.3, 0.6]
+    formula: 0.6 * (1 - f_ck / 250)
+    aliases: [ν, nu, v]
+    words: [strength reduction factor]
+  - id: V_Ed_max
+    symbol: "V_{Ed,max}"
+    name: Upper limit of the shear force in a member without shear reinforcement
+    topic: "6.2.2"
+    clause: "6.2.2(6)"
+    eq: "(6.5)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [50, 20000]
+    formula: 0.5 * b_w * d * nu * f_cd
+    sense: resistance
+    check: V_Ed
+    ref: VEdmax_unreinf
+    aliases: [VEd.max, "VEd,max", VEdmax]
+    words: [upper limit of shear force]
+
+  # ---- 6.2.3 shear with shear reinforcement ------------------------------------------
+  - id: z_V
+    symbol: "z"
+    name: Inner lever arm for shear
+    topic: "6.2.3"
+    clause: "6.2.3(1)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [80, 2800]
+    formula: 0.9 * d
+    aliases: [z]
+    words: [lever arm, inner lever arm]
+    background:
+      - kind: guidance
+        text: "0.9 d is the approximation the code allows for reinforced concrete without axial force. The lever arm from the bending analysis may be used instead: enter z directly."
+        refs: ["EN1992-1-1:6.2.3(1)"]
+  - id: f_ywd
+    symbol: "f_{ywd}"
+    name: Design yield strength of the shear reinforcement
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [300, 520]
+    formula: f_ywk / gamma_S
+    sense: resistance
+    aliases: [fywd, f_ywd]
+  - id: nu_1
+    symbol: "ν_{1}"
+    name: Strength reduction factor for concrete cracked in shear (strut)
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    eq: "(6.6N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [0.3, 0.6]
+    formula: nu
+    alternatives:
+      - formula: "0.6 if f_ck <= 60 else max(0.9 - f_ck / 200, 0.5)"
+        when: "the design stress of the shear reinforcement is below 80 % of f_yk (6.2.3(3) Note 2)"
+    aliases: [ν1, ν_1, nu_1, nu1, v1]
+  - id: alpha_cw
+    symbol: "α_{cw}"
+    name: Coefficient for the state of stress in the compression chord
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    eq: "(6.11aN) to (6.11cN)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [1.0, 1.25]
+    formula: "1 if sigma_cp <= 0 else (1 + sigma_cp / f_cd if sigma_cp <= 0.25 * f_cd else (1.25 if sigma_cp <= 0.5 * f_cd else 2.5 * (1 - sigma_cp / f_cd)))"
+    ref: alpha_cw
+    aliases: [αcw, α_cw, alpha_cw]
+    checks:
+      - when: "sigma_cp < f_cd"
+        text: "σ_cp must be below f_cd"
+        clause: "6.2.3(3)"
+  - id: V_Rd_s
+    symbol: "V_{Rd,s}"
+    name: Shear resistance governed by yielding of the shear reinforcement
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    eq: "(6.8)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 10000]
+    formula: A_sw / s * z_V * f_ywd * cot(theta)
+    sense: resistance
+    check: V_Ed
+    ref: VRds
+    aliases: [VRd.s, "VRd,s", VRds, V_Rd.s, "V_Rd,s"]
+    words: [steel shear resistance]
+    checks:
+      - when: "1 - 1e-9 <= cot(theta) <= 2.5 + 1e-9"
+        text: "1 ≤ cot θ ≤ 2.5 (recommended limits)"
+        clause: "6.2.3(2), (6.7N)"
+    background:
+      - kind: scope
+        text: "Vertical shear reinforcement. For inclined links use (6.13) with the angle α. The variable strut inclination method lets the designer choose θ within the limits; a flatter strut needs fewer links but increases the additional tensile force in the longitudinal reinforcement (6.2.3(7))."
+        refs: ["EN1992-1-1:6.2.3(2), (6.13), 6.2.3(7)"]
+      - kind: guidance
+        text: "Check the maximum effective shear reinforcement (6.12) and the minimum shear reinforcement ratio (9.5N) with the same links."
+        refs: ["EN1992-1-1:6.2.3(3), 9.2.2(5)"]
+  - id: V_Rd_max
+    symbol: "V_{Rd,max}"
+    name: Shear resistance governed by crushing of the compression struts
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    eq: "(6.9)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 30000]
+    formula: alpha_cw * b_w * z_V * nu_1 * f_cd / (cot(theta) + tan(theta))
+    sense: resistance
+    check: V_Ed
+    ref: VRdmax
+    aliases: [VRd.max, "VRd,max", VRdmax, V_Rd.max, "V_Rd,max"]
+    words: [maximum shear resistance, strut crushing]
+
+  # ---- 7.3.4 crack width (with the cracked elastic section) ---------------------------------
+  - id: alpha_e
+    symbol: "α_{e}"
+    name: Modular ratio E_s / E_cm
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [5, 20]
+    formula: E_s / E_cm
+    ref: alpha_e
+    alternatives:
+      - formula: E_s / E_c_eff
+        when: "stresses under long-term loads, with the effective modulus (7.4.3(5))"
+    aliases: [αe, α_e, alpha_e, ns, n_s, n]
+    words: [e-modulus ratio, modular ratio]
+  - id: x_el
+    symbol: "x_{el}"
+    name: Depth of the neutral axis of the cracked section (elastic)
+    topic: "7.3.4"
+    clause: "7.3.4, 7.2"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [10, 1500]
+    formula: (sqrt((alpha_e * A_s) ** 2 + 2 * b * alpha_e * A_s * d) - alpha_e * A_s) / b
+    aliases: [x, zNA, z_NA, xel, x_el, x_cr]
+    words: [distance to neutral axis, neutral axis depth]
+    background:
+      - kind: scope
+        text: "Rectangular section, tension reinforcement only, concrete in tension ignored, linear elastic materials. For flanged sections with the neutral axis in the web, or with compression reinforcement, the expression changes."
+        refs: ["DG-EC2:7.3"]
+  - id: I_cr
+    symbol: "I_{cr}"
+    name: Second moment of area of the cracked section
+    topic: "7.3.4"
+    clause: "7.3.4, 7.2"
+    kind: derived
+    basis: mechanics
+    unit: "mm⁴"
+    range: [1.0e+8, 1.0e+12]
+    formula: b * x_el ** 3 / 3 + alpha_e * A_s * (d - x_el) ** 2
+    aliases: [Icr, I_cr, Ic, I_c]
+    words: [moment of inertia, second moment of area]
+  - id: sigma_s
+    symbol: "σ_{s}"
+    name: Stress in the tension reinforcement assuming a cracked section
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    kind: derived
+    basis: mechanics
+    unit: MPa
+    range: [40, 450]
+    formula: alpha_e * M_SLS * (d - x_el) / I_cr
+    sense: effect
+    aliases: [σs, σ_s, sigma_s, σs.crack, σ_s.crack]
+    words: [stress in reinforcement, tensile stress in reinforcement, steel stress]
+    background:
+      - kind: guidance
+        text: "Under the characteristic combination the steel stress should not exceed 0.8 f_yk (7.2(5), recommended value)."
+        refs: ["EN1992-1-1:7.2(5)"]
+  - id: sigma_c
+    symbol: "σ_{c}"
+    name: Compressive stress in the concrete assuming a cracked section
+    topic: "7.2"
+    clause: "7.2(2), 7.2(3)"
+    kind: derived
+    basis: mechanics
+    unit: MPa
+    range: [1, 40]
+    formula: M_SLS * x_el / I_cr
+    sense: effect
+    aliases: [σc, σ_c, sigma_c]
+    words: [compressive stress in concrete]
+    background:
+      - kind: guidance
+        text: "Recommended limits: 0.6 f_ck under the characteristic combination in exposure classes XD, XF and XS (longitudinal cracking), and 0.45 f_ck under the quasi-permanent combination if linear creep is assumed."
+        refs: ["EN1992-1-1:7.2(2), 7.2(3)"]
+  - id: h_c_ef
+    symbol: "h_{c,ef}"
+    name: Effective height of the concrete tension zone
+    topic: "7.3.4"
+    clause: "7.3.2(3)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [50, 800]
+    formula: min(2.5 * (h - d), (h - x_el) / 3, h / 2)
+    ref: hc_eff
+    aliases: [hc.ef, "hc,ef", hcef, hc.eff, "hc,eff", hceff, h_c.eff, h_c.ef]
+    words: [effective height of tension zone, effective tension height]
+  - id: A_c_eff
+    symbol: "A_{c,eff}"
+    name: Effective area of concrete in tension around the reinforcement
+    topic: "7.3.4"
+    clause: "7.3.2(3)"
+    kind: derived
+    basis: code
+    unit: "mm²"
+    range: [10000, 2000000]
+    formula: h_c_ef * b
+    aliases: [Ac.eff, "Ac,eff", Aceff, A_c.eff]
+    words: [effective tension area]
+  - id: rho_p_eff
+    symbol: "ρ_{p,eff}"
+    name: Effective reinforcement ratio
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    eq: "(7.10)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.004, 0.08]
+    formula: A_s / A_c_eff
+    ref: rho_p_eff
+    aliases: [ρp.eff, "ρp,eff", ρpeff, ρ_p.eff, rho_p_eff, rhopeff]
+    words: [effective reinforcement ratio]
+    background:
+      - kind: scope
+        text: "Reinforcing steel only. With bonded prestressing tendons inside A_c,eff, ξ1² A'_p is added to A_s."
+        refs: ["EN1992-1-1:(7.10)"]
+  - id: k_1_bond
+    var: k_1
+    symbol: "k_{1}"
+    name: Coefficient for the bond properties of the reinforcement
+    topic: "7.3.4"
+    clause: "7.3.4(3)"
+    kind: coefficient
+    value: 0.8
+    choices: [{value: 0.8, label: high bond bars}, {value: 1.6, label: bars with an effectively plain surface}]
+    unit: "-"
+    range: [0.8, 1.6]
+    aliases: [k1, k_1]
+    words: [bond]
+  - id: k_2
+    symbol: "k_{2}"
+    name: Coefficient for the distribution of strain
+    topic: "7.3.4"
+    clause: "7.3.4(3)"
+    kind: coefficient
+    value: 0.5
+    choices: [{value: 0.5, label: bending}, {value: 1.0, label: pure tension}]
+    unit: "-"
+    range: [0.5, 1.0]
+    aliases: [k2, k_2]
+    words: [strain distribution]
+  - id: k_3
+    symbol: "k_{3}"
+    name: Coefficient k3 for crack spacing
+    topic: "7.3.4"
+    clause: "7.3.4(3)"
+    kind: coefficient
+    ndp: true
+    value: 3.4
+    unit: "-"
+    range: [2.0, 3.4]
+    aliases: [k3, k_3]
+  - id: k_4
+    symbol: "k_{4}"
+    name: Coefficient k4 for crack spacing
+    topic: "7.3.4"
+    clause: "7.3.4(3)"
+    kind: coefficient
+    ndp: true
+    value: 0.425
+    unit: "-"
+    range: [0.4, 0.45]
+    aliases: [k4, k_4]
+  - id: k_t
+    symbol: "k_{t}"
+    name: Factor for the duration of the load
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    kind: coefficient
+    value: 0.4
+    choices: [{value: 0.6, label: short-term loading}, {value: 0.4, label: long-term loading}]
+    unit: "-"
+    range: [0.4, 0.6]
+    aliases: [kt, k_t]
+    words: [duration of the load]
+  - id: f_ct_eff
+    symbol: "f_{ct,eff}"
+    name: Mean tensile strength of the concrete when the first cracks may occur
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [1.6, 5.0]
+    formula: f_ctm
+    aliases: [fct.eff, "fct,eff", fcteff, f_ct.eff, fctm, f_ctm]
+    background:
+      - kind: guidance
+        text: "f_ct,eff = f_ctm when cracking is expected after 28 days; use f_ctm(t) if it may occur earlier, e.g. from early thermal effects."
+        refs: ["EN1992-1-1:7.3.2(2)"]
+  - id: s_r_max
+    symbol: "s_{r,max}"
+    name: Maximum crack spacing
+    topic: "7.3.4"
+    clause: "7.3.4(3)"
+    eq: "(7.11)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: mm
+    range: [50, 1200]
+    formula: k_3 * c + k_1_bond * k_2 * k_4 * phi_bar / rho_p_eff
+    sense: effect
+    ref: sr_max_close
+    aliases: [sr.max, "sr,max", srmax, s_r.max]
+    words: [maximum crack spacing]
+    background:
+      - kind: limitation
+        text: "Valid where the bars are spaced at most 5(c + ϕ/2). For wider spacing, or where there is no bonded reinforcement within the tension zone, s_r,max = 1.3(h − x) (7.14)."
+        refs: ["EN1992-1-1:7.3.4(3)"]
+  - id: eps_sm_cm
+    symbol: "ε_{sm}−ε_{cm}"
+    name: Difference between the mean strains of reinforcement and concrete
+    topic: "7.3.4"
+    clause: "7.3.4(2)"
+    eq: "(7.9)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.0001, 0.003]
+    formula: max((sigma_s - k_t * f_ct_eff / rho_p_eff * (1 + alpha_e * rho_p_eff)) / E_s, 0.6 * sigma_s / E_s)
+    sense: effect
+    ref: eps_sm_eps_cm
+    aliases: [εsm−εcm, εsm-εcm, Δεsm.cm, Δε_sm.cm, Δε, eps_sm_cm, Deltaeps_sm_cm]
+    words: [difference between mean strain, mean strain difference]
+    background:
+      - kind: pitfall
+        text: "α_e in (7.9) is E_s/E_cm. Using the long-term modular ratio here, as is sometimes done because the stress was calculated with it, changes the tension-stiffening term."
+        refs: ["EN1992-1-1:7.3.4(2)"]
+  - id: w_k
+    symbol: "w_{k}"
+    name: Calculated crack width
+    topic: "7.3.4"
+    clause: "7.3.4(1)"
+    eq: "(7.8)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [0.01, 0.8]
+    formula: s_r_max * eps_sm_cm
+    sense: effect
+    check: w_max
+    ref: wk
+    aliases: [wk, w_k]
+    words: [crack-width, crack width]
+  - id: w_max
+    symbol: "w_{max}"
+    name: Limiting calculated crack width
+    topic: "7.3"
+    clause: "7.3.1(5), Table 7.1N"
+    kind: coefficient
+    ndp: true
+    value: 0.3
+    unit: mm
+    range: [0.1, 0.4]
+    aliases: [wmax, w_max, wk.Rd, w_k.Rd, wk.lim]
+    words: [allowable crack width, limiting crack width]
+    background:
+      - kind: guidance
+        text: "Table 7.1N recommends 0.3 mm under the quasi-permanent combination for exposure classes XC2 to XC4, XD and XS for reinforced members, and 0.4 mm for X0 and XC1 (appearance only)."
+        refs: ["EN1992-1-1:Table 7.1N"]
+
+  # ---- 7.4 deflection --------------------------------------------------------------
+  - id: E_c_eff
+    symbol: "E_{c,eff}"
+    name: Effective modulus of elasticity of concrete (creep)
+    topic: "7.4"
+    clause: "7.4.3(5)"
+    eq: "(7.20)"
+    kind: derived
+    basis: code
+    unit: GPa
+    range: [8, 30]
+    formula: E_cm / (1 + phi_creep)
+    aliases: [Ec.eff, "Ec,eff", Eceff, E_c.eff, E_c.long, Ec.long, Eclong]
+    words: [effective modulus, long e-modulus, long term e-modulus, long-term modulus]

@@ -65,6 +65,11 @@ class Variant:
     diffs: list[Diff] = field(default_factory=list)
     merged: bool = False
     reason: str = ""          # why it was not merged
+    relation: str = ""        # against a code baseline: as code | alternative | simplified | differs | project-specific
+    alternative: dict | None = None
+    reference: X.Node | None = None      # the expression this variant is benchmarked against
+    extra: list = field(default_factory=list)
+    renamed: dict = field(default_factory=dict)      # source symbol -> the quantity it stands for
 
     @property
     def sources(self) -> list[str]:
@@ -82,6 +87,7 @@ class Consolidation:
     unified: X.Node | None = None
     status: str = ""          # consensus | unified | single source | disagreement | project-specific
     neutral: dict = field(default_factory=dict)     # parameter -> value that switches it off
+    baseline: bool = False    # the unified formula is the code's own expression
 
     @property
     def merged(self) -> list[Variant]:
@@ -165,10 +171,20 @@ class Merger:
         return bool(rng) and rng[0] <= value <= rng[1]
 
     def _neutral_factor(self, n: X.Node) -> bool:
+        """Can this factor be left out (taken as 1)?  A width in a per-unit-width source, or a
+        dimensionless factor that can be 1 (a coefficient, or η which is 1 up to C50/60)."""
         if not isinstance(n, X.Sym):
             return False
         c = self.tax.concepts.get(n.name)
-        return c is not None and (c.strip or (c.kind == "coefficient" and not any(c.dims)))
+        if c is None:
+            return False
+        if c.strip:
+            return True
+        if any(c.dims):
+            return False
+        if c.kind == "coefficient":
+            return True
+        return bool(c.kind == "derived" and c.range and c.range[0] <= 1.0 <= c.range[1])
 
     def merge(self, a: X.Node, b: X.Node, da: list, db: list) -> X.Node | None:
         """Unified tree, or None.  ``da`` / ``db`` collect what a / b lack."""
@@ -452,37 +468,41 @@ def is_special_case(unified: X.Node, variant: Variant, tax: Taxonomy, observed: 
 
 
 # --------------------------------------------------------------------------
-def consolidate(concept: str, instances: list[Instance], tax: Taxonomy, observed: dict) -> Consolidation:
-    out = Consolidation(concept)
-    # ---- variants: the same formula, however it was typed --------------------
+def group_variants(instances: list[Instance], tax: Taxonomy, observed: dict) -> list[Variant]:
+    """Instances with the same formula, however it was typed, form one variant."""
+    variants: list[Variant] = []
     for inst in instances:
         if inst.formula is None:
             continue
-        for v in out.variants:
+        for v in variants:
             if X.same(v.formula, inst.formula):
                 v.instances.append(inst)
                 break
         else:
-            out.variants.append(Variant(inst.formula, [inst]))
-    # formulas written differently but numerically identical are one variant
+            variants.append(Variant(inst.formula, [inst]))
     merged_any = True
     while merged_any:
         merged_any = False
-        for i, v in enumerate(out.variants):
-            for w in out.variants[i + 1:]:
+        for i, v in enumerate(variants):
+            for w in variants[i + 1:]:
                 if equivalent(v.formula, w.formula, tax, observed):
                     keep, drop = (v, w) if len(v.instances) >= len(w.instances) else (w, v)
                     keep.instances.extend(drop.instances)
-                    out.variants.remove(drop)
+                    variants.remove(drop)
                     merged_any = True
                     break
             if merged_any:
                 break
+    variants.sort(key=lambda v: (-v.publishable, -len(v.sources), -len(v.instances)))
+    return variants
+
+
+def consolidate(concept: str, instances: list[Instance], tax: Taxonomy, observed: dict) -> Consolidation:
+    """Merge the sources among themselves (used where the registry has no code expression)."""
+    out = Consolidation(concept)
+    out.variants = group_variants(instances, tax, observed)
     if not out.variants:
         return out
-    # most support first: number of sources, then number of instances
-    out.variants.sort(key=lambda v: (-v.publishable, -len(v.sources), -len(v.instances)))
-
     usable = [v for v in out.variants if v.publishable]
     for v in out.variants:
         if not v.publishable:

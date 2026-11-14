@@ -58,8 +58,9 @@ class Context:
         self.twin: dict[str, Instance] = {}       # printed statement id -> the formula instance behind it
         self.printed_of: dict[str, Statement] = {}  # statement id in the other source -> printed statement
 
-    def roles(self, scope: str) -> dict[str, list]:
-        if scope not in self._roles:
+    def roles(self, scope) -> dict[str, list]:
+        key = getattr(scope, "id", scope)
+        if key not in self._roles:
             table: dict[str, list] = {}
             for i, st in enumerate(self.statements):
                 if not isinstance(st.best_value(), (int, float)):
@@ -70,10 +71,10 @@ class Context:
                     table.setdefault(m.concept.id, []).append((i, m.score))
                 if own and (m is None or own[0].id != m.concept.id):
                     table.setdefault(own[0].id, []).append((i, 0.6))
-            self._roles[scope] = table
-        return self._roles[scope]
+            self._roles[key] = table
+        return self._roles[key]
 
-    def find(self, concept: str, scope: str, near: Statement, same_group_only: bool = False) -> Statement | None:
+    def find(self, concept: str, scope, near: Statement, same_group_only: bool = False) -> Statement | None:
         t = self.twin.get(near.id)
         if t is not None and concept in t.args:
             hit = self.printed_of.get(t.args[concept]["stmt"])
@@ -122,13 +123,18 @@ def link_print(printed: Decomposition, other: Decomposition, ctx: "Context") -> 
                 break
 
 
-def typical_values(observed: dict) -> dict:
-    """Most frequent value of each quantity in the sources."""
+def typical_values(observed: dict, tax: Taxonomy | None = None) -> dict:
+    """A value for each quantity: the recommended value of a coefficient, else the most
+    frequent value in the sources."""
     out = {}
     for cid, vals in observed.items():
         nums = [float(f"{v:.6g}") for v in vals if isinstance(v, (int, float))]
         if nums:
             out[cid] = Counter(nums).most_common(1)[0][0]
+    if tax is not None:
+        for c in tax.concepts.values():
+            if c.kind == "coefficient" and c.canonical_value is not None:
+                out[c.id] = c.canonical_value
     return out
 
 
@@ -149,53 +155,93 @@ def _chain(pid: str, env: dict, formulas: dict, depth: int = 0):
         return None
 
 
+def _inverse(pid: str, env: dict, tax: Taxonomy):
+    """Recover a primary quantity from a derived one the source gives (θ from cot θ)."""
+    for c in tax.concepts.values():
+        expr = c.inverse.get(pid) if c.inverse else None
+        if expr and c.id in env:
+            try:
+                return X.evaluate(X.parse(expr), env)
+            except X.ExprError:
+                continue
+    return None
+
+
 def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Context, tax: Taxonomy,
                   formulas: dict, typical: dict, name) -> Benchmark:
+    from .baseline import effect, explain
     b = Benchmark(inst.concept, inst.doc, "formula", inst.loc, inst.case, inst.name, inst.value)
     b.per_width = inst.per_width
-    unified = cons.unified
-    scope = tax.concepts[inst.concept].topic
+    concept = tax.concepts[inst.concept]
+    reference = variant.reference if variant.reference is not None else cons.unified
     st = ctx.by_id[inst.stmt]
     env = {s: a["value"] for s, a in inst.args.items()}
+    for old, new in variant.renamed.items():
+        if old in env:
+            env.setdefault(new, env[old])
+            b.assumed[new] = f"the source's {name(old)}"
     for d in variant.diffs:
         if d.kind == "alias":
             env[d.sym] = env.get(d.expr.name)
-    for p in X.symbols(unified):
+        elif d.kind == "literal" and d.sym not in env:
+            env[d.sym], b.assumed[d.sym] = d.value, "fixed in the source formula"
+        elif d.kind == "factor" and d.sym not in env and tax.concepts.get(d.sym) is not None:
+            c = tax.concepts[d.sym]
+            if c.strip and inst.per_width:
+                env[d.sym], b.assumed[d.sym] = 1.0, "per unit width"
+            elif not c.formula:
+                env[d.sym], b.assumed[d.sym] = 1.0, "not in the source formula"
+    missing: list[str] = []
+
+    def value(p: str, trail: tuple = ()):
+        """The source's value of p, else derived from the source's values, else a stated assumption."""
         if p in env:
-            continue
-        lit = next((d for d in variant.diffs if d.kind == "literal" and d.sym == p), None)
-        fac = next((d for d in variant.diffs if d.kind == "factor" and d.sym == p), None)
-        if lit is not None:
-            env[p], b.assumed[p] = lit.value, "fixed in the source formula"
-            continue
-        if fac is not None and tax.concepts[p].strip:
-            env[p], b.assumed[p] = 1.0, "per unit width"
-            continue
-        r = ctx.find(p, scope, st, same_group_only=not ctx.sequential)
-        if r is not None:
+            return env[p]
+        if p in trail or len(trail) > 12:
+            return None
+        r = ctx.find(p, concept, st, same_group_only=not ctx.sequential)
+        if r is not None and isinstance(r.best_value(), (int, float)):
             env[p] = canonical_value(r, tax.concepts.get(p))
             b.assumed[p] = f"from {r.name} ({r.loc})"
-            continue
-        v = _chain(p, env, formulas)
+            return env[p]
+        v = _inverse(p, env, tax)
+        if v is None and p in formulas:
+            sub = [value(q, trail + (p,)) for q in X.symbols(formulas[p])]
+            if all(x is not None for x in sub):
+                try:
+                    v = X.evaluate(formulas[p], env)
+                except X.ExprError:
+                    v = None
         if v is not None:
-            env[p], b.assumed[p] = v, "calculated from the same inputs"
-        elif fac is not None:
-            env[p], b.assumed[p] = 1.0, "not in the source formula"
-        elif p in cons.neutral:
+            env[p] = v
+            b.assumed.setdefault(p, "calculated from the same inputs")
+            return v
+        if p in cons.neutral:
             env[p], b.assumed[p] = cons.neutral[p], "not in the source; no effect"
         elif typical.get(p) is not None:
-            env[p], b.assumed[p] = typical[p], "not in the source; typical value"
+            c = tax.concepts.get(p)
+            env[p] = typical[p]
+            b.assumed[p] = "recommended value" if c is not None and c.kind == "coefficient" else "typical value"
         else:
-            b.detail = f"{name(p)} is not given in the source"
-            return b
+            missing.append(p)
+            return None
+        return env[p]
+
+    for p in X.symbols(reference):
+        value(p)
+    if missing:
+        b.detail = f"{name(missing[0])} is not given in the source"
+        return b
     b.inputs = env
     try:
-        b.got = X.evaluate(unified, env)
+        b.got = X.evaluate(reference, env)
     except X.ExprError as exc:
         b.detail = str(exc)
         return b
+    notes = [explain(d, tax, env, inst.per_width, name) for d in variant.diffs if d.kind != "alias"]
     if close(b.got, inst.value, rel=1e-6):
         b.status = "agree"
+        b.detail = "; ".join(n for n in notes if n)
         return b
     b.status = "deviation"
     reasons = []
@@ -206,17 +252,24 @@ def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Co
                     lim = X.evaluate(arg, env)
                     if close(b.got, lim, rel=1e-9):
                         word = "lower" if d.fn == "max" else "upper"
-                        reasons.append(f"the {word} bound {X.to_text(arg, name)} governs here; "
-                                       "the source formula does not apply it")
+                        reasons.append(f"the {word} bound {X.to_text(arg, name)} governs here and the source does not apply it")
             elif d.kind == "term":
-                tv = X.evaluate(d.expr, env)
-                if tv != 0:
-                    reasons.append(f"the source formula leaves out {X.to_text(d.expr, name)}, which is not zero here")
+                if X.evaluate(d.expr, env) != 0:
+                    reasons.append(f"the source leaves out {X.to_text(d.expr, name)}, which is not zero here")
             elif d.kind == "factor" and env.get(d.sym) != 1.0:
-                reasons.append(f"the source formula leaves out the factor {name(d.sym)}")
+                reasons.append(f"the source leaves out the factor {name(d.sym)}")
+            elif d.kind == "literal" and tax.concepts.get(d.sym) is not None:
+                rec = tax.concepts[d.sym].canonical_value
+                if rec is not None and abs(rec - d.value) > 1e-9:
+                    reasons.append(f"the source uses {name(d.sym)} = {X._short(d.value)}")
         except X.ExprError:
             continue
-    b.detail = "; ".join(reasons) or "the unified formula gives a different result"
+    if variant.relation == "differs":
+        reasons.append("the source formula is not the code expression")
+    eff = effect(concept.sense, inst.value, b.got)
+    b.detail = "; ".join(reasons) or "different result"
+    if eff:
+        b.detail += f": {eff}"
     return b
 
 
@@ -243,7 +296,7 @@ def bench_printed(inst: Instance, ctx: Context, tax: Taxonomy, formulas: dict, n
         """(value, tolerance, inputs) of an object evaluated from the printed inputs."""
         if depth > 12 or cid not in formulas:
             return None
-        scope = tax.concepts[cid].topic
+        scope = tax.concepts[cid]
         env, tol = {}, {}
         for p in X.symbols(formulas[cid]):
             hit = printed(p, scope, near)
@@ -264,7 +317,7 @@ def bench_printed(inst: Instance, ctx: Context, tax: Taxonomy, formulas: dict, n
                 assumed[p] = "not printed; no effect"
             elif typical.get(p) is not None and tax.concepts[p].kind == "coefficient":
                 env[p], tol[p] = typical[p], 0.0
-                assumed[p] = "not printed; typical value"
+                assumed[p] = "not printed; recommended value"
             else:
                 return None
         try:
@@ -299,9 +352,10 @@ def bench_printed(inst: Instance, ctx: Context, tax: Taxonomy, formulas: dict, n
 
 def run(consolidations: dict[str, Consolidation], decs: list[Decomposition], tax: Taxonomy,
         observed: dict, name) -> dict[str, list[Benchmark]]:
-    formulas = {cid: c.unified for cid, c in consolidations.items() if c.unified is not None}
+    formulas = {c.id: c.tree for c in tax.concepts.values() if c.formula}
+    formulas.update({cid: c.unified for cid, c in consolidations.items() if c.unified is not None})
     neutral = {cid: c.neutral for cid, c in consolidations.items()}
-    typical = typical_values(observed)
+    typical = typical_values(observed, tax)
     ctx = {dec.doc.id: Context(dec, tax) for dec in decs}
     by_doc = {dec.doc.id: dec for dec in decs}
     for dec in decs:

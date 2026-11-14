@@ -39,7 +39,7 @@ def _adapters() -> dict:
 
     def hc(p):
         p["d"] = p["h"] * (0.70 + 0.25 * p["_u1"])
-        p["x"] = p["h"] * (0.10 + 0.50 * p["_u2"])
+        p["x_el"] = p["h"] * (0.10 + 0.50 * p["_u2"])
         return p
 
     def bond(p):                   # the library accepts the tabulated values only
@@ -71,21 +71,28 @@ def _adapters() -> dict:
                         lambda p: ec.fcd(p["f_ck"], p["alpha_cc"], p["gamma_C"]),
                         neutral={"alpha_cc": 1.0}),
         "V_Rd_s": Adapter(
-            "VRds(Asw, s, z, theta, fyk, alpha=90, gamma_s)", ["A_sw", "s", "z", "theta", "f_ywk", "gamma_S"],
-            lambda p: ec.VRds(p["A_sw"], p["s"], p["z"], math.degrees(p["theta"]), p["f_ywk"], 90.0, p["gamma_S"]),
+            "VRds(Asw, s, z, theta, fyk, alpha=90, gamma_s)", ["A_sw", "s", "z_V", "theta", "f_ywk", "gamma_S"],
+            lambda p: ec.VRds(p["A_sw"], p["s"], p["z_V"], math.degrees(p["theta"]), p["f_ywk"], 90.0, p["gamma_S"]),
             ranges={"theta": (math.radians(22.0), math.radians(45.0))}),
         "V_Rd_max": Adapter(
-            "VRdmax(bw, z, fck, theta, NEd=0, Ac, fcd)", ["b_w", "z", "f_ck", "theta", "gamma_C"],
-            lambda p: ec.VRdmax(p["b_w"], p["z"], p["f_ck"], math.degrees(p["theta"]), 0.0, 1.0,
+            "VRdmax(bw, z, fck, theta, NEd=0, Ac, fcd)", ["b_w", "z_V", "f_ck", "theta", "gamma_C"],
+            lambda p: ec.VRdmax(p["b_w"], p["z_V"], p["f_ck"], math.degrees(p["theta"]), 0.0, 1.0,
                                 p["f_ck"] / p["gamma_C"]),
             fixed={"alpha_cw": lambda p: 1.0, "nu_1": lambda p: sh.v(p["f_ck"]),
                    "f_cd": lambda p: p["f_ck"] / p["gamma_C"]},
             ranges={"theta": (math.radians(22.0), math.radians(45.0))},
             note="compared for σ_cp = 0 (α_cw = 1), vertical links, ν_1 = 0.6(1 − f_ck/250) and α_cc = 1"),
+        "V_Ed_max": Adapter("VEdmax_unreinf(bw, d, fck, fcd)", ["b_w", "d", "f_ck", "gamma_C", "alpha_cc"],
+                            lambda p: ec.VEdmax_unreinf(p["b_w"], p["d"], p["f_ck"],
+                                                        p["alpha_cc"] * p["f_ck"] / p["gamma_C"])),
+        "f_yd": Adapter("fyd(fyk, gamma_s)", ["f_yk", "gamma_S"], lambda p: ec.fyd(p["f_yk"], p["gamma_S"])),
+        "f_ctm": Adapter("fctm(fck)", ["f_ck"], lambda p: ec.fctm(p["f_ck"])),
+        "f_cm": Adapter("fcm(fck)", ["f_ck"], lambda p: ec.fcm(p["f_ck"])),
+        "E_cm": Adapter("Ecm(fcm(fck))", ["f_ck"], lambda p: ec.Ecm(ec.fcm(p["f_ck"]))),
         "alpha_cw": Adapter("shear.alpha_cw(NEd, Ac, fcd)", ["sigma_cp", "f_cd"],
                             lambda p: sh.alpha_cw(p["sigma_cp"] * 1e6, 1e6, p["f_cd"]),
                             ranges={"sigma_cp": (-2.0, 7.0), "f_cd": (8.0, 60.0)}),
-        "h_c_ef": Adapter("hc_eff(h, d, x)", ["h", "d", "x"], lambda p: ec.hc_eff(p["h"], p["d"], p["x"]),
+        "h_c_ef": Adapter("hc_eff(h, d, x)", ["h", "d", "x_el"], lambda p: ec.hc_eff(p["h"], p["d"], p["x_el"]),
                           constrain=hc),
         "rho_p_eff": Adapter("rho_p_eff(As, xi1=0, Ap=0, Ac_eff)", ["A_s", "A_c_eff"],
                              lambda p: ec.rho_p_eff(p["A_s"], 0.0, 0.0, p["A_c_eff"])),

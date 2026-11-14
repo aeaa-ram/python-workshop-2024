@@ -12,6 +12,7 @@ or a topic the taxonomy does not yet cover.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .. import expr as X
@@ -148,6 +149,21 @@ def decompose(doc: SourceDocument, tax: Taxonomy) -> Decomposition:
                     continue
             out.instances.append(inst)
             continue
+        if st.kind == "input" and concept.formula and isinstance(value, (int, float)) \
+                and isinstance(st.expr, X.Num) and not inst_dims_mismatch(dims, concept):
+            # a value the source typed for a quantity the code calculates (E_cm = 34 GPa):
+            # checked like a printed value, within the digits it was typed with
+            digits = re.sub(r"[^0-9.]", "", (st.expr.text or "").split(" ")[0])
+            dec = len(digits.split(".")[1]) if "." in digits else 0
+            try:
+                factor = U.parse_unit(st.unit).factor if st.unit else concept.factor
+            except U.UnitError:
+                factor = concept.factor
+            out.instances.append(Instance(concept.id, doc.id, st.id, "printed", value, unit=st.unit or concept.unit,
+                                          precision=0.5 * 10 ** (-dec) * factor, loc=st.loc, case=st.case,
+                                          section=st.section, clause=st.clause, name=st.name, how=how,
+                                          notes=["value typed in the source"]))
+            continue
         if st.expr is None or st.kind == "input" or isinstance(st.expr, (X.Num, X.Str)):
             continue
         if concept.kind != "derived":
@@ -174,7 +190,7 @@ def decompose(doc: SourceDocument, tax: Taxonomy) -> Decomposition:
         taken: dict[str, str] = {}
         for rid in st.refs:
             r = by_id[rid]
-            role = tax.resolve(r.name, r.label, r.clause, r.section, scope=concept.topic, argument=True)
+            role = tax.resolve(r.name, r.label, r.clause, r.section, scope=concept, argument=True)
             rc = role.concept if role else None
             if rc is None and rid in out.producer:
                 rc = out.producer[rid][0]
@@ -237,6 +253,10 @@ def _plausible(st: Statement, concept: Concept, how: str) -> bool:
         if cv > hi * 4 or (lo > 0 and cv < lo / 4 and cv != 0):
             return False
     return True
+
+
+def inst_dims_mismatch(dims, concept: Concept) -> bool:
+    return dims is not None and tuple(dims) != tuple(concept.dims)
 
 
 def _is_one(f: float) -> bool:

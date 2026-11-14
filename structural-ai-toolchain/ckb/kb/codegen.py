@@ -8,6 +8,7 @@ primary inputs.  Numbers are in N, mm, MPa (N/mm²) and radians.
 from __future__ import annotations
 
 import keyword
+import re
 import textwrap
 from pathlib import Path
 
@@ -27,64 +28,49 @@ def _vars(kb: KnowledgeBase, ids: list[str]) -> dict[str, str]:
 
 
 def module_source(kb: KnowledgeBase, obj: CalcObject) -> str:
+    """The object as a Python module: the design logic and nothing else."""
     names = _vars(kb, obj.params)
     body = X.to_python(obj.tree, lambda s: names.get(s, s))
-    used = [f for f in _MATH if f in body.replace("(", " ").replace(")", " ").replace(",", " ").split()
-            or f + "(" in body]
+    tokens = set(re.findall(r"[A-Za-z_]\w*(?=\()", body)) | set(re.findall(r"\bpi\b", body))
+    used = sorted(f for f in _MATH if f in tokens)
     extra = []
-    if "cot(" in body:
-        extra.append("def cot(x):\n    return 1.0 / tan(x)\n")
+    if "cot" in tokens:
+        extra.append("\n\ndef cot(x):\n    return 1.0 / tan(x)")
         if "tan" not in used:
             used.append("tan")
-    if "ln(" in body:
-        extra.append("from math import log as ln\n")
-    sup = obj.support
-    b = obj.benchmarks
-    head = [f"{obj.text} - {obj.name}", "", obj.reference_text, " > ".join(obj.topic_path), "",
-            f"Status: {obj.status} - {sup.get('formula_instances', 0)} formula instance(s) in "
-            f"{sup.get('sources', 0)} independent source(s), {sup.get('variants_merged', 0)} variant(s) merged.",
-            f"Benchmarks: {b.get('agree', 0)} of {b.get('total', 0)} source values reproduced"
-            + (f", {b['deviation']} deviation(s)." if b.get("deviation") else ".")]
-    if obj.reference:
-        r = obj.reference
-        head.append(f"Reference: {r['status']} with {r['library']} {r['function']} ({r['samples']} samples).")
-    for w in obj.warnings:
-        head += textwrap.wrap("WARNING: " + w, 96)
-    for w in obj.findings:
-        head += textwrap.wrap("Finding: " + w, 96)
-    for n in obj.notes:
-        head += textwrap.wrap("Note: " + n, 96)
-    head += ["", "Units: N, mm, MPa (N/mm2), rad.",
-             f"Generated from objects/{obj.id}.yaml (version {obj.version}) - do not edit by hand."]
-    fn = obj.var or obj.id
-    if keyword.iskeyword(fn):
-        fn += "_"
-    doc = [f"{obj.name} [{_canon(kb, obj.id)}]", ""]
+    if "ln" in tokens:
+        extra.append("from math import log as ln")
+    fn = _fn(kb, obj.id)
+    doc = [f"{obj.name} [{_canon(kb, obj.id)}]", obj.reference_text, ""]
     width = max((len(names[p]) for p in obj.params), default=1)
     for p in obj.params:
-        item = kb.objects.get(p) or kb.quantities.get(p)
+        item = kb.item(p)
         doc.append(f"{names[p]:<{width}}  {item.name if item else p} [{_canon(kb, p)}]")
+    for k, v in obj.fixed.items():
+        doc.append(f"{kb.name(k)} = {X._short(v)} in {obj.code}")
     steps, inputs = kb.plan(obj.id)
     others = [s for s in steps if s != obj.id]
-    lines = ['"""' + "\n".join(head) + '\n"""']
+    lines = [f'"""{obj.text} - {obj.reference_text}.  Units: N, mm, MPa, rad."""', f"# ckb {obj.id} {obj.version}"]
     if used:
         lines.append("from math import " + ", ".join(sorted(set(used))))
-    lines += extra
+    lines += [e for e in extra if e.startswith("from")]
     for s in others:                       # imported under a private name: the plain names are variables
         lines.append(f"from .{s} import {_fn(kb, s)} as _{s}")
+    lines += [e for e in extra if not e.startswith("from")]
     lines += ["", ""]
     lines.append(f"def {fn}({', '.join(names[p] for p in obj.params)}):")
     lines.append('    """' + "\n    ".join(doc) + '\n    """')
     lines.append(f"    return {body}")
-    # ---- the calculation from the primary inputs ----------------------------
     if others:
         chain_names = _vars(kb, inputs + steps)
         lines += ["", ""]
         lines.append(f"def {fn}_chain({', '.join(chain_names[p] for p in inputs)}):")
-        lines.append(f'    """{obj.text} from the primary inputs, through the objects it depends on."""')
+        lines.append(f'    """{obj.text} from the primary inputs."""')
+        for k, v in obj.fixed.items():
+            lines.append(f"    {chain_names.get(k, k)} = {X._short(v)}")
         for s in steps:
             o = kb.objects[s]
-            args = ", ".join(chain_names[p] for p in o.params)
+            args = ", ".join(chain_names.get(p, p) for p in o.params)
             lines.append(f"    return {fn}({args})" if s == obj.id else f"    {chain_names[s]} = _{s}({args})")
     return "\n".join(lines) + "\n"
 
