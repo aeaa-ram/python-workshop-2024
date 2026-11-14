@@ -1,14 +1,9 @@
-# Structural AI Toolchain (prototype repository)
+# Calculation Knowledge Base (prototype repository)
 
-This repository hosts the prototype of the **AI-Augmented Structural
-Engineering Toolchain** — an ecosystem that converts legacy engineering
-calculation files (Mathcad, Excel, Python, Jupyter) into a centralized,
-version-controlled library of standardized Python tools with
-Mathcad-style, print-ready PDF documentation.
+Turns existing structural calculations (Mathcad, Excel, PDF, Python, Jupyter, Word, scans) into
+small, checked calculation objects sorted by the clause structure of the design code, and lets an
+engineer use them without touching code.
 
-Everything lives in [`structural-ai-toolchain/`](structural-ai-toolchain/)
-— start with its [README](structural-ai-toolchain/README.md) and
-[architecture docs](structural-ai-toolchain/docs/ARCHITECTURE.md).
-
-Production deployment target is the company's enterprise GitLab; this
-GitHub repo is the rapid-prototyping mirror.
+Everything lives in [`structural-ai-toolchain/`](structural-ai-toolchain/): start with its
+[README](structural-ai-toolchain/README.md) and the
+[architecture notes](structural-ai-toolchain/docs/ARCHITECTURE.md).
