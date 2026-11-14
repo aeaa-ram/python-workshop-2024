@@ -1,8 +1,10 @@
 """Running a calculation object: inputs in engineering units, a traced result out.
 
-``run`` is the one entry point behind every way of using the knowledge base -
-the web calculator shows the same steps, the report prints them, the terminal
-prompt asks for the same inputs, an AI assistant calls it as a tool.
+``run`` is the one entry point behind every way of using the knowledge base - the
+web calculator shows the same steps, the reports print them, the terminal prompt
+asks for the same inputs, an AI assistant calls it as a tool.  A result carries the
+design logic only: every step with its clause, the applicability checks, and the
+scope and limitations of the objects used.  Evidence about sources stays out.
 """
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ from .. import expr as X
 from .. import units as U
 from ..kb.objects import KnowledgeBase, ResolveError
 from ..notation import symkey
+from .style import Style
 
 
 @dataclass
@@ -23,12 +26,10 @@ class Line:
     reference: str
     value: float | str         # canonical
     shown: float | str         # in the display unit
-    unit: str
+    unit: str                  # display unit
     formula: X.Node | None = None
     env: dict = field(default_factory=dict)
-    status: str = ""
-    warnings: list = field(default_factory=list)
-    source: str = ""           # inputs: entered | example | typical | given
+    source: str = ""           # inputs: entered | recommended | example | given | fixed
 
 
 @dataclass
@@ -39,9 +40,16 @@ class Result:
     value: float | str
     shown: float | str
     unit: str
+    style: Style = field(default_factory=Style)
     check: dict | None = None
-    notes: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    checks: list = field(default_factory=list)        # applicability checks
+    limitations: list = field(default_factory=list)   # scope and limitations of the objects used
+    warnings: list = field(default_factory=list)      # inputs outside the usual range, violated checks
+
+    def env(self) -> dict:
+        out = {ln.id: ln.value for ln in self.inputs}
+        out.update({ln.id: ln.value for ln in self.steps})
+        return out
 
 
 def lookup(kb: KnowledgeBase, name: str, among=None) -> str | None:
@@ -94,68 +102,64 @@ def parse_assignments(kb: KnowledgeBase, target: str, pairs: list[str], given=()
 
 
 def starting_values(kb: KnowledgeBase, target: str, given=()) -> tuple[dict, dict]:
-    """Values to start from: a real case from the sources if there is one.
-
-    Returns (canonical values, where each came from).
-    """
-    obj = kb.objects[target]
-    _, inputs = kb.plan(target, given)
+    """Recommended values for coefficients, example values for everything else."""
     values, origin = {}, {}
-    ex = next((e for e in obj.examples if not e.get("given") and e.get("matches_source")), None)
-    if ex:
-        for p in inputs:
-            if p in ex["inputs"]:
-                values[p], origin[p] = ex["inputs"][p], "example"
     for p, v in kb.defaults(target, given).items():
-        if p not in values and v is not None:
-            values[p], origin[p] = v, "typical"
+        values[p] = v
+        q = kb.quantities.get(p)
+        origin[p] = "recommended" if q is not None and q.kind == "coefficient" else "example"
     return values, origin
 
 
 def run(kb: KnowledgeBase, target: str, values: dict, given=(), origin: dict | None = None,
-        check_value: float | None = None) -> Result:
+        check_value: float | None = None, style: Style | None = None) -> Result:
     """Evaluate ``target`` from canonical ``values`` and return every step."""
+    style = style or Style()
     origin = origin or {}
     value, trace = kb.evaluate(target, values, given)
     _, inputs = kb.plan(target, given)
     obj = kb.objects[target]
 
     def line(sid: str, v, **kw) -> Line:
-        item = kb.objects.get(sid) or kb.quantities.get(sid)
+        item = kb.item(sid)
         ref = ""
         if sid in kb.objects:
             ref = kb.objects[sid].reference_text
         elif item is not None and getattr(item, "clause", ""):
             c = item.clause
-            ref = f"{kb.meta.get('code', '')} " + (c if c.lower().startswith("table") else f"cl. {c}")
-        return Line(sid, kb.name(sid), item.name if item else sid, ref, v, kb.to_display(sid, v), kb.unit(sid), **kw)
+            code = item.code or ""
+            ref = f"{code} " + (c if c.lower().startswith(("table", "fig")) else f"cl. {c}")
+        return Line(sid, kb.name(sid), item.name if item else sid, ref.strip(), v, style.show(kb, sid, v),
+                    style.unit(kb, sid), **kw)
 
-    res = Result(target, [], [], value, kb.to_display(target, value), obj.unit)
+    res = Result(target, [], [], value, style.show(kb, target, value), style.unit(kb, target), style=style)
     for p in inputs:
         res.inputs.append(line(p, values[p], source="given" if p in given else origin.get(p, "entered")))
+    for k, v in obj.fixed.items():
+        res.inputs.append(line(k, v, source="fixed"))
     for step in trace:
         o = kb.objects[step.id]
-        ln = line(step.id, step.value, formula=o.tree, env=step.env, status=o.status)
-        ln.warnings = list(o.warnings)
-        res.steps.append(ln)
-        for w in o.warnings:
-            res.warnings.append(f"{o.text}: {w}")
-        for n in o.notes:
-            res.notes.append(f"{o.text}: {n}")
-    # values outside the range the sources and the code cover
+        res.steps.append(line(step.id, step.value, formula=o.tree, env=step.env))
+        for text in o.limitations:
+            res.limitations.append(f"{o.text}: {text}")
+    env = res.env()
+    res.checks = kb.checks_for(target, env, given)
+    for c in res.checks:
+        if c["status"] == "violated":
+            res.warnings.append(f"Not met: {c['text']} ({c['clause']}).")
     for ln in res.inputs:
         q = kb.quantities.get(ln.id)
         if q is not None and q.range and isinstance(ln.value, (int, float)):
             lo, hi = q.range
             if not (lo - 1e-9 <= ln.value <= hi + 1e-9):
                 res.warnings.append(
-                    f"{ln.text} = {U.fmt(ln.shown)} {ln.unit} is outside the usual range "
-                    f"{U.fmt(kb.to_display(ln.id, lo))} to {U.fmt(kb.to_display(ln.id, hi))} {ln.unit}.")
+                    f"{ln.text} = {style.fmt(ln.shown)} {ln.unit} is outside the usual range "
+                    f"{style.fmt(style.show(kb, ln.id, lo))} to {style.fmt(style.show(kb, ln.id, hi))} {ln.unit}.")
     if obj.check and check_value is not None and isinstance(value, (int, float)) and value != 0:
-        demand_is_action = obj.check.endswith("_Ed")
+        demand_is_action = obj.sense == "resistance"
         ratio = (check_value / value) if demand_is_action else (value / check_value)
         res.check = {"against": obj.check, "text": kb.name(obj.check), "value": check_value,
-                     "shown": kb.to_display(obj.check, check_value), "unit": kb.unit(obj.check),
+                     "shown": style.show(kb, obj.check, check_value), "unit": style.unit(kb, obj.check),
                      "utilisation": ratio, "ok": ratio <= 1.0,
                      "expression": (f"{kb.name(obj.check)} / {obj.text}" if demand_is_action
                                     else f"{obj.text} / {kb.name(obj.check)}")}

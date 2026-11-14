@@ -781,6 +781,8 @@ def to_text(n: Node, name: Callable[[str], str] = lambda s: s,
             return name(x.name)
         if isinstance(x, Str):
             return f'"{x.value}"'
+        if isinstance(x, Unit):
+            return x.name
         if isinstance(x, Bin):
             return _infix(x, emit, ops)
         if isinstance(x, Neg):
