@@ -71,7 +71,8 @@ class CalcObject:
     benchmarks: dict = field(default_factory=dict)
     reference: dict = field(default_factory=dict)
     notes: list = field(default_factory=list)
-    warnings: list = field(default_factory=list)
+    warnings: list = field(default_factory=list)      # what limits trust in the object itself
+    findings: list = field(default_factory=list)      # what the object revealed about the sources
     examples: list = field(default_factory=list)
     check: str = ""
     version: str = ""

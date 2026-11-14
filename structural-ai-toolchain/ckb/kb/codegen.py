@@ -50,6 +50,8 @@ def module_source(kb: KnowledgeBase, obj: CalcObject) -> str:
         head.append(f"Reference: {r['status']} with {r['library']} {r['function']} ({r['samples']} samples).")
     for w in obj.warnings:
         head += textwrap.wrap("WARNING: " + w, 96)
+    for w in obj.findings:
+        head += textwrap.wrap("Finding: " + w, 96)
     for n in obj.notes:
         head += textwrap.wrap("Note: " + n, 96)
     head += ["", "Units: N, mm, MPa (N/mm2), rad.",

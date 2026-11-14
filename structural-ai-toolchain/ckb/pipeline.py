@@ -230,9 +230,10 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
             obj.warnings.append(f"Differs from the independent reference ({obj.reference['library']}, "
                                 f"{obj.reference['function']}) in {obj.reference['samples'] - obj.reference['agreeing_samples']} "
                                 f"of {obj.reference['samples']} samples.")
-        if counts.get("deviation"):
-            obj.warnings.append(f"{counts['deviation']} of {len(rows)} source values are not reproduced "
-                                "(see the benchmarks: a source formula that is a special case, or a disagreement).")
+        # what the unified logic revealed about the sources themselves
+        reasons = Counter(b.detail for b in rows if b.status == "deviation")
+        for reason, n in reasons.most_common():
+            obj.findings.append(f"{n} source value(s) differ from the unified logic: {reason}.")
         obj.version = obj.fingerprint()
         kb.objects[cid] = obj
 
@@ -450,6 +451,8 @@ def _write_report(out: Build, workspace: Path, label: dict) -> None:
                      f"({r['agreeing_samples']}/{r['samples']} samples, max. relative difference {r['max_relative_difference']})")
         for w in o.warnings:
             L.append(f"- warning: {w}")
+        for w in o.findings:
+            L.append(f"- finding: {w}")
         L.append("")
     L += ["## Not distilled", ""]
     for doc, dec in zip(out.docs, out.decs):
