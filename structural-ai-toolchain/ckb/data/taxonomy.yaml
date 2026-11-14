@@ -13,6 +13,7 @@
 #   words              phrases in a descriptive label that identify the quantity
 #   unit               customary unit; used when a source states no unit
 #   range              sensible range in the customary unit (for numerical comparison of variants)
+#   strip              a width: a source working per unit width leaves it out (b_w = 1)
 
 code: EN 1992-1-1
 branch: "EN 1992-1-1:2004 (recommended values)"
@@ -178,6 +179,7 @@ concepts:
   - id: b
     name: Width of the cross-section (compression zone)
     topic: "6.1"
+    strip: true
     kind: input
     unit: mm
     range: [150, 3000]
@@ -187,6 +189,7 @@ concepts:
     name: Smallest width of the cross-section in the tensile area
     topic: "6.2"
     clause: "6.2.2(1)"
+    strip: true
     kind: input
     unit: mm
     range: [100, 3000]
@@ -230,8 +233,7 @@ concepts:
     range: [200, 20000]
     aliases: [As, A_s, As1, A_s1, Ast]
     words: [total reinforcement area, area of tension reinforcement, reinforcement area]
-  - id: lambda
-    var: lam
+  - id: lam
     symbol: "λ"
     name: Factor defining the effective height of the compression zone
     topic: "6.1"
@@ -514,7 +516,7 @@ concepts:
     topic: "7.3.4"
     kind: input
     unit: "mm⁴"
-    range: [1.0e8, 1.0e12]
+    range: [1.0e+8, 1.0e+12]
     aliases: [Icr, I_cr, Ic, I_c]
     words: [moment of inertia, second moment of area]
   - id: sigma_s
