@@ -1,0 +1,932 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 84",
+  "kind": "formula",
+  "expected": 0.1285714285714286,
+  "got": 0.1285714285714286,
+  "status": "agree",
+  "case": "phase 1",
+  "inputs": {
+   "gamma_C": 1.4
+  }
+ },
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 129",
+  "kind": "formula",
+  "expected": 0.1285714285714286,
+  "got": 0.1285714285714286,
+  "status": "agree",
+  "case": "phase 2",
+  "inputs": {
+   "gamma_C": 1.4
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell E28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell F28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell G28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell H28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell I28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell J28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell K28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell L28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell M28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell N28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell O28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell P28",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell C8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell D8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell H8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell I8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell M8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell N8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 3 cell D18",
+  "kind": "formula",
+  "expected": 0.18,
+  "got": 0.18,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 3 cell E18",
+  "kind": "formula",
+  "expected": 0.18,
+  "got": 0.18,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 4 cell D18",
+  "kind": "formula",
+  "expected": 0.18,
+  "got": 0.18,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell E31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell F31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell I31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell J31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell K31",
+  "kind": "formula",
+  "expected": 0.13043478260869565,
+  "got": 0.13043478260869565,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.38
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell N31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell O31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell R31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell S31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell V31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell W31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell Z31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AA31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AD31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AE31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AH31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AI31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AL31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AM31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AN31",
+  "kind": "formula",
+  "expected": 0.13043478260869565,
+  "got": 0.13043478260869565,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.38
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AQ31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AR31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell E31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell F31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell G31",
+  "kind": "formula",
+  "expected": 0.13043478260869565,
+  "got": 0.13043478260869565,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.38
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell H31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell I31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell J31",
+  "kind": "formula",
+  "expected": 0.13043478260869565,
+  "got": 0.13043478260869565,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.38
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell K31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell L31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell M31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell N31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell O31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell P31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Q31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell R31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell S31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell T31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell U31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell V31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell W31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell X31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Y31",
+  "kind": "formula",
+  "expected": 0.13043478260869565,
+  "got": 0.13043478260869565,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.38
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Z31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell AA31",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell C6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell F6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell I6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell L6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell S6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell V6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell Y6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AB6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AE6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AN6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AQ6",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 9 cell D7",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 10 cell E8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 10 cell F8",
+  "kind": "formula",
+  "expected": 0.1306715063520871,
+  "got": 0.1306715063520871,
+  "status": "agree",
+  "inputs": {
+   "gamma_C": 1.3775
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 3",
+  "kind": "printed",
+  "expected": 0.13,
+  "got": 0.1285714285714286,
+  "status": "agree",
+  "case": "phase 1",
+  "tolerance": 0.005,
+  "inputs": {
+   "gamma_C": 1.4
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 4",
+  "kind": "printed",
+  "expected": 0.13,
+  "got": 0.1285714285714286,
+  "status": "agree",
+  "case": "phase 2",
+  "tolerance": 0.005,
+  "inputs": {
+   "gamma_C": 1.4
+  }
+ }
+]

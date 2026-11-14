@@ -1,0 +1,134 @@
+id: V_Rd_c_min
+name: Minimum design shear resistance without shear reinforcement
+formula: (v_min + k_1 * sigma_cp) * b_w * d
+params:
+- v_min
+- k_1
+- sigma_cp
+- b_w
+- d
+var: V_Rd_c_min
+symbol: V_{Rd,c,min}
+unit: kN
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: 6.2.2
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.2 Members not requiring design shear reinforcement
+clause: 6.2.2(1)
+eq: (6.2.b)
+status: unified
+support:
+  sources: 2
+  source_ids:
+  - S1
+  - S3
+  formula_instances: 86
+  variants_merged: 3
+  printed_values: 2
+variants:
+- formula: v_min * d
+  text: v_min · d
+  instances: 80
+  sources:
+  - S3 (Excel workbook)
+  merged: true
+  differences:
+  - has no term k_1 · σ_cp (equivalent to it being zero)
+  - has no factor b_w (equivalent to b_w = 1)
+- formula: (v_min + k_1 * sigma_cp) * d * b_w
+  text: (v_min + k_1 · σ_cp) · d · b_w
+  instances: 4
+  sources:
+  - S3 (Excel workbook)
+  merged: true
+  differences: []
+- formula: v_min * b_w * d
+  text: v_min · b_w · d
+  instances: 2
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences:
+  - has no term k_1 · σ_cp (equivalent to it being zero)
+neutral:
+  sigma_cp: 0.0
+benchmarks:
+  total: 88
+  agree: 80
+  deviation: 8
+  not_comparable: 0
+reference:
+  library: structuralcodes 0.7.3
+  function: (shear.vmin(fck, d) + k1·σcp)·bw·d
+  samples: 200
+  max_relative_difference: 0.0
+  status: agrees
+  agreeing_samples: 200
+findings:
+- '8 source value(s) differ from the unified logic: the source formula leaves out k_1 · σ_cp, which is not zero
+  here.'
+examples:
+- label: S1 (Mathcad worksheet) - region 133 - phase 2
+  inputs:
+    d: 841.5000000000001
+    f_ck: 35.0
+    k_1: 0.15
+    sigma_cp: 0.0
+    b_w: 500.0
+  expected: 158058.6250689481
+  result: 158058.6250689481
+  matches_source: true
+- label: S1 (Mathcad worksheet) - region 88 - phase 1
+  inputs:
+    d: 491.5000000000001
+    f_ck: 35.0
+    k_1: 0.15
+    sigma_cp: 0.0
+    b_w: 500.0
+  expected: 106666.25269892481
+  result: 106666.25269892481
+  matches_source: true
+- label: S3 (Excel workbook) - sheet 2 cell S25
+  inputs:
+    d: 1000.0
+    f_ck: 60.0
+    k_1: 0.15
+    sigma_cp: 0.0
+    b_w: 300.0
+  expected: 141600.2026465468
+  result: 141600.2026465468
+  matches_source: true
+- label: S3 (Excel workbook) - sheet 5 cell AD22
+  inputs:
+    d: 1000.0
+    f_ck: 50.0
+    k_1: 0.15
+    sigma_cp: 0.0
+    b_w: 300.0
+  expected: 129262.70856136065
+  result: 129262.70856136065
+  matches_source: true
+- label: S3 (Excel workbook) - sheet 9 cell W22
+  inputs:
+    d: 342.5
+    f_ck: 60.0
+    k_1: 0.15
+    sigma_cp: -2.0
+    b_w: 1000.0
+  expected: 114826.2400458677
+  result: 114826.24004586774
+  matches_source: true
+- label: S3 (Excel workbook) - sheet 8 cell AB17 (1 m strip)
+  inputs:
+    d: 472.0
+    f_ck: 60.0
+    k_1: 0.15
+    sigma_cp: -0.32
+    b_w: 1000.0
+  expected: 271446.5963941226
+  result: 248790.59639412255
+  matches_source: false
+version: 74021ebb23cb

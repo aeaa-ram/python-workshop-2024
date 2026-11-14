@@ -1,0 +1,37 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 200",
+  "kind": "formula",
+  "expected": 575.5666169058785,
+  "got": 575.5666169058785,
+  "status": "agree",
+  "inputs": {
+   "k_3": 3.4,
+   "c": 96.0,
+   "k_1_bond": 0.8,
+   "k_2": 0.5,
+   "k_4": 0.425,
+   "phi_bar": 25.0,
+   "rho_p_eff": 0.017056859593696766
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 6",
+  "kind": "printed",
+  "expected": 575.57,
+  "got": 575.5666666666667,
+  "status": "agree",
+  "tolerance": 1.7572716182777457,
+  "inputs": {
+   "k_3": 3.4,
+   "c": 96.0,
+   "k_1_bond": 0.8,
+   "k_2": 0.5,
+   "k_4": 0.425,
+   "phi_bar": 25.0,
+   "rho_p_eff": 0.017056856187290966
+  }
+ }
+]

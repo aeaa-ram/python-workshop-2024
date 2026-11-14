@@ -1,0 +1,1064 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 86",
+  "kind": "formula",
+  "expected": 0.43404375462431244,
+  "got": 0.43404375462431244,
+  "status": "agree",
+  "case": "phase 1",
+  "inputs": {
+   "k": 1.6379009321094968,
+   "f_ck": 35.0
+  }
+ },
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 131",
+  "kind": "formula",
+  "expected": 0.3756592396172266,
+  "got": 0.3756592396172266,
+  "status": "agree",
+  "case": "phase 2",
+  "inputs": {
+   "k": 1.487514949418087,
+   "f_ck": 35.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell E38",
+  "kind": "formula",
+  "expected": 0.6572210394922822,
+  "got": 0.6572210394922822,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9176629354822472,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell F38",
+  "kind": "formula",
+  "expected": 0.6791213193859645,
+  "got": 0.6791213193859645,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9600307214746386,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell G38",
+  "kind": "formula",
+  "expected": 0.6572210394922822,
+  "got": 0.6572210394922822,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9176629354822472,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell H38",
+  "kind": "formula",
+  "expected": 0.6791213193859645,
+  "got": 0.6791213193859645,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9600307214746386,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell I38",
+  "kind": "formula",
+  "expected": 0.6572210394922822,
+  "got": 0.6572210394922822,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9176629354822472,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell J38",
+  "kind": "formula",
+  "expected": 0.6791213193859645,
+  "got": 0.6791213193859645,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9600307214746386,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell K38",
+  "kind": "formula",
+  "expected": 0.5254855318850048,
+  "got": 0.5254855318850048,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6519813666388083,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell L38",
+  "kind": "formula",
+  "expected": 0.5325080420189116,
+  "got": 0.5325080420189114,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6666666666666665,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell M38",
+  "kind": "formula",
+  "expected": 0.6301702686804583,
+  "got": 0.6301702686804583,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8646754023342338,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell N38",
+  "kind": "formula",
+  "expected": 0.6480812529431101,
+  "got": 0.6480812529431101,
+  "status": "agree",
+  "inputs": {
+   "k": 1.899842541331695,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell O38",
+  "kind": "formula",
+  "expected": 0.6301702686804583,
+  "got": 0.6301702686804583,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8646754023342338,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 1 cell P38",
+  "kind": "formula",
+  "expected": 0.6480812529431101,
+  "got": 0.6480812529431101,
+  "status": "agree",
+  "inputs": {
+   "k": 1.899842541331695,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell C18",
+  "kind": "formula",
+  "expected": 0.7668115805072325,
+  "got": 0.7668115805072326,
+  "status": "agree",
+  "inputs": {
+   "k": 2.0,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell D18",
+  "kind": "formula",
+  "expected": 0.7668115805072325,
+  "got": 0.7668115805072326,
+  "status": "agree",
+  "inputs": {
+   "k": 2.0,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell H18",
+  "kind": "formula",
+  "expected": 0.5872927267524677,
+  "got": 0.5872927267524677,
+  "status": "agree",
+  "inputs": {
+   "k": 1.674199862463242,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell I18",
+  "kind": "formula",
+  "expected": 0.5930843726142079,
+  "got": 0.5930843726142079,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6851887098275316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell M18",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell N18",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 2 cell S23",
+  "kind": "formula",
+  "expected": 0.4720006754884893,
+  "got": 0.4720006754884893,
+  "status": "agree",
+  "inputs": {
+   "k": 1.4472135954999579,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 3 cell D29",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 3 cell E29",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 4 cell D28",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell E41",
+  "kind": "formula",
+  "expected": 0.6325759109065162,
+  "got": 0.6325759109065163,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7591896180011233,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell F41",
+  "kind": "formula",
+  "expected": 0.6411142473797765,
+  "got": 0.6411142473797765,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7749842582921285,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell I41",
+  "kind": "formula",
+  "expected": 0.6325759109065162,
+  "got": 0.6325759109065163,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7591896180011233,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell J41",
+  "kind": "formula",
+  "expected": 0.6411142473797765,
+  "got": 0.6411142473797765,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7749842582921285,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell K41",
+  "kind": "formula",
+  "expected": 0.4682745290475102,
+  "got": 0.46827452904751016,
+  "status": "agree",
+  "inputs": {
+   "k": 1.439586982263858,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell N41",
+  "kind": "formula",
+  "expected": 0.6572210394922822,
+  "got": 0.6572210394922822,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9176629354822472,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell O41",
+  "kind": "formula",
+  "expected": 0.6791213193859645,
+  "got": 0.6791213193859645,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9600307214746386,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell R41",
+  "kind": "formula",
+  "expected": 0.5872927267524677,
+  "got": 0.5872927267524677,
+  "status": "agree",
+  "inputs": {
+   "k": 1.674199862463242,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell S41",
+  "kind": "formula",
+  "expected": 0.5930843726142079,
+  "got": 0.5930843726142079,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6851887098275316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell V41",
+  "kind": "formula",
+  "expected": 0.5872927267524677,
+  "got": 0.5872927267524677,
+  "status": "agree",
+  "inputs": {
+   "k": 1.674199862463242,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell W41",
+  "kind": "formula",
+  "expected": 0.5930843726142079,
+  "got": 0.5930843726142079,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6851887098275316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell Z41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AA41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AD20",
+  "kind": "formula",
+  "expected": 0.4308756952045355,
+  "got": 0.4308756952045355,
+  "status": "agree",
+  "inputs": {
+   "k": 1.4472135954999579,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AD41",
+  "kind": "formula",
+  "expected": 0.5378163074501813,
+  "got": 0.5378163074501812,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5787990801732326,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AE41",
+  "kind": "formula",
+  "expected": 0.5413501408504392,
+  "got": 0.5413501408504392,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5857074126574227,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AH41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AI41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AL41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AM41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AN41",
+  "kind": "formula",
+  "expected": 0.47332593470461076,
+  "got": 0.4733259347046108,
+  "status": "agree",
+  "inputs": {
+   "k": 1.4499212706658475,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AQ41",
+  "kind": "formula",
+  "expected": 0.7668115805072325,
+  "got": 0.7668115805072326,
+  "status": "agree",
+  "inputs": {
+   "k": 2.0,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 5 cell AR41",
+  "kind": "formula",
+  "expected": 0.7668115805072325,
+  "got": 0.7668115805072326,
+  "status": "agree",
+  "inputs": {
+   "k": 2.0,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell E41",
+  "kind": "formula",
+  "expected": 0.6314012699750539,
+  "got": 0.6314012699750539,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7570111641044646,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell F41",
+  "kind": "formula",
+  "expected": 0.6398594079997981,
+  "got": 0.6398594079997982,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7726674092862558,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell G41",
+  "kind": "formula",
+  "expected": 0.4682745290475102,
+  "got": 0.46827452904751016,
+  "status": "agree",
+  "inputs": {
+   "k": 1.439586982263858,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell H41",
+  "kind": "formula",
+  "expected": 0.6314012699750539,
+  "got": 0.6314012699750539,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7570111641044646,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell I41",
+  "kind": "formula",
+  "expected": 0.6398594079997981,
+  "got": 0.6398594079997982,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7726674092862558,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell J41",
+  "kind": "formula",
+  "expected": 0.4682745290475102,
+  "got": 0.46827452904751016,
+  "status": "agree",
+  "inputs": {
+   "k": 1.439586982263858,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell K41",
+  "kind": "formula",
+  "expected": 0.6572210394922822,
+  "got": 0.6572210394922822,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9176629354822472,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell L41",
+  "kind": "formula",
+  "expected": 0.6791213193859645,
+  "got": 0.6791213193859645,
+  "status": "agree",
+  "inputs": {
+   "k": 1.9600307214746386,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell M41",
+  "kind": "formula",
+  "expected": 0.5872927267524677,
+  "got": 0.5872927267524677,
+  "status": "agree",
+  "inputs": {
+   "k": 1.674199862463242,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell N41",
+  "kind": "formula",
+  "expected": 0.5930843726142079,
+  "got": 0.5930843726142079,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6851887098275316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell O41",
+  "kind": "formula",
+  "expected": 0.5872927267524677,
+  "got": 0.5872927267524677,
+  "status": "agree",
+  "inputs": {
+   "k": 1.674199862463242,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell P41",
+  "kind": "formula",
+  "expected": 0.5930843726142079,
+  "got": 0.5930843726142079,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6851887098275316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Q41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell R41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell S41",
+  "kind": "formula",
+  "expected": 0.5378163074501813,
+  "got": 0.5378163074501812,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5787990801732326,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell T19",
+  "kind": "formula",
+  "expected": 0.4308756952045355,
+  "got": 0.4308756952045355,
+  "status": "agree",
+  "inputs": {
+   "k": 1.4472135954999579,
+   "f_ck": 50.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell T41",
+  "kind": "formula",
+  "expected": 0.5413501408504392,
+  "got": 0.5413501408504392,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5857074126574227,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell U41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell V41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell W41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell X41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Y41",
+  "kind": "formula",
+  "expected": 0.47332593470461076,
+  "got": 0.4733259347046108,
+  "status": "agree",
+  "inputs": {
+   "k": 1.4499212706658475,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell Z41",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 6 cell AA41",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell C16",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell F16",
+  "kind": "formula",
+  "expected": 0.604692665293899,
+  "got": 0.604692665293899,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7071067811865475,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell I16",
+  "kind": "formula",
+  "expected": 0.5726060848355323,
+  "got": 0.5726060848355323,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6461706697512386,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell L16",
+  "kind": "formula",
+  "expected": 0.5378163074501813,
+  "got": 0.5378163074501812,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5787990801732326,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell S16",
+  "kind": "formula",
+  "expected": 0.5548648444556422,
+  "got": 0.5548648444556422,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6119900613621045,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell V16",
+  "kind": "formula",
+  "expected": 0.5644838317688439,
+  "got": 0.5644838317688439,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6305666611194316,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell Y16",
+  "kind": "formula",
+  "expected": 0.5698276933578382,
+  "got": 0.5698276933578382,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6408413361120013,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AB16",
+  "kind": "formula",
+  "expected": 0.5750987211739885,
+  "got": 0.5750987211739885,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6509445549041193,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AE16",
+  "kind": "formula",
+  "expected": 0.5909813680404779,
+  "got": 0.5909813680404779,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6812027032901717,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AN16",
+  "kind": "formula",
+  "expected": 0.5798883730918724,
+  "got": 0.5798883730918724,
+  "status": "agree",
+  "inputs": {
+   "k": 1.6600983619844496,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 8 cell AQ16",
+  "kind": "formula",
+  "expected": 0.5450217427177245,
+  "got": 0.5450217427177245,
+  "status": "agree",
+  "inputs": {
+   "k": 1.5928691667287522,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 9 cell D17",
+  "kind": "formula",
+  "expected": 0.6325759109065162,
+  "got": 0.6325759109065163,
+  "status": "agree",
+  "inputs": {
+   "k": 1.7591896180011233,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 9 cell W20",
+  "kind": "formula",
+  "expected": 0.6352590950244312,
+  "got": 0.6352590950244313,
+  "status": "agree",
+  "inputs": {
+   "k": 1.76416071990087,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 10 cell E18",
+  "kind": "formula",
+  "expected": 0.685461225581295,
+  "got": 0.685461225581295,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8559209850218257,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S3 (Excel workbook)",
+  "where": "sheet 10 cell F18",
+  "kind": "formula",
+  "expected": 0.6981472055344272,
+  "got": 0.6981472055344272,
+  "status": "agree",
+  "inputs": {
+   "k": 1.8787495503274936,
+   "f_ck": 60.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 3",
+  "kind": "printed",
+  "expected": 0.43,
+  "got": 0.43404375462431244,
+  "status": "agree",
+  "case": "phase 1",
+  "tolerance": 0.0050012897644210975,
+  "inputs": {
+   "k": 1.6379009321094968,
+   "f_ck": 35.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 4",
+  "kind": "printed",
+  "expected": 0.38,
+  "got": 0.3756592396172266,
+  "status": "agree",
+  "case": "phase 2",
+  "tolerance": 0.005000548655658017,
+  "inputs": {
+   "k": 1.487514949418087,
+   "f_ck": 35.0
+  }
+ }
+]

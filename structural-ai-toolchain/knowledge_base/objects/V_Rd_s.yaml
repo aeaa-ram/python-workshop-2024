@@ -1,0 +1,105 @@
+id: V_Rd_s
+name: Design shear resistance governed by yielding of the shear reinforcement
+formula: A_sw / s * z * f_ywk / gamma_S * cot(theta)
+params:
+- A_sw
+- s
+- z
+- f_ywk
+- gamma_S
+- theta
+var: V_Rd_s
+symbol: V_{Rd,s}
+unit: kN
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(3)
+eq: (6.8)
+status: single source
+support:
+  sources: 1
+  source_ids:
+  - S1
+  formula_instances: 2
+  variants_merged: 1
+  printed_values: 2
+variants:
+- formula: A_sw / s * z * f_ywk / gamma_S * cot(theta)
+  text: A_sw / s · z · f_ywk / γ_S · cot(θ)
+  instances: 2
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences: []
+- formula: A_sw * z * f_ywk * fywd_fywk * cot_theta / s
+  text: A_sw · z · f_ywk · fywd_fywk · cot_theta / s
+  instances: 2
+  sources:
+  - S3 (Excel workbook)
+  merged: false
+  differences: []
+  reason: 'uses project-specific quantities: fywd_fywk, cot_theta'
+- formula: A_sw * z * f_ywk * fywd_fywk_0_8_or_0_87 * cot_theta / s
+  text: A_sw · z · f_ywk · fywd_fywk_0_8_or_0_87 · cot_theta / s
+  instances: 1
+  sources:
+  - S3 (Excel workbook)
+  merged: false
+  differences: []
+  reason: 'uses project-specific quantities: fywd_fywk_0_8_or_0_87, cot_theta'
+- formula: A_sw * f_ywk * fywd_fywk_0_8_or_0_87 * (cot_theta + 0 / tan(alpha)) * sin(alpha)
+  text: A_sw · f_ywk · fywd_fywk_0_8_or_0_87 · (cot_theta + 0 / tan(α)) · sin(α)
+  instances: 1
+  sources:
+  - S3 (Excel workbook)
+  merged: false
+  differences: []
+  reason: 'uses project-specific quantities: fywd_fywk_0_8_or_0_87, cot_theta'
+benchmarks:
+  total: 4
+  agree: 4
+  deviation: 0
+  not_comparable: 0
+reference:
+  library: structuralcodes 0.7.3
+  function: VRds(Asw, s, z, theta, fyk, alpha=90, gamma_s)
+  samples: 200
+  max_relative_difference: 5.31e-16
+  status: agrees
+  agreeing_samples: 200
+warnings:
+- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
+examples:
+- label: S1 (Mathcad worksheet) - region 100 - phase 1
+  inputs:
+    A_sw: 402.1238596594935
+    s: 150.0
+    z: 457.35225376532844
+    f_ywk: 500.0
+    gamma_S: 1.15
+    theta: 0.7853981633974483
+  expected: 533078.9956756001
+  result: 533078.9956756
+  matches_source: true
+  given:
+  - z
+- label: S1 (Mathcad worksheet) - region 139 - phase 2
+  inputs:
+    A_sw: 402.1238596594935
+    s: 150.0
+    z: 835.5761998031624
+    f_ywk: 500.0
+    gamma_S: 1.15
+    theta: 0.7853981633974483
+  expected: 973927.9029114778
+  result: 973927.9029114778
+  matches_source: true
+  given:
+  - z
+check: V_Ed
+version: e87f4b3b5693

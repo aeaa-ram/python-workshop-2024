@@ -42,6 +42,14 @@ def _adapters() -> dict:
         p["x"] = p["h"] * (0.10 + 0.50 * p["_u2"])
         return p
 
+    def bond(p):                   # the library accepts the tabulated values only
+        p["k_1_bond"] = 0.8 if p["_u1"] < 0.5 else 1.6
+        return p
+
+    def duration(p):
+        p["k_t"] = 0.4 if p["_u1"] < 0.5 else 0.6
+        return p
+
     return {
         "k": Adapter("shear._k(d)", ["d"], lambda p: sh._k(p["d"])),
         "rho_l": Adapter("shear._rho_L(Asl, bw, d)", ["A_sl", "b_w", "d"],
@@ -84,11 +92,13 @@ def _adapters() -> dict:
         "s_r_max": Adapter("sr_max_close(c, phi, rho_p_eff, k1, k2, k3, k4)",
                            ["c", "phi_bar", "rho_p_eff", "k_1_bond", "k_2", "k_3", "k_4"],
                            lambda p: ec.sr_max_close(p["c"], p["phi_bar"], p["rho_p_eff"], p["k_1_bond"],
-                                                     p["k_2"], p["k_3"], p["k_4"])),
+                                                     p["k_2"], p["k_3"], p["k_4"]),
+                           constrain=bond),
         "eps_sm_cm": Adapter("eps_sm_eps_cm(sigma_s, alpha_e, rho_p_eff, kt, fct_eff, Es)",
                              ["sigma_s", "alpha_e", "rho_p_eff", "k_t", "f_ct_eff", "E_s"],
                              lambda p: ec.eps_sm_eps_cm(p["sigma_s"], p["alpha_e"], p["rho_p_eff"], p["k_t"],
-                                                        p["f_ct_eff"], p["E_s"])),
+                                                        p["f_ct_eff"], p["E_s"]),
+                             constrain=duration),
         "w_k": Adapter("wk(sr_max, eps_sm_eps_cm)", ["s_r_max", "eps_sm_cm"],
                        lambda p: ec.wk(p["s_r_max"], p["eps_sm_cm"])),
         "alpha_e": Adapter("alpha_e(Es, Ecm)", ["E_s", "E_cm"], lambda p: ec.alpha_e(p["E_s"], p["E_cm"])),

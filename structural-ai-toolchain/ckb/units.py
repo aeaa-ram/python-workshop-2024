@@ -78,7 +78,7 @@ def _atom(tok: str) -> tuple[float, Dims, str]:
     if tok in _BASE:
         f, d = _BASE[tok]
         return f, d, tok
-    low = _LOWER.get(tok.lower())
+    low = _LOWER.get(tok.lower()) if len(tok) > 1 else None     # "k" is not kelvin
     if low and low != tok:
         return _atom(low)
     raise UnitError(f"unknown unit {tok!r}")

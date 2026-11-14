@@ -1,0 +1,27 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 199",
+  "kind": "formula",
+  "expected": 0.017056859593696766,
+  "got": 0.017056859593696762,
+  "status": "agree",
+  "inputs": {
+   "A_s": 1963.495408493621,
+   "A_c_eff": 115114.70782225447
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 6",
+  "kind": "printed",
+  "expected": 0.02,
+  "got": 0.017056856187290966,
+  "status": "agree",
+  "tolerance": 0.005000166912650146,
+  "inputs": {
+   "A_s": 1963.5,
+   "A_c_eff": 115115.00000000001
+  }
+ }
+]

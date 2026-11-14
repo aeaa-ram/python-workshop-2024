@@ -80,9 +80,13 @@ class _Sheet:
 
 
 def _is_unit_cell(text: str) -> bool:
+    """Is this cell a unit (``mm``, ``kN/m``, ``deg``) and not a symbol (``k``, ``s``, ``h``)?"""
     t = text.strip()
-    return bool(t) and len(t) <= 8 and U.is_unit(t) and t not in ("s", "t", "h", "d", "N", "m", "-") \
-        or t in ("m", "N")
+    if not t or len(t) > 8 or not U.is_unit(t):
+        return False
+    if len(t) == 1:
+        return t in ("m", "N", "%", "°", "‰")
+    return t not in ("min", "day", "year", "kg", "rad") or t == "rad"
 
 
 def _label_cells(sh: _Sheet, r: int, c: int) -> tuple[list[tuple[int, int, str]], bool]:
@@ -150,6 +154,13 @@ def _describe(sh: _Sheet, r: int, c: int) -> dict:
         right = sh.text(r, c + 1)
         if right is not None and _is_unit_cell(right):
             info["unit"] = U.parse_unit(right.strip()).text
+    # a code reference in one of the cells to the right of the value
+    info["clause_right"] = ""
+    for k in range(1, 4):
+        t = sh.text(r, c + k)
+        if t and find_clause(t) and len(t) < 60:
+            info["clause_right"] = find_clause(t)
+            break
     # a note held in the value's own column on the label row (e.g. "B16/200")
     if label_row != r:
         note = sh.text(label_row, c)
@@ -180,7 +191,7 @@ def _describe(sh: _Sheet, r: int, c: int) -> dict:
                     break
                 rr -= 1
     info["section"] = [sh.title.strip()] + list(reversed(heads[:1]))
-    info["clause"] = find_clause(info["label"]) or clause_head
+    info["clause"] = find_clause(info["label"]) or info["clause_right"] or clause_head
 
     # case: header text above the value column (rows whose label column is empty)
     case, rr = [], r - 1

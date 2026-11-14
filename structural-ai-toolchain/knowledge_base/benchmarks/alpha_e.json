@@ -1,0 +1,37 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 150",
+  "kind": "formula",
+  "expected": 5.882352941176471,
+  "got": 5.882352941176471,
+  "status": "agree",
+  "inputs": {
+   "E_s": 200000.0,
+   "E_cm": 34000.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 5",
+  "kind": "printed",
+  "expected": 5.88,
+  "got": 5.882352941176471,
+  "status": "agree",
+  "tolerance": 0.005,
+  "inputs": {
+   "E_s": 200000.0,
+   "E_cm": 34000.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 5",
+  "kind": "printed",
+  "expected": 14.71,
+  "got": null,
+  "status": "not comparable",
+  "detail": "printed from a formula variant that was not merged into this object",
+  "inputs": {}
+ }
+]

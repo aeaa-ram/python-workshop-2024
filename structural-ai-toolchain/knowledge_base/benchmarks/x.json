@@ -1,0 +1,61 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 71",
+  "kind": "formula",
+  "expected": 85.36936558667917,
+  "got": 85.36936558667917,
+  "status": "agree",
+  "case": "phase 1",
+  "inputs": {
+   "f_yk": 500.0,
+   "gamma_S": 1.15,
+   "A_s": 1963.495408493621,
+   "gamma_C": 1.4,
+   "lam": 0.8,
+   "b": 500.0,
+   "alpha_cc": 1.0,
+   "f_ck": 35.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 2",
+  "kind": "printed",
+  "expected": 85.37,
+  "got": 85.3695652173913,
+  "status": "agree",
+  "case": "phase 1",
+  "tolerance": 0.005217391304360604,
+  "inputs": {
+   "f_yk": 500.0,
+   "gamma_S": 1.15,
+   "A_s": 1963.5,
+   "gamma_C": 1.4,
+   "lam": 0.8,
+   "b": 500.0,
+   "alpha_cc": 1.0,
+   "f_ck": 35.0
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 5",
+  "kind": "printed",
+  "expected": 259.31,
+  "got": null,
+  "status": "not comparable",
+  "detail": "printed from a formula variant that was not merged into this object",
+  "inputs": {}
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 5",
+  "kind": "printed",
+  "expected": 175.42,
+  "got": null,
+  "status": "not comparable",
+  "detail": "printed from a formula variant that was not merged into this object",
+  "inputs": {}
+ }
+]

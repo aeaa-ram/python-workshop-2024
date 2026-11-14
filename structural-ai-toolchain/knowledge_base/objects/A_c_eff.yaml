@@ -1,0 +1,53 @@
+id: A_c_eff
+name: Effective area of concrete in tension surrounding the reinforcement
+formula: h_c_ef * b
+params:
+- h_c_ef
+- b
+var: A_c_eff
+symbol: A_{c,eff}
+unit: mm²
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.2(3)
+status: single source
+support:
+  sources: 1
+  source_ids:
+  - S1
+  formula_instances: 1
+  variants_merged: 1
+  printed_values: 0
+variants:
+- formula: h_c_ef * b
+  text: h_c,ef · b
+  instances: 1
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences: []
+benchmarks:
+  total: 1
+  agree: 1
+  deviation: 0
+  not_comparable: 0
+warnings:
+- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
+examples:
+- label: S1 (Mathcad worksheet) - region 194
+  inputs:
+    h: 950.0000000000001
+    d: 841.5000000000001
+    x: 259.31175306647333
+    b: 500.0
+  expected: 115114.70782225447
+  result: 115114.70782225447
+  matches_source: true
+  given:
+  - x
+version: 7fcfc2800f9a

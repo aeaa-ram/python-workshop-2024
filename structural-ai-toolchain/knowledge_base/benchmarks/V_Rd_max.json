@@ -1,0 +1,76 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 101",
+  "kind": "formula",
+  "expected": 1715070.9516199816,
+  "got": 1715070.9516199816,
+  "status": "agree",
+  "case": "phase 1",
+  "inputs": {
+   "alpha_cw": 1.0,
+   "b_w": 500.0,
+   "z": 457.35225376532844,
+   "nu_1": 0.6,
+   "f_ck": 35.0,
+   "gamma_C": 1.4,
+   "theta": 0.7853981633974483
+  }
+ },
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 140",
+  "kind": "formula",
+  "expected": 3133410.7492618584,
+  "got": 3133410.749261859,
+  "status": "agree",
+  "case": "phase 2",
+  "inputs": {
+   "alpha_cw": 1.0,
+   "b_w": 500.0,
+   "z": 835.5761998031624,
+   "nu_1": 0.6,
+   "f_ck": 35.0,
+   "gamma_C": 1.4,
+   "theta": 0.7853981633974483
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 3",
+  "kind": "printed",
+  "expected": 1715070.0,
+  "got": 1715062.5,
+  "status": "agree",
+  "case": "phase 1",
+  "tolerance": 23.75,
+  "inputs": {
+   "alpha_cw": 1.0,
+   "b_w": 500.0,
+   "z": 457.35,
+   "nu_1": 0.6,
+   "f_ck": 35.0,
+   "gamma_C": 1.4,
+   "theta": 0.7853981633974483
+  }
+ },
+ {
+  "source": "S2 (PDF print)",
+  "where": "page 4",
+  "kind": "printed",
+  "expected": 3133410.0,
+  "got": 3133425.0,
+  "status": "agree",
+  "case": "phase 2",
+  "tolerance": 23.75,
+  "inputs": {
+   "alpha_cw": 1.0,
+   "b_w": 500.0,
+   "z": 835.58,
+   "nu_1": 0.6,
+   "f_ck": 35.0,
+   "gamma_C": 1.4,
+   "theta": 0.7853981633974483
+  }
+ }
+]

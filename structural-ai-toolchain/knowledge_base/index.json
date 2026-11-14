@@ -1,0 +1,700 @@
+{
+ "meta": {
+  "code": "EN 1992-1-1",
+  "branch": "EN 1992-1-1:2004 (recommended values)",
+  "title": "Eurocode 2 - Design of concrete structures - Part 1-1",
+  "reference_library": "structuralcodes 0.7.3",
+  "units": "N, mm, MPa (N/mm²), rad",
+  "skipped": []
+ },
+ "topics": [
+  {
+   "id": "2",
+   "title": "Basis of design"
+  },
+  {
+   "id": "2.4",
+   "title": "Verification by the partial factor method"
+  },
+  {
+   "id": "3",
+   "title": "Materials"
+  },
+  {
+   "id": "3.1",
+   "title": "Concrete"
+  },
+  {
+   "id": "3.2",
+   "title": "Reinforcing steel"
+  },
+  {
+   "id": "4",
+   "title": "Durability and cover to reinforcement"
+  },
+  {
+   "id": "5",
+   "title": "Structural analysis"
+  },
+  {
+   "id": "6",
+   "title": "Ultimate limit states (ULS)"
+  },
+  {
+   "id": "6.1",
+   "title": "Bending with or without axial force"
+  },
+  {
+   "id": "6.2",
+   "title": "Shear"
+  },
+  {
+   "id": "6.2.1",
+   "title": "General verification procedure"
+  },
+  {
+   "id": "6.2.2",
+   "title": "Members not requiring design shear reinforcement"
+  },
+  {
+   "id": "6.2.3",
+   "title": "Members requiring design shear reinforcement"
+  },
+  {
+   "id": "6.3",
+   "title": "Torsion"
+  },
+  {
+   "id": "6.4",
+   "title": "Punching"
+  },
+  {
+   "id": "6.5",
+   "title": "Design with strut and tie models"
+  },
+  {
+   "id": "7",
+   "title": "Serviceability limit states (SLS)"
+  },
+  {
+   "id": "7.2",
+   "title": "Stress limitation"
+  },
+  {
+   "id": "7.3",
+   "title": "Crack control"
+  },
+  {
+   "id": "7.3.2",
+   "title": "Minimum reinforcement areas"
+  },
+  {
+   "id": "7.3.4",
+   "title": "Calculation of crack widths"
+  },
+  {
+   "id": "7.4",
+   "title": "Deflection control"
+  },
+  {
+   "id": "8",
+   "title": "Detailing of reinforcement"
+  },
+  {
+   "id": "9",
+   "title": "Detailing of members and particular rules"
+  }
+ ],
+ "sources": [
+  {
+   "id": "S1",
+   "label": "S1 (Mathcad worksheet)",
+   "kind": "mathcad",
+   "converter": "mcad2py 0.5.0 + isolated run",
+   "sha256": "47542d7819913b09",
+   "statements": 115,
+   "formulas": 84,
+   "formulas_verified": 84,
+   "printed_values": 0,
+   "recognised": 72,
+   "instances": 38,
+   "not_recognised": 35,
+   "issues": 0,
+   "stored_results": {
+    "compared": 80,
+    "agree": 80
+   }
+  },
+  {
+   "id": "S2",
+   "label": "S2 (PDF print)",
+   "kind": "pdf",
+   "converter": "pdfplumber 0.11.10 (text layer, character positions)",
+   "sha256": "7cce36210c741963",
+   "statements": 100,
+   "formulas": 0,
+   "formulas_verified": 0,
+   "printed_values": 100,
+   "recognised": 67,
+   "instances": 0,
+   "not_recognised": 0,
+   "issues": 0,
+   "print_of": "S1"
+  },
+  {
+   "id": "S3",
+   "label": "S3 (Excel workbook)",
+   "kind": "excel",
+   "converter": "openpyxl 3.1.5 + formula parser",
+   "sha256": "a5468a2adf5728b6",
+   "statements": 1701,
+   "formulas": 1040,
+   "formulas_verified": 1040,
+   "printed_values": 0,
+   "recognised": 1281,
+   "instances": 616,
+   "not_recognised": 337,
+   "issues": 0
+  }
+ ],
+ "quantities": {
+  "b": {
+   "id": "b",
+   "name": "Width of the cross-section (compression zone)",
+   "var": "b",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "6.1",
+   "typical": 500.0,
+   "range": [
+    150.0,
+    3000.0
+   ],
+   "observed": 2
+  },
+  "k_3": {
+   "id": "k_3",
+   "name": "Coefficient k3 for crack spacing",
+   "var": "k_3",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 3.4,
+   "range": [
+    2.0,
+    3.4
+   ],
+   "observed": 2
+  },
+  "f_ct_eff": {
+   "id": "f_ct_eff",
+   "name": "Mean tensile strength of the concrete effective at the time of cracking",
+   "var": "f_ct_eff",
+   "symbol": "f_{ct,eff}",
+   "unit": "MPa",
+   "kind": "input",
+   "topic": "7.3.4",
+   "clause": "7.3.4(2)",
+   "range": [
+    1.6,
+    5.0
+   ],
+   "observed": 0
+  },
+  "sigma_cp": {
+   "id": "sigma_cp",
+   "name": "Concrete compressive stress from axial load or prestress (compression positive)",
+   "var": "sigma_cp",
+   "symbol": "σ_{cp}",
+   "unit": "MPa",
+   "kind": "input",
+   "topic": "6.2.2",
+   "clause": "6.2.2(1)",
+   "typical": 0.0,
+   "range": [
+    -2.0,
+    6.0
+   ],
+   "observed": 88
+  },
+  "A_sw": {
+   "id": "A_sw",
+   "name": "Cross-sectional area of the shear reinforcement",
+   "var": "A_sw",
+   "unit": "mm²",
+   "kind": "input",
+   "topic": "6.2.3",
+   "clause": "6.2.3(3)",
+   "typical": 402.124,
+   "range": [
+    50.0,
+    2000.0
+   ],
+   "observed": 8
+  },
+  "k_1": {
+   "id": "k_1",
+   "name": "Coefficient for the effect of axial stress on shear resistance",
+   "var": "k_1",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "6.2.2",
+   "clause": "6.2.2(1)",
+   "typical": 0.15,
+   "range": [
+    0.1,
+    0.2
+   ],
+   "observed": 84
+  },
+  "h": {
+   "id": "h",
+   "name": "Overall depth of the cross-section",
+   "var": "h",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "6",
+   "typical": 326.0,
+   "range": [
+    150.0,
+    3000.0
+   ],
+   "observed": 86
+  },
+  "theta": {
+   "id": "theta",
+   "name": "Angle between the concrete compression strut and the beam axis",
+   "var": "theta",
+   "symbol": "θ",
+   "unit": "°",
+   "kind": "input",
+   "topic": "6.2.3",
+   "clause": "6.2.3(2)",
+   "typical": 0.785398,
+   "range": [
+    0.38048177693476387,
+    0.7853981633974483
+   ],
+   "observed": 2
+  },
+  "I_cr": {
+   "id": "I_cr",
+   "name": "Second moment of area of the cracked section",
+   "var": "I_cr",
+   "symbol": "I_{cr}",
+   "unit": "mm⁴",
+   "kind": "input",
+   "topic": "7.3.4",
+   "typical": 20564900000.0,
+   "range": [
+    100000000.0,
+    1000000000000.0
+   ],
+   "observed": 2
+  },
+  "k_4": {
+   "id": "k_4",
+   "name": "Coefficient k4 for crack spacing",
+   "var": "k_4",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 0.425,
+   "range": [
+    0.4,
+    0.45
+   ],
+   "observed": 2
+  },
+  "f_ck": {
+   "id": "f_ck",
+   "name": "Characteristic compressive cylinder strength of concrete at 28 days",
+   "var": "f_ck",
+   "unit": "MPa",
+   "kind": "input",
+   "topic": "3.1",
+   "clause": "3.1.2",
+   "typical": 60.0,
+   "range": [
+    12.0,
+    90.0
+   ],
+   "observed": 86
+  },
+  "V_Ed": {
+   "id": "V_Ed",
+   "name": "Design shear force",
+   "var": "V_Ed",
+   "unit": "kN",
+   "kind": "input",
+   "topic": "6.2",
+   "typical": 3300000.0,
+   "range": [
+    10000.0,
+    10000000.0
+   ],
+   "observed": 46
+  },
+  "c": {
+   "id": "c",
+   "name": "Cover to the longitudinal reinforcement",
+   "var": "c",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 80.0,
+   "range": [
+    20.0,
+    120.0
+   ],
+   "observed": 4
+  },
+  "f_ywk": {
+   "id": "f_ywk",
+   "name": "Characteristic yield strength of the shear reinforcement",
+   "var": "f_ywk",
+   "unit": "MPa",
+   "kind": "input",
+   "topic": "6.2.3",
+   "typical": 500.0,
+   "range": [
+    400.0,
+    600.0
+   ],
+   "observed": 4
+  },
+  "w_max": {
+   "id": "w_max",
+   "name": "Limiting calculated crack width",
+   "var": "w_max",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "7.3",
+   "clause": "Table 7.1N",
+   "typical": 0.3,
+   "range": [
+    0.1,
+    0.4
+   ],
+   "observed": 2
+  },
+  "b_w": {
+   "id": "b_w",
+   "name": "Smallest width of the cross-section in the tensile area",
+   "var": "b_w",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "6.2",
+   "clause": "6.2.2(1)",
+   "typical": 300.0,
+   "range": [
+    100.0,
+    3000.0
+   ],
+   "observed": 6
+  },
+  "alpha_cc": {
+   "id": "alpha_cc",
+   "name": "Coefficient for long-term effects on the compressive strength",
+   "var": "alpha_cc",
+   "symbol": "α_{cc}",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "3.1",
+   "clause": "3.1.6(1)",
+   "typical": 1.0,
+   "range": [
+    0.8,
+    1.0
+   ],
+   "observed": 2
+  },
+  "gamma_S": {
+   "id": "gamma_S",
+   "name": "Partial factor for reinforcing steel",
+   "var": "gamma_S",
+   "symbol": "γ_{S}",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "2.4",
+   "clause": "2.4.2.4(1)",
+   "typical": 1.15,
+   "range": [
+    1.0,
+    1.25
+   ],
+   "observed": 2
+  },
+  "E_s": {
+   "id": "E_s",
+   "name": "Design value of modulus of elasticity of reinforcing steel",
+   "var": "E_s",
+   "unit": "GPa",
+   "kind": "input",
+   "topic": "3.2",
+   "clause": "3.2.7(4)",
+   "typical": 200000.0,
+   "range": [
+    190000.0,
+    210000.0
+   ],
+   "observed": 2
+  },
+  "k_1_bond": {
+   "id": "k_1_bond",
+   "name": "Coefficient for the bond properties of the reinforcement",
+   "var": "k_1",
+   "symbol": "k_{1}",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 0.8,
+   "range": [
+    0.8,
+    1.6
+   ],
+   "observed": 2
+  },
+  "d": {
+   "id": "d",
+   "name": "Effective depth of the cross-section",
+   "var": "d",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "6",
+   "typical": 273.0,
+   "range": [
+    100.0,
+    2900.0
+   ],
+   "observed": 88
+  },
+  "s": {
+   "id": "s",
+   "name": "Spacing of the stirrups",
+   "var": "s",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "6.2.3",
+   "clause": "6.2.3(3)",
+   "typical": 200.0,
+   "range": [
+    50.0,
+    400.0
+   ],
+   "observed": 5
+  },
+  "phi_creep": {
+   "id": "phi_creep",
+   "name": "Creep coefficient",
+   "var": "phi",
+   "symbol": "φ",
+   "unit": "-",
+   "kind": "input",
+   "topic": "3.1",
+   "clause": "3.1.4",
+   "typical": 1.5,
+   "range": [
+    0.5,
+    3.5
+   ],
+   "observed": 2
+  },
+  "gamma_C": {
+   "id": "gamma_C",
+   "name": "Partial factor for concrete",
+   "var": "gamma_C",
+   "symbol": "γ_{C}",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "2.4",
+   "clause": "2.4.2.4(1)",
+   "typical": 1.3775,
+   "range": [
+    1.0,
+    1.6
+   ],
+   "observed": 86
+  },
+  "E_cm": {
+   "id": "E_cm",
+   "name": "Secant modulus of elasticity of concrete",
+   "var": "E_cm",
+   "unit": "GPa",
+   "kind": "input",
+   "topic": "3.1",
+   "clause": "Table 3.1",
+   "typical": 34000.0,
+   "range": [
+    27000.0,
+    44000.0
+   ],
+   "observed": 2
+  },
+  "k_t": {
+   "id": "k_t",
+   "name": "Factor dependent on the duration of the load",
+   "var": "k_t",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "7.3.4",
+   "clause": "7.3.4(2)",
+   "typical": 0.4,
+   "range": [
+    0.4,
+    0.6
+   ],
+   "observed": 2
+  },
+  "phi_bar": {
+   "id": "phi_bar",
+   "name": "Bar diameter (equivalent diameter for a mix of sizes)",
+   "var": "phi",
+   "symbol": "ϕ",
+   "unit": "mm",
+   "kind": "input",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 25.0,
+   "range": [
+    8.0,
+    40.0
+   ],
+   "observed": 2
+  },
+  "f_yk": {
+   "id": "f_yk",
+   "name": "Characteristic yield strength of reinforcement",
+   "var": "f_yk",
+   "unit": "MPa",
+   "kind": "input",
+   "topic": "3.2",
+   "clause": "3.2.2",
+   "typical": 500.0,
+   "range": [
+    400.0,
+    600.0
+   ],
+   "observed": 2
+  },
+  "A_s": {
+   "id": "A_s",
+   "name": "Cross-sectional area of tension reinforcement",
+   "var": "A_s",
+   "unit": "mm²",
+   "kind": "input",
+   "topic": "6.1",
+   "typical": 1963.5,
+   "range": [
+    200.0,
+    20000.0
+   ],
+   "observed": 6
+  },
+  "M_Ed": {
+   "id": "M_Ed",
+   "name": "Design bending moment",
+   "var": "M_Ed",
+   "unit": "kNm",
+   "kind": "input",
+   "topic": "6.1",
+   "range": [
+    10000000.0,
+    20000000000.0
+   ],
+   "observed": 0
+  },
+  "lam": {
+   "id": "lam",
+   "name": "Factor defining the effective height of the compression zone",
+   "var": "lam",
+   "symbol": "λ",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "6.1",
+   "clause": "3.1.7(3)",
+   "typical": 0.8,
+   "range": [
+    0.7,
+    0.8
+   ],
+   "observed": 2
+  },
+  "nu_1": {
+   "id": "nu_1",
+   "name": "Strength reduction factor for concrete cracked in shear (strut)",
+   "var": "nu_1",
+   "symbol": "ν_{1}",
+   "unit": "-",
+   "kind": "derived",
+   "topic": "6.2.3",
+   "clause": "6.2.3(3)",
+   "typical": 0.45,
+   "range": [
+    0.3,
+    0.6
+   ],
+   "observed": 6
+  },
+  "k_2": {
+   "id": "k_2",
+   "name": "Coefficient for the distribution of strain",
+   "var": "k_2",
+   "unit": "-",
+   "kind": "coefficient",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "typical": 0.5,
+   "range": [
+    0.5,
+    1.0
+   ],
+   "observed": 2
+  },
+  "A_sl": {
+   "id": "A_sl",
+   "name": "Area of tensile reinforcement extending at least l_bd + d beyond the section",
+   "var": "A_sl",
+   "unit": "mm²",
+   "kind": "input",
+   "topic": "6.2.2",
+   "clause": "6.2.2(1)",
+   "typical": 402.0,
+   "range": [
+    100.0,
+    20000.0
+   ],
+   "observed": 6
+  }
+ },
+ "objects": [
+  "f_cd",
+  "E_c_eff",
+  "x",
+  "z",
+  "M_Rd",
+  "k",
+  "rho_l",
+  "C_Rd_c",
+  "v_min",
+  "V_Rd_c_min",
+  "V_Rd_c",
+  "nu",
+  "alpha_cw",
+  "V_Rd_s",
+  "V_Rd_max",
+  "alpha_e",
+  "sigma_s",
+  "sigma_c",
+  "h_c_ef",
+  "A_c_eff",
+  "rho_p_eff",
+  "s_r_max",
+  "eps_sm_cm",
+  "w_k"
+ ]
+}

@@ -226,11 +226,17 @@ class KnowledgeBase:
     def save(self, root: Path) -> None:
         root = Path(root)
         (root / "objects").mkdir(parents=True, exist_ok=True)
-        for old in (root / "objects").glob("*.yaml"):
+        (root / "benchmarks").mkdir(parents=True, exist_ok=True)
+        for old in list((root / "objects").glob("*.yaml")) + list((root / "benchmarks").glob("*.json")):
             old.unlink()
         for obj in self.objects.values():
+            # the object file stays short enough to read; its full benchmark list sits beside it
+            d = obj.to_dict()
+            items = d.get("benchmarks", {}).pop("items", [])
             (root / "objects" / f"{obj.id}.yaml").write_text(
-                yaml.safe_dump(obj.to_dict(), sort_keys=False, allow_unicode=True, width=110), encoding="utf-8")
+                yaml.safe_dump(d, sort_keys=False, allow_unicode=True, width=110), encoding="utf-8")
+            (root / "benchmarks" / f"{obj.id}.json").write_text(
+                json.dumps(items, indent=1, ensure_ascii=False), encoding="utf-8")
         index = {
             "meta": self.meta, "topics": self.topics, "sources": self.sources,
             "quantities": {q.id: {k: v for k, v in asdict(q).items() if v not in ("", None, [])}
@@ -252,5 +258,8 @@ class KnowledgeBase:
             kb.quantities[qid] = Quantity(**q)
         for oid in index.get("objects", []):
             data = yaml.safe_load((root / "objects" / f"{oid}.yaml").read_text(encoding="utf-8"))
+            bench = root / "benchmarks" / f"{oid}.json"
+            if bench.exists():
+                data.setdefault("benchmarks", {})["items"] = json.loads(bench.read_text(encoding="utf-8"))
             kb.objects[oid] = CalcObject(**data)
         return kb

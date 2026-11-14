@@ -1,0 +1,75 @@
+id: s_r_max
+name: Maximum crack spacing
+formula: k_3 * c + k_1_bond * k_2 * k_4 * phi_bar / rho_p_eff
+params:
+- k_3
+- c
+- k_1_bond
+- k_2
+- k_4
+- phi_bar
+- rho_p_eff
+var: s_r_max
+symbol: s_{r,max}
+unit: mm
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.4(3)
+eq: (7.11)
+status: single source
+support:
+  sources: 1
+  source_ids:
+  - S1
+  formula_instances: 1
+  variants_merged: 1
+  printed_values: 1
+variants:
+- formula: k_3 * c + k_1_bond * k_2 * k_4 * phi_bar / rho_p_eff
+  text: k_3 · c + k_1 · k_2 · k_4 · ϕ / ρ_p,eff
+  instances: 1
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences: []
+benchmarks:
+  total: 2
+  agree: 2
+  deviation: 0
+  not_comparable: 0
+reference:
+  library: structuralcodes 0.7.3
+  function: sr_max_close(c, phi, rho_p_eff, k1, k2, k3, k4)
+  samples: 200
+  max_relative_difference: 3.03e-16
+  status: agrees
+  agreeing_samples: 200
+notes:
+- Valid where the bar spacing is not larger than 5(c + ϕ/2); otherwise 7.3.4(3) expression (7.14) applies.
+warnings:
+- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
+examples:
+- label: S1 (Mathcad worksheet) - region 200
+  inputs:
+    k_3: 3.4
+    c: 96.0
+    k_1_bond: 0.8
+    k_2: 0.5
+    k_4: 0.425
+    phi_bar: 25.0
+    A_s: 1963.495408493621
+    h: 950.0000000000001
+    d: 841.5000000000001
+    x: 259.31175306647333
+    b: 500.0
+  expected: 575.5666169058785
+  result: 575.5666169058785
+  matches_source: true
+  given:
+  - x
+version: 4137d2d88b8f

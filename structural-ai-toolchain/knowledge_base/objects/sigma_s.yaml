@@ -1,0 +1,66 @@
+id: sigma_s
+name: Stress in the tension reinforcement assuming a cracked section
+formula: alpha_e * M_Ed / I_cr * (d - x)
+params:
+- alpha_e
+- M_Ed
+- I_cr
+- d
+- x
+var: sigma_s
+symbol: σ_{s}
+unit: MPa
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.4(2)
+status: single source
+support:
+  sources: 1
+  source_ids:
+  - S1
+  formula_instances: 2
+  variants_merged: 1
+  printed_values: 3
+variants:
+- formula: alpha_e * M_Ed / I_cr * (d - x)
+  text: α_e · M_Ed / I_cr · (d − x)
+  instances: 2
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences: []
+- formula: sigma_s_QP + alpha_e * DeltaM_SLS_y / I_cr * (d - x)
+  text: sigma_s_QP + α_e · DeltaM_SLS_y / I_cr · (d − x)
+  instances: 1
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: false
+  differences: []
+  reason: 'uses project-specific quantities: sigma_s_QP, DeltaM_SLS_y'
+benchmarks:
+  total: 5
+  agree: 2
+  deviation: 0
+  not_comparable: 3
+warnings:
+- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
+examples:
+- label: S1 (Mathcad worksheet) - region 176
+  inputs:
+    alpha_e: 14.705882352941176
+    M_Ed: 196069916.345625
+    I_cr: 20564932872.71287
+    d: 841.5000000000001
+    x: 259.31175306647333
+  expected: 81.62781816373749
+  result: 81.62781816373752
+  matches_source: true
+  given:
+  - alpha_e
+  - x
+version: 673a89f1f975

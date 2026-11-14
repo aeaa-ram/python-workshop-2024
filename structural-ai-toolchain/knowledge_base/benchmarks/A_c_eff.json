@@ -1,0 +1,14 @@
+[
+ {
+  "source": "S1 (Mathcad worksheet)",
+  "where": "region 194",
+  "kind": "formula",
+  "expected": 115114.70782225447,
+  "got": 115114.70782225447,
+  "status": "agree",
+  "inputs": {
+   "h_c_ef": 230.22941564450892,
+   "b": 500.0
+  }
+ }
+]

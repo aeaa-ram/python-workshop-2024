@@ -1,0 +1,49 @@
+id: E_c_eff
+name: Effective modulus of elasticity of concrete (creep)
+formula: E_cm / (1 + phi_creep)
+params:
+- E_cm
+- phi_creep
+var: E_c_eff
+symbol: E_{c,eff}
+unit: GPa
+code: EN 1992-1-1
+branch: EN 1992-1-1:2004 (recommended values)
+topic: '7.4'
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.4 Deflection control
+clause: 7.4.3(5)
+eq: (7.20)
+status: single source
+support:
+  sources: 1
+  source_ids:
+  - S1
+  formula_instances: 1
+  variants_merged: 1
+  printed_values: 1
+variants:
+- formula: E_cm / (1 + phi_creep)
+  text: E_cm / (1 + φ)
+  instances: 1
+  sources:
+  - S1 (Mathcad worksheet)
+  merged: true
+  differences: []
+benchmarks:
+  total: 2
+  agree: 2
+  deviation: 0
+  not_comparable: 0
+warnings:
+- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
+examples:
+- label: S1 (Mathcad worksheet) - region 148
+  inputs:
+    E_cm: 34000.0
+    phi_creep: 1.5
+  expected: 13600.0
+  result: 13600.0
+  matches_source: true
+version: a48916bb9c1e
