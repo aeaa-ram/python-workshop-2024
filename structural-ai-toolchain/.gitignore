@@ -1,0 +1,7 @@
+# real project files and everything derived from them stay local
+inbox/*
+!inbox/README.md
+workspace/
+__pycache__/
+*.pyc
+.pytest_cache/
