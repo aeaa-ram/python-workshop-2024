@@ -89,13 +89,18 @@ def _is_unit_cell(text: str) -> bool:
     return t not in ("min", "day", "year", "kg", "rad") or t == "rad"
 
 
-def _label_cells(sh: _Sheet, r: int, c: int) -> tuple[list[tuple[int, int, str]], bool]:
+def _label_cells(sh: _Sheet, r: int, c: int, below: int | None = None) -> tuple[list[tuple[int, int, str]], bool]:
     """Text cells to the left of (r, c): nearest first.  Also says whether the
     scan had to pass over other values (i.e. this is one of several case columns)."""
     out, empties, passed_values = [], 0, False
     cc = c - 1
     while cc >= 1 and c - cc <= _MAX_SCAN_LEFT:
         t = sh.text(r, cc)
+        if t is not None and below is not None and sh.is_value(below, cc):
+            # a note above a neighbouring case column ("B16/150"), not a label
+            passed_values, empties = True, 0
+            cc -= 1
+            continue
         if t is not None and t.strip():
             out.append((r, cc, t))
             # an adjacent second text cell (description | symbol | value)
@@ -123,7 +128,7 @@ def _describe(sh: _Sheet, r: int, c: int) -> dict:
         # the value sits one row below its label (label row holds a note)
         above = sh.text(r - 1, c)
         if above is not None or sh.is_empty(r - 1, c):
-            cells, _ = _label_cells(sh, r - 1, c)
+            cells, _ = _label_cells(sh, r - 1, c, below=r)
             label_row = r - 1
             if cells and sh.is_value(r - 1, c):
                 cells = []

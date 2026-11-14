@@ -258,7 +258,8 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
         s, d = doc.summary(), dec.summary()
         kb.sources.append({
             "id": doc.id, "label": doc.label, "kind": doc.kind, "converter": doc.converter,
-            "sha256": doc.sha256[:16], "statements": s["statements"], "formulas": s["formulas"],
+            **({} if anonymous else {"sha256": doc.sha256[:16]}),
+            "statements": s["statements"], "formulas": s["formulas"],
             "formulas_verified": s["formulas_verified"], "printed_values": s["printed_values"],
             "recognised": d["recognised"], "instances": d["instances_with_formula"],
             "not_recognised": d["not_recognised"], "issues": len(doc.issues),

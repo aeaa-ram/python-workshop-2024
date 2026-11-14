@@ -337,20 +337,35 @@ class Merger:
                 return (isinstance(n, X.Bin) and n.op in "+-") or isinstance(n, X.Neg) or (
                     isinstance(n, X.Call) and n.fn in ("max", "min"))
 
+            # A factor that can act as 1 (a width, a coefficient) may have to stay outside:
+            # (T + k1·σ) against T·b_w  ->  (T + k1·σ)·b_w.  Try without any, then one at a time.
+            m, keep_a, keep_b = None, [], []
             if len(rest_b) == 1 and composite(rest_b[0][1]):
-                m = self.merge(X.product(rest_a), rest_b[0][1], ta, tb)
+                for out_a in [[]] + [[x] for x in rest_a if self._neutral_factor(x)]:
+                    inner = [x for x in rest_a if x not in out_a]
+                    ta, tb = [], []
+                    m = self.merge(X.product(inner), rest_b[0][1], ta, tb) if inner else None
+                    if m is not None:
+                        keep_a = out_a
+                        break
             elif len(rest_a) == 1 and composite(rest_a[0]):
-                m = self.merge(rest_a[0], X.product([y for _, y in rest_b]), ta, tb)
-            else:
-                m = None
+                for out_b in [[]] + [[y] for y in rest_b if self._neutral_factor(y[1])]:
+                    inner = [y for y in rest_b if y not in out_b]
+                    ta, tb = [], []
+                    m = self.merge(rest_a[0], X.product([y for _, y in inner]), ta, tb) if inner else None
+                    if m is not None:
+                        keep_b = out_b
+                        break
             if m is None:
                 return None
             da.extend(ta)
             db.extend(tb)
-            slots[rest_b[0][0]] = m
-            for j, _ in rest_b[1:]:
-                slots[j] = "drop"
-            rest_a, rest_b = [], []
+            first = next(j for j, _ in rest_b if (j, _) not in keep_b)
+            slots[first] = m
+            for j, y in rest_b:
+                if j != first and (j, y) not in keep_b:
+                    slots[j] = "drop"
+            rest_a, rest_b = keep_a, keep_b
         # a factor only one side has must be able to act as 1 on the other side:
         # a dimensionless coefficient, or a width in a per-unit-width source
         for x in rest_a:
@@ -481,11 +496,12 @@ def consolidate(concept: str, instances: list[Instance], tax: Taxonomy, observed
     unified = usable[0].formula
     usable[0].merged = True
     members = [usable[0]]
-    for v in usable[1:]:
+    def _try_merge(v) -> bool:
+        nonlocal unified
         cand = merger.merge(unified, v.formula, [], [])
         if cand is None:
             v.reason = "the formulas differ in a way that is not a generalisation of one another"
-            continue
+            return False
         cand = tidy(cand)
         # every member, and the newcomer, must be a special case of the candidate
         trial = members + [v]
@@ -507,12 +523,25 @@ def consolidate(concept: str, instances: list[Instance], tax: Taxonomy, observed
             new_diffs[id(m)] = dm
         if not fits:
             v.reason = "merging would change the result of another variant"
-            continue
+            return False
         unified = cand
         v.merged = True
         members.append(v)
         for m in members:
             m.diffs = new_diffs[id(m)]
+        v.reason = ""
+        return True
+
+    # The unified formula grows as variants join, so a variant that did not fit
+    # at first is tried again until a whole pass adds nothing.
+    pending = list(usable[1:])
+    progress = True
+    while pending and progress:
+        progress = False
+        for v in list(pending):
+            if _try_merge(v):
+                pending.remove(v)
+                progress = True
     out.unified = unified
 
     for m in members:

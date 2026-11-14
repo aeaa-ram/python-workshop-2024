@@ -227,6 +227,9 @@ def convert_source(source: str, name: str, kind: str = "python", *, sha256: str 
         for err in result["errors"]:
             doc.issues.append(f"line {err['line']}: did not run ({err['error']})")
 
+    # heading comments anywhere in the file: "# --- Shear ---", "# === Shear ===", "# %% Shear"
+    headings = sorted((no, m.group(1)) for no, c in comments.items()
+                      if lines[no - 1].lstrip().startswith("#") and (m := _HEADING.match(c)) and m.group(1))
     latest: dict[str, str] = {}          # variable name -> id of its latest statement
     counts: dict[str, int] = {}
     display: dict[str, str] = {}         # statement id -> display unit from print(disp(x, unit))
@@ -274,7 +277,7 @@ def convert_source(source: str, name: str, kind: str = "python", *, sha256: str 
         info = annotate(node.lineno, above) if annotate else None
         if info is None:
             info = {}
-            heads = [m.group(1) for c in above if (m := _HEADING.match(c)) and m.group(1)]
+            heads = [text for ln_no, text in headings if ln_no < node.lineno]
             if heads:
                 section = [heads[-1]]
             text = [c for c in above if not _HEADING.match(c)]

@@ -1,0 +1,24 @@
+[project]
+name = "ckb"
+version = "0.1.0"
+description = "Calculation knowledge base: distils structural calculations into small, benchmarked calculation objects"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "openpyxl>=3.1", "pdfplumber>=0.11", "python-docx>=1.1", "pint>=0.24", "mcad2py>=0.5.0"]
+
+[project.optional-dependencies]
+reference = ["structuralcodes>=0.7"]
+llm = ["anthropic>=0.40"]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+ckb = "ckb.cli:main"
+
+[tool.setuptools]
+packages = ["ckb", "ckb.convert", "ckb.distill", "ckb.kb", "ckb.use", "ckb.maintain"]
+
+[tool.setuptools.package-data]
+ckb = ["data/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
