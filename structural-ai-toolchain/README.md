@@ -57,9 +57,10 @@ python -m ckb report V_Rd_c d=450 --pdf --docx   # PDF with bookmarks, Word with
 python -m ckb report-template V_Rd_c -o form.xlsx  # a report set up in an Excel form instead of YAML
 python -m ckb verify workspace/excel/V_Rd_c.xlsx
 python -m ckb questions                # differences between sources and code that nothing explained
+python -m ckb share                    # zip for SharePoint/Teams: calculator with Excel and Mathcad downloads
 ```
 
-`python -m ckb --help` lists every command. Tests: `python -m pytest` (52 tests; four of them need
+`python -m ckb --help` lists every command. Tests: `python -m pytest` (53 tests; four of them need
 real project files in `inbox/` and are skipped without them).
 
 ## Using an object
@@ -177,13 +178,44 @@ The same expression with other inputs is an *instance*:
 The expression is taken from the original, never typed twice. `python -m ckb codes` shows the links.
 Adding a code means adding one YAML file to `ckb/data/codes/`.
 
-## Where the web calculator lives
+## Sharing it with a workshop
 
-`app/index.html` is one static file. It holds the objects, their JavaScript functions (printed
-from the same trees), and the evidence. It works offline, from SharePoint, Azure Static Web Apps
-or any internal web server. The copy shared in the workshop channel is hosted privately on
-claude.ai. A hosted version could add what one file cannot: shared ratings and usage counts, and
-an AI search agent on top of the word search.
+What people can do without Python, and what needs it:
+
+| They want to | Needs Python? |
+|---|---|
+| Find an object, calculate, chart it, read the design background, the code and the evidence | No: the web calculator |
+| Download an Excel calculator with their inputs and live formulas | No: "Take it with you" in the web calculator |
+| Download a Mathcad Prime worksheet, or the calculation as a page to print to PDF | No: same panel |
+| Run a report over many cases (YAML or the Excel form), Word with equations, PDF with bookmarks | Yes: `ckb report` |
+| Add source files, distil them, answer the open questions, rebuild | Yes: `ckb build`, `ckb answer` |
+
+Three ways to hand it out, easiest first:
+
+1. **A claude.ai link.** The copy published on claude.ai has every download switched on. Share it
+   from its Share menu with the people in the workshop. Viewers who are signed in to Claude also get
+   an "Ask Claude" box that finds objects from a question in plain words, on their own account.
+2. **A zip on SharePoint or Teams.** `python -m ckb share` writes `workspace/workshop/` and
+   `workspace/workshop.zip`. The zip holds `index.html` with an Excel calculator and a Mathcad
+   worksheet embedded for every object, an example report (PDF, Word, HTML) with its template and
+   Excel form, and a short READ ME. SharePoint serves `.html` files as downloads rather than pages,
+   so people download the zip, unzip it and double-click `index.html`. It works offline. The Excel
+   download carries the inputs on the page when the browser can reach cdnjs.cloudflare.com, and
+   example inputs when it cannot.
+3. **This repository, opened in GitHub Codespaces.** For the people who will run reports or add
+   files: Code > Codespaces > Create codespace. `.devcontainer/` installs the requirements and a
+   browser for PDFs, so every command in Quick start works in the browser tab with nothing installed
+   locally. `python -m http.server 8000 -d app` shows the web calculator from there.
+
+`app/index.html` in the repository is built without the embedded files to keep the repository
+small (`python -m ckb app --files` embeds them, about 5 MB). For a permanent internal address,
+the same static file can sit behind company sign-in on Azure Static Web Apps or an internal web
+server. GitHub Pages is public unless the organisation has an Enterprise plan. A hosted version
+could add what one file cannot: shared ratings and usage counts.
+
+Everything shared is generated from the knowledge base. Build it with `--anonymous` so file
+names, project names and people are left out. The numbers in the benchmarks still come from the
+source calculations, so share it inside the company only.
 
 ## How it works
 

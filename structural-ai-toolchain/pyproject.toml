@@ -8,6 +8,7 @@ dependencies = ["PyYAML>=6.0", "openpyxl>=3.1", "pdfplumber>=0.11", "python-docx
 [project.optional-dependencies]
 reference = ["structuralcodes>=0.7"]
 llm = ["anthropic>=0.40"]
+reports = ["pypdf>=4.0", "matplotlib>=3.8"]
 test = ["pytest>=8.0"]
 
 [project.scripts]

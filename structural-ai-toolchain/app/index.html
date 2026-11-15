@@ -106,6 +106,8 @@ table.cases th:first-child,table.cases td:first-child{text-align:left}
 table.cases th{font-weight:600;border-bottom-color:var(--rule)} table.cases th small{display:block;font-weight:400;color:var(--muted)}
 table.cases tr.gov td{background:var(--accent-soft);font-weight:600}
 .scroll{overflow-x:auto}
+.dl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px}
+#ask{margin:6px 0 2px} #ask-out{margin-top:6px} #ask-out .ans{margin:4px 0 6px;color:var(--ink2)}
 .rb{display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;font-size:12.5px}
 .rb label{display:flex;flex-direction:column;gap:2px;color:var(--ink2)} .rb label.ck{flex-direction:row;align-items:center;gap:5px}
 .rb input:not([type=checkbox]),.rb select{padding:3px 7px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;min-width:9em}
@@ -153,6 +155,7 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
 <div class="shell">
   <nav class="side" aria-label="Codes and calculation objects">
     <input class="search" id="q" type="search" placeholder="Search: concrete shear, V_Rd,c, 6.2.2" aria-label="Search">
+    <div id="ask" hidden><button class="btn small" type="button" id="ask-btn">Ask Claude about it</button><div id="ask-out" class="small"></div></div>
     <div class="chips" id="codes"></div>
     <div id="tree"></div>
     <button class="ovw" id="ovw" type="button">Overview of the knowledge base</button>
@@ -600,8 +603,8 @@ function renderMain() {
 // ---------------------------------------------------------------- Calculate
 function renderCalc() {
   const id = state.target, o = D.objects[id], w = W(id);
-  $("#panel").innerHTML = `<div class="calc-grid"><div id="inputs"></div><div><div id="sheet"></div><div id="cases"></div></div></div>`;
-  renderInputs(); renderSheet(); renderCases();
+  $("#panel").innerHTML = `<div class="calc-grid"><div id="inputs"></div><div><div id="sheet"></div><div id="dl"></div><div id="cases"></div></div></div>`;
+  renderInputs(); renderSheet(); renderDownloads(); renderCases();
 }
 function inputRow(p, value, isCheck) {
   const it = item(p), [u] = unitOf(p), q = D.quantities[p];
@@ -804,6 +807,161 @@ function currentCase(name) {
     if (w.entered.has(p) || !(q && q.kind === "coefficient")) values[p] = vals[p];
   }
   return {name, values, given: [...w.given], check: w.check};
+}
+
+
+// ---------------------------------------------------------------- take it with you: downloads
+// Excel calculators and Mathcad worksheets are embedded in the page (built by `python -m ckb share`),
+// so nobody needs Python. The Excel file gets the inputs on the page; the calculation page is built here.
+let ZIP = null;
+function loadZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  if (ZIP) return ZIP;
+  ZIP = new Promise(res => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    const t = setTimeout(() => res(null), 8000);
+    s.onload = () => { clearTimeout(t); res(window.JSZip || null); };
+    s.onerror = () => { clearTimeout(t); res(null); };
+    document.head.appendChild(s);
+  });
+  return ZIP;
+}
+const b64bytes = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+async function claudeCap(name) {
+  try { return window.claude && window.claude.use ? await window.claude.use(name) : null; } catch (e) { return null; }
+}
+async function saveFile(filename, data, mime) {
+  const dl = await claudeCap("downloads");             // inside claude.ai: the viewer confirms each file
+  if (dl) {
+    try { await dl.save({filename, data: data instanceof Uint8Array ? new Blob([data], {type: mime}) : data}); return ""; }
+    catch (e) { return e && e.code === "declined" ? "" : `Not saved (${(e && e.code) || "error"}).`; }
+  }
+  const blob = data instanceof Blob ? data : new Blob([data], {type: mime});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  return "";
+}
+function renderDownloads() {
+  const id = state.target, f = D.files && D.files[id];
+  $("#dl").innerHTML = `<h4>Take it with you</h4><div class="dl">`
+    + (f ? `<button class="btn small" type="button" id="dl-xlsx">Excel calculator</button><button class="btn small" type="button" id="dl-mcdx">Mathcad Prime worksheet</button>` : "")
+    + `<button class="btn small" type="button" id="dl-html">Calculation page (print to PDF)</button></div>
+    <p class="small muted" id="dl-msg">${f ? "The Excel file carries the inputs above and live formulas; the Mathcad worksheet opens with example inputs. " : `This copy was built without the Excel and Mathcad files: they are in the workshop package (python -m ckb share), or run python -m ckb excel ${esc(id)}. `}The calculation page is this calculation as shown, ready to print. Every file carries version ${esc(D.objects[id].version)}.</p>`;
+}
+async function excelBytes(id) {
+  const f = D.files[id], w = W(id);
+  const bytes = b64bytes(f.xlsx);
+  if (w.given.size) return [bytes, "with example inputs: a value entered directly is not carried into Excel"];
+  const Z = await loadZip();
+  if (!Z) return [bytes, "with example inputs (the zip library did not load); change them in Excel"];
+  const zip = await Z.loadAsync(bytes), path = "xl/worksheets/sheet1.xml";
+  let xml = await zip.file(path).async("string");
+  const put = (cell, v) => {
+    const re = new RegExp('<c r="' + cell + '"([^>]*?)(?:/>|>[\\s\\S]*?</c>)');
+    xml = xml.replace(re, (m, a) => `<c r="${cell}"${a.replace(/\s*t="[^"]*"/, "")} t="n"><v>${v}</v></c>`);
+  };
+  const vals = valuesFor(id);
+  for (const [sid, cell] of Object.entries(f.cells)) {
+    if (!D.objects[sid] && typeof vals[sid] === "number") put(cell, +(vals[sid] / item(sid).units[0][1]).toPrecision(12));
+  }
+  const chk = D.objects[id].check;
+  if (f.check && chk && w.check != null) put(f.check, +(w.check / item(chk).units[0][1]).toPrecision(12));
+  zip.file(path, xml);
+  return [await zip.generateAsync({type: "uint8array", compression: "DEFLATE"}), "with the inputs on the page"];
+}
+async function mathcadFile(id) {
+  const bytes = b64bytes(D.files[id].mcdx);
+  if (!(await claudeCap("downloads"))) return [`${id}.mcdx`, bytes, "application/octet-stream"];
+  const Z = await loadZip();                 // claude.ai saves .zip, not .mcdx: the worksheet goes in a zip
+  if (!Z) return [null, null, null];
+  const zip = new Z();
+  zip.file(`${id}.mcdx`, bytes);
+  return [`${id}_mathcad.zip`, await zip.generateAsync({type: "uint8array", compression: "DEFLATE"}), "application/zip"];
+}
+const REPORT_CSS = `body{margin:0;background:#e9edeb;color:#16211f;font:13px/1.45 "IBM Plex Sans","Segoe UI",Arial,sans-serif}
+.sheet{background:#fff;max-width:210mm;margin:16px auto;padding:14mm 15mm 16mm;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",math;font-size:1.06em}
+table.tb{width:100%;border-collapse:collapse;margin-bottom:6mm;font-size:11.5px} table.tb td{border:1px solid #16211f;padding:3px 6px;width:33%}
+table.tb small{display:block;color:#5b6966;font-size:9px;letter-spacing:.05em;text-transform:uppercase}
+h1{font-size:18px;margin:0 0 3mm} h3{font-size:13px;margin:4mm 0 1mm} .ref,.muted,.small{color:#5b6966;font-size:11.5px}
+.grp,h4{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#5b6966;margin:3mm 0 1mm;font-weight:600}
+table.in{width:100%;border-collapse:collapse} table.in td{padding:3px 6px 3px 0;border-bottom:1px solid #eef2f0;vertical-align:baseline}
+table.in td.c{color:#5b6966;font-size:11px;text-align:right} table.in td.r{font-style:italic;color:#5b6966;font-size:11px}
+.st{padding:4px 0 5px;border-bottom:1px solid #eef2f0;break-inside:avoid} .st .hd{display:flex;justify-content:space-between;gap:12px}
+.st .hd .c{color:#5b6966;font-size:11px} .st .eqs{padding-left:7mm} .eq{display:flex;gap:6px;align-items:baseline;margin:1px 0}
+.eq .lhs{min-width:3.6em;text-align:right} .eq.res,.eq.res math{font-weight:700}
+.verdict{margin:3mm 0 1mm;padding:6px 10px;border:1.5px solid #16211f;display:flex;gap:6px 18px;flex-wrap:wrap;align-items:baseline;break-inside:avoid}
+.ok{color:#0a7d34;font-weight:700} .bad{color:#c0302f;font-weight:700}
+ul.conds{list-style:none;padding:0;margin:2mm 0;font-size:11.5px} ul.conds li{display:flex;gap:8px} ul.conds .m{min-width:6.5em;font-weight:600}
+details summary{font-size:11.5px;color:#5b6966} details ul{font-size:11.5px;color:#5b6966}
+.foot{margin-top:8mm;color:#5b6966;font-size:9.5px;display:flex;justify-content:space-between;gap:12px}
+@media print{body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:none;padding:0}@page{size:A4;margin:15mm 15mm 17mm}}`;
+function reportHTML(id) {
+  const o = D.objects[id], w = W(id), rb = reportOpts(), vals = valuesFor(id), {inputs, steps} = plan(id, w.given);
+  const sheet = $("#sheet").cloneNode(true);
+  sheet.querySelectorAll(".opts, .give").forEach(e => e.remove());
+  sheet.querySelectorAll("details").forEach(d => d.setAttribute("open", ""));
+  const rows = inputs.map(p => {
+    const q = D.quantities[p], it = item(p);
+    return `<tr><td>${esc(it ? it.name : p)}</td><td><math>${symML(p)}<mo>=</mo>${mathNum(shown(p, vals[p]))}${mathUnit(unitOf(p)[0])}</math></td>`
+      + `<td class="c">${esc(q && q.ref || "")}</td><td class="r">${esc(rb.remarks[p] || "")}</td></tr>`;
+  }).join("");
+  const date = new Date().toISOString().slice(0, 10);
+  const versions = steps.map(s => `ckb ${s} ${D.objects[s].version}`).join(" · ");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
+    + `<title>${esc(rb.title || o.name)}</title><style>${REPORT_CSS}</style></head><body><div class="sheet">`
+    + `<table class="tb"><tr><td><small>Project</small>${esc(rb.project)}&nbsp;</td><td><small>Subject</small>${esc(rb.title || o.name)}</td><td><small>Calc. no.</small>${esc(rb.number)}&nbsp;</td></tr>`
+    + `<tr><td><small>Made by / date</small>${esc(rb.made_by)} ${date}</td><td><small>Checked by / date</small>${esc(rb.checked_by)}&nbsp;</td><td><small>Approved by / date</small>&nbsp;</td></tr></table>`
+    + `<h1>${esc(rb.title || o.name)}</h1><h3><math>${o.ml}</math> ${esc(o.name)}</h3><p class="ref">${esc(o.ref)}</p>`
+    + `<div class="grp">Input</div><table class="in">${rows}</table><div class="grp">Calculation</div>${sheet.innerHTML}`
+    + `<div class="foot"><span>${esc(o.code)}; recommended values unless stated. Substituted values are in N, mm and MPa. Print with your browser (Ctrl+P) to make a PDF.</span><span>${esc(versions)}</span></div>`
+    + `</div></body></html>`;
+}
+async function download(kind) {
+  const id = state.target, msg = $("#dl-msg");
+  msg.textContent = "Preparing…";
+  try {
+    let text = "";
+    if (kind === "xlsx") {
+      const [bytes, how] = await excelBytes(id);
+      text = (await saveFile(`${id}_calculator.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) || `Excel calculator ${how}.`;
+    } else if (kind === "mcdx") {
+      const [name, bytes, mime] = await mathcadFile(id);
+      text = name ? ((await saveFile(name, bytes, mime)) || "Mathcad Prime worksheet with example inputs" + (name.endsWith(".zip") ? " (unzip it first)." : ".")) : "The zip library did not load; try again later.";
+    } else {
+      text = (await saveFile(`${id}_calculation.html`, reportHTML(id), "text/html")) || "Open the page in your browser and print it to PDF.";
+    }
+    msg.textContent = text;
+  } catch (e) { msg.textContent = "Could not prepare the file: " + (e && e.message || e); }
+}
+
+// ---------------------------------------------------------------- ask Claude (claude.ai only)
+let SAMPLE = null;
+(async () => { SAMPLE = await claudeCap("sample"); if (SAMPLE) $("#ask").hidden = false; })();
+async function ask() {
+  const q = $("#q").value.trim(), out = $("#ask-out");
+  if (!q) { out.textContent = "Type a question in the search box first, e.g. “how do I check punching at an edge column?”"; return; }
+  const cat = Object.values(D.objects).map(o => `${o.id} | ${o.text} | ${o.name} | ${o.ref} | ${(o.path || []).slice(-1)[0] || ""}`).join("\n");
+  const prompt = `You are the search assistant of a knowledge base of structural design calculation objects (Eurocodes 2, 3 and 4). `
+    + `The catalogue lists every object as: id | symbol | name | code and clause | chapter.\n\nQuestion from an engineer: ${q}\n\n`
+    + `Answer with JSON only: {"answer": "two or three sentences: which objects to use and in what order, with clauses; say plainly what the knowledge base does not cover", `
+    + `"objects": [{"id": "an id from the catalogue", "why": "a few words"}]} with at most six objects, most relevant first, using only ids from the catalogue.\n\nCatalogue:\n${cat}`;
+  out.textContent = "Thinking…";
+  $("#ask-btn").disabled = true;
+  try {
+    const r = await SAMPLE.json(prompt, {modelTier: "quick"});
+    const hits = (r && r.objects || []).filter(h => D.objects[h.id]);
+    out.innerHTML = `<p class="ans">${esc(r && r.answer || "")}</p>` + hits.map(h => {
+      const o = D.objects[h.id];
+      return `<button class="hit" type="button" data-id="${esc(o.id)}">${dot(o)} <b>${esc(o.text)}</b> ${esc(o.name)}<div class="r">${esc(o.ref)} · ${esc(h.why || "")}</div></button>`;
+    }).join("") + `<p class="muted">Answered by Claude from the object list; check the clause before you rely on it.</p>`;
+  } catch (e) {
+    if (e && e.code === "not_granted") { $("#ask").hidden = true; return; }
+    out.textContent = e && e.code === "rate_limited" ? "Too many questions at once; try again in a moment." : "No answer this time.";
+  } finally { $("#ask-btn").disabled = false; }
 }
 
 // ---------------------------------------------------------------- Design background
@@ -1107,6 +1265,10 @@ document.addEventListener("click", ev => {
   if (t.id === "add-case") { const l = cases(); l.push(currentCase(`Case ${l.length + 1}`)); setCases(l); renderCases(); return; }
   if (t.id === "clear-cases") { setCases([]); renderCases(); return; }
   if (t.id === "tpl") { renderBuilder(); return; }
+  if (t.id === "dl-xlsx") { download("xlsx"); return; }
+  if (t.id === "dl-mcdx") { download("mcdx"); return; }
+  if (t.id === "dl-html") { download("html"); return; }
+  if (t.id === "ask-btn") { ask(); return; }
   if (t.id === "copy") {
     const ta = $("#yaml"); ta.select();
     let ok = false;

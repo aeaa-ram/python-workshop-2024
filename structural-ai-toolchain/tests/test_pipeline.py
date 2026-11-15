@@ -322,3 +322,19 @@ def test_latex_and_word_printers(kb):
     assert X.to_latex(o.tree, kb.tex) == "\\min\\left(1 + \\sqrt{\\frac{200}{d}}, 2\\right)"
     assert latex("V_Rd_c", "V_{Rd,c}") == "V_{\\mathrm{Rd,c}}"
     assert "<m:sSub>" in kb.omml("V_Rd_c") and "<m:func>" in X.to_omml(o.tree, kb.omml)
+
+
+def test_web_calculator_carries_the_excel_and_mathcad_files(kb, tmp_path):
+    import base64
+    from ckb.use import share
+    from ckb.use.mathcad_export import verify as verify_mcdx
+    files = share.calculator_files(kb, log=lambda *_: None)
+    entry = files["V_Rd_c"]
+    (tmp_path / "c.xlsx").write_bytes(base64.b64decode(entry["xlsx"]))
+    (tmp_path / "c.mcdx").write_bytes(base64.b64decode(entry["mcdx"]))
+    check = excel_bridge.verify(kb, tmp_path / "c.xlsx")
+    assert check["same_version"] and not check["edited"]
+    assert verify_mcdx(kb, tmp_path / "c.mcdx")["same_version"]
+    assert {"d", "A_sl", "V_Rd_c"} <= set(entry["cells"]) and entry["check"].startswith("C")
+    page = render(kb, files={"V_Rd_c": entry})
+    assert 'id="dl-xlsx"' in page and 'id="dl-mcdx"' in page and entry["xlsx"][:200] in page

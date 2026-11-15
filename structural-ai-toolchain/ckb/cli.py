@@ -13,7 +13,8 @@
     excel            Excel calculator with live formulas and named ranges
     mathcad          Mathcad Prime worksheet
     verify           does a file (xlsx, mcdx, py, html, pdf) carry the knowledge base's logic?
-    app              rebuild the web calculator
+    app              rebuild the web calculator (--files: with Excel and Mathcad downloads inside)
+    share            a package for people without Python: calculator with downloads, examples, zip
     check            place a new source file against the knowledge base
     questions        differences between the sources and the code that nothing explained
     answer           answer one of those questions (applied in the next build)
@@ -417,7 +418,19 @@ def cmd_verify(args):
 def cmd_app(args):
     from .use.webapp import write
     kb = _kb(args)
-    print(f"web calculator -> {write(kb, Path(args.output or args.app), standalone=not args.fragment)}")
+    files = None
+    if args.files:
+        from .use.share import calculator_files
+        files = calculator_files(kb)
+    print(f"web calculator -> {write(kb, Path(args.output or args.app), standalone=not args.fragment, files=files)}")
+
+
+def cmd_share(args):
+    from .use.share import write_bundle
+    kb = _kb(args)
+    zip_path = write_bundle(kb, Path(args.output), ROOT / "examples")
+    print(f"workshop package -> {Path(args.output)}  and  {zip_path}")
+    print("  open index.html in a browser; share the zip on SharePoint or Teams")
 
 
 def cmd_check(args):
@@ -611,7 +624,13 @@ def main(argv=None):
     s.add_argument("-o", "--output")
     s.add_argument("--app", default=str(ROOT / "app" / "index.html"))
     s.add_argument("--fragment", action="store_true", help="page content only (for embedding)")
+    s.add_argument("--files", action="store_true",
+                   help="embed an Excel calculator and a Mathcad worksheet per object (downloads without Python)")
     s.set_defaults(fn=cmd_app)
+
+    s = sub.add_parser("share", help="a package for people without Python: web calculator with downloads, examples, zip")
+    s.add_argument("-o", "--output", default=str(ROOT / "workspace" / "workshop"))
+    s.set_defaults(fn=cmd_share)
 
     s = sub.add_parser("check", help="place a new source against the knowledge base")
     s.add_argument("file")
