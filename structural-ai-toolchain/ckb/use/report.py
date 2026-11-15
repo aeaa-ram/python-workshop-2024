@@ -477,10 +477,7 @@ def _tick(v: float) -> str:
 # the report
 # --------------------------------------------------------------------------
 def load_template(path: Path) -> dict:
-    """A template from YAML, or from the Excel form (``report_form``)."""
-    if Path(path).suffix.lower() in (".xlsx", ".xlsm"):
-        from .report_form import read_form
-        return read_form(Path(path))
+    """A template from YAML (any file name: the web calculator saves it as .txt)."""
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
 
@@ -556,8 +553,8 @@ def title_block(template: dict) -> list[list[tuple[str, str]]]:
 
 def footer_text(kb: KnowledgeBase, used: list[str]) -> tuple[str, str]:
     codes = sorted({kb.objects[o].code for o in used if kb.objects[o].code})
-    return (f"{', '.join(codes)}; recommended values unless stated. Substituted values are in N, mm and MPa.",
-            " · ".join(f"ckb {oid} {kb.objects[oid].version}" for oid in used))
+    return (f"{', '.join(codes)}. Recommended values unless stated. Substituted values are in N, mm and MPa.",
+            " ".join(f"ckb {oid} {kb.objects[oid].version}" for oid in used))
 
 
 def render(kb: KnowledgeBase, template: dict, base: Path | None = None, with_objects: bool = False):
@@ -590,12 +587,13 @@ def render(kb: KnowledgeBase, template: dict, base: Path | None = None, with_obj
             P.append(table_block(kb, it["target"], it["cases"], it["opts"], style, it["gov"]))
         elif t == "chart":
             P.append(svg_line_chart(**it["data"]))
-    left, right = footer_text(kb, used)
-    P.append(f'<div class="foot"><span>{_e(left)}</span><span>{_e(right)}</span></div>')
+    left, versions = footer_text(kb, used)
+    P.append(f'<div class="foot"><span>{_e(left)}</span></div>')
     title = template.get("title") or "Calculation"
+    # the versions are kept out of sight: in the page's metadata, where `ckb verify` reads them
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<meta name="generator" content="calculation knowledge base"><title>{_e(title)}</title>'
+            f'<meta name="generator" content="{_e(versions)}"><title>{_e(title)}</title>'
             f"<style>{CSS}</style></head><body><div class=\"sheet\">{''.join(P)}</div></body></html>")
     return (page, used) if with_objects else page
 
@@ -787,8 +785,12 @@ def add_bookmarks(pdf_path: Path, page_html: str) -> int:
             del parents[deeper]
         n += 1
     title = re.search(r"<title>(.*?)</title>", page_html)
-    if title:
-        writer.add_metadata({"/Title": html.unescape(title.group(1))})
+    versions = re.search(r'<meta name="generator" content="([^"]*)"', page_html)
+    meta = {"/Title": html.unescape(title.group(1))} if title else {}
+    if versions:
+        meta["/Keywords"] = html.unescape(versions.group(1))        # read by `ckb verify`
+    if meta:
+        writer.add_metadata(meta)
     writer.page_mode = "/UseOutlines"
     with open(pdf_path, "wb") as fh:
         writer.write(fh)

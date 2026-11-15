@@ -227,13 +227,11 @@ def _chart_png(data: dict) -> bytes | None:
     return buf.getvalue()
 
 
-def _footer(doc, left: str, right: str):
+def _footer(doc, left: str):
     from docx.oxml import parse_xml
     footer = doc.sections[0].footer
     p = footer.paragraphs[0]
     _run(p, left, size=7, color=GREY)
-    q = footer.add_paragraph()
-    _run(q, right, size=6, color=GREY)
     r = footer.add_paragraph()
     _run(r, "Page ", size=7, color=GREY)
     for instr in ("PAGE", None, "NUMPAGES"):
@@ -286,8 +284,9 @@ def render_docx(kb: KnowledgeBase, template: dict, path: Path, base: Path | None
             if png:
                 doc.add_picture(io.BytesIO(png), width=Mm(170))
                 _run(doc.add_paragraph(), it["data"]["caption"], size=8, color=GREY)
-    left, right = R.footer_text(kb, used)
-    _footer(doc, left, right)
+    left, versions = R.footer_text(kb, used)
+    _footer(doc, left)
+    doc.core_properties.keywords = versions          # out of sight, for `ckb verify`
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(path)

@@ -9,12 +9,12 @@
     status           the evidence behind one object: sources, benchmarks, reference
     run              calculate in the terminal
     report           calculation report (HTML, PDF): one case, or a template over many cases
-    report-template  a report template to start from: YAML, or an Excel form (-o name.xlsx)
+    report-template  a commented report template (YAML) to start from
     excel            Excel calculator with live formulas and named ranges
     mathcad          Mathcad Prime worksheet
     verify           does a file (xlsx, mcdx, py, html, pdf) carry the knowledge base's logic?
     app              rebuild the web calculator (--files: with Excel and Mathcad downloads inside)
-    share            a package for people without Python: calculator with downloads, examples, zip
+    share            a package for people without Python: the web calculator with downloads, zipped
     check            place a new source file against the knowledge base
     questions        differences between the sources and the code that nothing explained
     answer           answer one of those questions (applied in the next build)
@@ -338,11 +338,6 @@ def cmd_report_template(args):
     from .use.report import example_template
     kb = _kb(args)
     oid = _target(kb, args.object)
-    if args.output and Path(args.output).suffix.lower() == ".xlsx":
-        from .use.report_form import write_form
-        write_form(kb, oid, Path(args.output))
-        print(f"report form -> {args.output}   (fill it in, then: python -m ckb report --template {args.output} --pdf --docx)")
-        return
     text = example_template(kb, oid)
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
@@ -428,7 +423,7 @@ def cmd_app(args):
 def cmd_share(args):
     from .use.share import write_bundle
     kb = _kb(args)
-    zip_path = write_bundle(kb, Path(args.output), ROOT / "examples")
+    zip_path = write_bundle(kb, Path(args.output))
     print(f"workshop package -> {Path(args.output)}  and  {zip_path}")
     print("  open index.html in a browser; share the zip on SharePoint or Teams")
 
@@ -628,7 +623,7 @@ def main(argv=None):
                    help="embed an Excel calculator and a Mathcad worksheet per object (downloads without Python)")
     s.set_defaults(fn=cmd_app)
 
-    s = sub.add_parser("share", help="a package for people without Python: web calculator with downloads, examples, zip")
+    s = sub.add_parser("share", help="a package for people without Python: the web calculator with downloads, zipped")
     s.add_argument("-o", "--output", default=str(ROOT / "workspace" / "workshop"))
     s.set_defaults(fn=cmd_share)
 

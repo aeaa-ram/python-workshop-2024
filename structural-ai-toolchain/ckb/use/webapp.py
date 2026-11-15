@@ -7,15 +7,19 @@ by searching ("concrete shear"), types the inputs and reads a clean calculation 
 updates as they type.  Dependencies are resolved in the page, and any intermediate
 value can be entered directly instead of being calculated.
 
-Per object there are five tabs:
+Per object there are six tabs:
 
-    Calculate           inputs, the calculation, conditions, cases, a report template
+    Calculate           inputs and the calculation, one line per step
+    Cases and report    several sets of inputs; a report as PDF or Word, made in the page
     Design background   scope, limitations, pitfalls and guidance with their sources;
                         where the object is shared with other codes; a dependency map
     Chart               the result against any input (a parameter study)
-    Code                the Python code block and the function this page runs
+    Code                the Python code block and the LaTeX of the expression
     Status              confidence, sources, simplifications found, benchmarks,
                         independent reference check
+
+Excel calculators and Mathcad worksheets embedded with ``files`` download from the page; reports
+are written in the page itself (HTML to print as PDF, and Word with editable equations).
 
 The JavaScript functions are printed from the same formula trees as the Python code
 blocks, the Excel formulas, the Mathcad worksheet and the report equations
@@ -149,131 +153,169 @@ def write(kb: KnowledgeBase, path: Path, standalone: bool = True, files: dict | 
 
 TEMPLATE = r"""<title>Calculation Knowledge Base</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Math&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+Math&display=swap">
 <style>
 :root{
-  --bg:#f1f2f0; --surface:#fcfcfb; --raised:#f5f6f4; --ink:#1b2220; --ink2:#47514e; --muted:#6a7471; --rule:#d8dcd9; --soft:#eaece9;
-  --accent:#0b5d73; --accent-soft:#dcecf0; --s1:#2a78d6; --s2:#eb6834;
-  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --ok-ink:#0a7a2f; --bad-ink:#b3261e;
+  --bg:#ecf0f2; --surface:#ffffff; --raised:#f5f8f9; --tint:#eff5f7; --ink:#14212a; --ink2:#3c4b56; --muted:#66757f; --rule:#d2dbe0; --soft:#e5ebee;
+  --brand:#0f4757; --brand2:#17687a; --accent:#0f6b80; --accent-ink:#0b5566; --accent-soft:#e0eff3;
+  --gold:#a86b12; --gold-soft:#fbf0dc;
+  --s1:#2a78d6; --s2:#eb6834;
+  --good:#1e8e3e; --good-soft:#e7f4eb; --warn:#c07f0e; --warn-soft:#fdf3df; --crit:#c5221f; --crit-soft:#fce9e7;
+  --ec2:#0f7b8a; --ec3:#2f62b8; --ec4:#7a4fb3; --gen:#8a6a12;
+  --shadow:0 1px 2px rgba(15,40,52,.06),0 2px 8px rgba(15,40,52,.05);
   --font:"IBM Plex Sans","Segoe UI",system-ui,Arial,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
   --math:"Cambria Math","STIX Two Math","Latin Modern Math","Noto Sans Math",math;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121312; --surface:#1a1a19; --raised:#222321; --ink:#e8ebe9; --ink2:#bcc4c1; --muted:#949d9a; --rule:#353836; --soft:#2a2c2a;
-  --accent:#6cc3d8; --accent-soft:#18363e; --s1:#3987e5; --s2:#d95926;
-  --ok-ink:#62d08a; --bad-ink:#f2928b; color-scheme:dark}}
+  --bg:#0e1316; --surface:#162027; --raised:#1c272f; --tint:#172830; --ink:#e5ecef; --ink2:#b9c6cd; --muted:#8998a1; --rule:#2b3a43; --soft:#22303a;
+  --brand:#0b3440; --brand2:#124a58; --accent:#5cc0d6; --accent-ink:#86d3e4; --accent-soft:#15343e;
+  --gold:#e2aa4c; --gold-soft:#30260f; --s1:#3987e5; --s2:#d95926;
+  --good:#4cc36f; --good-soft:#14301d; --warn:#e2aa4c; --warn-soft:#30260f; --crit:#f07a74; --crit-soft:#3a1a19;
+  --ec2:#4fc1cf; --ec3:#86a9ee; --ec4:#b89bf0; --gen:#d8b65a; --shadow:none; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121312; --surface:#1a1a19; --raised:#222321; --ink:#e8ebe9; --ink2:#bcc4c1; --muted:#949d9a; --rule:#353836; --soft:#2a2c2a;
-  --accent:#6cc3d8; --accent-soft:#18363e; --s1:#3987e5; --s2:#d95926;
-  --ok-ink:#62d08a; --bad-ink:#f2928b; color-scheme:dark}
+  --bg:#0e1316; --surface:#162027; --raised:#1c272f; --tint:#172830; --ink:#e5ecef; --ink2:#b9c6cd; --muted:#8998a1; --rule:#2b3a43; --soft:#22303a;
+  --brand:#0b3440; --brand2:#124a58; --accent:#5cc0d6; --accent-ink:#86d3e4; --accent-soft:#15343e;
+  --gold:#e2aa4c; --gold-soft:#30260f; --s1:#3987e5; --s2:#d95926;
+  --good:#4cc36f; --good-soft:#14301d; --warn:#e2aa4c; --warn-soft:#30260f; --crit:#f07a74; --crit-soft:#3a1a19;
+  --ec2:#4fc1cf; --ec3:#86a9ee; --ec4:#b89bf0; --gen:#d8b65a; --shadow:none; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{color:var(--ink);font:14px/1.5 var(--font);margin:0}
-math{font-family:var(--math);font-size:1.08em}
+math{font-family:var(--math);font-size:1.1em}
 button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wrap{max-width:1480px;margin:0 auto;padding-block:max(14px,env(safe-area-inset-top,0px)) 40px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header.top{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:space-between;margin-bottom:12px}
-header.top h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em}
-header.top p{margin:0;color:var(--muted);font-size:13px}
-.btn{background:var(--surface);border:1px solid var(--rule);padding:5px 11px;cursor:pointer;border-radius:4px}
-.btn:hover{border-color:var(--ink2)} .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
-.btn.small{padding:2px 8px;font-size:12.5px}
+header.top{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between;margin-bottom:14px;
+  background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-radius:12px;padding:14px 20px;box-shadow:var(--shadow)}
+header.top h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em;color:#fff}
+header.top p{margin:2px 0 0;color:rgba(255,255,255,.8);font-size:13px}
+header.top .btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
+header.top .btn:hover{background:rgba(255,255,255,.22);border-color:#fff}
+.btn{display:inline-flex;gap:7px;align-items:center;background:var(--surface);border:1px solid var(--rule);padding:6px 13px;cursor:pointer;border-radius:8px;font-weight:500;font-size:13.5px}
+.btn:hover{border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.primary:hover{filter:brightness(1.08);color:var(--surface)}
+.btn.ghost{background:none}
+.btn svg{width:16px;height:16px;flex:none}
+.btn[disabled]{opacity:.6;cursor:progress}
+.icon-btn{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:6px;border:1px solid transparent;background:none;cursor:pointer;color:var(--muted);flex:none;font-size:14px}
+.icon-btn:hover{border-color:var(--rule);color:var(--accent-ink);background:var(--raised)}
 .shell{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
-nav.side{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
-.search{width:100%;padding:7px 10px;border:1px solid var(--rule);background:var(--raised);border-radius:4px}
-.chips{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 6px}
-.chip{border:1px solid var(--rule);background:var(--raised);border-radius:999px;padding:1px 9px;font-size:12px;cursor:pointer}
+nav.side{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;box-shadow:var(--shadow)}
+.search{width:100%;padding:8px 11px;border:1px solid var(--rule);background:var(--raised);border-radius:8px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 6px}
+.chip{border:1px solid var(--rule);background:var(--raised);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
-.t-code{font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
-.t-chap{font-weight:600;margin:8px 0 1px;font-size:13px}
-.t-sec{color:var(--muted);font-size:12px;margin:5px 0 1px 4px}
-.t-obj{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-left:2px solid var(--rule);padding:3px 8px;cursor:pointer;margin-left:4px;border-radius:0 4px 4px 0}
+.t-code{font-weight:600;font-size:12.5px;color:var(--cc,var(--ink));margin:14px 0 4px;padding:3px 0 3px 9px;border-left:3px solid var(--cc,var(--rule))}
+.t-code small{display:block;font-weight:400;color:var(--muted);font-size:11.5px}
+.t-chap{font-weight:600;margin:9px 0 2px;font-size:13px}
+.t-sec{color:var(--muted);font-size:12px;margin:6px 0 1px 4px}
+.t-obj{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-left:2px solid var(--soft);padding:3px 8px;cursor:pointer;margin-left:4px;border-radius:0 6px 6px 0}
 .t-obj:hover{background:var(--raised)} .t-obj[aria-current="true"]{border-left-color:var(--accent);background:var(--accent-soft)}
 .t-obj .s{min-width:4.8em;font-size:13px} .t-obj .n{color:var(--muted);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.t-obj .via{font-size:11px;color:var(--muted)}
 .dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
 .dot.good{background:var(--good)} .dot.warn{background:var(--warn)} .dot.crit{background:var(--crit)}
-.legend-dots{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:8px;border-top:1px solid var(--soft)}
+.legend-dots{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:12px;padding-top:8px;border-top:1px solid var(--soft)}
 .legend-dots span{display:inline-flex;gap:5px;align-items:center}
-.ovw{display:block;width:100%;text-align:left;background:var(--raised);border:1px solid var(--rule);padding:6px 9px;cursor:pointer;margin-top:8px;border-radius:4px}
-.ovw[aria-current="true"]{border-color:var(--accent)}
-.hit{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--soft);padding:6px 4px;cursor:pointer}
+.ovw{display:block;width:100%;text-align:left;background:var(--raised);border:1px solid var(--rule);padding:7px 10px;cursor:pointer;margin-top:10px;border-radius:8px;font-weight:500}
+.ovw[aria-current="true"]{border-color:var(--accent);color:var(--accent-ink)}
+.hit{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--soft);padding:7px 4px;cursor:pointer}
 .hit:hover{background:var(--raised)} .hit .r{color:var(--muted);font-size:12px}
 main{min-width:0;display:flex;flex-direction:column;gap:14px}
-.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+.head{border-top:4px solid var(--cc,var(--accent))}
+.head-grid{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:flex-start}
 .crumb{color:var(--muted);font-size:12.5px}
-.head h2{margin:2px 0 4px;font-size:19px;font-weight:600;line-height:1.3;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--ink2);font-size:13px;align-items:center}
-.stat-link{background:none;border:0;padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink2);font-size:13px;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
-[role="tablist"]{display:flex;gap:2px;margin-top:12px;border-bottom:1px solid var(--rule);overflow-x:auto}
-[role="tab"]{background:none;border:0;border-bottom:2px solid transparent;padding:6px 12px;cursor:pointer;color:var(--ink2);white-space:nowrap}
-[role="tab"][aria-selected="true"]{border-bottom-color:var(--accent);color:var(--ink);font-weight:500}
-.calc-grid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:14px;align-items:start}
-h3{font-size:14px;margin:0 0 8px;font-weight:600}
-h4{font-size:12px;margin:14px 0 6px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.inp{padding:7px 0;border-bottom:1px solid var(--soft)}
-.inp label{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:13px}
-.inp label .nm{color:var(--ink2)}
-.ctl{display:flex;gap:6px;margin-top:3px}
-.ctl input{flex:1;min-width:0;padding:4px 8px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;font-variant-numeric:tabular-nums}
-.ctl select,.ctl .u{min-width:4.2em;padding:4px 6px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;font-size:12.5px}
+.head h2{margin:3px 0 8px;font-size:21px;font-weight:600;line-height:1.3;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.head h2 math{color:var(--cc,var(--accent-ink))}
+.meta{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.pill{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:2px 11px;font-size:12.5px;background:var(--tint);color:var(--ink2);border:1px solid var(--soft)}
+button.pill{cursor:pointer}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+[role="tablist"]{display:flex;gap:4px;margin-top:14px;overflow-x:auto;padding-bottom:2px}
+[role="tab"]{background:none;border:1px solid transparent;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink2);white-space:nowrap;font-weight:500}
+[role="tab"]:hover{background:var(--raised)}
+[role="tab"][aria-selected="true"]{background:var(--accent);color:var(--surface)}
+h3{font-size:15px;margin:0 0 10px;font-weight:600;color:var(--accent-ink);display:flex;gap:8px;align-items:center}
+h4{font-size:13.5px;margin:16px 0 6px;font-weight:600;color:var(--accent-ink)}
+.calc-grid{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:18px;align-items:start}
+.inputs{background:var(--tint);border:1px solid var(--soft);border-radius:10px;padding:14px 14px 12px}
+.inputs h3.sub{margin-top:16px}
+.inp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--soft)}
+.inp:last-of-type{border-bottom:0}
+.inp label{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:4px;min-width:0}
+.inp .sym{text-align:right;color:var(--accent-ink)}
+.ctl{grid-column:1/-1;display:flex;gap:6px;align-items:center}
+.ctl input{flex:1;min-width:0;padding:5px 9px;border:1px solid var(--rule);background:var(--surface);border-radius:6px;font-variant-numeric:tabular-nums}
+.ctl input.out{border-color:var(--warn);background:var(--warn-soft)}
+.ctl select,.ctl .u{min-width:4.4em;padding:5px 6px;border:1px solid var(--rule);background:var(--surface);border-radius:6px;font-size:12.5px}
 .ctl .u{border-color:transparent;background:none;color:var(--muted)}
-.hint{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center}
-.tag{border:1px solid var(--rule);border-radius:3px;padding:0 5px;font-size:10.5px;letter-spacing:.03em}
-.warn-text{color:var(--bad-ink)} .hint .practice{font-style:italic}
-.choice{border:1px dashed var(--rule);background:none;border-radius:3px;padding:0 6px;font-size:11.5px;cursor:pointer;color:var(--ink2)}
-.opts{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--ink2);padding-bottom:8px;border-bottom:1px solid var(--rule);margin-bottom:6px}
-.opts label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
-.st{padding:6px 0 7px;border-bottom:1px solid var(--soft)}
-.st .hd{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:13px}
-.st .hd .c{color:var(--muted);font-size:12px;text-align:right}
-.st .eqs{padding-left:18px;margin-top:2px;overflow-x:auto}
-.eq{display:flex;gap:6px;align-items:baseline;margin:2px 0;white-space:nowrap}
-.eq .lhs{min-width:3.8em;text-align:right;flex:none}
-.eq.res{font-weight:700} .eq.res math{font-weight:700}
-.give{background:none;border:0;color:var(--muted);font-size:11.5px;cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);padding:0}
-.verdict{margin:12px 0 4px;padding:9px 12px;border:1.5px solid var(--ink);border-radius:4px;display:flex;gap:6px 20px;flex-wrap:wrap;align-items:baseline}
-.verdict b{font-size:15px}
-.ok{color:var(--ok-ink);font-weight:700}.bad{color:var(--bad-ink);font-weight:700}
-ul.conds{margin:6px 0 0;padding:0;list-style:none;font-size:13px}
-ul.conds li{display:flex;gap:8px;padding:2px 0;align-items:baseline}
-ul.conds .m{min-width:6.5em;font-size:11.5px;font-weight:600}
-details{margin-top:8px} summary{cursor:pointer;color:var(--ink2);font-size:13px}
-details ul{margin:6px 0;padding-left:18px;font-size:13px;color:var(--ink2)}
-table.cases{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
-table.cases th,table.cases td{border-bottom:1px solid var(--soft);padding:4px 6px;text-align:right;white-space:nowrap}
-table.cases th:first-child,table.cases td:first-child{text-align:left}
-table.cases th{font-weight:600;border-bottom-color:var(--rule)} table.cases th small{display:block;font-weight:400;color:var(--muted)}
-table.cases tr.gov td{background:var(--accent-soft);font-weight:600}
-.scroll{overflow-x:auto}
-.dl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px}
-#ask{margin:6px 0 2px} #ask-out{margin-top:6px} #ask-out .ans{margin:4px 0 6px;color:var(--ink2)}
-.rb{display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;font-size:12.5px}
-.rb label{display:flex;flex-direction:column;gap:2px;color:var(--ink2)} .rb label.ck{flex-direction:row;align-items:center;gap:5px}
-.rb input:not([type=checkbox]),.rb select{padding:3px 7px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;min-width:9em}
-textarea.yaml{width:100%;min-height:220px;font:12px/1.45 var(--mono);border:1px solid var(--rule);background:var(--raised);padding:8px;border-radius:4px}
-pre.code{font:12px/1.5 var(--mono);background:var(--raised);border:1px solid var(--soft);padding:10px 12px;overflow:auto;border-radius:4px;margin:6px 0 12px}
-.note{border-left:3px solid var(--rule);padding:4px 0 4px 10px;margin:8px 0}
-.note.pitfall{border-left-color:var(--serious)} .note.limitation{border-left-color:var(--warn)} .note.scope{border-left-color:var(--s1)} .note.practice{border-left-color:var(--s2)}
-.note .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.note .src{font-size:12px;color:var(--muted);margin-top:2px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0 4px}
-.tile{background:var(--raised);border:1px solid var(--soft);border-radius:4px;padding:8px 10px}
-.tile .v{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums} .tile .l{font-size:12px;color:var(--muted)}
+.info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font:600 10px/1 var(--font);cursor:help;flex:none;font-style:normal}
+.info.warn{border-color:var(--warn);color:var(--surface);background:var(--warn)}
+.fixed{font-size:13px;color:var(--ink2);margin:10px 0 0}
+.sheet-h{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sheet-h h3{margin:0}
+.seg-ctl{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg-ctl button{border:0;border-left:1px solid var(--rule);background:none;padding:4px 12px;font-size:12.5px;cursor:pointer;color:var(--ink2)}
+.seg-ctl button:first-child{border-left:0}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.st{display:grid;grid-template-columns:minmax(140px,26%) minmax(0,1fr);gap:4px 20px;padding:10px 0;border-bottom:1px solid var(--soft);align-items:center}
+.st .nm{display:block;font-size:13.5px;color:var(--ink)} .st .cl{display:block;font-size:12px;color:var(--muted)}
+.st .row{display:flex;gap:8px;align-items:center;justify-content:space-between;min-width:0}
+.chain{display:flex;flex-wrap:wrap;align-items:center;column-gap:.55em;row-gap:8px;min-width:0}
+.chain .seg{white-space:nowrap;max-width:100%;overflow-x:auto}
+.chain .res math{color:var(--accent-ink);font-weight:700}
+.verdict{margin:16px 0 8px;padding:12px 16px;border-radius:10px;display:flex;flex-wrap:wrap;gap:8px 28px;align-items:center;background:var(--raised);border:1px solid var(--rule)}
+.verdict.pass{background:var(--good-soft);border-color:var(--good)} .verdict.fail{background:var(--crit-soft);border-color:var(--crit)}
+.verdict math{font-size:1.15em}
+.badge{display:inline-flex;gap:6px;align-items:center;font-weight:700;padding:3px 12px;border-radius:999px;font-size:13px;letter-spacing:.02em}
+.badge.ok{background:var(--good);color:#fff} .badge.bad{background:var(--crit);color:#fff}
+.conds ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.conds li{display:flex;gap:9px;align-items:baseline;font-size:13.5px}
+.conds .mk{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;background:var(--soft);color:var(--ink2);flex:none;cursor:help}
+.conds li.met .mk{background:var(--good);color:#fff} .conds li.unmet .mk{background:var(--crit);color:#fff}
 .muted{color:var(--muted)} .small{font-size:12.5px}
+.ok{color:var(--good)} .bad{color:var(--crit)}
+.rep-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:22px;align-items:start}
+.rep-grid section{min-width:0}
+.empty{color:var(--ink2);background:var(--tint);border:1px dashed var(--rule);border-radius:10px;padding:14px 16px;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.form label{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--ink2);font-weight:500}
+.form label.wide{grid-column:1/-1}
+.form input,.form select,.ctrls input,.ctrls select{padding:6px 9px;border:1px solid var(--rule);background:var(--surface);border-radius:6px;min-width:0}
+fieldset{border:1px solid var(--soft);border-radius:10px;margin:14px 0 0;padding:10px 14px 12px;display:grid;gap:7px;min-width:0}
+legend{font-weight:600;font-size:13px;color:var(--accent-ink);padding:0 4px}
+fieldset label{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:13.5px;cursor:pointer;min-width:0}
+fieldset select{padding:3px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);flex:1 1 180px;width:0;min-width:0;max-width:100%}
+table.cases{width:100%;border-collapse:collapse;font-size:13px}
+table.cases th,table.cases td{border-bottom:1px solid var(--soft);padding:6px 8px;text-align:right;white-space:nowrap}
+table.cases th:first-child,table.cases td:first-child{text-align:left}
+table.cases th{font-weight:600;border-bottom:2px solid var(--rule);color:var(--ink2);background:var(--raised)} table.cases th small{display:block;font-weight:400;color:var(--muted)}
+table.cases tr.gov td{background:var(--accent-soft);font-weight:600}
+.linkish{background:none;border:0;padding:0;color:var(--accent-ink);cursor:pointer;font-weight:500;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.scroll{overflow-x:auto}
+#ask{margin:8px 0 2px} #ask-out{margin-top:6px} #ask-out .ans{margin:4px 0 6px;color:var(--ink2)}
+pre.code{font:12.5px/1.55 var(--mono);background:var(--raised);border:1px solid var(--soft);padding:12px 14px;overflow:auto;border-radius:8px;margin:0}
+.code-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 6px}
+.code-h:first-child{margin-top:0} .code-h h4{margin:0}
+.note{border-left:3px solid var(--rule);padding:6px 0 6px 12px;margin:8px 0;background:linear-gradient(90deg,var(--raised),transparent 70%);border-radius:0 6px 6px 0}
+.note.pitfall{border-left-color:var(--crit)} .note.limitation{border-left-color:var(--warn)} .note.scope{border-left-color:var(--accent)} .note.practice{border-left-color:var(--gold)} .note.guidance{border-left-color:var(--good)}
+.note .src{font-size:12px;color:var(--muted);margin-top:3px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:10px 0 4px}
+.tile{background:var(--tint);border:1px solid var(--soft);border-radius:10px;padding:10px 12px}
+.tile .v{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent-ink)} .tile .l{font-size:12.5px;color:var(--ink2)}
 .chartbox{position:relative;margin-top:8px}
 .chartbox svg{display:block;width:100%;height:auto;overflow:visible}
-.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:5px 8px;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.12);white-space:nowrap;display:none;z-index:2}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:7px 10px;font-size:12.5px;box-shadow:0 4px 14px rgba(0,0,0,.14);max-width:340px;white-space:pre-line;display:none;z-index:5;color:var(--ink)}
 .tip b{font-variant-numeric:tabular-nums}
-.ctrls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:end;font-size:13px}
-.ctrls label{display:flex;flex-direction:column;gap:2px;color:var(--ink2);font-size:12px}
-.ctrls input,.ctrls select{padding:4px 7px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;min-width:6em}
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end;font-size:13px}
+.ctrls label{display:flex;flex-direction:column;gap:3px;color:var(--ink2);font-size:12.5px;font-weight:500}
 .series-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin-top:8px}
 .series-key span{display:inline-flex;gap:6px;align-items:center}
 .series-key i{display:inline-block;width:16px;height:2px}
-.bars .row{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr);gap:10px;align-items:center;padding:3px 0}
+.bars .row{display:grid;grid-template-columns:minmax(120px,260px) minmax(0,1fr);gap:10px;align-items:center;padding:3px 0}
 .bars .lab{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bars .track{display:flex;align-items:center;gap:2px;min-height:16px}
 .bars .seg{height:14px}
@@ -282,42 +324,48 @@ pre.code{font:12px/1.5 var(--mono);background:var(--raised);border:1px solid var
 .depmap{overflow-x:auto;margin-top:6px}
 .depmap svg{display:block}
 .depmap .node{cursor:pointer}
-dialog{border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);max-width:min(520px,calc(100vw - 32px));padding:16px}
+dialog{border:1px solid var(--rule);border-radius:12px;background:var(--surface);color:var(--ink);max-width:min(520px,calc(100vw - 32px));padding:18px}
 dialog::backdrop{background:rgba(0,0,0,.35)}
-.setrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px solid var(--soft)}
-.setrow select{padding:3px 6px;border:1px solid var(--rule);background:var(--raised);border-radius:4px}
+.setrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:5px 0;font-size:13.5px;border-bottom:1px solid var(--soft)}
+.setrow select{padding:3px 6px;border:1px solid var(--rule);background:var(--raised);border-radius:6px}
+.toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));max-width:min(420px,calc(100vw - 32px));background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:10px;font-size:13.5px;box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:9}
+.toast.show{opacity:1;transform:none}
+@media (max-width:1100px){.rep-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){.shell{grid-template-columns:minmax(0,1fr)} nav.side{position:static;max-height:46vh}
   .calc-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.st{grid-template-columns:minmax(0,1fr)} .form{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 <div class="wrap">
 <header class="top">
-  <div><h1>Calculation knowledge base</h1><p id="sub"></p></div>
+  <div><h1>Calculation Knowledge Base</h1><p id="sub"></p></div>
   <button class="btn" id="settings-btn" type="button">Settings</button>
 </header>
 <div class="shell">
   <nav class="side" aria-label="Codes and calculation objects">
     <input class="search" id="q" type="search" placeholder="Search: concrete shear, V_Rd,c, 6.2.2" aria-label="Search">
-    <div id="ask" hidden><button class="btn small" type="button" id="ask-btn">Ask Claude about it</button><div id="ask-out" class="small"></div></div>
+    <div id="ask" hidden><button class="btn" type="button" id="ask-btn">Ask Claude</button><div id="ask-out" class="small"></div></div>
     <div class="chips" id="codes"></div>
     <div id="tree"></div>
-    <button class="ovw" id="ovw" type="button">Overview of the knowledge base</button>
-    <div class="legend-dots"><span><i class="dot good"></i>checked</span><span><i class="dot warn"></i>not yet checked</span><span><i class="dot crit"></i>review needed</span></div>
+    <button class="ovw" id="ovw" type="button">Overview</button>
+    <div class="legend-dots"><span><i class="dot good"></i>Checked</span><span><i class="dot warn"></i>Not yet checked</span><span><i class="dot crit"></i>Review needed</span></div>
   </nav>
   <main id="main"></main>
 </div>
 </div>
 <dialog id="settings">
   <h3>Settings</h3>
-  <p class="small muted">How numbers are shown here. The calculation itself always runs in N, mm, MPa.</p>
-  <div class="setrow"><span>Digits after the decimal point</span><select id="set-dec"></select></div>
-  <div class="setrow"><span>Significant digits kept for small values</span><select id="set-sig"></select></div>
-  <h4>Units in this calculation</h4>
-  <div id="set-units" class="small"></div>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+  <div class="setrow"><span>Decimal places</span><select id="set-dec"></select></div>
+  <div class="setrow"><span>Significant digits for small values</span><select id="set-sig"></select></div>
+  <h4>Units</h4>
+  <div id="set-units"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
     <button class="btn" id="set-reset" type="button">Reset</button><button class="btn primary" id="set-close" type="button">Done</button>
   </div>
 </dialog>
-<div class="tip" id="tip"></div>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
 <script>
 "use strict";
 const D = /*__DATA__*/;
@@ -365,11 +413,6 @@ const mathNum = v => {
   return s.startsWith("-") ? "<mo>&#x2212;</mo><mn>" + esc(s.slice(1)) + "</mn>" : "<mn>" + esc(s) + "</mn>";
 };
 const mathUnit = u => u === "-" ? "" : "<mtext>&#x2009;" + esc(u) + "</mtext>";
-
-// ---------------------------------------------------------------- confidence
-const CONF = {high: {cls: "good", label: "checked"}, medium: {cls: "warn", label: "not yet checked"}, low: {cls: "crit", label: "review needed"}};
-const conf = o => CONF[(o.conf || {}).level] || CONF.medium;
-const dot = o => { const c = conf(o); return `<span class="dot ${c.cls}" role="img" aria-label="${c.label}" title="${c.label}"></span>`; };
 
 // ---------------------------------------------------------------- engine (same objects as Python)
 function plan(target, given) {
@@ -434,21 +477,30 @@ function defaults(target, given) {
   return out;
 }
 
+// ---------------------------------------------------------------- confidence
+const CONF = {high: {cls: "good", label: "Checked"}, medium: {cls: "warn", label: "Not yet checked"}, low: {cls: "crit", label: "Review needed"}};
+const conf = o => CONF[(o.conf || {}).level] || CONF.medium;
+const dot = o => { const c = conf(o); return `<span class="dot ${c.cls}" role="img" aria-label="${c.label}" title="${c.label}"></span>`; };
+const CODE_COLOR = {"EN 1992": "var(--ec2)", "EN 1993": "var(--ec3)", "EN 1994": "var(--ec4)"};
+const codeColor = code => (code ? CODE_COLOR[String(code).slice(0, 7)] : "var(--gen)") || "var(--accent)";
+const ICON_DL = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10"/></svg>`;
+const ICON_DOC = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.8h5.5L12.5 5v9.2h-8.5z"/><path d="M9.3 1.8V5h3.2M6.2 8.5h4M6.2 11h4"/></svg>`;
+
 // ---------------------------------------------------------------- state
 const state = {view: "overview", target: null, tab: "calc", code: store.get("code", "all"), q: ""};
-const work = {};      // per object: {values, entered:Set, given:Set, check, show, steps, chart}
+const DETAIL = [["full", "Full"], ["equations", "Without substitution"], ["result", "Results only"]];
+const work = {};      // per object: {values, entered:Set, given:Set, check, detail, chart, report}
 function W(id) {
   if (!work[id]) {
     const saved = store.get("work:" + id, null);
-    const w = {values: {}, entered: new Set(), given: new Set(), check: null,
-               show: {equation: true, substituted: true, result: true}, steps: "all", chart: {}};
+    const w = {values: {}, entered: new Set(), given: new Set(), check: null, detail: "full", chart: {}};
     if (saved) {
       w.given = new Set(saved.given || []);
       Object.assign(w.values, saved.values || {});
       w.entered = new Set(Object.keys(saved.values || {}));
       w.check = saved.check == null ? null : saved.check;
-      if (saved.show) w.show = saved.show;
-      if (saved.steps) w.steps = saved.steps;
+      if (DETAIL.some(d => d[0] === saved.detail)) w.detail = saved.detail;
+      if (saved.report) w.report = saved.report;
     }
     work[id] = w;
   }
@@ -458,13 +510,220 @@ function saveWork(id) {
   const w = work[id];
   const vals = {};
   for (const k of w.entered) if (k in w.values) vals[k] = w.values[k];
-  store.set("work:" + id, {values: vals, given: [...w.given], check: w.check, show: w.show, steps: w.steps});
+  store.set("work:" + id, {values: vals, given: [...w.given], check: w.check, detail: w.detail, report: w.report});
 }
 function valuesFor(id) {
   const w = W(id);
   const v = defaults(id, w.given);
   for (const k of w.entered) if (k in w.values) v[k] = w.values[k];
   return v;
+}
+let toastTimer = null;
+function toast(text) {
+  const el = $("#toast");
+  if (!text) return;
+  el.textContent = text; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 6500);
+}
+
+// ---------------------------------------------------------------- page
+function openObject(id, tab) {
+  state.view = "object"; state.target = id; state.tab = tab || "calc";
+  renderTree(); renderMain();
+  try {   // on a phone the tree sits above the page: go to the calculation
+    if (window.matchMedia("(max-width: 900px)").matches) $("#main").scrollIntoView({block: "start"});
+    else window.scrollTo({top: 0});
+  } catch (e) {}
+}
+const TABS = [["calc", "Calculate"], ["report", "Cases and report"], ["background", "Design background"], ["chart", "Chart"], ["code", "Code"], ["status", "Status"]];
+function renderMain() {
+  $("#ovw").setAttribute("aria-current", String(state.view === "overview"));
+  if (state.view !== "object") { renderOverview(); return; }
+  const o = D.objects[state.target], c = conf(o), f = D.files && D.files[o.id];
+  const crumb = (o.code ? [o.code] : ["Definitions used by every code"]).concat(o.path || []).join(" › ");
+  const actions = (f ? `<button class="btn" type="button" id="dl-xlsx">${ICON_DL}Download Excel</button><button class="btn" type="button" id="dl-mcdx">${ICON_DL}Download Mathcad</button>` : "")
+    + `<button class="btn primary" type="button" data-tab="report">${ICON_DOC}Create report</button>`;
+  $("#main").innerHTML = `<section class="card head" style="--cc:${codeColor(o.code)}"><div class="head-grid"><div>
+      <div class="crumb">${esc(crumb)}</div>
+      <h2><math>${o.ml}</math><span>${esc(o.name)}</span></h2>
+      <div class="meta"><span class="pill">${esc(o.ref)}</span><button class="pill" type="button" data-tab="status">${dot(o)}${esc(c.label)}</button></div>
+    </div><div class="actions">${actions}</div></div>
+    <div role="tablist" aria-label="Views">${TABS.map(([k, l]) => `<button role="tab" type="button" data-tab="${k}" aria-selected="${state.tab === k}">${l}</button>`).join("")}</div>
+  </section><section class="card" id="panel"></section>`;
+  ({calc: renderCalc, report: renderReport, background: renderBackground, chart: renderChart, code: renderCode, status: renderStatus})[state.tab]();
+}
+
+// ---------------------------------------------------------------- Calculate
+function renderCalc() {
+  $("#panel").innerHTML = `<div class="calc-grid"><div class="inputs" id="inputs"></div><div id="sheet"></div></div>`;
+  renderInputs(); renderSheet();
+}
+function inputInfo(p, value) {
+  const it = item(p), [u] = unitOf(p), q = D.quantities[p], w = W(state.target), tip = [];
+  let out = false;
+  if (q && q.ref) tip.push(q.ref);
+  if (q && q.kind === "coefficient" && q.value != null) tip.push(`Recommended value: ${fmtShort(shown(p, q.value))} ${ulabel(u)}`.trim());
+  if (q && q.ndp) tip.push("Nationally determined parameter: check the National Annex.");
+  if (q && q.choices && q.choices.length) tip.push("Common values: " + q.choices.map(ch => `${fmtShort(shown(p, ch.value))} (${ch.label})`).join(", "));
+  const practice = new Set();
+  for (const s of plan(state.target, w.given).steps) for (const b of D.objects[s].background || [])
+    if (b.kind === "practice" && b.about === p) practice.add(b.text.split(": ")[0]);
+  for (const t of practice) tip.push(t);
+  if (q && q.range && typeof value === "number" && (value < q.range[0] - 1e-9 || value > q.range[1] + 1e-9)) {
+    out = true;
+    tip.push(`Outside the usual range of ${fmtShort(shown(p, q.range[0]))} to ${fmtShort(shown(p, q.range[1]))} ${ulabel(u)}.`);
+  }
+  if (D.objects[p] && w.given.has(p)) tip.push("Entered directly instead of calculated.");
+  const html = tip.length ? `<span class="info${out ? " warn" : ""}" tabindex="0" data-tip="${esc(tip.join("\n"))}" aria-label="${esc(tip.join(". "))}">i</span>` : "";
+  return {html, out, it};
+}
+function inputRow(p, value) {
+  const [u] = unitOf(p), q = D.quantities[p], w = W(state.target), info = inputInfo(p, value), it = info.it;
+  const sel = it && it.units.length > 1
+    ? `<select data-unit="${esc(p)}" aria-label="Unit of ${esc(it.name)}">${it.units.map(x => `<option ${x[0] === u ? "selected" : ""}>${esc(x[0])}</option>`).join("")}</select>`
+    : `<span class="u">${esc(ulabel(u))}</span>`;
+  const choices = q && q.choices && q.choices.length;
+  const list = choices ? `<datalist id="dl-${esc(p)}">${q.choices.map(ch => `<option value="${esc(fmtShort(shown(p, ch.value)))}" label="${esc(ch.label)}"></option>`).join("")}</datalist>` : "";
+  const undo = D.objects[p] && w.given.has(p) ? `<button class="icon-btn" type="button" data-ungive="${esc(p)}" data-tip="Calculate this value instead" aria-label="Calculate ${esc(symText(p))} instead">↺</button>` : "";
+  return `<div class="inp" data-row="${esc(p)}"><label for="in-${esc(p)}"><span>${esc(it ? it.name : p)}</span>${info.html}</label><span class="sym"><math>${symML(p)}</math></span>
+    <div class="ctl"><input id="in-${esc(p)}" class="${info.out ? "out" : ""}" data-in="${esc(p)}" inputmode="decimal" autocomplete="off"${choices ? ` list="dl-${esc(p)}"` : ""} value="${value == null ? "" : esc(fmtShort(shown(p, value)))}">${sel}${undo}</div>${list}</div>`;
+}
+function renderInputs() {
+  const id = state.target, o = D.objects[id], w = W(id), vals = valuesFor(id), {inputs} = plan(id, w.given);
+  let h = `<h3>Input</h3>` + inputs.map(p => inputRow(p, vals[p])).join("");
+  if (o.check) h += `<h3 class="sub">Design value to check</h3>` + inputRow(o.check, w.check);
+  const fixed = Object.entries(o.fixed || {});
+  if (fixed.length) h += `<p class="fixed">Fixed by ${esc(o.code)}: ${fixed.map(([k, v]) => `<math>${symML(k)}<mo>=</mo>${mathNum(v)}</math>`).join(", ")}</p>`;
+  h += `<div class="btns"><button class="btn ghost" type="button" id="reset">Reset inputs</button></div>`;
+  $("#inputs").innerHTML = h;
+}
+// one step of a calculation: equation, substituted values and result on one line
+function subML(so, env) {
+  return so.mlS.replace(/<mn class="slot" data-s="([^"]+)"><\/mn>/g, (m, s) => {
+    const v = env[s], t = typeof v === "number" ? fmtShort(v) : String(v);
+    return t.startsWith("-") ? `<mo>(</mo><mo>&#x2212;</mo><mn>${esc(t.slice(1))}</mn><mo>)</mo>` : `<mn>${esc(t)}</mn>`;
+  });
+}
+function stepParts(target, t, detail) {
+  const so = D.objects[t.id], [u] = unitOf(t.id), segs = [];
+  if (detail !== "result") segs.push(so.mlF);
+  if (detail === "full" && so.params.length) segs.push(subML(so, t.env));
+  const ref = so.code === D.objects[target].code ? so.ref.replace(so.code + " ", "") : so.ref;
+  return {so, segs, res: mathNum(shown(t.id, t.v)) + mathUnit(u), ref};
+}
+const chainHTML = p => `<div class="chain"><span class="seg"><math>${p.so.ml}</math></span>`
+  + p.segs.map(s => `<span class="seg"><math displaystyle="true"><mo>=</mo>${s}</math></span>`).join("")
+  + `<span class="seg res"><math><mo>=</mo>${p.res}</math></span></div>`;
+function verdictOf(id, value, check) {
+  const o = D.objects[id];
+  if (!(o.check && check != null && typeof value === "number" && value !== 0)) return null;
+  const eta = o.sense === "resistance" ? check / value : value / check;
+  return {eta, ok: eta <= 1};
+}
+function verdictHTML(id, value, check) {
+  const o = D.objects[id], v = verdictOf(id, value, check);
+  let h = `<div class="verdict${v ? (v.ok ? " pass" : " fail") : ""}"><span><math>${o.ml}<mo>=</mo>${mathNum(shown(id, value))}${mathUnit(unitOf(id)[0])}</math></span>`;
+  if (v) h += `<span><math>${symML(o.check)}<mo>=</mo>${mathNum(shown(o.check, check))}${mathUnit(unitOf(o.check)[0])}</math></span>`
+    + `<span><math><mi>η</mi><mo>=</mo>${o.sense === "resistance" ? symML(o.check) + "<mo>/</mo>" + o.ml : o.ml + "<mo>/</mo>" + symML(o.check)}<mo>=</mo><mn>${v.eta.toFixed(2)}</mn></math></span>`
+    + `<span class="badge ${v.ok ? "ok" : "bad"}">${v.ok ? "✓ OK" : "✗ Not OK"}</span>`;
+  return h + `</div>`;
+}
+const COND = {ok: ["✓", "met", "Met"], violated: ["✗", "unmet", "Not met"], "not checked": ["?", "", "Not checked: a value it needs is not part of this calculation"]};
+function renderSheet() {
+  const id = state.target, w = W(id);
+  let r;
+  try { r = evaluate(id, valuesFor(id), w.given); }
+  catch (e) { $("#sheet").innerHTML = `<p class="bad">${esc(e.message)}</p>`; return; }
+  let h = `<div class="sheet-h"><h3>Calculation <span class="info" tabindex="0" data-tip="Substituted values are in N, mm and MPa. Results are in the units chosen in Settings.">i</span></h3>
+    <div class="seg-ctl" role="group" aria-label="Detail">${DETAIL.map(([k, l]) => `<button type="button" data-detail="${k}" aria-pressed="${w.detail === k}">${l}</button>`).join("")}</div></div>`;
+  for (const t of r.trace) {
+    const p = stepParts(id, t, w.detail);
+    const edit = t.id !== id ? `<button class="icon-btn" type="button" data-give="${esc(t.id)}" data-tip="Enter this value directly instead of calculating it" aria-label="Enter ${esc(p.so.text)} directly">✎</button>` : "";
+    h += `<div class="st"><div><span class="nm">${esc(p.so.name)}</span><span class="cl">${esc(p.ref)}</span></div><div class="row">${chainHTML(p)}${edit}</div></div>`;
+  }
+  h += verdictHTML(id, r.value, w.check);
+  const checks = checksFor(id, r.env, w.given);
+  if (checks.length) h += `<div class="conds"><h4>Conditions</h4><ul>` + checks.map(c => {
+    const m = COND[c.status];
+    return `<li class="${m[1]}"><span class="mk" tabindex="0" data-tip="${esc(m[2])}" aria-label="${esc(m[2])}">${m[0]}</span><span>${esc(c.text)} <span class="muted">${esc(c.clause)}</span></span></li>`;
+  }).join("") + `</ul></div>`;
+  $("#sheet").innerHTML = h;
+}
+
+// ---------------------------------------------------------------- Cases and report
+function cases() { return store.get("cases:" + state.target, []); }
+function setCases(c) { store.set("cases:" + state.target, c); }
+function caseResult(id, cs) {
+  const v = Object.assign(defaults(id, new Set(cs.given || [])), cs.values);
+  try {
+    const r = evaluate(id, v, new Set(cs.given || []));
+    return {r, values: v, eta: (verdictOf(id, r.value, cs.check) || {}).eta};
+  } catch (e) { return {error: e.message}; }
+}
+function governing(id, res) {
+  const o = D.objects[id];
+  let gov = 0, best = null;
+  res.forEach((x, i) => {
+    if (x.error) return;
+    const m = x.eta != null ? x.eta : (o.sense === "resistance" ? -x.r.value : x.r.value);
+    if (best == null || m > best) { best = m; gov = i; }
+  });
+  return gov;
+}
+function currentCase(name) {
+  const id = state.target, w = W(id), vals = valuesFor(id), {inputs} = plan(id, w.given), values = {};
+  for (const p of inputs) {
+    const q = D.quantities[p];
+    if (w.entered.has(p) || !(q && q.kind === "coefficient")) values[p] = vals[p];
+  }
+  return {name, values, given: [...w.given], check: w.check};
+}
+function caseKeys(id, list) {
+  const keys = [];
+  for (const c of list) for (const k of Object.keys(c.values)) if (!keys.includes(k) && k !== D.objects[id].check) keys.push(k);
+  return keys;
+}
+function casesTable(id, list, res, gov, editable) {
+  const o = D.objects[id], keys = caseKeys(id, list);
+  const th = k => `<th><math>${symML(k)}</math><small>${esc(ulabel(unitOf(k)[0])) || "&nbsp;"}</small></th>`;
+  let h = `<div class="scroll"><table class="cases"><tr><th>Case</th>${keys.map(th).join("")}${th(id)}`
+    + (o.check ? `${th(o.check)}<th><math><mi>η</mi></math><small>&nbsp;</small></th><th></th>` : "") + (editable ? `<th></th>` : "") + `</tr>`;
+  list.forEach((c, i) => {
+    const x = res[i];
+    const name = editable ? `<button class="linkish" type="button" data-load="${i}" data-tip="Open this case on the Calculate tab">${esc(c.name)}</button>` : esc(c.name);
+    const cells = keys.map(k => `<td>${k in c.values ? esc(fmt(shown(k, c.values[k]))) : "–"}</td>`).join("");
+    const val = x.error ? `<td class="bad">${esc(x.error)}</td>` : `<td>${esc(fmt(shown(id, x.r.value)))}</td>`;
+    const chk = o.check ? `<td>${c.check == null ? "–" : esc(fmt(shown(o.check, c.check)))}</td><td>${x.eta == null ? "–" : x.eta.toFixed(2)}</td><td>${x.eta == null ? "" : (x.eta <= 1 ? '<span class="ok">OK</span>' : '<span class="bad">Not OK</span>')}</td>` : "";
+    const del = editable ? `<td><button class="icon-btn" type="button" data-del="${i}" aria-label="Remove ${esc(c.name)}" data-tip="Remove this case">×</button></td>` : "";
+    h += `<tr class="${i === gov && list.length > 1 ? "gov" : ""}"><td>${name}</td>${cells}${val}${chk}${del}</tr>`;
+  });
+  return h + `</table></div>`;
+}
+function reportOpts() {
+  const id = state.target, o = D.objects[id], w = W(id);
+  if (!w.report) {
+    const x = plan(id, w.given).inputs.find(p => D.quantities[p] && D.quantities[p].kind === "input") || "";
+    w.report = {title: o.name, project: "", number: "", made_by: "", checked_by: "", calc: true, table: true, chart: false, x, detail: "full"};
+  }
+  return w.report;
+}
+function renderReport() {
+  const id = state.target, w = W(id), rb = reportOpts(), list = cases(), {inputs} = plan(id, w.given);
+  const res = list.map(c => caseResult(id, c)), gov = governing(id, res);
+  const xs = inputs.filter(p => D.quantities[p] && D.quantities[p].kind === "input");
+  const fld = (k, l, cls) => `<label class="${cls || ""}">${l}<input data-rb="${k}" value="${esc(rb[k])}"></label>`;
+  const chk = (k, l) => `<label><input type="checkbox" data-rb="${k}" ${rb[k] ? "checked" : ""}>${l}</label>`;
+  let h = `<div class="rep-grid"><section><h3>Cases <span class="info" tabindex="0" data-tip="Each case is a set of inputs. Set them on the Calculate tab and add them here. The governing case is highlighted.">i</span></h3>`;
+  h += list.length ? casesTable(id, list, res, gov, true) : `<p class="empty">No cases yet. Without cases the report shows the inputs on the Calculate tab.</p>`;
+  h += `<div class="btns"><button class="btn" type="button" id="add-case">Add current inputs as a case</button>${list.length ? `<button class="btn ghost" type="button" id="clear-cases">Remove all cases</button>` : ""}</div></section>`;
+  h += `<section><h3>Report</h3><div class="form">${fld("title", "Title", "wide")}${fld("project", "Project")}${fld("number", "Calculation no.")}${fld("made_by", "Made by")}${fld("checked_by", "Checked by")}</div>
+    <fieldset><legend>Contents</legend>${chk("calc", list.length > 1 ? "Calculation of the governing case" : "Calculation")}
+      ${list.length > 1 ? chk("table", "Summary of all cases") : ""}
+      <label><input type="checkbox" data-rb="chart" ${rb.chart ? "checked" : ""}>Chart against <select data-rb="x" aria-label="Chart against">${xs.map(p => `<option value="${esc(p)}" ${p === rb.x ? "selected" : ""}>${esc(item(p).name)}</option>`).join("")}</select></label></fieldset>
+    <fieldset><legend>Detail of each step</legend><div class="seg-ctl" role="group" aria-label="Detail of each step">${DETAIL.map(([k, l]) => `<button type="button" data-rdetail="${k}" aria-pressed="${rb.detail === k}">${l}</button>`).join("")}</div></fieldset>
+    <div class="btns"><button class="btn primary" type="button" id="rep-pdf">${ICON_DL}Download PDF</button><button class="btn primary" type="button" id="rep-docx">${ICON_DL}Download Word</button>
+      <button class="btn ghost" type="button" id="rep-yaml" data-tip="A template for running many cases with the Python package: python -m ckb report --template">Batch template</button></div></section></div>`;
+  $("#panel").innerHTML = h;
 }
 
 // ---------------------------------------------------------------- tree and search
@@ -495,13 +754,13 @@ function renderTree() {
   let h = "";
   const general = Object.values(D.objects).filter(o => !o.code);
   if (general.length && state.code === "all") {
-    h += `<div class="t-code">Definitions used by every code</div>` + general.map(o =>
+    h += `<div class="t-code" style="--cc:var(--gen)">Definitions used by every code</div>` + general.map(o =>
       `<button class="t-obj" type="button" data-id="${esc(o.id)}" aria-current="${state.view === "object" && state.target === o.id}">`
       + `${dot(o)}<span class="s">${esc(o.text)}</span><span class="n">${esc(o.name)}</span></button>`).join("");
   }
   for (const c of D.codes) {
     if (state.code !== "all" && state.code !== c.code) continue;
-    h += `<div class="t-code">${esc(c.code)}</div>`;
+    h += `<div class="t-code" style="--cc:${codeColor(c.code)}">${esc(c.code)}${c.title ? `<small>${esc(c.title)}</small>` : ""}</div>`;
     let chap = null, sec = null;
     for (const e of entries(c.code)) {
       const ch = e.topic.split(".")[0];
@@ -509,7 +768,7 @@ function renderTree() {
       if (e.topic !== ch && e.topic !== sec) { sec = e.topic; h += `<div class="t-sec">${esc(topicTitle(c.code, e.topic))}</div>`; }
       const o = D.objects[e.id];
       h += `<button class="t-obj" type="button" data-id="${esc(e.id)}" aria-current="${state.view === "object" && state.target === e.id}">`
-        + `${dot(o)}<span class="s">${esc(e.label)}</span><span class="n">${esc(e.via ? "from " + e.via : e.name)}</span></button>`;
+        + `${dot(o)}<span class="s">${esc(e.label)}</span><span class="n">${esc(e.via ? "From " + e.via : e.name)}</span></button>`;
     }
   }
   box.innerHTML = h;
@@ -531,14 +790,14 @@ function search(q) {
   let hits = [];
   for (const [id, e] of Object.entries(D.index)) {
     const o = D.objects[id];
-    if (key && e.keys.includes(key)) { hits.push([100, id, "symbol"]); continue; }
-    if (q === (o.ref.match(/cl\. ([^,]+)/) || [])[1]) { hits.push([90, id, "clause"]); continue; }
+    if (key && e.keys.includes(key)) { hits.push([100, id, "Symbol"]); continue; }
+    if (q === (o.ref.match(/cl\. ([^,]+)/) || [])[1]) { hits.push([90, id, "Clause"]); continue; }
     if (!tokens.length) continue;
     let score = 0, found = 0, weak = false;
     for (const t of tokens) for (const [f, w] of FIELDS) { if (hitWord(t, e[f].split(" "))) { score += w; found++; weak = weak || f === "weak"; break; } }
     if (!found) continue;
     score = score / tokens.length + (found === tokens.length ? 20 : 5 * found / tokens.length) + 1.5 * e.rank;
-    hits.push([score, id, (found === tokens.length ? "all words" : `${found} of ${tokens.length} words`) + (weak ? ", partly in the background" : "")]);
+    hits.push([score, id, (found === tokens.length ? "All words" : `${found} of ${tokens.length} words`) + (weak ? ", partly in the background" : "")]);
   }
   hits.sort((a, b) => b[0] - a[0] || a[1].localeCompare(b[1]));
   if (hits.length && hits[0][0] >= 90) hits = hits.filter(h => h[0] >= 90);
@@ -554,366 +813,380 @@ function renderHits(box) {
   }).join("");
 }
 
-// ---------------------------------------------------------------- page
-function open(id, tab) {
-  state.view = "object"; state.target = id; state.tab = tab || "calc";
-  renderTree(); renderMain();
-  try {   // on a phone the tree sits above the page: go to the calculation
-    if (window.matchMedia("(max-width: 900px)").matches) $("#main").scrollIntoView({block: "start"});
-    else window.scrollTo({top: 0});
-  } catch (e) {}
-}
-function renderMain() {
-  $("#ovw").setAttribute("aria-current", String(state.view === "overview"));
-  if (state.view !== "object") { renderOverview(); return; }
-  const o = D.objects[state.target], c = conf(o);
-  const crumb = (o.code ? [o.code] : ["Definition used by every code"]).concat(o.path || []).join(" › ");
-  const tabs = [["calc", "Calculate"], ["background", "Design background"], ["chart", "Chart"], ["code", "Code"], ["status", "Status"]];
-  $("#main").innerHTML = `<section class="card head"><div class="crumb">${esc(crumb)}</div>
-    <h2><math>${o.ml}</math><span>${esc(o.name)}</span></h2>
-    <div class="meta"><span>${esc(o.ref)}</span><span>Result in ${esc(o.unit === "-" ? "no unit" : o.unit)}</span>
-      <button class="stat-link" type="button" data-tab="status">${dot(o)}${esc(c.label)}</button></div>
-    <div role="tablist">${tabs.map(([k, l]) => `<button role="tab" type="button" data-tab="${k}" aria-selected="${state.tab === k}">${l}</button>`).join("")}</div>
-  </section><section class="card" id="panel"></section>`;
-  ({calc: renderCalc, background: renderBackground, chart: renderChart, code: renderCode, status: renderStatus})[state.tab]();
-}
-
-// ---------------------------------------------------------------- Calculate
-function renderCalc() {
-  const id = state.target, o = D.objects[id], w = W(id);
-  $("#panel").innerHTML = `<div class="calc-grid"><div id="inputs"></div><div><div id="sheet"></div><div id="dl"></div><div id="cases"></div></div></div>`;
-  renderInputs(); renderSheet(); renderDownloads(); renderCases();
-}
-function inputRow(p, value, isCheck) {
-  const it = item(p), [u] = unitOf(p), q = D.quantities[p];
-  const v = shown(p, value);
-  const sel = it && it.units.length > 1
-    ? `<select data-unit="${esc(p)}" aria-label="unit">${it.units.map(x => `<option ${x[0] === u ? "selected" : ""}>${esc(x[0])}</option>`).join("")}</select>`
-    : `<span class="u">${esc(ulabel(u))}</span>`;
-  const hint = [];
-  const w = W(state.target);
-  if (q && q.kind === "coefficient" && q.value != null) {
-    const rec = Math.abs((value || 0) - q.value) <= 1e-12 * Math.max(1, Math.abs(q.value));
-    hint.push(rec ? `<span class="tag">recommended</span>` : `<span class="tag">recommended ${esc(fmt(shown(p, q.value)))}</span>`);
-  }
-  if (q && q.ndp) hint.push(`<span class="tag" title="Nationally Determined Parameter: check the National Annex">NDP</span>`);
-  if (q && q.choices && q.choices.length) for (const ch of q.choices)
-    hint.push(`<button type="button" class="choice" data-set="${esc(p)}" data-v="${ch.value}" title="${esc(ch.label)}">${esc(fmt(shown(p, ch.value)))} ${esc(ch.label)}</button>`);
-  if (D.objects[p] && w.given.has(p)) hint.push(`<button type="button" class="give" data-ungive="${esc(p)}">calculate instead</button>`);
-  if (q && q.ref) hint.push(`<span>${esc(q.ref)}</span>`);
-  const tips = new Set();
-  for (const s of plan(state.target, w.given).steps) for (const b of D.objects[s].background || [])
-    if (b.kind === "practice" && b.about === p) tips.add(b.text.split(": ")[0]);
-  for (const t of tips) hint.push(`<span class="practice">${esc(t)}</span>`);
-  if (q && q.range && typeof value === "number" && (value < q.range[0] - 1e-9 || value > q.range[1] + 1e-9))
-    hint.push(`<span class="warn-text">outside the usual range ${esc(fmt(shown(p, q.range[0])))} to ${esc(fmt(shown(p, q.range[1])))} ${esc(ulabel(u))}</span>`);
-  return `<div class="inp"><label for="in-${esc(p)}"><span class="nm">${esc(it ? it.name : p)}${isCheck ? " (to check against)" : ""}</span><math>${symML(p)}</math></label>
-    <div class="ctl"><input id="in-${esc(p)}" data-in="${esc(p)}" inputmode="decimal" autocomplete="off" value="${value == null ? "" : esc(fmtShort(v))}">${sel}</div>
-    ${hint.length ? `<div class="hint">${hint.join("")}</div>` : ""}</div>`;
-}
-function renderInputs() {
-  const id = state.target, o = D.objects[id], w = W(id);
-  const vals = valuesFor(id);
-  const {inputs} = plan(id, w.given);
-  let h = `<h3>Input</h3>`;
-  h += inputs.map(p => inputRow(p, vals[p], false)).join("");
-  if (o.check) h += inputRow(o.check, w.check, true);
-  const fixed = Object.entries(o.fixed || {});
-  if (fixed.length) h += `<p class="small muted">${fixed.map(([k, v]) => `<math>${symML(k)}<mo>=</mo>${mathNum(v)}</math>`).join(", ")} fixed by ${esc(o.code)}.</p>`;
-  h += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn small" type="button" id="reset">Reset inputs</button></div>`;
-  $("#inputs").innerHTML = h;
-  refreshInputHints();
-}
-function refreshInputHints() {}
-function renderSheet() {
-  const id = state.target, o = D.objects[id], w = W(id);
-  let r;
-  try { r = evaluate(id, valuesFor(id), w.given); }
-  catch (e) { $("#sheet").innerHTML = `<p class="bad">${esc(e.message)}</p>`; return; }
-  const sh = w.show;
-  let h = `<div class="opts"><span>Show</span>`
-    + [["equation", "Equation"], ["substituted", "Substituted values"], ["result", "Result"]].map(([k, l]) =>
-      `<label><input type="checkbox" data-show="${k}" ${sh[k] ? "checked" : ""}>${l}</label>`).join("")
-    + `<label><input type="checkbox" id="only-result" ${w.steps === "result" ? "checked" : ""}>Final step only</label></div>`;
-  const lines = w.steps === "result" ? r.trace.filter(t => t.id === id) : r.trace;
-  for (const t of lines) {
-    const so = D.objects[t.id], [u] = unitOf(t.id), eqs = [];
-    const lhs = () => eqs.length ? "" : `<math>${so.ml}</math>`;
-    if (sh.equation) eqs.push(`<div class="eq"><span class="lhs">${lhs()}</span><math displaystyle="true"><mo>=</mo>${so.mlF}</math></div>`);
-    if (sh.substituted && so.params.length) eqs.push(`<div class="eq sub" data-env="${esc(JSON.stringify(t.env))}"><span class="lhs">${lhs()}</span><math displaystyle="true"><mo>=</mo>${so.mlS}</math></div>`);
-    if (sh.result || !eqs.length) eqs.push(`<div class="eq res"><span class="lhs">${lhs()}</span><math><mo>=</mo>${mathNum(shown(t.id, t.v))}${mathUnit(u)}</math></div>`);
-    const ref = so.code === o.code ? so.ref.replace(o.code + " ", "") : so.ref;
-    const give = t.id !== id ? ` · <button class="give" type="button" data-give="${esc(t.id)}">enter directly</button>` : "";
-    h += `<div class="st"><div class="hd"><span>${esc(so.name)}</span><span class="c">${esc(ref)}${give}</span></div><div class="eqs">${eqs.join("")}</div></div>`;
-  }
-  const [ut] = unitOf(id);
-  if (o.check && w.check != null && typeof r.value === "number" && r.value !== 0) {
-    const res = o.sense === "resistance";
-    const eta = res ? w.check / r.value : r.value / w.check, ok = eta <= 1;
-    const [uc] = unitOf(o.check);
-    h += `<div class="verdict"><span><math>${o.ml}<mo>=</mo>${mathNum(shown(id, r.value))}${mathUnit(ut)}</math></span>
-      <span><math>${symML(o.check)}<mo>=</mo>${mathNum(shown(o.check, w.check))}${mathUnit(uc)}</math></span>
-      <span><math><mi>η</mi><mo>=</mo>${res ? symML(o.check) + "<mo>/</mo>" + o.ml : o.ml + "<mo>/</mo>" + symML(o.check)}</math> = <b>${eta.toFixed(2)}</b> ${ok ? "≤" : ">"} 1.00</span>
-      <span class="${ok ? "ok" : "bad"}">${ok ? "OK" : "NOT OK"}</span></div>`;
-  } else {
-    h += `<div class="verdict"><span><math>${o.ml}<mo>=</mo>${mathNum(shown(id, r.value))}${mathUnit(ut)}</math></span>`
-      + (o.check ? `<span class="small muted">Enter <math>${symML(o.check)}</math> to check against it.</span>` : "") + `</div>`;
-  }
-  const checks = checksFor(id, r.env, w.given);
-  if (checks.length) h += `<ul class="conds">` + checks.map(c => {
-    const m = {ok: ["met", "ok"], violated: ["NOT MET", "bad"], "not checked": ["to be checked", ""]}[c.status];
-    return `<li><span class="m ${m[1]}">${m[0]}</span><span>${esc(c.text)} <span class="muted">(${esc(c.clause)})</span></span></li>`;
-  }).join("") + `</ul>`;
-  const lim = [];
-  for (const s of r.steps) for (const b of D.objects[s].background || []) if (b.kind === "scope" || b.kind === "limitation") lim.push(`<li><b>${esc(D.objects[s].text)}</b>: ${esc(b.text)}</li>`);
-  if (lim.length) h += `<details><summary>Scope and limitations of the expressions used (${lim.length})</summary><ul>${lim.join("")}</ul></details>`;
-  h += `<p class="small muted" style="margin-top:10px">Substituted values are in N, mm and MPa. Version ${esc(o.version)}.</p>`;
-  $("#sheet").innerHTML = h;
-  // fill the substituted lines
-  for (const el of document.querySelectorAll("#sheet .eq.sub")) {
-    const env = JSON.parse(el.dataset.env);
-    for (const sl of el.querySelectorAll("mn.slot")) {
-      const v = env[sl.dataset.s];
-      const s = typeof v === "number" ? fmtShort(v) : String(v);
-      sl.textContent = s.startsWith("-") ? "(−" + s.slice(1) + ")" : s;
-    }
-  }
-}
-
-// cases: the same calculation for several sets of inputs; the governing one is highlighted
-function cases() { return store.get("cases:" + state.target, []); }
-function setCases(c) { store.set("cases:" + state.target, c); }
-function caseResult(cs) {
-  const id = state.target, o = D.objects[id];
-  const v = Object.assign(defaults(id, new Set(cs.given || [])), cs.values);
-  try {
-    const r = evaluate(id, v, new Set(cs.given || []));
-    let eta = null;
-    if (o.check && cs.check != null && typeof r.value === "number" && r.value) eta = o.sense === "resistance" ? cs.check / r.value : r.value / cs.check;
-    return {r, eta};
-  } catch (e) { return {error: e.message}; }
-}
-function renderCases() {
-  const id = state.target, o = D.objects[id], list = cases();
-  let h = `<h4>Cases</h4><p class="small muted">Add the current inputs as a case to compare several members. The governing case is highlighted; a case opens again when you click its name.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" type="button" id="add-case">Add current inputs as a case</button>
-    <button class="btn small" type="button" id="tpl">Build a report${list.length ? ` (${list.length} case${list.length > 1 ? "s" : ""})` : ""}</button>
-    ${list.length ? `<button class="btn small" type="button" id="clear-cases">Remove all cases</button>` : ""}</div>`;
-  if (list.length) {
-    const res = list.map(caseResult);
-    const keys = [];
-    for (const c of list) for (const k of Object.keys(c.values)) if (!keys.includes(k) && k !== o.check) keys.push(k);
-    let gov = -1, best = null;
-    res.forEach((x, i) => {
-      if (x.error) return;
-      const m = x.eta != null ? x.eta : (o.sense === "resistance" ? -x.r.value : x.r.value);
-      if (best == null || m > best) { best = m; gov = i; }
-    });
-    const head = keys.map(k => `<th><math>${symML(k)}</math><small>${esc(ulabel(unitOf(k)[0]))}</small></th>`).join("");
-    h += `<div class="scroll"><table class="cases"><tr><th>Case</th>${head}<th><math>${o.ml}</math><small>${esc(ulabel(unitOf(id)[0]))}</small></th>`
-      + (o.check ? `<th><math>${symML(o.check)}</math><small>${esc(ulabel(unitOf(o.check)[0]))}</small></th><th>η</th><th></th>` : "") + `<th></th></tr>`;
-    list.forEach((c, i) => {
-      const x = res[i];
-      const cells = keys.map(k => `<td>${k in c.values ? esc(fmt(shown(k, c.values[k]))) : "–"}</td>`).join("");
-      const val = x.error ? `<td class="bad">${esc(x.error)}</td>` : `<td>${esc(fmt(shown(id, x.r.value)))}</td>`;
-      const chk = o.check ? `<td>${c.check == null ? "–" : esc(fmt(shown(o.check, c.check)))}</td><td>${x.eta == null ? "–" : x.eta.toFixed(2)}</td><td>${x.eta == null ? "" : (x.eta <= 1 ? '<span class="ok">OK</span>' : '<span class="bad">NOT OK</span>')}</td>` : "";
-      h += `<tr class="${i === gov && list.length > 1 ? "gov" : ""}"><td><button class="give" type="button" data-load="${i}">${esc(c.name)}</button></td>${cells}${val}${chk}<td><button class="give" type="button" data-del="${i}" aria-label="remove ${esc(c.name)}">remove</button></td></tr>`;
-    });
-    h += `</table></div>`;
-  }
-  h += `<div id="tpl-box"></div>`;
-  $("#cases").innerHTML = h;
-}
-function yamlNum(id, v) {
-  const x = +(v / item(id).units[0][1]).toPrecision(8);
-  return Number.isInteger(x) || Math.abs(x) >= 1e-4 ? String(x) : x.toExponential(6);   // YAML reads 1.0e-07, not 1e-7
-}
-function templateYAML() {
-  const id = state.target, o = D.objects[id], w = W(id);
-  let list = cases();
-  if (!list.length) list = [currentCase("Case 1")];
-  const rb = reportOpts();
-  const q = v => JSON.stringify(String(v || ""));
-  const L = [`# Report template for ${o.text} (${o.ref}).`, `# Save as ${id}_report.yaml and run:`, `#   python -m ckb report --template ${id}_report.yaml --pdf --docx`,
-    `title: ${q(rb.title)}`, `project: ${q(rb.project)}`, `number: ${q(rb.number)}`, `made_by: ${q(rb.made_by)}`, `checked_by: ${q(rb.checked_by)}`,
-    `style:`, `  decimals: ${S.decimals}`, `  min_significant: ${S.minsig}`];
-  const units = Object.entries(S.units).filter(([k]) => item(k));
-  L.push(`  units: {${units.map(([k, u]) => `${k}: ${u}`).join(", ")}}`);
-  L.push(`cases:          # values in the usual units: ${[...new Set(list.flatMap(c => Object.keys(c.values)))].map(k => `${k} [${item(k) ? item(k).units[0][0] : ""}]`).join(", ")}`);
-  for (const c of list) {
-    const cells = [`case: ${JSON.stringify(c.name)}`].concat(Object.entries(c.values).map(([k, v]) => `${k}: ${yamlNum(k, v)}`));
-    if (o.check && c.check != null) cells.push(`${o.check}: ${yamlNum(o.check, c.check)}`);
-    L.push(`  - {${cells.join(", ")}}`);
-  }
-  const show = Object.keys(w.show).filter(k => w.show[k]);
-  const remarks = Object.entries(rb.remarks).filter(([, v]) => v.trim());
-  L.push(`blocks:`);
-  if (rb.heading) L.push(`  - heading: ${q(rb.heading)}`);
-  if (rb.text) L.push(`  - text: ${q(rb.text)}`);
-  if (rb.calc) L.push(`  - calc: ${id}`, `    case: governing          # governing | first | a case name`,
-    `    show: [${show.join(", ")}]`, `    steps: ${w.steps === "result" ? "result" : "all"}                # all | result | [k, rho_l, ...]`,
-    `    remarks: {${remarks.map(([k, v]) => `${k}: ${q(v)}`).join(", ")}}`, `    limitations: ${rb.limitations ? "true" : "false"}`);
-  if (rb.table && list.length > 1) L.push(`  - table: ${id}`, `    sort: ${o.check ? "utilisation desc" : ""}`);
-  if (rb.chart && rb.x) L.push(`  - chart: ${id}`, `    x: ${rb.x}`);
-  return L.join("\n") + "\n";
-}
-function reportOpts() {
-  const id = state.target, o = D.objects[id], w = W(id);
-  if (!w.report) {
-    const x = plan(id, w.given).inputs.find(p => D.quantities[p] && D.quantities[p].kind === "input") || "";
-    w.report = {title: o.name, project: "", number: "", made_by: "", checked_by: "", heading: o.name, text: "",
-                calc: true, table: true, chart: true, limitations: false, x, remarks: {}};
-  }
-  return w.report;
-}
-function renderBuilder() {
-  const id = state.target, w = W(id), rb = reportOpts(), {inputs} = plan(id, w.given);
-  const fld = (k, l) => `<label>${l}<input data-rb="${k}" value="${esc(rb[k])}"></label>`;
-  const chk = (k, l) => `<label class="ck"><input type="checkbox" data-rb="${k}" ${rb[k] ? "checked" : ""}>${l}</label>`;
-  const xs = inputs.filter(p => D.quantities[p] && D.quantities[p].kind === "input");
-  $("#tpl-box").innerHTML = `<h4>Report</h4><p class="small muted">Choose what the report shows; the template below follows. Save it as a file and run the command in its first lines (or use the Excel form: <code>python -m ckb report-template ${esc(id)} -o report.xlsx</code>). What is shown per step follows the Show options above the calculation; decimals and units follow Settings.</p>
-    <div class="rb">${fld("title", "Title")}${fld("project", "Project")}${fld("number", "Calc. no.")}${fld("made_by", "Made by")}${fld("checked_by", "Checked by")}${fld("heading", "Heading")}${fld("text", "Text under the heading")}</div>
-    <div class="rb">${chk("calc", "Calculation of the governing case")}${chk("limitations", "Scope and limitations")}${chk("table", "Summary table of all cases")}${chk("chart", "Chart against")}
-      <select data-rb="x">${xs.map(p => `<option value="${esc(p)}" ${p === rb.x ? "selected" : ""}>${esc(symText(p))}</option>`).join("")}</select></div>
-    <details><summary>Remarks beside the inputs</summary><div class="rb">${inputs.map(p => `<label>${esc(symText(p))}<input data-rem="${esc(p)}" value="${esc(rb.remarks[p] || "")}"></label>`).join("")}</div></details>
-    <textarea class="yaml" id="yaml" spellcheck="false" readonly>${esc(templateYAML())}</textarea><button class="btn small" type="button" id="copy">Copy</button> <span id="copied" class="small muted"></span>`;
-}
-function currentCase(name) {
-  const id = state.target, w = W(id), vals = valuesFor(id), {inputs} = plan(id, w.given), values = {};
-  for (const p of inputs) {
-    const q = D.quantities[p];
-    if (w.entered.has(p) || !(q && q.kind === "coefficient")) values[p] = vals[p];
-  }
-  return {name, values, given: [...w.given], check: w.check};
-}
-
-
-// ---------------------------------------------------------------- take it with you: downloads
-// Excel calculators and Mathcad worksheets are embedded in the page (built by `python -m ckb share`),
-// so nobody needs Python. The Excel file gets the inputs on the page; the calculation page is built here.
-let ZIP = null;
-function loadZip() {
-  if (window.JSZip) return Promise.resolve(window.JSZip);
-  if (ZIP) return ZIP;
-  ZIP = new Promise(res => {
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
-    const t = setTimeout(() => res(null), 8000);
-    s.onload = () => { clearTimeout(t); res(window.JSZip || null); };
-    s.onerror = () => { clearTimeout(t); res(null); };
-    document.head.appendChild(s);
-  });
-  return ZIP;
-}
+// ---------------------------------------------------------------- files: zip, downloads
+// Excel calculators and Mathcad worksheets are embedded in the page (python -m ckb share), so nobody
+// needs Python. Zip packages are read and written here with the browser's own (de)compression.
 const b64bytes = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function streamBytes(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+async function deflateRaw(b) { try { return typeof CompressionStream === "undefined" ? null : await streamBytes(b, new CompressionStream("deflate-raw")); } catch (e) { return null; } }
+async function inflateRaw(b) { if (typeof DecompressionStream === "undefined") throw new Error("this browser cannot unpack the file"); return streamBytes(b, new DecompressionStream("deflate-raw")); }
+async function zipRead(bytes) {
+  const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength), dec = new TextDecoder(), out = [];
+  let e = bytes.length - 22;
+  while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error("not a zip package");
+  let p = v.getUint32(e + 16, true);
+  for (let i = 0, n = v.getUint16(e + 10, true); i < n; i++) {
+    const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nlen = v.getUint16(p + 28, true);
+    const name = dec.decode(bytes.subarray(p + 46, p + 46 + nlen)), lh = v.getUint32(p + 42, true);
+    const start = lh + 30 + v.getUint16(lh + 26, true) + v.getUint16(lh + 28, true), raw = bytes.subarray(start, start + csize);
+    out.push([name, method === 8 ? await inflateRaw(raw) : raw.slice()]);
+    p += 46 + nlen + v.getUint16(p + 30, true) + v.getUint16(p + 32, true);
+  }
+  return out;
+}
+async function zipWrite(files) {
+  const enc = new TextEncoder(), parts = [], central = [], now = new Date();
+  const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  let off = 0;
+  for (let [name, data] of files) {
+    if (typeof data === "string") data = enc.encode(data);
+    const nm = enc.encode(name), crc = crc32(data);
+    let body = await deflateRaw(data), method = 8;
+    if (!body || body.length >= data.length) { body = data; method = 0; }
+    const h = new DataView(new ArrayBuffer(30));
+    [[0, 0x04034b50, 4], [4, 20, 2], [6, 0, 2], [8, method, 2], [10, time, 2], [12, date, 2], [14, crc, 4], [18, body.length, 4], [22, data.length, 4], [26, nm.length, 2], [28, 0, 2]]
+      .forEach(([o, x, s]) => s === 4 ? h.setUint32(o, x, true) : h.setUint16(o, x, true));
+    const c = new DataView(new ArrayBuffer(46));
+    [[0, 0x02014b50, 4], [4, 20, 2], [6, 20, 2], [8, 0, 2], [10, method, 2], [12, time, 2], [14, date, 2], [16, crc, 4], [20, body.length, 4], [24, data.length, 4], [28, nm.length, 2], [42, off, 4]]
+      .forEach(([o, x, s]) => s === 4 ? c.setUint32(o, x, true) : c.setUint16(o, x, true));
+    parts.push(new Uint8Array(h.buffer), nm, body);
+    central.push(new Uint8Array(c.buffer), nm);
+    off += 30 + nm.length + body.length;
+  }
+  const size = central.reduce((s, b) => s + b.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, size, true); end.setUint32(16, off, true);
+  return new Uint8Array(await new Blob(parts.concat(central, [new Uint8Array(end.buffer)])).arrayBuffer());
+}
 async function claudeCap(name) {
   try { return window.claude && window.claude.use ? await window.claude.use(name) : null; } catch (e) { return null; }
 }
 async function saveFile(filename, data, mime) {
   const dl = await claudeCap("downloads");             // inside claude.ai: the viewer confirms each file
   if (dl) {
-    try { await dl.save({filename, data: data instanceof Uint8Array ? new Blob([data], {type: mime}) : data}); return ""; }
-    catch (e) { return e && e.code === "declined" ? "" : `Not saved (${(e && e.code) || "error"}).`; }
+    try { await dl.save({filename, data: data instanceof Uint8Array ? new Blob([data], {type: mime}) : data}); return "saved"; }
+    catch (e) { return e && e.code === "declined" ? "declined" : `Not saved (${(e && e.code) || "error"}).`; }
   }
   const blob = data instanceof Blob ? data : new Blob([data], {type: mime});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = filename;
   document.body.appendChild(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  return "";
+  return "saved";
 }
-function renderDownloads() {
-  const id = state.target, f = D.files && D.files[id];
-  $("#dl").innerHTML = `<h4>Take it with you</h4><div class="dl">`
-    + (f ? `<button class="btn small" type="button" id="dl-xlsx">Excel calculator</button><button class="btn small" type="button" id="dl-mcdx">Mathcad Prime worksheet</button>` : "")
-    + `<button class="btn small" type="button" id="dl-html">Calculation page (print to PDF)</button></div>
-    <p class="small muted" id="dl-msg">${f ? "The Excel file carries the inputs above and live formulas; the Mathcad worksheet opens with example inputs. " : `This copy was built without the Excel and Mathcad files: they are in the workshop package (python -m ckb share), or run python -m ckb excel ${esc(id)}. `}The calculation page is this calculation as shown, ready to print. Every file carries version ${esc(D.objects[id].version)}.</p>`;
+async function busy(btn, job) {
+  if (btn) btn.disabled = true;
+  try { await job(); } catch (e) { toast("The file could not be prepared: " + (e && e.message || e)); }
+  finally { if (btn) btn.disabled = false; }
 }
 async function excelBytes(id) {
-  const f = D.files[id], w = W(id);
-  const bytes = b64bytes(f.xlsx);
-  if (w.given.size) return [bytes, "with example inputs: a value entered directly is not carried into Excel"];
-  const Z = await loadZip();
-  if (!Z) return [bytes, "with example inputs (the zip library did not load); change them in Excel"];
-  const zip = await Z.loadAsync(bytes), path = "xl/worksheets/sheet1.xml";
-  let xml = await zip.file(path).async("string");
-  const put = (cell, v) => {
-    const re = new RegExp('<c r="' + cell + '"([^>]*?)(?:/>|>[\\s\\S]*?</c>)');
-    xml = xml.replace(re, (m, a) => `<c r="${cell}"${a.replace(/\s*t="[^"]*"/, "")} t="n"><v>${v}</v></c>`);
-  };
-  const vals = valuesFor(id);
-  for (const [sid, cell] of Object.entries(f.cells)) {
-    if (!D.objects[sid] && typeof vals[sid] === "number") put(cell, +(vals[sid] / item(sid).units[0][1]).toPrecision(12));
-  }
-  const chk = D.objects[id].check;
-  if (f.check && chk && w.check != null) put(f.check, +(w.check / item(chk).units[0][1]).toPrecision(12));
-  zip.file(path, xml);
-  return [await zip.generateAsync({type: "uint8array", compression: "DEFLATE"}), "with the inputs on the page"];
+  const f = D.files[id], w = W(id), bytes = b64bytes(f.xlsx);
+  if (w.given.size) return [bytes, "with example inputs, because a value was entered directly"];
+  let files;
+  try { files = await zipRead(bytes); } catch (e) { return [bytes, "with example inputs"]; }
+  const vals = valuesFor(id), chk = D.objects[id].check, dec = new TextDecoder();
+  const put = (xml, cell, v) => xml.replace(new RegExp('<c r="' + cell + '"([^>]*?)(?:/>|>[\\s\\S]*?</c>)'),
+    (m, a) => `<c r="${cell}"${a.replace(/\s*t="[^"]*"/, "")} t="n"><v>${v}</v></c>`);
+  files = files.map(([name, data]) => {
+    if (name !== "xl/worksheets/sheet1.xml") return [name, data];
+    let xml = dec.decode(data);
+    for (const [sid, cell] of Object.entries(f.cells))
+      if (!D.objects[sid] && typeof vals[sid] === "number") xml = put(xml, cell, +(vals[sid] / item(sid).units[0][1]).toPrecision(12));
+    if (f.check && chk && w.check != null) xml = put(xml, f.check, +(w.check / item(chk).units[0][1]).toPrecision(12));
+    return [name, xml];
+  });
+  return [await zipWrite(files), "with the inputs on the page"];
 }
-async function mathcadFile(id) {
-  const bytes = b64bytes(D.files[id].mcdx);
-  if (!(await claudeCap("downloads"))) return [`${id}.mcdx`, bytes, "application/octet-stream"];
-  const Z = await loadZip();                 // claude.ai saves .zip, not .mcdx: the worksheet goes in a zip
-  if (!Z) return [null, null, null];
-  const zip = new Z();
-  zip.file(`${id}.mcdx`, bytes);
-  return [`${id}_mathcad.zip`, await zip.generateAsync({type: "uint8array", compression: "DEFLATE"}), "application/zip"];
+async function downloadExcel(btn) {
+  const id = state.target;
+  await busy(btn, async () => {
+    const [bytes, how] = await excelBytes(id);
+    const r = await saveFile(`${id}_calculator.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    toast(r === "saved" ? `Excel calculator saved ${how}.` : r === "declined" ? "" : r);
+  });
 }
-const REPORT_CSS = `body{margin:0;background:#e9edeb;color:#16211f;font:13px/1.45 "IBM Plex Sans","Segoe UI",Arial,sans-serif}
-.sheet{background:#fff;max-width:210mm;margin:16px auto;padding:14mm 15mm 16mm;box-shadow:0 1px 4px rgba(0,0,0,.18)}
-math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",math;font-size:1.06em}
-table.tb{width:100%;border-collapse:collapse;margin-bottom:6mm;font-size:11.5px} table.tb td{border:1px solid #16211f;padding:3px 6px;width:33%}
-table.tb small{display:block;color:#5b6966;font-size:9px;letter-spacing:.05em;text-transform:uppercase}
-h1{font-size:18px;margin:0 0 3mm} h3{font-size:13px;margin:4mm 0 1mm} .ref,.muted,.small{color:#5b6966;font-size:11.5px}
-.grp,h4{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#5b6966;margin:3mm 0 1mm;font-weight:600}
-table.in{width:100%;border-collapse:collapse} table.in td{padding:3px 6px 3px 0;border-bottom:1px solid #eef2f0;vertical-align:baseline}
-table.in td.c{color:#5b6966;font-size:11px;text-align:right} table.in td.r{font-style:italic;color:#5b6966;font-size:11px}
-.st{padding:4px 0 5px;border-bottom:1px solid #eef2f0;break-inside:avoid} .st .hd{display:flex;justify-content:space-between;gap:12px}
-.st .hd .c{color:#5b6966;font-size:11px} .st .eqs{padding-left:7mm} .eq{display:flex;gap:6px;align-items:baseline;margin:1px 0}
-.eq .lhs{min-width:3.6em;text-align:right} .eq.res,.eq.res math{font-weight:700}
-.verdict{margin:3mm 0 1mm;padding:6px 10px;border:1.5px solid #16211f;display:flex;gap:6px 18px;flex-wrap:wrap;align-items:baseline;break-inside:avoid}
-.ok{color:#0a7d34;font-weight:700} .bad{color:#c0302f;font-weight:700}
-ul.conds{list-style:none;padding:0;margin:2mm 0;font-size:11.5px} ul.conds li{display:flex;gap:8px} ul.conds .m{min-width:6.5em;font-weight:600}
-details summary{font-size:11.5px;color:#5b6966} details ul{font-size:11.5px;color:#5b6966}
-.foot{margin-top:8mm;color:#5b6966;font-size:9.5px;display:flex;justify-content:space-between;gap:12px}
-@media print{body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:none;padding:0}@page{size:A4;margin:15mm 15mm 17mm}}`;
-function reportHTML(id) {
-  const o = D.objects[id], w = W(id), rb = reportOpts(), vals = valuesFor(id), {inputs, steps} = plan(id, w.given);
-  const sheet = $("#sheet").cloneNode(true);
-  sheet.querySelectorAll(".opts, .give").forEach(e => e.remove());
-  sheet.querySelectorAll("details").forEach(d => d.setAttribute("open", ""));
-  const rows = inputs.map(p => {
-    const q = D.quantities[p], it = item(p);
-    return `<tr><td>${esc(it ? it.name : p)}</td><td><math>${symML(p)}<mo>=</mo>${mathNum(shown(p, vals[p]))}${mathUnit(unitOf(p)[0])}</math></td>`
-      + `<td class="c">${esc(q && q.ref || "")}</td><td class="r">${esc(rb.remarks[p] || "")}</td></tr>`;
-  }).join("");
-  const date = new Date().toISOString().slice(0, 10);
-  const versions = steps.map(s => `ckb ${s} ${D.objects[s].version}`).join(" · ");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
-    + `<title>${esc(rb.title || o.name)}</title><style>${REPORT_CSS}</style></head><body><div class="sheet">`
-    + `<table class="tb"><tr><td><small>Project</small>${esc(rb.project)}&nbsp;</td><td><small>Subject</small>${esc(rb.title || o.name)}</td><td><small>Calc. no.</small>${esc(rb.number)}&nbsp;</td></tr>`
-    + `<tr><td><small>Made by / date</small>${esc(rb.made_by)} ${date}</td><td><small>Checked by / date</small>${esc(rb.checked_by)}&nbsp;</td><td><small>Approved by / date</small>&nbsp;</td></tr></table>`
-    + `<h1>${esc(rb.title || o.name)}</h1><h3><math>${o.ml}</math> ${esc(o.name)}</h3><p class="ref">${esc(o.ref)}</p>`
-    + `<div class="grp">Input</div><table class="in">${rows}</table><div class="grp">Calculation</div>${sheet.innerHTML}`
-    + `<div class="foot"><span>${esc(o.code)}; recommended values unless stated. Substituted values are in N, mm and MPa. Print with your browser (Ctrl+P) to make a PDF.</span><span>${esc(versions)}</span></div>`
-    + `</div></body></html>`;
-}
-async function download(kind) {
-  const id = state.target, msg = $("#dl-msg");
-  msg.textContent = "Preparing…";
-  try {
-    let text = "";
-    if (kind === "xlsx") {
-      const [bytes, how] = await excelBytes(id);
-      text = (await saveFile(`${id}_calculator.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) || `Excel calculator ${how}.`;
-    } else if (kind === "mcdx") {
-      const [name, bytes, mime] = await mathcadFile(id);
-      text = name ? ((await saveFile(name, bytes, mime)) || "Mathcad Prime worksheet with example inputs" + (name.endsWith(".zip") ? ". It comes in a zip: right-click it, Extract All, then open the .mcdx in Mathcad (Mathcad cannot open the zip itself)." : ".")) : "The zip library did not load; try again later.";
+async function downloadMathcad(btn) {
+  const id = state.target;
+  await busy(btn, async () => {
+    const bytes = b64bytes(D.files[id].mcdx);
+    if (await claudeCap("downloads")) {        // claude.ai saves .zip but not .mcdx files
+      const r = await saveFile(`${id}_mathcad.zip`, await zipWrite([[`${id}.mcdx`, bytes]]), "application/zip");
+      toast(r === "saved" ? "Mathcad worksheet saved in a zip. Extract it (right-click, Extract All) and open the .mcdx file in Mathcad Prime." : r === "declined" ? "" : r);
     } else {
-      text = (await saveFile(`${id}_calculation.html`, reportHTML(id), "text/html")) || "Open the page in your browser and print it to PDF.";
+      const r = await saveFile(`${id}.mcdx`, bytes, "application/octet-stream");
+      toast(r === "saved" ? "Mathcad Prime worksheet saved, with example inputs." : r);
     }
-    msg.textContent = text;
-  } catch (e) { msg.textContent = "Could not prepare the file: " + (e && e.message || e); }
+  });
+}
+function yamlNum(id, v) {
+  const x = +(v / item(id).units[0][1]).toPrecision(8);
+  return Number.isInteger(x) || Math.abs(x) >= 1e-4 ? String(x) : x.toExponential(6);   // YAML reads 1.0e-07, not 1e-7
+}
+function templateYAML() {
+  const id = state.target, o = D.objects[id], rb = reportOpts();
+  let list = cases();
+  if (!list.length) list = [currentCase("Case 1")];
+  const q = v => JSON.stringify(String(v || ""));
+  const show = {full: "[equation, substituted, result]", equations: "[equation, result]", result: "[result]"}[rb.detail || "full"];
+  const L = [`# Report template for ${o.text} (${o.ref}).`, `# Run: python -m ckb report --template ${id}_report_template.txt --pdf --docx`,
+    `title: ${q(rb.title)}`, `project: ${q(rb.project)}`, `number: ${q(rb.number)}`, `made_by: ${q(rb.made_by)}`, `checked_by: ${q(rb.checked_by)}`,
+    `style:`, `  decimals: ${S.decimals}`, `  min_significant: ${S.minsig}`,
+    `  units: {${Object.entries(S.units).filter(([k]) => item(k)).map(([k, u]) => `${k}: ${u}`).join(", ")}}`, `cases:`];
+  for (const c of list) {
+    const cells = [`case: ${JSON.stringify(c.name)}`].concat(Object.entries(c.values).map(([k, v]) => `${k}: ${yamlNum(k, v)}`));
+    if (o.check && c.check != null) cells.push(`${o.check}: ${yamlNum(o.check, c.check)}`);
+    L.push(`  - {${cells.join(", ")}}`);
+  }
+  L.push(`blocks:`, `  - heading: ${q(rb.title)}`);
+  if (rb.calc) L.push(`  - calc: ${id}`, `    case: governing`, `    show: ${show}`);
+  if (rb.table && list.length > 1) L.push(`  - table: ${id}`, `    sort: ${o.check ? "utilisation desc" : ""}`);
+  if (rb.chart && rb.x) L.push(`  - chart: ${id}`, `    x: ${rb.x}`);
+  return L.join("\n") + "\n";
+}
+
+// ---------------------------------------------------------------- reports: one layout, printed as PDF (HTML) and Word
+function reportData() {
+  const id = state.target, o = D.objects[id], rb = reportOpts();
+  let list = cases();
+  const single = !list.length;
+  if (single) list = [currentCase("Calculation")];
+  const res = list.map(c => caseResult(id, c)), gov = governing(id, res), x = res[gov];
+  if (x.error) throw new Error(x.error);
+  const {inputs, steps} = plan(id, new Set(list[gov].given || []));
+  const detail = rb.detail || "full";
+  const rows = x.r.trace.map(t => stepParts(id, t, detail));
+  const checks = checksFor(id, x.r.env, new Set(list[gov].given || []));
+  const v = verdictOf(id, x.r.value, list[gov].check);
+  const date = new Date().toISOString().slice(0, 10);
+  const versions = steps.map(s => `ckb ${s} ${D.objects[s].version}`).join(" ");
+  return {id, o, rb, list, res, gov, x, inputs, rows, checks, v, date, versions, single, detail};
+}
+function sweep(R) {
+  const id = R.id, c = R.list[R.gov], given = new Set(c.given || []), xq = R.rb.x, q = D.quantities[xq];
+  if (!R.rb.chart || !xq || !q) return null;
+  const x0 = R.x.values[xq];
+  let lo = q.range ? q.range[0] : 0.5 * (x0 || 1), hi = q.range ? q.range[1] : 1.5 * (x0 || 1);
+  if (typeof x0 === "number") { lo = Math.min(lo, x0); hi = Math.max(hi, x0); }
+  const xs = [], ys = [];
+  for (let i = 0; i <= 60; i++) {
+    const xv = lo + (hi - lo) * i / 60, vals = Object.assign({}, R.x.values, {[xq]: xv});
+    try { const r = evaluate(id, vals, given); if (typeof r.value === "number") { xs.push(shown(xq, xv)); ys.push(shown(id, r.value)); } } catch (e) {}
+  }
+  if (!xs.length) return null;
+  const ref = R.o.check && c.check != null ? {label: symText(R.o.check), y: shown(R.o.check, c.check)} : null;
+  return {xs, ys, ref, marker: [shown(xq, x0), shown(id, R.x.r.value)], xLabel: `${item(xq).name} [${ulabel(unitOf(xq)[0])}]`, yLabel: `${R.o.text} [${ulabel(unitOf(id)[0])}]`};
+}
+function staticChart(ch) {      // plain SVG with fixed colours, for the printed report and Word
+  const W = 640, H = 300, ml = 62, mr = 18, mt = 16, mb = 46, pw = W - ml - mr, ph = H - mt - mb;
+  const all = ch.ys.concat(ch.ref ? [ch.ref.y] : []);
+  let y0 = Math.min(0, ...all), y1 = Math.max(...all) * 1.08 || 1;
+  const yt = nice(y0, y1, 5); y0 = Math.min(y0, yt[0]); y1 = Math.max(y1, yt[yt.length - 1]);
+  const x0 = ch.xs[0], x1 = ch.xs[ch.xs.length - 1], xt = nice(x0, x1, 6);
+  const sx = v => ml + (v - x0) / (x1 - x0 || 1) * pw, sy = v => mt + ph - (v - y0) / (y1 - y0 || 1) * ph;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Arial, Helvetica, sans-serif">`;
+  s += `<rect width="${W}" height="${H}" fill="#ffffff"/>`;
+  for (const t of yt) s += `<line x1="${ml}" x2="${ml + pw}" y1="${sy(t)}" y2="${sy(t)}" stroke="#e3e8eb"/><text x="${ml - 7}" y="${sy(t) + 4}" text-anchor="end" font-size="11" fill="#5f6d76">${tick(t)}</text>`;
+  for (const t of xt) if (t >= x0 - 1e-9 && t <= x1 + 1e-9) s += `<text x="${sx(t)}" y="${mt + ph + 17}" text-anchor="middle" font-size="11" fill="#5f6d76">${tick(t)}</text>`;
+  s += `<line x1="${ml}" x2="${ml + pw}" y1="${mt + ph}" y2="${mt + ph}" stroke="#5f6d76"/>`;
+  s += `<text x="${ml + pw / 2}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#14212a">${esc(ch.xLabel)}</text>`;
+  s += `<text x="12" y="${mt + ph / 2}" text-anchor="middle" font-size="12" fill="#14212a" transform="rotate(-90 12 ${mt + ph / 2})">${esc(ch.yLabel)}</text>`;
+  if (ch.ref) s += `<line x1="${ml}" x2="${ml + pw}" y1="${sy(ch.ref.y)}" y2="${sy(ch.ref.y)}" stroke="#14212a" stroke-dasharray="5 4"/><text x="${ml + pw - 2}" y="${sy(ch.ref.y) - 6}" text-anchor="end" font-size="11" fill="#14212a">${esc(ch.ref.label)} = ${esc(fmt(ch.ref.y))}</text>`;
+  s += `<path d="${ch.xs.map((x, i) => (i ? "L" : "M") + sx(x).toFixed(1) + "," + sy(ch.ys[i]).toFixed(1)).join("")}" fill="none" stroke="#2a78d6" stroke-width="2.2" stroke-linejoin="round"/>`;
+  if (ch.marker && isFinite(ch.marker[1])) s += `<circle cx="${sx(ch.marker[0])}" cy="${sy(ch.marker[1])}" r="5" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>`;
+  return s + `</svg>`;
+}
+const REPORT_CSS = `@page{size:A4;margin:16mm 15mm 18mm}
+body{margin:0;background:#e9eef0;color:#14212a;font:10.5pt/1.45 "IBM Plex Sans","Segoe UI",Arial,sans-serif}
+.sheet{background:#fff;max-width:210mm;margin:14px auto;padding:16mm 15mm;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+.bar{max-width:210mm;margin:14px auto 0;display:flex;justify-content:flex-end}
+.bar button{font:inherit;background:#0f6b80;color:#fff;border:0;border-radius:8px;padding:8px 16px;cursor:pointer}
+math{font-family:"Cambria Math","STIX Two Math","Latin Modern Math",math;font-size:1.08em}
+table.tb{width:100%;border-collapse:collapse;margin-bottom:7mm;font-size:9.5pt} table.tb td{border:1px solid #14212a;padding:3px 7px;width:33%;vertical-align:top}
+table.tb small{display:block;color:#5f6d76;font-size:7pt;letter-spacing:.06em;text-transform:uppercase}
+h1{font-size:16pt;margin:0 0 1mm;color:#0f4757} h2{font-size:12.5pt;margin:6mm 0 1mm} h3{font-size:11pt;margin:6mm 0 2mm;color:#0f6b80;border-bottom:1px solid #d2dbe0;padding-bottom:1mm}
+.ref{color:#5f6d76;margin:0 0 2mm} .gov{margin:1mm 0 0}
+.inputs{display:grid;grid-template-columns:1fr 1fr;column-gap:10mm}
+.inputs div{display:flex;justify-content:space-between;gap:4mm;padding:1.2mm 0;border-bottom:1px solid #edf1f3;break-inside:avoid}
+.inputs span{color:#3c4b56}
+.st{display:grid;grid-template-columns:30% 1fr;gap:2mm 6mm;padding:2mm 0;border-bottom:1px solid #edf1f3;break-inside:avoid;align-items:center}
+.st .cl{display:block;color:#5f6d76;font-size:8.5pt}
+.chain{display:flex;flex-wrap:wrap;align-items:center;column-gap:.5em;row-gap:2mm}
+.chain .seg{white-space:nowrap} .chain .res math{font-weight:700}
+.verdict{margin:5mm 0 2mm;padding:3mm 4mm;border:1.5px solid #14212a;border-radius:2mm;display:flex;flex-wrap:wrap;gap:2mm 8mm;align-items:center;break-inside:avoid}
+.verdict.pass{border-color:#1e8e3e;background:#f1f9f3} .verdict.fail{border-color:#c5221f;background:#fdf1f0}
+.badge{font-weight:700} .verdict.pass .badge{color:#1e7a35} .verdict.fail .badge{color:#b3201d}
+ul.conds{list-style:none;padding:0;margin:2mm 0} ul.conds li{display:flex;gap:3mm;padding:.5mm 0} ul.conds .m{min-width:5.5em;font-weight:600}
+table.sum{width:100%;border-collapse:collapse;font-size:9.5pt} table.sum th,table.sum td{border-bottom:1px solid #d2dbe0;padding:1.2mm 2mm;text-align:right;white-space:nowrap}
+table.sum th:first-child,table.sum td:first-child{text-align:left} table.sum th{border-bottom:1.5px solid #14212a;font-weight:600} table.sum small{display:block;font-weight:400;color:#5f6d76}
+table.sum tr.g td{background:#e0eff3;font-weight:600}
+.chart svg{width:100%;height:auto;display:block}
+@media print{body{background:#fff}.sheet{box-shadow:none;margin:0;max-width:none;padding:0}.bar{display:none}}`;
+function reportHTML(R) {
+  const o = R.o, rb = R.rb, title = rb.title || o.name;
+  const inp = R.inputs.map(p => `<div><span>${esc(item(p) ? item(p).name : p)}</span><math>${symML(p)}<mo>=</mo>${mathNum(shown(p, R.x.values[p]))}${mathUnit(unitOf(p)[0])}</math></div>`).join("");
+  const conds = R.checks.length ? `<ul class="conds">${R.checks.map(c => `<li><span class="m">${COND[c.status][2].split(":")[0]}</span><span>${esc(c.text)} (${esc(c.clause)})</span></li>`).join("")}</ul>` : "";
+  let body = `<table class="tb"><tr><td><small>Project</small>${esc(rb.project)}&nbsp;</td><td><small>Subject</small>${esc(title)}</td><td><small>Calculation no.</small>${esc(rb.number)}&nbsp;</td></tr>`
+    + `<tr><td><small>Made by / date</small>${esc(rb.made_by)} ${R.date}</td><td><small>Checked by / date</small>${esc(rb.checked_by)}&nbsp;</td><td><small>Approved by / date</small>&nbsp;</td></tr></table>`
+    + `<h1>${esc(title)}</h1><p class="ref">${esc(o.ref)}</p>`;
+  if (rb.calc) {
+    body += (title !== o.name ? `<h2><math>${o.ml}</math> ${esc(o.name)}</h2>` : "") + (R.list.length > 1 ? `<p class="gov">Governing case: ${esc(R.list[R.gov].name)}</p>` : "")
+      + `<h3>Input</h3><div class="inputs">${inp}</div><h3>Calculation</h3>`
+      + R.rows.map(p => `<div class="st"><div>${esc(p.so.name)}<span class="cl">${esc(p.ref)}</span></div>${chainHTML(p)}</div>`).join("")
+      + verdictHTML(R.id, R.x.r.value, R.list[R.gov].check) + conds;
+  }
+  if (rb.table && R.list.length > 1) {
+    const keys = caseKeys(R.id, R.list), th = k => `<th><math>${symML(k)}</math><small>${esc(ulabel(unitOf(k)[0])) || "&nbsp;"}</small></th>`;
+    const order = R.list.map((c, i) => i).sort((a, b) => (R.res[b].eta || 0) - (R.res[a].eta || 0));
+    body += `<h3>Summary of all cases</h3><table class="sum"><tr><th>Case</th>${keys.map(th).join("")}${th(R.id)}${o.check ? th(o.check) + "<th><math><mi>η</mi></math><small>&nbsp;</small></th><th></th>" : ""}</tr>`
+      + order.map(i => {
+        const c = R.list[i], x = R.res[i];
+        return `<tr class="${i === R.gov ? "g" : ""}"><td>${esc(c.name)}</td>${keys.map(k => `<td>${k in c.values ? esc(fmt(shown(k, c.values[k]))) : "–"}</td>`).join("")}`
+          + `<td>${x.error ? "–" : esc(fmt(shown(R.id, x.r.value)))}</td>`
+          + (o.check ? `<td>${c.check == null ? "–" : esc(fmt(shown(o.check, c.check)))}</td><td>${x.eta == null ? "–" : x.eta.toFixed(2)}</td><td>${x.eta == null ? "" : x.eta <= 1 ? "OK" : "Not OK"}</td>` : "") + `</tr>`;
+      }).join("") + `</table>`;
+  }
+  const ch = sweep(R);
+  if (ch) body += `<h3>${esc(o.name)} against ${esc(item(rb.x).name.toLowerCase())}</h3><div class="chart">${staticChart(ch)}</div>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`
+    + `<meta name="generator" content="${esc(R.versions)}"><title>${esc(title)}</title><style>${REPORT_CSS}</style></head><body>`
+    + `<div class="bar"><button type="button" onclick="window.print()">Print or save as PDF</button></div><div class="sheet">${body}</div></body></html>`;
+}
+async function reportPDF(btn) {
+  await busy(btn, async () => {
+    const R = reportData(), html = reportHTML(R), name = `${R.id}_report.html`;
+    if (!(await claudeCap("downloads"))) {
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.open(); win.document.write(html); win.document.close();
+        setTimeout(() => { try { win.focus(); win.print(); } catch (e) {} }, 900);
+        toast("The report opened in a new tab. Choose “Save as PDF” as the printer.");
+        return;
+      }
+    }
+    const r = await saveFile(name, html, "text/html");
+    toast(r === "saved" ? "Report saved. Open it in your browser and press “Print or save as PDF”." : r === "declined" ? "" : r);
+  });
+}
+
+// Word: the same layout with native, editable equations (Office Math) converted from the MathML
+const XE = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+function omml(ml) {
+  const doc = new DOMParser().parseFromString(`<math xmlns="http://www.w3.org/1998/Math/MathML">${ml}</math>`, "application/xml");
+  const run = (text, upright) => text ? `<m:r>${upright ? '<m:rPr><m:sty m:val="p"/></m:rPr>' : ""}<w:rPr><w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/></w:rPr><m:t xml:space="preserve">${XE(text)}</m:t></m:r>` : "";
+  const kids = n => [...n.children].map(go).join("");
+  function go(n) {
+    const tag = n.localName, kid = [...n.children];
+    if (tag === "mi") return run(n.textContent, n.getAttribute("mathvariant") === "normal" || n.textContent.length > 1);
+    if (tag === "mn" || tag === "mtext") return run(n.textContent.replace(/ /g, " "), true);
+    if (tag === "mo") return run(n.textContent.replace(/⁡/g, ""), true);
+    if (tag === "msub") return `<m:sSub><m:e>${go(kid[0])}</m:e><m:sub>${go(kid[1])}</m:sub></m:sSub>`;
+    if (tag === "msup") return `<m:sSup><m:e>${go(kid[0])}</m:e><m:sup>${go(kid[1])}</m:sup></m:sSup>`;
+    if (tag === "mfrac") return `<m:f><m:num>${go(kid[0])}</m:num><m:den>${go(kid[1])}</m:den></m:f>`;
+    if (tag === "msqrt") return `<m:rad><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e>${kids(n)}</m:e></m:rad>`;
+    if (tag === "mtable") return `<m:eqArr>${kid.map(r => `<m:e>${[...r.children].map(kids).join(run("  ", true))}</m:e>`).join("")}</m:eqArr>`;
+    return kids(n);
+  }
+  return kids(doc.documentElement);
+}
+const wRun = (t, o = {}) => `<w:r><w:rPr>${o.b ? "<w:b/>" : ""}${o.color ? `<w:color w:val="${o.color}"/>` : ""}${o.sz ? `<w:sz w:val="${o.sz}"/>` : ""}</w:rPr><w:t xml:space="preserve">${XE(t)}</w:t></w:r>`;
+const wP = (inner, style, o = {}) => `<w:p><w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ""}${o.keep ? "<w:keepNext/>" : ""}${o.shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.shade}"/>` : ""}${o.after != null ? `<w:spacing w:after="${o.after}"/>` : ""}</w:pPr>${inner}</w:p>`;
+const wMath = ml => `<m:oMath>${omml(ml)}</m:oMath>`;
+function wTable(rows, o = {}) {
+  const border = o.grid ? `<w:tblBorders>${["top", "left", "bottom", "right", "insideH", "insideV"].map(b => `<w:${b} w:val="single" w:sz="6" w:color="14212A"/>`).join("")}</w:tblBorders>`
+    : `<w:tblBorders><w:top w:val="single" w:sz="8" w:color="14212A"/><w:bottom w:val="single" w:sz="6" w:color="D2DBE0"/><w:insideH w:val="single" w:sz="4" w:color="D2DBE0"/></w:tblBorders>`;
+  const n = rows[0].cells.length, cw = Math.floor(9864 / n);
+  return `<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/>${border}<w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>`
+    + `<w:tblGrid>${`<w:gridCol w:w="${cw}"/>`.repeat(n)}</w:tblGrid>`
+    + rows.map((r, i) => `<w:tr>${r.cells.map((c, j) => `<w:tc><w:tcPr>${r.fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${r.fill}"/>` : ""}</w:tcPr><w:p><w:pPr><w:spacing w:before="20" w:after="20"/>${j && o.right ? '<w:jc w:val="right"/>' : ""}</w:pPr>${c}</w:p></w:tc>`).join("")}</w:tr>`).join("")
+    + `</w:tbl>`;
+}
+async function svgPng(svg, w, h) {
+  const img = new Image();
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  await img.decode();
+  const c = document.createElement("canvas"); c.width = w * 2; c.height = h * 2;
+  const g = c.getContext("2d"); g.scale(2, 2); g.drawImage(img, 0, 0, w, h);
+  const blob = await new Promise(res => c.toBlob(res, "image/png"));
+  return new Uint8Array(await blob.arrayBuffer());
+}
+async function reportDocx(R) {
+  const o = R.o, rb = R.rb, title = rb.title || o.name, B = [];
+  const cell = (k, v) => wRun(k.toUpperCase(), {sz: 14, color: "5F6D76"}) + "<w:br/>" + wRun(v || " ");
+  B.push(wTable([{cells: [cell("Project", rb.project), cell("Subject", title), cell("Calculation no.", rb.number)]},
+    {cells: [cell("Made by / date", `${rb.made_by} ${R.date}`), cell("Checked by / date", rb.checked_by), cell("Approved by / date", "")]}], {grid: true}));
+  B.push(wP(wRun(title), "Title"), wP(wRun(o.ref, {color: "5F6D76"}), null, {after: 160}));
+  if (rb.calc) {
+    if (title !== o.name) B.push(wP(wMath(o.ml) + wRun("  " + o.name), "Heading1"));
+    if (R.list.length > 1) B.push(wP(wRun("Governing case: " + R.list[R.gov].name)));
+    B.push(wP(wRun("Input"), "Heading2"));
+    B.push(wTable(R.inputs.map(p => ({cells: [wRun(item(p) ? item(p).name : p), wMath(`${symML(p)}<mo>=</mo>${mathNum(shown(p, R.x.values[p]))}${mathUnit(unitOf(p)[0])}`)]})), {right: true}));
+    B.push(wP(wRun("Calculation"), "Heading2"));
+    for (const p of R.rows) {
+      B.push(wP(wRun(p.so.name) + wRun("   " + p.ref, {color: "5F6D76", sz: 17}), null, {keep: true, after: 20}));
+      B.push(wP(wMath(`${p.so.ml}${p.segs.map(s => "<mo>=</mo>" + s).join("")}<mo>=</mo>${p.res}`), null, {after: 120}));
+    }
+    const v = R.v;
+    let line = `${o.ml}<mo>=</mo>${mathNum(shown(R.id, R.x.r.value))}${mathUnit(unitOf(R.id)[0])}`;
+    if (v) line += `<mtext>    </mtext><mi>η</mi><mo>=</mo>${o.sense === "resistance" ? symML(o.check) + "<mo>/</mo>" + o.ml : o.ml + "<mo>/</mo>" + symML(o.check)}<mo>=</mo><mn>${v.eta.toFixed(2)}</mn>`;
+    B.push(wP(wMath(line) + (v ? wRun(v.ok ? "   OK" : "   Not OK", {b: true, color: v.ok ? "1E7A35" : "B3201D"}) : ""), null, {shade: v ? (v.ok ? "F1F9F3" : "FDF1F0") : "F5F8F9"}));
+    for (const c of R.checks) B.push(wP(wRun(COND[c.status][2].split(":")[0] + ": ", {b: true}) + wRun(`${c.text} (${c.clause})`)));
+  }
+  if (rb.table && R.list.length > 1) {
+    const keys = caseKeys(R.id, R.list), head = k => wMath(symML(k)) + (ulabel(unitOf(k)[0]) ? wRun(` [${unitOf(k)[0]}]`, {sz: 16, color: "5F6D76"}) : "");
+    const order = R.list.map((c, i) => i).sort((a, b) => (R.res[b].eta || 0) - (R.res[a].eta || 0));
+    B.push(wP(wRun("Summary of all cases"), "Heading2"));
+    B.push(wTable([{cells: [wRun("Case", {b: true})].concat(keys.map(head), [head(R.id)], o.check ? [head(o.check), wMath("<mi>η</mi>"), wRun("")] : [])}].concat(order.map(i => {
+      const c = R.list[i], x = R.res[i];
+      return {fill: i === R.gov ? "E0EFF3" : null, cells: [wRun(c.name)].concat(keys.map(k => wRun(k in c.values ? fmt(shown(k, c.values[k])) : "–")),
+        [wRun(x.error ? "–" : fmt(shown(R.id, x.r.value)))], o.check ? [wRun(c.check == null ? "–" : fmt(shown(o.check, c.check))), wRun(x.eta == null ? "–" : x.eta.toFixed(2)), wRun(x.eta == null ? "" : x.eta <= 1 ? "OK" : "Not OK")] : [])};
+    })), {right: true}));
+  }
+  const files = [], rels = [`<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`,
+    `<Relationship Id="rIdFooter" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>`];
+  const ch = sweep(R);
+  if (ch) {
+    try {
+      const png = await svgPng(staticChart(ch), 640, 300), cx = 5760000, cy = Math.round(cx * 300 / 640);
+      files.push(["word/media/chart.png", png]);
+      rels.push(`<Relationship Id="rIdChart" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/chart.png"/>`);
+      B.push(wP(wRun(`${o.name} against ${item(rb.x).name.toLowerCase()}`), "Heading2"));
+      B.push(`<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Chart"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="chart.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdChart"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`);
+    } catch (e) { /* the chart is left out when the browser cannot draw it */ }
+  }
+  const NS = `xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"`;
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${B.join("")}<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1021" w:right="1021" w:bottom="1134" w:left="1021" w:header="567" w:footer="567" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const style = (id, name, rpr, ppr = "") => `<w:style w:type="paragraph" w:styleId="${id}"><w:name w:val="${name}"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/>${ppr}</w:pPr><w:rPr>${rpr}</w:rPr></w:style>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="60" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>`
+    + `<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>`
+    + style("Title", "Title", `<w:b/><w:color w:val="0F4757"/><w:sz w:val="34"/>`, `<w:spacing w:before="240" w:after="40"/>`)
+    + style("Heading1", "heading 1", `<w:b/><w:sz w:val="26"/>`, `<w:spacing w:before="240" w:after="80"/><w:outlineLvl w:val="0"/>`)
+    + style("Heading2", "heading 2", `<w:b/><w:color w:val="0F6B80"/><w:sz w:val="22"/>`, `<w:pBdr><w:bottom w:val="single" w:sz="4" w:space="1" w:color="D2DBE0"/></w:pBdr><w:spacing w:before="240" w:after="80"/><w:outlineLvl w:val="1"/>`)
+    + `</w:styles>`;
+  const footer = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr>${wRun("Page ", {sz: 16, color: "5F6D76"})}<w:fldSimple w:instr="PAGE">${wRun("1", {sz: 16, color: "5F6D76"})}</w:fldSimple>${wRun(" of ", {sz: 16, color: "5F6D76"})}<w:fldSimple w:instr="NUMPAGES">${wRun("1", {sz: 16, color: "5F6D76"})}</w:fldSimple></w:p></w:ftr>`;
+  const core = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${XE(title)}</dc:title><dc:description>${XE(R.versions)}</dc:description></cp:coreProperties>`;
+  return zipWrite([
+    ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`],
+    ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`],
+    ["word/_rels/document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`],
+    ["word/document.xml", doc], ["word/styles.xml", styles], ["word/footer1.xml", footer], ["docProps/core.xml", core]].concat(files));
+}
+async function reportWord(btn) {
+  await busy(btn, async () => {
+    const R = reportData();
+    const r = await saveFile(`${R.id}_report.docx`, await reportDocx(R), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    toast(r === "saved" ? "Word report saved. The equations can be edited in Word." : r === "declined" ? "" : r);
+  });
+}
+async function batchTemplate(btn) {
+  await busy(btn, async () => {
+    const name = `${state.target}_report_template.txt`;   // YAML; claude.ai saves .txt but not .yaml files
+    const r = await saveFile(name, templateYAML(), "text/plain");
+    toast(r === "saved" ? `Batch template saved. Run it with: python -m ckb report --template ${name} --pdf --docx` : r === "declined" ? "" : r);
+  });
 }
 
 // ---------------------------------------------------------------- ask Claude (claude.ai only)
@@ -946,7 +1219,7 @@ async function ask() {
 const KINDS = [["scope", "Scope"], ["limitation", "Limitations"], ["pitfall", "Pitfalls"], ["guidance", "Guidance"], ["practice", "From practice"], ["history", "History"]];
 function noteHTML(b) {
   let refs = (b.refs || []).map(r => `<span title="${esc(r.text || D.references[r.id] || "")}">${esc(r.id)}${r.at ? " " + esc(r.at) : ""}</span>`).join("; ");
-  if (b.kind === "practice") refs = b.from === "engineer" ? "an engineer's answer to a question from the distillation" : "how the source calculations use it";
+  if (b.kind === "practice") refs = b.from === "engineer" ? "Answer from an engineer" : "From the source calculations";
   return `<div class="note ${esc(b.kind)}"><div>${esc(b.text)}</div>${refs ? `<div class="src">${refs}</div>` : ""}</div>`;
 }
 function renderBackground() {
@@ -967,7 +1240,7 @@ function renderBackground() {
   for (const r of shared) h += `<li>Also ${esc(r.code)} cl. ${esc(r.clause || "")}${r.symbol ? ` (written ${esc(r.symbol)})` : ""}: ${esc(r.how || "")}. Stored once; that code's values are applied when it is used there.</li>`;
   if (users.length) h += `<li>Used by ${users.map(u => `<button class="give" type="button" data-open="${esc(u.id)}">${esc(u.text)}</button>`).join(", ")}.</li>`;
   h += `</ul>`;
-  h += `<h4>Dependency map</h4><p class="small muted">What ${esc(o.text)} is calculated from. Click an object to open it.</p><div class="depmap" id="depmap"></div>`;
+  h += `<h4>Dependency map</h4><div class="depmap" id="depmap"></div>`;
   if (!h.includes("note")) h = `<p class="small muted">No design background recorded for this object yet.</p>` + h;
   $("#panel").innerHTML = h;
   drawDepMap();
@@ -1017,12 +1290,12 @@ function renderChart() {
   }
   const ux = unitOf(c.x)[0];
   $("#panel").innerHTML = `<div class="ctrls">
-    <label>Vary<select id="cx">${nums.map(p => `<option value="${esc(p)}" ${p === c.x ? "selected" : ""}>${esc(symText(p))} – ${esc(item(p).name)}</option>`).join("")}</select></label>
-    <label>from [${esc(ulabel(ux))}]<input id="clo" inputmode="decimal" value="${esc(fmtShort(shown(c.x, lo)))}"></label>
-    <label>to [${esc(ulabel(ux))}]<input id="chi" inputmode="decimal" value="${esc(fmtShort(shown(c.x, hi)))}"></label>
-    <label>Also show<select id="cy2"><option value="">nothing else</option>${second.map(s => `<option value="${esc(s)}" ${s === c.y2 ? "selected" : ""}>${esc(D.objects[s].text)} – ${esc(D.objects[s].name)}</option>`).join("")}</select></label>
+    <label>Vary <select id="cx">${nums.map(p => `<option value="${esc(p)}" ${p === c.x ? "selected" : ""}>${esc(symText(p))} – ${esc(item(p).name)}</option>`).join("")}</select></label>
+    <label>From [${esc(ulabel(ux))}]<input id="clo" inputmode="decimal" value="${esc(fmtShort(shown(c.x, lo)))}"></label>
+    <label>To [${esc(ulabel(ux))}]<input id="chi" inputmode="decimal" value="${esc(fmtShort(shown(c.x, hi)))}"></label>
+    <label>Also show<select id="cy2"><option value="">Nothing else</option>${second.map(s => `<option value="${esc(s)}" ${s === c.y2 ? "selected" : ""}>${esc(D.objects[s].text)} – ${esc(D.objects[s].name)}</option>`).join("")}</select></label>
   </div>
-  <p class="small muted">${esc(o.text)} as ${esc(item(c.x).name.toLowerCase())} varies; every other input as on the Calculate tab. The dot is the current calculation.</p>
+  <span class="info" tabindex="0" data-tip="Every other input is as on the Calculate tab. The dot marks the current calculation.">i</span>
   <div id="chart"></div><details><summary>Values as a table</summary><div id="chart-table" class="scroll"></div></details>`;
   drawSweep();
 }
@@ -1109,38 +1382,23 @@ function showTip(ev, tip) {
   tip.style.left = x + "px"; tip.style.top = y + "px";
 }
 
-// ---------------------------------------------------------------- Code
-function renderCode() {
-  const o = D.objects[state.target];
-  $("#panel").innerHTML = `<h4>Python code block</h4><p class="small muted">Design logic only: the expression, its clause and units, and one line that identifies the version.</p>
-    <pre class="code">${esc(o.python)}</pre>
-    <h4>The function this page runs</h4><pre class="code">${esc(F[o.id].toString())}</pre>
-    <h4>LaTeX</h4><p class="small muted">For a LaTeX document, or Word's equation editor in LaTeX mode.</p><pre class="code">${esc(o.tex)}</pre>
-    <h4>The same logic as a file</h4><p class="small">Every output is printed from the same formula tree and carries the version <code>${esc(o.version)}</code>:</p>
-    <pre class="code">python -m ckb excel ${esc(o.id)}            # Excel calculator, named ranges, live formulas
-python -m ckb mathcad ${esc(o.id)}          # Mathcad Prime worksheet
-python -m ckb report ${esc(o.id)} --pdf     # calculation report (or --template for many cases)
-python -m ckb verify &lt;file&gt;              # is this file still the same logic?</pre>`;
-}
-
 // ---------------------------------------------------------------- Status (evidence, out of the way)
 function renderStatus() {
   const o = D.objects[state.target], c = conf(o), ev = o.ev, b = o.bench, ref = o.reference || {};
   let h = `<h3>${dot(o)} ${esc(c.label)}</h3><ul class="small">${(o.conf.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
     <div class="tiles">
-      <div class="tile"><div class="v">${ev.sources}</div><div class="l">source files that apply it</div></div>
-      <div class="tile"><div class="v">${ev.formulas}</div><div class="l">formulas found in them</div></div>
-      <div class="tile"><div class="v">${b.total ? b.agree + " / " + b.total : "–"}</div><div class="l">source values reproduced</div></div>
-      <div class="tile"><div class="v">${esc(ref.status || "–")}</div><div class="l">independent reference</div></div>
+      <div class="tile"><div class="v">${ev.sources}</div><div class="l">Source files that apply it</div></div>
+      <div class="tile"><div class="v">${ev.formulas}</div><div class="l">Formulas found in them</div></div>
+      <div class="tile"><div class="v">${b.total ? b.agree + " / " + b.total : "–"}</div><div class="l">Source values reproduced</div></div>
+      <div class="tile"><div class="v">${esc(ref.status || "–")}</div><div class="l">Independent reference</div></div>
     </div>`;
   if (ev.variants.length) {
     h += `<h4>How the sources apply it</h4><div class="scroll"><table class="cases"><tr><th>Relation to the code</th><th>Formulas</th><th style="text-align:left">As written</th><th style="text-align:left">Differences</th></tr>`
       + ev.variants.map(v => `<tr><td>${esc(v.relation || "")}</td><td>${v.instances}</td><td style="text-align:left;white-space:normal">${esc(v.text)}</td><td style="text-align:left;white-space:normal">${esc((v.differences || []).concat(v.reason ? [v.reason] : []).join("; "))}</td></tr>`).join("") + `</table></div>`;
   }
   if (ev.practice.length) h += `<h4>Practice seen in the sources</h4><ul class="small">${ev.practice.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
-  if (b.pts.length) h += `<h4>Benchmarks</h4><p class="small muted">Each dot is a value a source shows, against what the code expression gives for the same inputs. On the line: reproduced.</p><div id="bench"></div>`;
+  if (b.pts.length) h += `<h4>Benchmarks</h4><p class="small">Each dot is a value shown in a source, against the code expression for the same inputs.</p><div id="bench"></div>`;
   if (ref.library) h += `<h4>Independent reference</h4><p class="small">${esc(ref.status)} with ${esc(ref.library)} <code>${esc(ref.function || "")}</code> over ${ref.agreeing_samples || 0} of ${ref.samples || 0} samples.${ref.note ? " " + esc(ref.note) : ""}</p>`;
-  h += `<h4>Use</h4><p class="small muted">Version ${esc(o.version)}. Uses and ratings are not recorded in this single-file copy; a shared deployment (an internal server or Azure) can count downloads and collect ratings per object.</p>`;
   $("#panel").innerHTML = h;
   if (b.pts.length) drawBench(o);
 }
@@ -1156,9 +1414,9 @@ function drawBench(o) {
   for (const v of t) s += `<line x1="${m}" x2="${m + pw}" y1="${sy(v)}" y2="${sy(v)}" style="stroke:var(--soft)"/><text x="${m - 6}" y="${sy(v) + 4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${tick(v)}</text><text x="${sx(v)}" y="${14 + ph + 16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${tick(v)}</text>`;
   s += `<line x1="${sx(lo)}" y1="${sy(lo)}" x2="${sx(hi)}" y2="${sy(hi)}" style="stroke:var(--muted)" stroke-width="1"/>`;
   pts.forEach((p, i) => { s += `<circle data-i="${i}" cx="${sx(p[0])}" cy="${sy(p[1])}" r="4.5" style="fill:${p[2] === "agree" ? "var(--s1)" : "var(--s2)"};stroke:var(--surface)" stroke-width="2"/>`; });
-  s += `<text x="${m + pw / 2}" y="${H - 6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">value in the source [${esc(u)}${pts.some(p => p[6]) ? " or " + esc(u) + "/m" : ""}]</text>`;
-  s += `<text x="${m - 46}" y="10" font-size="11" style="fill:var(--muted)">code</text></svg>`;
-  el.innerHTML = `<div class="series-key"><span><i style="background:var(--s1);height:8px;width:8px;border-radius:50%"></i>reproduced</span><span><i style="background:var(--s2);height:8px;width:8px;border-radius:50%"></i>differs</span></div><div class="chartbox" style="max-width:${W}px">${s}</div>`;
+  s += `<text x="${m + pw / 2}" y="${H - 6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Value in the source [${esc(u)}${pts.some(p => p[6]) ? " or " + esc(u) + "/m" : ""}]</text>`;
+  s += `<text x="${m - 46}" y="10" font-size="11" style="fill:var(--muted)">Code</text></svg>`;
+  el.innerHTML = `<div class="series-key"><span><i style="background:var(--s1);height:8px;width:8px;border-radius:50%"></i>Reproduced</span><span><i style="background:var(--s2);height:8px;width:8px;border-radius:50%"></i>Differs</span></div><div class="chartbox" style="max-width:${W}px">${s}</div>`;
   const svg = el.querySelector("svg"), tip = $("#tip");
   svg.addEventListener("pointermove", ev => {
     const r = svg.getBoundingClientRect(), k = W / r.width, px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k;
@@ -1176,21 +1434,20 @@ function drawBench(o) {
 function renderOverview() {
   const objs = Object.values(D.objects), n = {high: 0, medium: 0, low: 0};
   for (const o of objs) n[(o.conf || {}).level || "medium"]++;
-  let h = `<section class="card"><h3>What this is</h3><p class="small">Design-code expressions as small calculation objects, written from the codes themselves and checked against how real calculation files apply them. Pick a quantity on the left or search for it; every calculation shows its equations, substituted values and the code's conditions. The evidence behind each object is on its Status tab.</p>
-    <div class="tiles"><div class="tile"><div class="v">${objs.length}</div><div class="l">calculation objects</div></div>
-      <div class="tile"><div class="v">${Object.keys(D.quantities).length}</div><div class="l">parameters</div></div>
-      <div class="tile"><div class="v">${D.codes.length}</div><div class="l">codes</div></div>
-      <div class="tile"><div class="v">${D.sources}</div><div class="l">source files distilled</div></div></div></section>`;
+  let h = `<section class="card"><h3>Overview</h3><p>Design-code expressions as calculation objects, written from the codes and checked against how real calculation files apply them. Choose a quantity on the left or search for it.</p>
+    <div class="tiles"><div class="tile"><div class="v">${objs.length}</div><div class="l">Calculation objects</div></div>
+      <div class="tile"><div class="v">${Object.keys(D.quantities).length}</div><div class="l">Parameters</div></div>
+      <div class="tile"><div class="v">${D.codes.length}</div><div class="l">Codes</div></div>
+      <div class="tile"><div class="v">${D.sources}</div><div class="l">Source files distilled</div></div></div></section>`;
   h += `<section class="card"><h3>Coverage and confidence by chapter</h3>
-    <div class="series-key"><span><i class="dot good" style="width:9px;height:9px"></i>checked (${n.high})</span><span><i class="dot warn" style="width:9px;height:9px"></i>not yet checked (${n.medium})</span><span><i class="dot crit" style="width:9px;height:9px"></i>review needed (${n.low})</span></div>
+    <div class="series-key"><span><i class="dot good" style="width:9px;height:9px"></i>Checked (${n.high})</span><span><i class="dot warn" style="width:9px;height:9px"></i>Not yet checked (${n.medium})</span><span><i class="dot crit" style="width:9px;height:9px"></i>Review needed (${n.low})</span></div>
     <div class="bars" id="bars" style="margin-top:8px"></div></section>`;
   h += `<section class="card"><h3>Codes and what they share</h3><div class="scroll"><table class="cases"><tr><th>Code</th><th style="text-align:left">Title</th><th>Objects</th><th>Shared</th><th style="text-align:left">Values it fixes</th></tr>`
     + D.codes.map(c => {
       const own = objs.filter(o => o.code === c.code).length, sh = objs.filter(o => (o.refs || []).some(r => r.code === c.code)).length;
       const fx = Object.entries(c.fixed || {}).map(([k, v]) => `${symText(k)} = ${fmtShort(v)}`).join(", ");
       return `<tr><td>${esc(c.code)}</td><td style="text-align:left;white-space:normal">${esc(c.title || "")}</td><td>${own}</td><td>${sh}</td><td style="text-align:left">${esc(fx || "–")}</td></tr>`;
-    }).join("") + `</table></div>
-    <p class="small muted">A later code that writes an expression already stored (EN 1994-1-1 f_cd = f_ck/γ_C) is linked to the existing object as a special case, with its own fixed values (α_cc = 1), so no formula is stored twice.</p></section>`;
+    }).join("") + `</table></div></section>`;
   $("#main").innerHTML = h;
   // bars: one row per chapter, segments by confidence
   const groups = [];
@@ -1201,13 +1458,13 @@ function renderOverview() {
   }
   const max = Math.max(...groups.map(g => g.high + g.medium + g.low));
   $("#bars").innerHTML = groups.map((g, i) => {
-    const segs = [["high", "good", "checked"], ["medium", "warn", "not yet checked"], ["low", "crit", "review needed"]].filter(([k]) => g[k])
+    const segs = [["high", "good", "Checked"], ["medium", "warn", "Not yet checked"], ["low", "crit", "Review needed"]].filter(([k]) => g[k])
       .map(([k, cls, l]) => `<span class="seg" data-g="${i}" data-l="${l}" data-n="${g[k]}" style="width:${g[k] / max * 100}%;background:var(--${cls})"></span>`).join("");
     return `<div class="row"><div class="lab" title="${esc(g.label)}">${esc(g.label)}</div><div class="track">${segs}<span class="n">${g.high + g.medium + g.low}</span></div></div>`;
   }).join("");
   const tip = $("#tip");
   for (const sg of document.querySelectorAll("#bars .seg")) {
-    sg.addEventListener("pointermove", ev => { const g = groups[+sg.dataset.g]; tip.innerHTML = `${esc(g.label)}<br><b>${sg.dataset.n}</b> ${esc(sg.dataset.l)}`; showTip(ev, tip); });
+    sg.addEventListener("pointermove", ev => { const g = groups[+sg.dataset.g]; tip.innerHTML = `${esc(g.label)}<br><b>${sg.dataset.n}</b> ${esc(sg.dataset.l.toLowerCase())}`; showTip(ev, tip); });
     sg.addEventListener("pointerleave", () => { tip.style.display = "none"; });
   }
 }
@@ -1220,47 +1477,74 @@ function renderSettings() {
   if (state.view === "object") { const w = W(state.target), p = plan(state.target, w.given); ids = p.steps.slice().reverse().concat(p.inputs); if (D.objects[state.target].check) ids.push(D.objects[state.target].check); }
   ids = ids.filter((x, i) => ids.indexOf(x) === i && item(x) && item(x).units.length > 1);
   $("#set-units").innerHTML = ids.length ? ids.map(i => `<div class="setrow"><span><math>${symML(i)}</math> ${esc(item(i).name)}</span><select data-unit="${esc(i)}">${item(i).units.map(u => `<option ${u[0] === unitOf(i)[0] ? "selected" : ""}>${esc(u[0])}</option>`).join("")}</select></div>`).join("")
-    : `<p class="muted">Open a calculation to choose its units.</p>`;
+    : `<p>Open a calculation to choose its units.</p>`;
 }
+
+// ---------------------------------------------------------------- Code
+function renderCode() {
+  const o = D.objects[state.target];
+  $("#panel").innerHTML = `<div class="code-h"><h4>Python</h4><button class="btn ghost" type="button" data-copy="py">Copy</button></div><pre class="code" id="code-py">${esc(o.python)}</pre>
+    <div class="code-h"><h4>LaTeX</h4><button class="btn ghost" type="button" data-copy="tex">Copy</button></div><pre class="code" id="code-tex">${esc(o.tex)}</pre>`;
+}
+function copyText(id, btn) {
+  const text = $("#code-" + id).textContent;
+  const done = ok => { btn.textContent = ok ? "Copied" : "Select and press Ctrl+C"; setTimeout(() => { btn.textContent = "Copy"; }, 2000); };
+  try { navigator.clipboard.writeText(text).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
+
+// ---------------------------------------------------------------- tooltips: any element with data-tip
+function tipShow(el, ev) {
+  const tip = $("#tip");
+  tip.textContent = el.dataset.tip;
+  tip.style.display = "block";
+  const r = el.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = r.left + r.width / 2 - tw / 2, y = r.top - th - 8;
+  x = Math.max(8, Math.min(x, window.innerWidth - tw - 8));
+  if (y < 8) y = r.bottom + 8;
+  tip.style.left = (x + window.scrollX) + "px"; tip.style.top = (y + window.scrollY) + "px";
+}
+const tipHide = () => { $("#tip").style.display = "none"; };
+document.addEventListener("pointerover", ev => { const el = ev.target.closest && ev.target.closest("[data-tip]"); if (el) tipShow(el, ev); });
+document.addEventListener("pointerout", ev => { const el = ev.target.closest && ev.target.closest("[data-tip]"); if (el && !el.contains(ev.relatedTarget)) tipHide(); });
+document.addEventListener("focusin", ev => { const el = ev.target.closest && ev.target.closest("[data-tip]"); if (el) tipShow(el, ev); });
+document.addEventListener("focusout", tipHide);
+window.addEventListener("scroll", tipHide, {passive: true});
 
 // ---------------------------------------------------------------- events
 document.addEventListener("click", ev => {
   const t = ev.target.closest("button, [data-open]");
   if (!t) return;
   const d = t.dataset;
-  if (d.id) { open(d.id); return; }
-  if (d.open) { open(d.open); return; }
+  if (d.id) { openObject(d.id); return; }
+  if (d.open) { openObject(d.open); return; }
   if (d.code) { state.code = d.code; store.set("code", d.code); renderCodes(); renderTree(); return; }
-  if (d.tab) { state.tab = d.tab; renderMain(); return; }
+  if (d.tab) { state.tab = d.tab; tipHide(); renderMain(); return; }
   const id = state.target;
-  if (d.set) { const w = W(id); w.values[d.set] = +d.v; w.entered.add(d.set); saveWork(id); renderInputs(); renderSheet(); return; }
-  if (d.give) { const w = W(id), r = evaluate(id, valuesFor(id), w.given); w.given.add(d.give); w.values[d.give] = r.env[d.give]; w.entered.add(d.give); saveWork(id); renderInputs(); renderSheet(); return; }
-  if (d.ungive) { const w = W(id); w.given.delete(d.ungive); w.entered.delete(d.ungive); saveWork(id); renderInputs(); renderSheet(); return; }
-  if (d.load) { const c = cases()[+d.load], w = W(id); w.values = Object.assign({}, c.values); w.entered = new Set(Object.keys(c.values)); w.given = new Set(c.given || []); w.check = c.check; saveWork(id); renderCalc(); return; }
-  if (d.del) { const l = cases(); l.splice(+d.del, 1); setCases(l); renderCases(); return; }
+  if (d.detail) { const w = W(id); w.detail = d.detail; saveWork(id); renderSheet(); return; }
+  if (d.rdetail) { const rb = reportOpts(); rb.detail = d.rdetail; saveWork(id); renderReport(); return; }
+  if (d.copy) { copyText(d.copy, t); return; }
+  if (d.give) { const w = W(id), r = evaluate(id, valuesFor(id), w.given); w.given.add(d.give); w.values[d.give] = r.env[d.give]; w.entered.add(d.give); saveWork(id); tipHide(); renderInputs(); renderSheet(); return; }
+  if (d.ungive) { const w = W(id); w.given.delete(d.ungive); w.entered.delete(d.ungive); saveWork(id); tipHide(); renderInputs(); renderSheet(); return; }
+  if (d.load) { const c = cases()[+d.load], w = W(id); w.values = Object.assign({}, c.values); w.entered = new Set(Object.keys(c.values)); w.given = new Set(c.given || []); w.check = c.check; saveWork(id); state.tab = "calc"; tipHide(); renderMain(); return; }
+  if (d.del) { const l = cases(); l.splice(+d.del, 1); setCases(l); tipHide(); renderReport(); return; }
   if (t.id === "ovw") { state.view = "overview"; renderTree(); renderMain(); return; }
   if (t.id === "reset") { const w = W(id); w.values = {}; w.entered = new Set(); w.given = new Set(); w.check = null; saveWork(id); renderInputs(); renderSheet(); return; }
-  if (t.id === "add-case") { const l = cases(); l.push(currentCase(`Case ${l.length + 1}`)); setCases(l); renderCases(); return; }
-  if (t.id === "clear-cases") { setCases([]); renderCases(); return; }
-  if (t.id === "tpl") { renderBuilder(); return; }
-  if (t.id === "dl-xlsx") { download("xlsx"); return; }
-  if (t.id === "dl-mcdx") { download("mcdx"); return; }
-  if (t.id === "dl-html") { download("html"); return; }
+  if (t.id === "add-case") { const l = cases(); l.push(currentCase(`Case ${l.length + 1}`)); setCases(l); renderReport(); toast(`Case ${l.length} added.`); return; }
+  if (t.id === "clear-cases") { setCases([]); renderReport(); return; }
+  if (t.id === "dl-xlsx") { downloadExcel(t); return; }
+  if (t.id === "dl-mcdx") { downloadMathcad(t); return; }
+  if (t.id === "rep-pdf") { reportPDF(t); return; }
+  if (t.id === "rep-docx") { reportWord(t); return; }
+  if (t.id === "rep-yaml") { batchTemplate(t); return; }
   if (t.id === "ask-btn") { ask(); return; }
-  if (t.id === "copy") {
-    const ta = $("#yaml"); ta.select();
-    let ok = false;
-    try { navigator.clipboard.writeText(ta.value).then(() => { $("#copied").textContent = "copied"; }, () => { $("#copied").textContent = "selected: press Ctrl+C"; }); ok = true; } catch (e) {}
-    if (!ok) $("#copied").textContent = "selected: press Ctrl+C";
-    return;
-  }
   if (t.id === "settings-btn") { renderSettings(); try { $("#settings").showModal(); } catch (e) { $("#settings").setAttribute("open", ""); } return; }
   if (t.id === "set-close") { $("#settings").close(); return; }
   if (t.id === "set-reset") { S.decimals = 2; S.minsig = 3; S.units = {}; store.set("style", S); renderSettings(); renderMain(); return; }
 });
 document.addEventListener("keydown", ev => {
   const t = ev.target.closest && ev.target.closest("[data-open]");
-  if (t && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(t.dataset.open); }
+  if (t && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); openObject(t.dataset.open); }
+  if (ev.key === "Escape") tipHide();
 });
 document.addEventListener("input", ev => {
   const t = ev.target;
@@ -1274,26 +1558,19 @@ document.addEventListener("input", ev => {
     const c = v * unitOf(p)[1];
     if (p === o.check) w.check = c; else { w.values[p] = c; w.entered.add(p); }
     saveWork(id); renderSheet();
-    // refresh this row's hints (recommended, usual range) without re-rendering the inputs
-    const row = t.closest(".inp"), tmp = document.createElement("div");
-    tmp.innerHTML = inputRow(p, c, p === o.check);
-    const old = row.querySelector(".hint"), nu = tmp.querySelector(".hint");
-    if (old && nu) old.replaceWith(nu); else if (old) old.remove(); else if (nu) row.appendChild(nu);
+    // refresh this row's information mark without re-rendering the input being typed in
+    const row = t.closest(".inp"), info = inputInfo(p, c), old = row.querySelector(".info");
+    t.classList.toggle("out", info.out);
+    const tmp = document.createElement("span"); tmp.innerHTML = info.html;
+    if (old && tmp.firstChild) old.replaceWith(tmp.firstChild); else if (old) old.remove(); else if (tmp.firstChild) row.querySelector("label").appendChild(tmp.firstChild);
     return;
   }
-  if (t.dataset.rb !== undefined || t.dataset.rem !== undefined) {
-    const rb = reportOpts();
-    if (t.dataset.rem !== undefined) rb.remarks[t.dataset.rem] = t.value;
-    else rb[t.dataset.rb] = t.type === "checkbox" ? t.checked : t.value;
-    $("#yaml").value = templateYAML();
-    return;
-  }
+  if (t.dataset.rb !== undefined && t.type !== "checkbox" && t.tagName !== "SELECT") { reportOpts()[t.dataset.rb] = t.value; saveWork(state.target); return; }
   if (t.id === "clo" || t.id === "chi") { const w = W(state.target), f = unitOf(w.chart.x)[1]; const a = parseFloat($("#clo").value.replace(",", ".")), b = parseFloat($("#chi").value.replace(",", ".")); if (isFinite(a) && isFinite(b)) { w.chart.lo = a * f; w.chart.hi = b * f; } drawSweep(); return; }
 });
 document.addEventListener("change", ev => {
   const t = ev.target;
-  if (t.dataset.show) { const w = W(state.target); w.show[t.dataset.show] = t.checked; saveWork(state.target); renderSheet(); return; }
-  if (t.id === "only-result") { const w = W(state.target); w.steps = t.checked ? "result" : "all"; saveWork(state.target); renderSheet(); return; }
+  if (t.dataset.rb !== undefined && (t.type === "checkbox" || t.tagName === "SELECT")) { const rb = reportOpts(); rb[t.dataset.rb] = t.type === "checkbox" ? t.checked : t.value; saveWork(state.target); return; }
   if (t.dataset.unit) { S.units[t.dataset.unit] = t.value; store.set("style", S); if ($("#settings").open) renderSettings(); renderMain(); return; }
   if (t.id === "set-dec") { S.decimals = +t.value; store.set("style", S); renderMain(); return; }
   if (t.id === "set-sig") { S.minsig = +t.value; store.set("style", S); renderMain(); return; }
@@ -1306,8 +1583,9 @@ window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() =
 // ---------------------------------------------------------------- start
 (function start() {
   const nObj = Object.keys(D.objects).length;
-  $("#sub").textContent = `${nObj} objects from ${D.codes.map(c => c.code).join(" and ")}: expressions from the codes, checked against ${D.sources} calculation file${D.sources === 1 ? "" : "s"}`;
+  $("#sub").textContent = `${nObj} calculation objects · ${D.codes.map(c => c.code).join(" · ")}`;
   if (!D.codes.some(c => c.code === state.code)) state.code = "all";
   renderCodes(); renderTree(); renderMain();
 })();
-</script>"""
+</script>
+"""

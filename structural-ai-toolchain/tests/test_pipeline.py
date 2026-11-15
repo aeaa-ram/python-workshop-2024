@@ -308,16 +308,6 @@ def test_pdf_report_has_bookmarks(kb, tmp_path):
     assert "Shear check" in titles and any("V_Rd,c" in t for t in titles)
 
 
-def test_excel_form_is_a_report_template(kb, tmp_path):
-    from ckb.use.report_form import read_form, write_form
-    path = write_form(kb, "V_Rd_c", tmp_path / "form.xlsx")
-    t = read_form(path)
-    assert [list(b)[0] for b in t["blocks"]] == ["heading", "calc", "table", "chart"]
-    assert len(t["cases"]) == 3 and "V_Ed [kN]" in t["cases"][0] and t["defaults"]["gamma_C"] == 1.5
-    page = R.render(kb, t)
-    assert 'class="gov"' in page and "<svg" in page
-
-
 def test_excel_calculator_with_cell_references(kb, tmp_path):
     from openpyxl import load_workbook
     path = excel_bridge.export_calculator(kb, "V_Rd_c", tmp_path / "c.xlsx", PRIMARY, refs="cells")
@@ -348,3 +338,59 @@ def test_web_calculator_carries_the_excel_and_mathcad_files(kb, tmp_path):
     assert {"d", "A_sl", "V_Rd_c"} <= set(entry["cells"]) and entry["check"].startswith("C")
     page = render(kb, files={"V_Rd_c": entry})
     assert 'id="dl-xlsx"' in page and 'id="dl-mcdx"' in page and entry["xlsx"][:200] in page
+
+
+DOWNLOADS_JS = r"""
+const { chromium } = require('playwright');
+(async () => {
+  const [page, out] = [process.argv[2], process.argv[3]];
+  const b = await chromium.launch();
+  const ctx = await b.newContext({acceptDownloads: true});
+  const p = await ctx.newPage();
+  const errors = []; p.on('pageerror', e => errors.push(e.message));
+  await p.route('https://**', r => r.abort());
+  await p.goto('file://' + page);
+  await p.click('.t-obj[data-id="V_Rd_c"]');
+  await p.fill('#in-d', '273'); await p.fill('#in-V_Ed', '150');
+  const save = async sel => { const [d] = await Promise.all([p.waitForEvent('download'), p.click(sel)]); await d.saveAs(out + '/' + d.suggestedFilename()); return d.suggestedFilename(); };
+  const names = [await save('#dl-xlsx')];
+  await p.click('[role="tab"][data-tab="report"]');
+  await p.click('#add-case');
+  await p.click('[role="tab"][data-tab="calc"]'); await p.fill('#in-V_Ed', '50'); await p.click('[role="tab"][data-tab="report"]');
+  await p.click('#add-case');
+  names.push(await save('#rep-docx'));
+  const [pop] = await Promise.all([ctx.waitForEvent('page'), p.click('#rep-pdf')]);
+  await pop.waitForLoadState();
+  require('fs').writeFileSync(out + '/report.html', await pop.content());
+  console.log(JSON.stringify({names, errors}));
+  await b.close();
+})();
+"""
+
+
+def test_web_page_downloads_and_reports(kb, tmp_path):
+    import json as _json
+    import zipfile
+    from openpyxl import load_workbook
+    from ckb.use import share
+    from ckb.use.webapp import write
+    node = shutil.which("node")
+    if not node or subprocess.run([node, "-e", "require('playwright')"], capture_output=True).returncode:
+        pytest.skip("node with playwright is not installed")
+    files = share.calculator_files(kb, log=lambda *_: None)
+    page = write(kb, tmp_path / "index.html", files={"V_Rd_c": files["V_Rd_c"]})
+    (tmp_path / "run.js").write_text(DOWNLOADS_JS, encoding="utf-8")
+    proc = subprocess.run([node, str(tmp_path / "run.js"), str(page), str(tmp_path)], capture_output=True, text=True, timeout=180)
+    res = _json.loads(proc.stdout.strip().splitlines()[-1])
+    assert not res["errors"] and res["names"] == ["V_Rd_c_calculator.xlsx", "V_Rd_c_report.docx"]
+    ws = load_workbook(tmp_path / "V_Rd_c_calculator.xlsx")["Calculation"]
+    assert 273 in [c.value for row in ws.iter_rows() for c in row]                 # the inputs on the page
+    assert excel_bridge.verify(kb, tmp_path / "V_Rd_c_calculator.xlsx")["same_version"]
+    with zipfile.ZipFile(tmp_path / "V_Rd_c_report.docx") as z:
+        doc = z.read("word/document.xml").decode()
+    assert doc.count("<m:oMath>") > 10 and "Summary of all cases" in doc            # editable equations
+    from ckb.use.verify import verify
+    assert verify(kb, tmp_path / "V_Rd_c_report.docx")["ok"]
+    html = (tmp_path / "report.html").read_text(encoding="utf-8")
+    body = html[html.index("<body"):]
+    assert "Governing case: Case 1" in body and "ckb V_Rd_c" not in body and "data-tip" not in body

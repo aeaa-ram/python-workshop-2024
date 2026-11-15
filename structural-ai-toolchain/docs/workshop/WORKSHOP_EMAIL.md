@@ -1,4 +1,4 @@
-**Subject:** Workshop: building the calculation knowledge architecture together
+**Subject:** Workshop: building the unified design logic architecture together
 
 Hi all,
 

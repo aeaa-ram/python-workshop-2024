@@ -6,7 +6,7 @@ of the way until someone asks for it. Engineers use the objects without touching
 calculator, Excel, Mathcad Prime, a report generator, the terminal, or an AI assistant.
 
 It follows the eight-stage architecture in
-[`docs/workshop/calculation-knowledge-architecture.html`](docs/workshop/calculation-knowledge-architecture.html).
+[`docs/workshop/unified-design-logic-architecture.html`](docs/workshop/unified-design-logic-architecture.html).
 
 ## The idea in one paragraph
 
@@ -54,7 +54,6 @@ python -m ckb run V_Rd_c d=450 b_w=300 A_sl=942 --check 60
 python -m ckb excel V_Rd_c             # Excel calculator, named ranges, live formulas
 python -m ckb mathcad V_Rd_c           # Mathcad Prime worksheet
 python -m ckb report V_Rd_c d=450 --pdf --docx   # PDF with bookmarks, Word with native equations
-python -m ckb report-template V_Rd_c -o form.xlsx  # a report set up in an Excel form instead of YAML
 python -m ckb verify workspace/excel/V_Rd_c.xlsx
 python -m ckb questions                # differences between sources and code that nothing explained
 python -m ckb share                    # zip for SharePoint/Teams: calculator with Excel and Mathcad downloads
@@ -81,7 +80,9 @@ calculation always runs in N, mm, MPa.
 
 ## Reports
 
-A report is a YAML template that you set up once and run for any number of cases:
+In the web calculator, the **Cases and report** tab makes a report from the cases you add, as PDF
+or as Word, without Python. With Python, a report is a YAML template that you set up once and run
+for any number of cases:
 
 ```bash
 python -m ckb report-template V_Rd_c -o shear.yaml     # a commented starting point
@@ -121,12 +122,13 @@ for the title, the headings and every calculation. `--docx` writes the same repo
 document with native, editable Word equations and heading styles (navigation pane; *Save as PDF*
 with bookmarks). Every equation is printed from the object's formula tree: `expr.to_mathml` for
 HTML/PDF ([`ckb/use/report.py`](ckb/use/report.py)), `expr.to_omml` for Word
-([`ckb/use/report_docx.py`](ckb/use/report_docx.py)), `expr.to_latex` for LaTeX. The footer lists
-`ckb <object> <version>` for every object used.
+([`ckb/use/report_docx.py`](ckb/use/report_docx.py)), `expr.to_latex` for LaTeX. The printed
+report carries no version codes; `ckb <object> <version>` for every object used is kept in the
+document properties, where `ckb verify` reads it.
 
-Nobody has to edit YAML: `report-template V_Rd_c -o form.xlsx` writes the same template as an Excel
-form (title block, blocks with drop-down choices, cases, remarks), and the web calculator has a
-report builder that fills the template from your cases and choices.
+Nobody has to edit YAML: the web calculator's **Cases and report** tab makes the same report in
+the page, as PDF or as Word, from the cases you add there. Its *Batch template* button saves the
+YAML for running many cases with Python.
 
 ## How do I know it is the same logic?
 
@@ -185,9 +187,10 @@ What people can do without Python, and what needs it:
 | They want to | Needs Python? |
 |---|---|
 | Find an object, calculate, chart it, read the design background, the code and the evidence | No: the web calculator |
-| Download an Excel calculator with their inputs and live formulas | No: "Take it with you" in the web calculator |
-| Download a Mathcad Prime worksheet, or the calculation as a page to print to PDF | No: same panel |
-| Run a report over many cases (YAML or the Excel form), Word with equations, PDF with bookmarks | Yes: `ckb report` |
+| Download an Excel calculator with their inputs and live formulas | No: *Download Excel* |
+| Download a Mathcad Prime worksheet | No: *Download Mathcad* |
+| Make a report over several cases, as PDF or Word with editable equations | No: *Cases and report* |
+| Run a report template over hundreds of cases, PDF with bookmarks | Yes: `ckb report` |
 | Add source files, distil them, answer the open questions, rebuild | Yes: `ckb build`, `ckb answer` |
 
 Three ways to hand it out, easiest first:
@@ -196,12 +199,10 @@ Three ways to hand it out, easiest first:
    from its Share menu with the people in the workshop. Viewers who are signed in to Claude also get
    an "Ask Claude" box that finds objects from a question in plain words, on their own account.
 2. **A zip on SharePoint or Teams.** `python -m ckb share` writes `workspace/workshop/` and
-   `workspace/workshop.zip`. The zip holds `index.html` with an Excel calculator and a Mathcad
-   worksheet embedded for every object, an example report (PDF, Word, HTML) with its template and
-   Excel form, and a short READ ME. SharePoint serves `.html` files as downloads rather than pages,
-   so people download the zip, unzip it and double-click `index.html`. It works offline. The Excel
-   download carries the inputs on the page when the browser can reach cdnjs.cloudflare.com, and
-   example inputs when it cannot.
+   `workspace/workshop.zip`. The zip holds `index.html`, with an Excel calculator and a Mathcad
+   worksheet embedded for every object, and a short READ ME. SharePoint serves `.html` files as
+   downloads rather than pages, so people download the zip, unzip it and double-click `index.html`.
+   It works offline, downloads and reports included.
 3. **This repository, opened in GitHub Codespaces.** For the people who will run reports or add
    files: Code > Codespaces > Create codespace. `.devcontainer/` installs the requirements and a
    browser for PDFs, so every command in Quick start works in the browser tab with nothing installed

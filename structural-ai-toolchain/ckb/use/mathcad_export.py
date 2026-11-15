@@ -25,8 +25,10 @@ import io
 import json
 import math
 import re
+import struct
 import uuid
 import zipfile
+import zlib
 from fractions import Fraction
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -284,7 +286,7 @@ def with_units(kb: KnowledgeBase, oid: str) -> X.Node:
 # --------------------------------------------------------------------------
 _SPAN = ('<Span xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" '
          'xmlns:pw="clr-namespace:Ptc.Wpf;assembly=Ptc.Core">{b}<pw:Subscript>{s}</pw:Subscript></Span>')
-_FN = {"max": "max", "min": "min", "abs": "|x|", "sin": "sin", "cos": "cos", "tan": "tan", "cot": "cot",
+_FN = {"max": "max", "min": "min", "sin": "sin", "cos": "cos", "tan": "tan", "cot": "cot",
        "asin": "asin", "acos": "acos", "atan": "atan", "exp": "exp", "ln": "ln", "log10": "log",
        "floor": "floor", "ceil": "ceil", "round": "round"}
 _CMP = {"<": "lessThan", ">": "greaterThan", "<=": "lessOrEqual", ">=": "greaterOrEqual", "==": "equal",
@@ -312,29 +314,39 @@ def mathcad_names(kb: KnowledgeBase, ids) -> dict[str, tuple[str, str]]:
     return out
 
 
-def _id(base: str, sub: str, labels: str = "VARIABLE") -> str:
+def _id(base: str, sub: str, labels: str = "VARIABLE", ctx: bool = False) -> str:
+    """An identifier as Prime writes it; inside an expression it is marked contextual."""
     body = _SPAN.format(b=escape(base), s=escape(sub)) if sub else escape(base)
-    return f'<ml:id labels="{labels}" xml:space="preserve">{body}</ml:id>'
+    flag = ' label-is-contextual="true"' if ctx else ""
+    return f'<ml:id labels="{labels}"{flag} xml:space="preserve">{body}</ml:id>'
 
 
-def to_xml(n: X.Node, names: dict) -> str:
+def _unit_id(name: str, ctx: bool = True) -> str:
+    flag = ' label-is-contextual="true"' if ctx else ""
+    return f'<ml:id labels="UNIT"{flag} xml:space="preserve">{escape(_UNIT_ID.get(name) or name)}</ml:id>'
+
+
+def to_xml(n: X.Node, names: dict, ctx: bool = True) -> str:
+    """Math50 XML for an expression; ``ctx=False`` for a unit override, where Prime omits the flag."""
+    def go(m):
+        return to_xml(m, names, ctx)
     if isinstance(n, X.Num):
         v = n.value
         if v < 0:
-            return f"<ml:apply><ml:neg />{to_xml(X.Num(-v), names)}</ml:apply>"
+            return f"<ml:apply><ml:neg />{go(X.Num(-v))}</ml:apply>"
         return f"<ml:real>{X._fmt_num(v)}</ml:real>"
     if isinstance(n, X.Str):
         return f'<ml:str xml:space="preserve">{escape(n.value)}</ml:str>'
     if isinstance(n, X.Sym):
         b, s = names[n.name]
-        return _id(b, s)
+        return _id(b, s, ctx=ctx)
     if isinstance(n, X.Unit):
-        return f'<ml:id labels="UNIT" xml:space="preserve">{escape(_UNIT_ID.get(n.name) or n.name)}</ml:id>'
+        return _unit_id(n.name, ctx)
     if isinstance(n, X.Neg):
-        return f"<ml:apply><ml:neg />{to_xml(n.arg, names)}</ml:apply>"
+        return f"<ml:apply><ml:neg />{go(n.arg)}</ml:apply>"
     if isinstance(n, X.Bin):
         tag = {"+": "plus", "-": "minus", "*": "mult", "/": "div", "**": "pow"}[n.op]
-        left, right = to_xml(n.left, names), to_xml(n.right, names)
+        left, right = go(n.left), go(n.right)
         if n.op in "*/" and isinstance(n.left, X.Bin) and n.left.op in "+-":
             left = f"<ml:parens>{left}</ml:parens>"
         if n.op in "*/-" and isinstance(n.right, X.Bin) and n.right.op in "+-":
@@ -346,26 +358,28 @@ def to_xml(n: X.Node, names: dict) -> str:
         if n.fn == "pi":
             return '<ml:id labels="CONSTANT" xml:space="preserve">π</ml:id>'
         if n.fn == "sqrt":
-            return f"<ml:apply><ml:nthRoot /><ml:placeholder />{to_xml(n.args[0], names)}</ml:apply>"
+            return f"<ml:apply><ml:nthRoot /><ml:placeholder />{go(n.args[0])}</ml:apply>"
         if n.fn == "radians":
-            return f'<ml:apply><ml:mult />{to_xml(n.args[0], names)}<ml:id labels="UNIT" xml:space="preserve">°</ml:id></ml:apply>'
+            return f'<ml:apply><ml:mult />{go(n.args[0])}{_unit_id("°", ctx)}</ml:apply>'
+        if n.fn == "abs":
+            return f"<ml:apply><ml:absval />{go(n.args[0])}</ml:apply>"
         fn = _FN.get(n.fn, n.fn)
-        head = f'<ml:id labels="FUNCTION" xml:space="preserve">{escape(fn)}</ml:id>'
+        head = f'<ml:id xml:space="preserve">{escape(fn)}</ml:id>'
         if len(n.args) == 1:
-            return f"<ml:apply>{head}{to_xml(n.args[0], names)}</ml:apply>"
-        return f"<ml:apply>{head}<ml:sequence>{''.join(to_xml(a, names) for a in n.args)}</ml:sequence></ml:apply>"
+            return f"<ml:apply>{head}{go(n.args[0])}</ml:apply>"
+        return f"<ml:apply>{head}<ml:sequence>{''.join(go(a) for a in n.args)}</ml:sequence></ml:apply>"
     if isinstance(n, X.If):
-        other = to_xml(n.other, names)
-        return (f"<ml:if><ml:test>{to_xml(n.cond, names)}</ml:test><ml:then><ml:program>{to_xml(n.then, names)}"
+        other = go(n.other)
+        return (f"<ml:if><ml:test>{go(n.cond)}</ml:test><ml:then><ml:program>{go(n.then)}"
                 f"</ml:program></ml:then><ml:else><ml:program>{other}</ml:program></ml:else></ml:if>")
     if isinstance(n, X.Cmp):
-        return f"<ml:apply><ml:{_CMP[n.op]} />{to_xml(n.left, names)}{to_xml(n.right, names)}</ml:apply>"
+        return f"<ml:apply><ml:{_CMP[n.op]} />{go(n.left)}{go(n.right)}</ml:apply>"
     if isinstance(n, X.Logic):
         if n.op == "not":
-            return f"<ml:apply><ml:not />{to_xml(n.args[0], names)}</ml:apply>"
-        out = to_xml(n.args[0], names)
+            return f"<ml:apply><ml:not />{go(n.args[0])}</ml:apply>"
+        out = go(n.args[0])
         for a in n.args[1:]:
-            out = f"<ml:apply><ml:{n.op} />{out}{to_xml(a, names)}</ml:apply>"
+            out = f"<ml:apply><ml:{n.op} />{out}{go(a)}</ml:apply>"
         return out
     raise ValueError(f"cannot write {type(n).__name__} to Mathcad")
 
@@ -393,6 +407,38 @@ def _rid() -> str:
     return "R" + uuid.uuid4().hex[:16]
 
 
+# Zip entries laid out like the ones Mathcad Prime's packaging library (System.IO.Packaging) writes:
+# made by MS-DOS 4.5, version needed 1.0 (stored) or 2.0 (deflated), no attributes, and the
+# 28-byte padding field that library reserves in every local header.
+_PAD = struct.pack("<HHHH", 0xA220, 24, 0xA028, 20) + bytes(20)
+
+
+def _zip(entries, stamp=None) -> bytes:
+    """[(name, data, deflate?)] -> zip bytes."""
+    y, mo, d, h, mi, s = stamp or _dt.datetime.now().timetuple()[:6]
+    dos_time, dos_date = (h << 11) | (mi << 5) | (s // 2), ((y - 1980) << 9) | (mo << 5) | d
+    out, central = io.BytesIO(), []
+    for name, data, deflate in entries:
+        raw = name.encode("ascii")
+        crc = zlib.crc32(data) & 0xFFFFFFFF
+        if deflate:
+            c = zlib.compressobj(6, zlib.DEFLATED, -15)
+            body, method, need = c.compress(data) + c.flush(), 8, 20
+        else:
+            body, method, need = data, 0, 10
+        offset = out.tell()
+        out.write(struct.pack("<IHHHHHIIIHH", 0x04034B50, need, 0, method, dos_time, dos_date, crc,
+                              len(body), len(data), len(raw), len(_PAD)) + raw + _PAD + body)
+        central.append(struct.pack("<IHHHHHHIIIHHHHHII", 0x02014B50, 0x002D, need, 0, method, dos_time,
+                                   dos_date, crc, len(body), len(data), len(raw), 0, 0, 0, 0, 0, offset) + raw)
+    start = out.tell()
+    for c in central:
+        out.write(c)
+    size = out.tell() - start
+    out.write(struct.pack("<IHHHHIIH", 0x06054B50, 0, 0, len(central), len(central), size, start, 0))
+    return out.getvalue()
+
+
 _XAML = ('<Section xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xml:space="preserve" '
          'TextAlignment="Left" LineHeight="Auto" IsHyphenationEnabled="False" xml:lang="en-us" '
          'FlowDirection="LeftToRight" FontFamily="Tahoma" FontStyle="Normal" FontWeight="Normal" FontStretch="Normal" '
@@ -405,20 +451,16 @@ _FLOW = ('<FlowDocument FontFamily="Tahoma" FontStyle="Normal" FontWeight="Norma
 
 def _xaml_package(text: str, size: float = 13.3333333333333, weight: str = "Normal") -> bytes:
     """A text region's content: a small package of its own, laid out like the ones Mathcad saves."""
-    buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w") as z:
-        z.writestr(zipfile.ZipInfo("Xaml/Document.xaml", (1980, 1, 1, 0, 0, 0)),
-                   _XAML.format(text=escape(text), size=size, weight=weight).encode("utf-8"),
-                   compress_type=zipfile.ZIP_DEFLATED)
-        z.writestr("_rels/.rels", _part(
+    return _zip([
+        ("Xaml/Document.xaml", _XAML.format(text=escape(text), size=size, weight=weight).encode("utf-8"), True),
+        ("_rels/.rels", _part(
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship '
             'Type="http://schemas.microsoft.com/wpf/2005/10/xaml/entry" Target="/Xaml/Document.xaml" '
-            f'Id="{_rid()}" /></Relationships>'), compress_type=zipfile.ZIP_STORED)
-        z.writestr("[Content_Types].xml", _part(
+            f'Id="{_rid()}" /></Relationships>'), False),
+        ("[Content_Types].xml", _part(
             '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xaml" '
             'ContentType="application/vnd.ms-wpf.xaml+xml" /><Default Extension="rels" ContentType="application/'
-            'vnd.openxmlformats-package.relationships+xml" /></Types>'), compress_type=zipfile.ZIP_STORED)
-    return buf.getvalue()
+            'vnd.openxmlformats-package.relationships+xml" /></Types>'), False)])
 
 
 _MATH_STYLES = "".join(
@@ -513,8 +555,11 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
     def math(body: str, top: float, result: float | None = None, left: float = 330.0):
         nonlocal rid
         n = len(results)
-        regions.append(f'<region region-id="{rid}" top="{top:.3f}" left="{left:.3f}"><math resultRef="{n}">'
-                       f'{body}</math></region>')
+        # Prime measures regions itself; these are first estimates it replaces when it lays out the sheet
+        width = min(420.0, 40.0 + 7.5 * len(re.sub(r"<[^>]+>", "", body)))
+        height = 45.0 if "<ml:div" in body or "<ml:nthRoot" in body else 25.0
+        regions.append(f'<region region-id="{rid}" actualWidth="{width:.2f}" actualHeight="{height:.2f}" '
+                       f'top="{top:.3f}" left="{left:.3f}"><math resultRef="{n}">{body}</math></region>')
         value = (f'<ml:result><ml:real>{_real(result)}</ml:real></ml:result>'
                  if isinstance(result, (int, float)) and not isinstance(result, bool) else "")
         results.append(f'<resultData result-id="{n}" calculation-status="Synchronized"'
@@ -525,7 +570,7 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
         u = style.unit(kb, sid)
         if u in ("-", ""):
             return "<ml:unitOverride><ml:placeholder /></ml:unitOverride>"
-        return f"<ml:unitOverride>{to_xml(_unit_tree(u), names)}</ml:unitOverride>"
+        return f"<ml:unitOverride>{to_xml(_unit_tree(u), names, ctx=False)}</ml:unitOverride>"
 
     text(f"{obj.text} - {obj.name}", y, size=18.6666666666667, weight="Bold")
     y += 34
@@ -540,8 +585,8 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
         u = style.unit(kb, sid)
         text(item.name if item else sid, y)
         value = to_xml(X.Num(round(shown, 10)), names) if isinstance(shown, (int, float)) else to_xml(X.Str(str(shown)), names)
-        if u not in ("-", ""):
-            value = f"<ml:apply><ml:mult />{value}{to_xml(_unit_tree(u), names)}</ml:apply>"
+        if u not in ("-", ""):                                   # 450 mm: a number scaled by a unit
+            value = f"<ml:apply><ml:scale />{value}{to_xml(_unit_tree(u), names)}</ml:apply>"
         b, s = names[sid]
         math(f"<ml:define>{_id(b, s)}{value}</ml:define>", y)
         y += 30
@@ -566,7 +611,7 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
                            for n in ("worksheet", "header", "footer"))
     package_rels += ('<Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/'
                      f'core-properties" Target="/docProps/core.xml" Id="{_rid()}" />')
-    deflate, stored = zipfile.ZIP_DEFLATED, zipfile.ZIP_STORED
+    deflate, stored = True, False
     # parts in the order and with the compression Mathcad Prime uses when it saves a worksheet
     parts = [("mathcad/worksheet.xml", worksheet.encode("utf-8"), deflate),
              ("_rels/.rels", _part(_RELS.format(package_rels)), stored)]
@@ -588,12 +633,7 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
     ]
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    stamp = _dt.datetime.now().timetuple()[:6]
-    with zipfile.ZipFile(path, "w") as z:
-        for name, data, how in parts:
-            info = zipfile.ZipInfo(name, stamp)
-            info.compress_type = how
-            z.writestr(info, data)
+    path.write_bytes(_zip(parts))
     return path
 
 

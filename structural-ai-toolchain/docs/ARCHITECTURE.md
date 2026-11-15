@@ -2,7 +2,7 @@
 
 How the code maps to the stages, the decisions behind it, and how the concerns raised before the
 workshop are handled. The picture of the stages is in
-[`workshop/calculation-knowledge-architecture.html`](workshop/calculation-knowledge-architecture.html).
+[`workshop/unified-design-logic-architecture.html`](workshop/unified-design-logic-architecture.html).
 
 ## Four decisions everything else rests on
 
@@ -160,7 +160,6 @@ be the start of a longer one. The web calculator runs the same index with the sa
 | `calc.py` | `run`: inputs in engineering units, every step, conditions, utilisation |
 | `report.py` | templates over many cases; calc, table, chart, text blocks; static HTML; PDF by headless Chromium, with bookmarks |
 | `report_docx.py` | the same report as Word, equations as native Office Math (`expr.to_omml`) |
-| `report_form.py` | the report template as an Excel form (read and written), for people who don't edit YAML |
 | `webapp.py` | the single-file web calculator |
 | `excel_bridge.py` | Excel calculator with named ranges; read back and verified with LibreOffice |
 | `mathcad_export.py` | Mathcad Prime worksheet (math50 XML in an .mcdx package); verified by reading it back |

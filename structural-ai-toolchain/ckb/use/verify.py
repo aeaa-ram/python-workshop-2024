@@ -6,7 +6,8 @@ design logic (a fingerprint of formula, unit and checks):
     Python code block   a "# ckb <object> <version>" line
     Excel calculator    a hidden sheet with the formulas as generated
     Mathcad worksheet   the document description
-    report (HTML/PDF)   a "ckb <object> <version>" line per calculation
+    report              the versions in the document properties (HTML metadata, PDF
+                        keywords, Word keywords or description), out of sight
 
 ``verify`` reads that back and checks three things: the version is the current one,
 nothing was edited, and the numbers in the file are the numbers the knowledge base
@@ -36,7 +37,7 @@ def verify(kb: KnowledgeBase, path: Path) -> dict:
         return v(kb, path)
     if ext == ".py":
         return _verify_python(kb, path)
-    if ext in (".html", ".htm", ".pdf"):
+    if ext in (".html", ".htm", ".pdf", ".docx"):
         return _verify_report(kb, path)
     return {"ok": False, "reason": f"{ext} files are not produced by the knowledge base"}
 
@@ -47,10 +48,13 @@ def _versions(text: str) -> list[tuple[str, str]]:
 
 def _verify_report(kb: KnowledgeBase, path: Path) -> dict:
     if path.suffix.lower() == ".pdf":
-        try:
-            text = subprocess.run(["pdftotext", str(path), "-"], capture_output=True, text=True, timeout=60).stdout
-        except (OSError, subprocess.TimeoutExpired):
-            return {"ok": False, "reason": "pdftotext is needed to read a PDF"}
+        from pypdf import PdfReader
+        info = PdfReader(str(path)).metadata or {}
+        text = " ".join(str(v) for v in info.values())
+    elif path.suffix.lower() == ".docx":
+        import zipfile
+        with zipfile.ZipFile(path) as z:
+            text = z.read("docProps/core.xml").decode("utf-8", "replace") if "docProps/core.xml" in z.namelist() else ""
     else:
         text = path.read_text(encoding="utf-8", errors="replace")
     found = _versions(text)
