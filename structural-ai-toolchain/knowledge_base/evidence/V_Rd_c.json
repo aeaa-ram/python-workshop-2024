@@ -1,0 +1,1984 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.2(1), expr. (6.2.a), (6.2.b)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 64 value(s) from 2 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 2,
+  "source_ids": [
+   "S1",
+   "S3"
+  ],
+  "formula_instances": 86,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "(C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) + k_1 * sigma_cp) * d",
+    "text": "(C_Rd,c · k · (100 · ρ_l · f_ck)^(1 / 3) + k_1 · σ_cp) · d",
+    "relation": "simplified",
+    "instances": 80,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": true,
+    "differences": [
+     "works per unit width, so b_w = 1",
+     "omits the lower bound V_Rd,c,min"
+    ],
+    "reproduced": 58,
+    "compared": 80,
+    "deviations": [
+     [
+      "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+      21
+     ]
+    ]
+   },
+   {
+    "formula": "(C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) + k_1 * sigma_cp) * b_w * d",
+    "text": "(C_Rd,c · k · (100 · ρ_l · f_ck)^(1 / 3) + k_1 · σ_cp) · b_w · d",
+    "relation": "simplified",
+    "instances": 4,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": true,
+    "differences": [
+     "omits the lower bound V_Rd,c,min"
+    ],
+    "reproduced": 2,
+    "compared": 4,
+    "deviations": [
+     [
+      "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+      2
+     ]
+    ]
+   },
+   {
+    "formula": "max(C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) * b_w * d, V_Rd_c_min)",
+    "text": "max(C_Rd,c · k · (100 · ρ_l · f_ck)^(1 / 3) · b_w · d, V_Rd,c,min)",
+    "relation": "simplified",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [
+     "leaves out k_1 · σ_cp, which is zero in every case: no effect"
+    ],
+    "reproduced": 2,
+    "compared": 2
+   }
+  ],
+  "practice": [
+   "80 formula(s) in S3: simplified - works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min. The result differs in 21 of 80 cases: the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code).",
+   "4 formula(s) in S3: simplified - omits the lower bound V_Rd,c,min. The result differs in 2 of 4 cases: the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code).",
+   "2 formula(s) in S1: simplified - leaves out k_1 · σ_cp, which is zero in every case: no effect.",
+   "γ_C: the sources use 1.3775 (72×), 1.38 (9×), 1 (3×), 1.4 (2×) against the recommended 1.5.",
+   "k_1: the sources use 0.1 (14×) against the recommended 0.15."
+  ],
+  "values_seen": {
+   "gamma_C": {
+    "recommended": 1.5,
+    "seen": [
+     [
+      1.3775,
+      72
+     ],
+     [
+      1.38,
+      9
+     ],
+     [
+      1.0,
+      3
+     ],
+     [
+      1.4,
+      2
+     ]
+    ]
+   },
+   "k_1": {
+    "recommended": 0.15,
+    "seen": [
+     [
+      0.15,
+      70
+     ],
+     [
+      0.1,
+      14
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 88,
+  "agree": 64,
+  "deviation": 23,
+  "not_comparable": 1,
+  "items": [
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell E40",
+    "kind": "formula",
+    "expected": 273.556308278472,
+    "got": 273.556308278472,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9176629354822472,
+     "rho_l": 0.019423157894736844,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 237.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 156.08999687941701
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell F40",
+    "kind": "formula",
+    "expected": 174.3579949856088,
+    "got": 174.35799498560877,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9600307214746386,
+     "rho_l": 0.006175115207373272,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 217.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.3693263067543
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell G40",
+    "kind": "formula",
+    "expected": 243.9875041168868,
+    "got": 243.9875041168868,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9176629354822472,
+     "rho_l": 0.013781052631578947,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 237.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 156.08999687941701
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell H40",
+    "kind": "formula",
+    "expected": 174.3579949856088,
+    "got": 174.35799498560877,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9600307214746386,
+     "rho_l": 0.006175115207373272,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 217.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.3693263067543
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell I40",
+    "kind": "formula",
+    "expected": 243.9875041168868,
+    "got": 243.9875041168868,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9176629354822472,
+     "rho_l": 0.013781052631578947,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 237.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 156.08999687941701
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell J40",
+    "kind": "formula",
+    "expected": 174.3579949856088,
+    "got": 174.35799498560877,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9600307214746386,
+     "rho_l": 0.006175115207373272,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 217.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.3693263067543
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell K40",
+    "kind": "formula",
+    "expected": 331.53633361533275,
+    "got": 331.53633361533275,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6519813666388083,
+     "rho_l": 0.006956429330499469,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 470.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 247.24094275189472
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell L40",
+    "kind": "formula",
+    "expected": 241.09947088523745,
+    "got": 241.09947088523745,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6666666666666665,
+     "rho_l": 0.002977777777777778,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 450.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 239.6286189085102
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell M40",
+    "kind": "formula",
+    "expected": 256.82581025984445,
+    "got": 256.8258102598445,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8646754023342338,
+     "rho_l": 0.01223551401869159,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 267.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 168.5705468720226
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell N40",
+    "kind": "formula",
+    "expected": 184.24176078714035,
+    "got": 184.24176078714035,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.899842541331695,
+     "rho_l": 0.0054251012145748985,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 247.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 160.07606947694822
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell O40",
+    "kind": "formula",
+    "expected": 221.30041293005394,
+    "got": 221.30041293005397,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8646754023342338,
+     "rho_l": 0.00782803738317757,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 267.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 168.5705468720226
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 1 cell P40",
+    "kind": "formula",
+    "expected": 184.24176078714035,
+    "got": 184.24176078714035,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.899842541331695,
+     "rho_l": 0.0054251012145748985,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 247.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 160.07606947694822
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell C20",
+    "kind": "formula",
+    "expected": 184.37056124254272,
+    "got": 184.3705612425427,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 2.0,
+     "rho_l": 0.008139896373056996,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 193.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.99463503789588
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell D20",
+    "kind": "formula",
+    "expected": 137.28416481658266,
+    "got": 137.28416481658263,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 2.0,
+     "rho_l": 0.004212290502793296,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 179.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 137.25927291079464
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell H20",
+    "kind": "formula",
+    "expected": 340.2598581491166,
+    "got": 340.25985814911655,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.674199862463242,
+     "rho_l": 0.007361363636363636,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 440.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 258.4087997710858
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell I20",
+    "kind": "formula",
+    "expected": 206.19432264329495,
+    "got": 252.65394273365254,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6851887098275316,
+     "rho_l": 0.0017699530516431924,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 426.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 252.65394273365254
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell M20",
+    "kind": "formula",
+    "expected": 294.9994387353006,
+    "got": 294.99943873530066,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014743589743589743,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell N20",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 3 cell D31",
+    "kind": "formula",
+    "expected": 406.36172685787665,
+    "got": 406.36172685787665,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.18,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014743589743589743,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 3 cell E31",
+    "kind": "formula",
+    "expected": 227.25604079446347,
+    "got": 227.25604079446347,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.18,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 4 cell D30",
+    "kind": "formula",
+    "expected": 406.36172685787665,
+    "got": 406.36172685787665,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.18,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014743589743589743,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell E43",
+    "kind": "formula",
+    "expected": 350.5591401140926,
+    "got": 350.5591401140926,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7591896180011233,
+     "rho_l": 0.014146974063400576,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 347.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 219.50384108456115
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell F43",
+    "kind": "formula",
+    "expected": 184.29452119381807,
+    "got": 213.49104437746558,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7749842582921285,
+     "rho_l": 0.0022642642642642643,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 333.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 213.49104437746558
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell I43",
+    "kind": "formula",
+    "expected": 328.00085460975805,
+    "got": 328.0008546097581,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7591896180011233,
+     "rho_l": 0.011587896253602306,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 347.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 219.50384108456115
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell J43",
+    "kind": "formula",
+    "expected": 184.29452119381807,
+    "got": 213.49104437746558,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7749842582921285,
+     "rho_l": 0.0022642642642642643,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 333.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 213.49104437746558
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell K43",
+    "kind": "formula",
+    "expected": 607.8528278520539,
+    "got": 607.8528278520539,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.439586982263858,
+     "rho_l": 0.00509951690821256,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 1035.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 484.6641375641731
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell N43",
+    "kind": "formula",
+    "expected": 243.9875041168868,
+    "got": 243.9875041168868,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9176629354822472,
+     "rho_l": 0.013781052631578947,
+     "f_ck": 50.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 237.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 156.08999687941701
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell O43",
+    "kind": "formula",
+    "expected": 174.3579949856088,
+    "got": 174.35799498560877,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9600307214746386,
+     "rho_l": 0.006175115207373272,
+     "f_ck": 50.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 217.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.3693263067543
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell R43",
+    "kind": "formula",
+    "expected": 365.8157182642189,
+    "got": 365.81571826421884,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.674199862463242,
+     "rho_l": 0.009147727272727273,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 440.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 258.4087997710858
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell S43",
+    "kind": "formula",
+    "expected": 206.19432264329495,
+    "got": 252.65394273365254,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6851887098275316,
+     "rho_l": 0.0017699530516431924,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 426.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 252.65394273365254
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell V43",
+    "kind": "formula",
+    "expected": 365.8157182642189,
+    "got": 365.81571826421884,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.674199862463242,
+     "rho_l": 0.009147727272727273,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 440.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 258.4087997710858
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell W43",
+    "kind": "formula",
+    "expected": 206.19432264329495,
+    "got": 252.65394273365254,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6851887098275316,
+     "rho_l": 0.0017699530516431924,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 426.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 252.65394273365254
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell Z43",
+    "kind": "formula",
+    "expected": 297.4465728121685,
+    "got": 297.4465728121684,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.015113553113553113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AA43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AD43",
+    "kind": "formula",
+    "expected": 451.72286838284697,
+    "got": 451.72286838284697,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5787990801732326,
+     "rho_l": 0.008222780569514239,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 597.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 321.0763355477582
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AE43",
+    "kind": "formula",
+    "expected": 239.16108915055287,
+    "got": 315.60713211580605,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5857074126574227,
+     "rho_l": 0.001293310463121784,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 583.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 315.60713211580605
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AH43",
+    "kind": "formula",
+    "expected": 315.1835713102139,
+    "got": 315.1835713102139,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.01798168498168498,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AI43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AL43",
+    "kind": "formula",
+    "expected": 294.9016839642513,
+    "got": 294.9016839642513,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014728937728937729,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AM43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AN43",
+    "kind": "formula",
+    "expected": 593.5391197550405,
+    "got": 593.5391197550406,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.4499212706658475,
+     "rho_l": 0.0053421052631578946,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 988.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 467.6460234881554
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AQ43",
+    "kind": "formula",
+    "expected": 158.8625526457541,
+    "got": 158.8625526457541,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 2.0,
+     "rho_l": 0.0052072538860103625,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 193.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.99463503789588
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AR43",
+    "kind": "formula",
+    "expected": 137.28416481658266,
+    "got": 137.28416481658263,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 2.0,
+     "rho_l": 0.004212290502793296,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 179.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 137.25927291079464
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell E43",
+    "kind": "formula",
+    "expected": 328.85224502800384,
+    "got": 328.8522450280038,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7570111641044646,
+     "rho_l": 0.011521489971346706,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 349.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 220.3590432212938
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell F43",
+    "kind": "formula",
+    "expected": 184.7901825818045,
+    "got": 214.35290167993236,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7726674092862558,
+     "rho_l": 0.0022507462686567163,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 335.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 214.35290167993236
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell G43",
+    "kind": "formula",
+    "expected": 607.8528278520539,
+    "got": 607.8528278520539,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.439586982263858,
+     "rho_l": 0.00509951690821256,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 1035.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 484.6641375641731
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell H43",
+    "kind": "formula",
+    "expected": 328.85224502800384,
+    "got": 328.8522450280038,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7570111641044646,
+     "rho_l": 0.011521489971346706,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 349.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 220.3590432212938
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell I43",
+    "kind": "formula",
+    "expected": 184.7901825818045,
+    "got": 214.35290167993236,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7726674092862558,
+     "rho_l": 0.0022507462686567163,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 335.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 214.35290167993236
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell J43",
+    "kind": "formula",
+    "expected": 607.8528278520539,
+    "got": 607.8528278520539,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.439586982263858,
+     "rho_l": 0.00509951690821256,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 1035.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 484.6641375641731
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell K43",
+    "kind": "formula",
+    "expected": 243.9875041168868,
+    "got": 243.9875041168868,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9176629354822472,
+     "rho_l": 0.013781052631578947,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 237.5,
+     "b_w": 1.0,
+     "V_Rd_c_min": 156.08999687941701
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell L43",
+    "kind": "formula",
+    "expected": 174.3579949856088,
+    "got": 174.35799498560877,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.9600307214746386,
+     "rho_l": 0.006175115207373272,
+     "f_ck": 50.0,
+     "k_1": 0.1,
+     "sigma_cp": 0.0,
+     "d": 217.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 147.3693263067543
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell M43",
+    "kind": "formula",
+    "expected": 365.6944969088885,
+    "got": 365.6944969088884,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.674199862463242,
+     "rho_l": 0.009138636363636364,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 440.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 258.4087997710858
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell N43",
+    "kind": "formula",
+    "expected": 206.19432264329495,
+    "got": 252.65394273365254,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6851887098275316,
+     "rho_l": 0.0017699530516431924,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 426.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 252.65394273365254
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell O43",
+    "kind": "formula",
+    "expected": 365.6944969088885,
+    "got": 365.6944969088884,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.674199862463242,
+     "rho_l": 0.009138636363636364,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 440.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 258.4087997710858
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell P43",
+    "kind": "formula",
+    "expected": 206.19432264329495,
+    "got": 252.65394273365254,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6851887098275316,
+     "rho_l": 0.0017699530516431924,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 426.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 252.65394273365254
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell Q43",
+    "kind": "formula",
+    "expected": 294.9016839642513,
+    "got": 294.9016839642513,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014728937728937729,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell R43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell S43",
+    "kind": "formula",
+    "expected": 451.75353940876835,
+    "got": 451.75353940876835,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5787990801732326,
+     "rho_l": 0.008224455611390284,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 597.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 321.0763355477582
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell T43",
+    "kind": "formula",
+    "expected": 239.16108915055287,
+    "got": 129262.70856136065,
+    "status": "not comparable",
+    "detail": "not comparable: the inputs found in the source are on different scales (the results differ by a factor of 540)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5857074126574227,
+     "rho_l": 0.001293310463121784,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 583.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 129262.70856136065
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell U43",
+    "kind": "formula",
+    "expected": 294.9016839642513,
+    "got": 294.9016839642513,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014728937728937729,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell V43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell W43",
+    "kind": "formula",
+    "expected": 294.9016839642513,
+    "got": 294.9016839642513,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014728937728937729,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell X43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell Y43",
+    "kind": "formula",
+    "expected": 593.5391197550405,
+    "got": 593.5391197550406,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.4499212706658475,
+     "rho_l": 0.0053421052631578946,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 988.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 467.6460234881554
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell Z43",
+    "kind": "formula",
+    "expected": 294.9016839642513,
+    "got": 294.9016839642513,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.014728937728937729,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell AA43",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell C18",
+    "kind": "formula",
+    "expected": 292.19340357265776,
+    "got": 292.1934035726578,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.015186813186813187,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.14,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell F18",
+    "kind": "formula",
+    "expected": 323.0423770249234,
+    "got": 323.04237702492344,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7071067811865475,
+     "rho_l": 0.0100625,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.45,
+     "d": 400.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 241.87706611755956
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell I18",
+    "kind": "formula",
+    "expected": 213.4269201149195,
+    "got": 274.27831463622,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6461706697512386,
+     "rho_l": 0.0020876826722338203,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.36,
+     "d": 479.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 274.27831463622
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell L18",
+    "kind": "formula",
+    "expected": 233.5534867690007,
+    "got": 321.0763355477582,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5787990801732326,
+     "rho_l": 0.0016750418760469012,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.36,
+     "d": 597.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 321.0763355477582
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell S18",
+    "kind": "formula",
+    "expected": 400.7527155036854,
+    "got": 400.7527155036853,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6119900613621045,
+     "rho_l": 0.007537453183520599,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 534.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 296.297826939313
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell V18",
+    "kind": "formula",
+    "expected": 377.4546337164091,
+    "got": 377.45463371640903,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6305666611194316,
+     "rho_l": 0.008001988071570577,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.16,
+     "d": 503.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 283.93536737972846
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell Y18",
+    "kind": "formula",
+    "expected": 366.09206093362616,
+    "got": 366.0920609336262,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6408413361120013,
+     "rho_l": 0.008264887063655031,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.24,
+     "d": 487.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 277.5060866652672
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell AB18",
+    "kind": "formula",
+    "expected": 355.3631169386674,
+    "got": 355.3631169386674,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6509445549041193,
+     "rho_l": 0.008527542372881355,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.32,
+     "d": 472.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 271.4465963941226
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell AE18",
+    "kind": "formula",
+    "expected": 327.40835596887644,
+    "got": 327.40835596887644,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6812027032901717,
+     "rho_l": 0.009338747099767982,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -0.54,
+     "d": 431.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 254.71296962544596
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell AN18",
+    "kind": "formula",
+    "expected": 373.10312566721814,
+    "got": 373.10312566721814,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.6600983619844496,
+     "rho_l": 0.008769063180827886,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 459.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 266.1687632491694
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 8 cell AQ18",
+    "kind": "formula",
+    "expected": 413.118736718398,
+    "got": 413.11873671839794,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.5928691667287522,
+     "rho_l": 0.007073813708260105,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 569.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 310.1173716063853
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 9 cell D19",
+    "kind": "formula",
+    "expected": 350.5591401140926,
+    "got": 350.5591401140926,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.7591896180011233,
+     "rho_l": 0.014146974063400576,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 347.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 219.50384108456115
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 10 cell E20",
+    "kind": "formula",
+    "expected": 297.92640357265776,
+    "got": 297.9264035726578,
+    "status": "agree",
+    "detail": "works per unit width, so b_w = 1; omits the lower bound V_Rd,c,min",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8559209850218257,
+     "rho_l": 0.015186813186813187,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 273.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 187.1309145836935
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 10 cell F20",
+    "kind": "formula",
+    "expected": 164.97716210124392,
+    "got": 180.82012623341666,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "per_width": true,
+    "inputs": {
+     "C_Rd_c": 0.1306715063520871,
+     "k": 1.8787495503274936,
+     "rho_l": 0.0029111969111969113,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "d": 259.0,
+     "b_w": 1.0,
+     "V_Rd_c_min": 180.82012623341666
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell S26",
+    "kind": "formula",
+    "expected": 180106.99637901544,
+    "got": 180106.99637901544,
+    "status": "agree",
+    "detail": "omits the lower bound V_Rd,c,min",
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.4472135954999579,
+     "rho_l": 0.00536165146212658,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "b_w": 300.0,
+     "d": 1000.0,
+     "V_Rd_c_min": 141600.2026465468
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AD23",
+    "kind": "formula",
+    "expected": 106759.26489519616,
+    "got": 129262.70856136065,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.4472135954999579,
+     "rho_l": 0.00134,
+     "f_ck": 50.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "b_w": 300.0,
+     "d": 1000.0,
+     "V_Rd_c_min": 129262.70856136065
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell T22",
+    "kind": "formula",
+    "expected": 106759.26489519616,
+    "got": 129262.70856136065,
+    "status": "deviation",
+    "detail": "the lower bound V_Rd,c,min governs here and the source does not apply it: on the safe side (lower resistance than the code)",
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.4472135954999579,
+     "rho_l": 0.00134,
+     "f_ck": 50.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "b_w": 300.0,
+     "d": 1000.0,
+     "V_Rd_c_min": 129262.70856136065
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 9 cell W23",
+    "kind": "formula",
+    "expected": 173337.80261130488,
+    "got": 173337.80261130488,
+    "status": "agree",
+    "detail": "omits the lower bound V_Rd,c,min",
+    "inputs": {
+     "C_Rd_c": 0.13043478260869565,
+     "k": 1.76416071990087,
+     "rho_l": 0.007164963503649635,
+     "f_ck": 60.0,
+     "k_1": 0.15,
+     "sigma_cp": -2.0,
+     "b_w": 1000.0,
+     "d": 342.5,
+     "V_Rd_c_min": 114826.2400458677
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 90",
+    "kind": "formula",
+    "expected": 157082.24346658657,
+    "got": 157082.24346658654,
+    "status": "agree",
+    "case": "phase 1",
+    "detail": "leaves out k_1 · σ_cp, which is zero for this case: no effect",
+    "inputs": {
+     "C_Rd_c": 0.1285714285714286,
+     "k": 1.6379009321094968,
+     "rho_l": 0.00798980837637282,
+     "f_ck": 35.0,
+     "b_w": 500.0,
+     "d": 491.5000000000001,
+     "V_Rd_c_min": 106666.25269892481,
+     "k_1": 0.15,
+     "sigma_cp": 0.0
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 135",
+    "kind": "formula",
+    "expected": 204168.09176039105,
+    "got": 204168.09176039102,
+    "status": "agree",
+    "case": "phase 2",
+    "detail": "leaves out k_1 · σ_cp, which is zero for this case: no effect",
+    "inputs": {
+     "C_Rd_c": 0.1285714285714286,
+     "k": 1.487514949418087,
+     "rho_l": 0.004666655753995533,
+     "f_ck": 35.0,
+     "b_w": 500.0,
+     "d": 841.5000000000001,
+     "V_Rd_c_min": 158058.6250689481,
+     "k_1": 0.15,
+     "sigma_cp": 0.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 3",
+    "kind": "printed",
+    "expected": 157080.0,
+    "got": 157082.36590869623,
+    "status": "agree",
+    "case": "phase 1",
+    "tolerance": 1531.7096868031658,
+    "inputs": {
+     "C_Rd_c": 0.1285714285714286,
+     "k": 1.6379009321094968,
+     "rho_l": 0.007989827060020346,
+     "f_ck": 35.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "b_w": 500.0,
+     "d": 491.5,
+     "V_Rd_c_min": 106666.25269892479
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 4",
+    "kind": "printed",
+    "expected": 204170.0,
+    "got": 204168.25090487063,
+    "status": "agree",
+    "case": "phase 2",
+    "tolerance": 1987.9875576449558,
+    "inputs": {
+     "C_Rd_c": 0.1285714285714286,
+     "k": 1.487514949418087,
+     "rho_l": 0.004666666666666667,
+     "f_ck": 35.0,
+     "k_1": 0.15,
+     "sigma_cp": 0.0,
+     "b_w": 500.0,
+     "d": 841.5,
+     "V_Rd_c_min": 158058.62506894808
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "VRdc(fck, d, Asl, bw, NEd, Ac, fcd, k1, gamma_c)",
+  "samples": 200,
+  "max_relative_difference": 3.01e-16,
+  "status": "agrees",
+  "agreeing_samples": 200,
+  "note": "σ_cp passed as N_Ed/A_c; the library's cap σ_cp ≤ 0.2 f_cd is switched off for the comparison"
+ }
+}

@@ -1,0 +1,109 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 7.2(2), 7.2(3)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 1 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 2,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "M_SLS / I_cr * x_el",
+    "text": "M_SLS / I_cr · x_el",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   },
+   {
+    "formula": "M_SLS / I_cr * x_el + DeltaM_SLS_y / I_c_short * z_NA_short",
+    "text": "M_SLS / I_cr · x_el + DeltaM_SLS_y / I_c_short · z_NA_short",
+    "relation": "project-specific",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: DeltaM_SLS_y, I_c_short, z_NA_short"
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code.",
+   "1 formula(s) in S1: written with project-specific quantities (DeltaM_SLS_y, I_c_short, z_NA_short)."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 3,
+  "agree": 1,
+  "deviation": 1,
+  "not_comparable": 1,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 211",
+    "kind": "formula",
+    "expected": 2.4723267537937597,
+    "got": 2.4723267537937597,
+    "status": "agree",
+    "inputs": {
+     "M_SLS": 196069916.345625,
+     "I_cr": 20564932872.71287,
+     "x_el": 259.31175306647333
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 7",
+    "kind": "printed",
+    "expected": 2.47,
+    "got": 4.003745114951669,
+    "status": "deviation",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.01945569431851279,
+    "inputs": {
+     "M_SLS": 196000000.0,
+     "x_el": 259.34168942084267,
+     "I_cr": 12695855921.662178
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 7",
+    "kind": "printed",
+    "expected": 4.1,
+    "got": null,
+    "status": "not comparable",
+    "detail": "printed from a formula variant that was not merged into this object",
+    "inputs": {}
+   }
+  ]
+ }
+}

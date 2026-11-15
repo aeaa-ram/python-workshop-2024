@@ -1,0 +1,134 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.3.4(1), expr. (7.8)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 1,
+  "printed_values": 1,
+  "variants": [
+   {
+    "formula": "s_r_max * eps_sm_cm",
+    "text": "s_r,max · ε_sm−ε_cm",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   },
+   "k_1_bond": {
+    "recommended": 0.8,
+    "seen": [
+     [
+      0.8,
+      2
+     ]
+    ]
+   },
+   "k_2": {
+    "recommended": 0.5,
+    "seen": [
+     [
+      0.5,
+      2
+     ]
+    ]
+   },
+   "k_3": {
+    "recommended": 3.4,
+    "seen": [
+     [
+      3.4,
+      2
+     ]
+    ]
+   },
+   "k_4": {
+    "recommended": 0.425,
+    "seen": [
+     [
+      0.425,
+      2
+     ]
+    ]
+   },
+   "k_t": {
+    "recommended": 0.4,
+    "seen": [
+     [
+      0.4,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 206",
+    "kind": "formula",
+    "expected": 0.1409467414377318,
+    "got": 0.1409467414377318,
+    "status": "agree",
+    "inputs": {
+     "s_r_max": 575.5666169058785,
+     "eps_sm_cm": 0.00024488345449121245
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 6",
+    "kind": "printed",
+    "expected": 0.14,
+    "got": 0.14158658773537974,
+    "status": "agree",
+    "tolerance": 0.00795383321536652,
+    "inputs": {
+     "s_r_max": 575.5552346966657,
+     "eps_sm_cm": 0.00024599999999999996
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "wk(sr_max, eps_sm_eps_cm)",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

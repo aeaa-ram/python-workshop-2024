@@ -1,0 +1,33 @@
+id: E_cm
+name: Secant modulus of elasticity of concrete
+formula: 22000 * (f_cm / 10) ** 0.3
+params:
+- f_cm
+var: E_cm
+symbol: E_{cm}
+unit: GPa
+code: EN 1992-1-1
+topic: '3.1'
+topic_path:
+- 3 Materials
+- 3.1 Concrete
+clause: 3.1.3, Table 3.1
+basis: code
+refs:
+- code: EN 1994-1-1
+  clause: 3.1(1)
+  eq: ''
+  topic: '3.1'
+  symbol: E_cm
+  how: same object
+background:
+- kind: limitation
+  text: The expression applies to quartzite aggregates. Reduce by 10 % for limestone and 30 % for sandstone aggregates
+    and increase by 20 % for basalt (3.1.3(2)). For deflections and long-term stresses an effective modulus is used
+    instead (see E_c,eff).
+  refs:
+  - id: EN1992-1-1
+    at: 3.1.3(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 8eb579a02ecf

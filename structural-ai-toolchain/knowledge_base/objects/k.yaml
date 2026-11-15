@@ -6,72 +6,20 @@ params:
 var: k
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.2
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.2 Shear
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(1)
-status: consensus
-support:
-  sources: 2
-  source_ids:
-  - S1
-  - S3
-  formula_instances: 86
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: min(1 + sqrt(200 / d), 2)
-  text: min(1 + √(200 mm / d), 2)
-  instances: 86
-  sources:
-  - S1 (Mathcad worksheet)
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-benchmarks:
-  total: 88
-  agree: 88
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: shear._k(d)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-examples:
-- label: S1 (Mathcad worksheet) - region 125 - phase 2
-  inputs:
-    d: 841.5000000000001
-  expected: 1.487514949418087
-  result: 1.487514949418087
-  matches_source: true
-- label: S1 (Mathcad worksheet) - region 80 - phase 1
-  inputs:
-    d: 491.5000000000001
-  expected: 1.6379009321094968
-  result: 1.6379009321094968
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell E33
-  inputs:
-    d: 237.5
-  expected: 1.9176629354822472
-  result: 1.9176629354822472
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell F33
-  inputs:
-    d: 217.0
-  expected: 1.9600307214746386
-  result: 1.9600307214746386
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell K33
-  inputs:
-    d: 470.5
-  expected: 1.6519813666388083
-  result: 1.6519813666388083
-  matches_source: true
-version: 3f4078a78ea5
+basis: code
+background:
+- kind: pitfall
+  text: 'The expression is empirical and not dimensionally consistent: d must be in millimetres. k reaches its cap
+    of 2.0 for d ≤ 200 mm.'
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.2(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: b0163741b699

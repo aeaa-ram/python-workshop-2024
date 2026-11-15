@@ -8,7 +8,6 @@ var: rho_p_eff
 symbol: ρ_{p,eff}
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 7.3.4
 topic_path:
 - 7 Serviceability limit states (SLS)
@@ -16,47 +15,13 @@ topic_path:
 - 7.3.4 Calculation of crack widths
 clause: 7.3.4(2)
 eq: (7.10)
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 1
-  variants_merged: 1
-  printed_values: 1
-variants:
-- formula: A_s / A_c_eff
-  text: A_s / A_c,eff
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-benchmarks:
-  total: 2
-  agree: 2
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: rho_p_eff(As, xi1=0, Ap=0, Ac_eff)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S1 (Mathcad worksheet) - region 199
-  inputs:
-    A_s: 1963.495408493621
-    h: 950.0000000000001
-    d: 841.5000000000001
-    x: 259.31175306647333
-    b: 500.0
-  expected: 0.017056859593696766
-  result: 0.017056859593696762
-  matches_source: true
-  given:
-  - x
-version: 8a3f3d86bce9
+basis: code
+background:
+- kind: scope
+  text: Reinforcing steel only. With bonded prestressing tendons inside A_c,eff, ξ1² A'_p is added to A_s.
+  refs:
+  - id: EN1992-1-1
+    at: (7.10)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: c186a6a688b7

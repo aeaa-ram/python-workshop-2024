@@ -1,0 +1,89 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.3.4(2), expr. (7.10)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 1,
+  "printed_values": 1,
+  "variants": [
+   {
+    "formula": "A_s / A_c_eff",
+    "text": "A_s / A_c,eff",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 199",
+    "kind": "formula",
+    "expected": 0.017056859593696766,
+    "got": 0.017056859593696762,
+    "status": "agree",
+    "inputs": {
+     "A_s": 1963.495408493621,
+     "A_c_eff": 115114.70782225447
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 6",
+    "kind": "printed",
+    "expected": 0.02,
+    "got": 0.017057638805679384,
+    "status": "agree",
+    "tolerance": 0.005033054073728743,
+    "inputs": {
+     "A_s": 1963.5,
+     "A_c_eff": 115109.71842985957
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "rho_p_eff(As, xi1=0, Ap=0, Ac_eff)",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

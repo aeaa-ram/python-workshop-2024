@@ -7,69 +7,12 @@ var: C_Rd_c
 symbol: C_{Rd,c}
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.2
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.2 Shear
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(1)
-status: consensus
-support:
-  sources: 2
-  source_ids:
-  - S1
-  - S3
-  formula_instances: 82
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: 0.18 / gamma_C
-  text: 0.18 / γ_C
-  instances: 82
-  sources:
-  - S1 (Mathcad worksheet)
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-- formula: 0.18 / gamma_C * (1 if av_or_none == 'N' else Max_enhance_factor if av_or_none < d / 2 else 1 if av_or_none
-    > 2 * d else 2 * d / av_or_none)
-  text: 0.18 / γ_C · (1 if av_or_none = "N" else Max_enhance_factor if av_or_none < d / 2 else 1 if av_or_none >
-    2 · d else 2 · d / av_or_none)
-  instances: 4
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: av_or_none, Max_enhance_factor'
-benchmarks:
-  total: 84
-  agree: 84
-  deviation: 0
-  not_comparable: 0
-examples:
-- label: S1 (Mathcad worksheet) - region 129 - phase 2
-  inputs:
-    gamma_C: 1.4
-  expected: 0.1285714285714286
-  result: 0.1285714285714286
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell E28
-  inputs:
-    gamma_C: 1.3775
-  expected: 0.1306715063520871
-  result: 0.1306715063520871
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 3 cell D18
-  inputs:
-    gamma_C: 1.0
-  expected: 0.18
-  result: 0.18
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 5 cell AN31
-  inputs:
-    gamma_C: 1.38
-  expected: 0.13043478260869565
-  result: 0.13043478260869565
-  matches_source: true
-version: 36d3631268f3
+basis: code
+ndp: true
+version: 6a4e22c4e444

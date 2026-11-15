@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .. import units as U
 from ..ir import SourceDocument, close, file_sha256
+from ..notation import case_of
 from .python_src import ConversionError, convert_source, find_clause
 
 _REGION = re.compile(r"<region\b([^>]*)>\s*<(\w+)\b([^>]*)", re.S)
@@ -144,10 +145,7 @@ def convert_mathcad(path: Path) -> SourceDocument:
         label_text = " ".join(lab["text"]) if lab else ""
         clause = find_clause(label_text) or sub_clause
         label = re.sub(r"\s*\(Acc\. to[^)]*\)+\s*", " ", label_text).strip().rstrip(":").strip()
-        case = ""
-        m = re.search(r"\bphase\s*(\d+)", main, re.I)
-        if m:
-            case = f"phase {m.group(1)}"
+        case = case_of(main)
         info = {"name": r["raw"], "label": label, "clause": clause,
                 "section": [h for h in (main, sub) if h], "case": case, "group": main,
                 "loc": f"region {r['id']}"}

@@ -1,0 +1,52 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 3.1.7(3), expr. (3.19), (3.20)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 2 value(s) printed in the sources."
+  ]
+ },
+ "evidence": {
+  "sources": 0,
+  "source_ids": [],
+  "formula_instances": 0,
+  "printed_values": 2,
+  "variants": [],
+  "practice": [],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 24",
+    "kind": "printed",
+    "expected": 0.8,
+    "got": 0.8,
+    "status": "agree",
+    "tolerance": 0.05,
+    "inputs": {
+     "f_ck": 35.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 1",
+    "kind": "printed",
+    "expected": 0.8,
+    "got": 0.8,
+    "status": "agree",
+    "tolerance": 0.05,
+    "inputs": {
+     "f_ck": 35.0
+    }
+   }
+  ]
+ }
+}

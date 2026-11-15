@@ -1,0 +1,21 @@
+id: I_cr
+name: Second moment of area of the cracked section
+formula: b * x_el ** 3 / 3 + alpha_e * A_s * (d - x_el) ** 2
+params:
+- b
+- x_el
+- alpha_e
+- A_s
+- d
+var: I_cr
+symbol: I_{cr}
+unit: mm⁴
+code: EN 1992-1-1
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.4, 7.2
+basis: mechanics
+version: eafa05c2a139

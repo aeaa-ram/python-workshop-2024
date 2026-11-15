@@ -1,0 +1,17 @@
+id: lam
+name: Factor for the effective height of the compression zone
+formula: 0.8 if f_ck <= 50 else 0.8 - (f_ck - 50) / 400
+params:
+- f_ck
+var: lam
+symbol: λ
+unit: '-'
+code: EN 1992-1-1
+topic: '3.1'
+topic_path:
+- 3 Materials
+- 3.1 Concrete
+clause: 3.1.7(3)
+eq: (3.19), (3.20)
+basis: code
+version: d1e2ea6ba204

@@ -1,0 +1,16 @@
+id: f_ctk_005
+name: Characteristic axial tensile strength of concrete (5 % fractile)
+formula: 0.7 * f_ctm
+params:
+- f_ctm
+var: f_ctk_005
+symbol: f_{ctk,0.05}
+unit: MPa
+code: EN 1992-1-1
+topic: '3.1'
+topic_path:
+- 3 Materials
+- 3.1 Concrete
+clause: 3.1.2, Table 3.1
+basis: code
+version: 71c93a93007b

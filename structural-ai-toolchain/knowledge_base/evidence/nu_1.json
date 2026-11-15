@@ -1,0 +1,90 @@
+{
+ "confidence": {
+  "level": "medium",
+  "label": "not yet checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.3(3), expr. (6.6N)).",
+   "No independent implementation available to compare with.",
+   "Not reproduced by any source value yet."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S3"
+  ],
+  "formula_instances": 4,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "0.6 if fywd_fywk == 0.8 else nu",
+    "text": "0.6 if fywd_fywk = 0.8 else ν",
+    "relation": "project-specific",
+    "instances": 2,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: fywd_fywk"
+   },
+   {
+    "formula": "0.6 if fywd_fywk_0_8_or_0_87 == 0.8 else nu",
+    "text": "0.6 if fywd_fywk_0_8_or_0_87 = 0.8 else ν",
+    "relation": "project-specific",
+    "instances": 2,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: fywd_fywk_0_8_or_0_87"
+   }
+  ],
+  "practice": [
+   "2 formula(s) in S3: written with project-specific quantities (fywd_fywk).",
+   "2 formula(s) in S3: written with project-specific quantities (fywd_fywk_0_8_or_0_87)."
+  ],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 0,
+  "deviation": 2,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 97",
+    "kind": "printed",
+    "expected": 0.6,
+    "got": 0.516,
+    "status": "deviation",
+    "case": "phase 1",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.05,
+    "inputs": {
+     "nu": 0.516
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 3",
+    "kind": "printed",
+    "expected": 0.6,
+    "got": 0.516,
+    "status": "deviation",
+    "case": "phase 1",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.05120000000000009,
+    "inputs": {
+     "nu": 0.516
+    }
+   }
+  ]
+ }
+}

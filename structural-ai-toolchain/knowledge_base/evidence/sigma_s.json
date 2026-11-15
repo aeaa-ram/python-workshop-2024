@@ -1,0 +1,145 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 7.3.4(2)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 3,
+  "printed_values": 3,
+  "variants": [
+   {
+    "formula": "alpha_e * M_SLS / I_cr * (d - x_el)",
+    "text": "α_e · M_SLS / I_cr · (d − x_el)",
+    "relation": "as code",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 2,
+    "compared": 2
+   },
+   {
+    "formula": "sigma_s_QP + alpha_e * DeltaM_SLS_y / I_cr * (d - x_el)",
+    "text": "sigma_s_QP + α_e · DeltaM_SLS_y / I_cr · (d − x_el)",
+    "relation": "project-specific",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: sigma_s_QP, DeltaM_SLS_y"
+   }
+  ],
+  "practice": [
+   "2 formula(s) in S1: as in the code.",
+   "1 formula(s) in S1: written with project-specific quantities (sigma_s_QP, DeltaM_SLS_y)."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 5,
+  "agree": 2,
+  "deviation": 2,
+  "not_comparable": 1,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 176",
+    "kind": "formula",
+    "expected": 81.62781816373749,
+    "got": 81.62781816373752,
+    "status": "agree",
+    "inputs": {
+     "alpha_e": 14.705882352941176,
+     "M_SLS": 196069916.345625,
+     "I_cr": 20564932872.71287,
+     "d": 841.5000000000001,
+     "x_el": 259.31175306647333
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 221",
+    "kind": "formula",
+    "expected": 81.62781816373749,
+    "got": 81.62781816373752,
+    "status": "agree",
+    "inputs": {
+     "alpha_e": 14.705882352941176,
+     "M_SLS": 196069916.345625,
+     "I_cr": 20564932872.71287,
+     "d": 841.5000000000001,
+     "x_el": 259.31175306647333
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 6",
+    "kind": "printed",
+    "expected": 82.0,
+    "got": 132.20499390399942,
+    "status": "deviation",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.9828826462859581,
+    "inputs": {
+     "alpha_e": 14.71,
+     "M_SLS": 196000000.0,
+     "d": 841.5,
+     "x_el": 259.34168942084267,
+     "I_cr": 12695855921.662178
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 7",
+    "kind": "printed",
+    "expected": 81.63,
+    "got": 132.20499390399942,
+    "status": "deviation",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.4878826462859581,
+    "inputs": {
+     "alpha_e": 14.71,
+     "M_SLS": 196000000.0,
+     "d": 841.5,
+     "x_el": 259.34168942084267,
+     "I_cr": 12695855921.662178
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 7",
+    "kind": "printed",
+    "expected": 118.01,
+    "got": null,
+    "status": "not comparable",
+    "detail": "printed from a formula variant that was not merged into this object",
+    "inputs": {}
+   }
+  ]
+ }
+}

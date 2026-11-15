@@ -1,0 +1,71 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.4.3(5), expr. (7.20)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 1,
+  "printed_values": 1,
+  "variants": [
+   {
+    "formula": "E_cm / (1 + phi_creep)",
+    "text": "E_cm / (1 + φ(∞,t_0))",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code."
+  ],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 148",
+    "kind": "formula",
+    "expected": 13600.0,
+    "got": 13600.0,
+    "status": "agree",
+    "inputs": {
+     "E_cm": 34000.0,
+     "phi_creep": 1.5
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 5",
+    "kind": "printed",
+    "expected": 13600.0,
+    "got": 13630.858479675731,
+    "status": "agree",
+    "tolerance": 80.06065661249704,
+    "inputs": {
+     "E_cm": 34077.14619918933,
+     "phi_creep": 1.5
+    }
+   }
+  ]
+ }
+}

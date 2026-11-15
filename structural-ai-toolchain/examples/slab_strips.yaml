@@ -1,0 +1,35 @@
+# A report template: set up once, run for any number of cases.
+#   python -m ckb report --template examples/slab_strips.yaml --pdf
+#   python -m ckb report --template examples/slab_strips.yaml --cases my_strips.xlsx --pdf
+# The values are invented for the example.
+title: Shear resistance of slab strips without shear reinforcement
+project: Example project
+number: C-101
+made_by: ''
+checked_by: ''
+style:
+  decimals: 2                 # digits after the decimal point
+  min_significant: 3          # small values keep 3 significant digits (ρ_l = 0.00491)
+  units: {V_Rd_c: kN, V_Rd_c_min: kN, V_Ed: kN}
+defaults:                     # applied to every case; anything not given takes the recommended value
+  f_ck: 35
+  b_w: 1000                   # per metre width
+  sigma_cp: 0
+cases: {file: slab_strips.csv}
+blocks:
+  - heading: Governing strip
+  - text: Strips are checked per metre width. Coefficients not listed take the recommended values of EN 1992-1-1.
+  - calc: V_Rd_c
+    case: governing           # governing | first | a case name
+    show: [equation, substituted, result]
+    steps: all                # all | result | [k, rho_l, V_Rd_c]
+    remarks: {d: "h - c - φ/2 from the reinforcement drawing"}
+    limitations: true
+  - heading: All strips
+  - table: V_Rd_c
+    columns: [case, d, A_sl, rho_l, k, V_Rd_c, V_Ed, utilisation, verdict]
+    sort: utilisation desc
+  - chart: V_Rd_c
+    x: d
+    range: [150, 500]
+    series: [V_Rd_c, V_Rd_c_min]

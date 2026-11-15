@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .. import units as U
 from ..ir import SourceDocument, Statement, file_sha256
+from ..notation import case_of
 from .python_src import ConversionError, find_clause
 
 _DEF = "≔"
@@ -224,8 +225,7 @@ def _page_statements(page, page_no: int, doc: SourceDocument, section: list[str]
             st.section = [h for h in (main_h, sub_h) if h]
             if not st.clause:
                 st.clause = sub_clause
-            m = re.search(r"\bphase\s*(\d+)", main_h, re.I)
-            st.case = f"phase {m.group(1)}" if m else ""
+            st.case = case_of(main_h)
             st.group = main_h
     section[:] = [main_h, sub_h]
     return statements

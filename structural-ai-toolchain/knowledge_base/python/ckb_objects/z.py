@@ -1,21 +1,28 @@
-"""z - Lever arm of internal forces
-
-EN 1992-1-1 cl. 6.2.3(1)
-6 Ultimate limit states (ULS) > 6.1 Bending with or without axial force
-
-Status: disagreement - 3 formula instance(s) in 1 independent source(s), 1 variant(s) merged.
-Benchmarks: 3 of 5 source values reproduced.
-WARNING: Sources disagree: 2 other formula(s) for this quantity could not be merged with the one
-shown. The one shown has the most support; an engineer has to decide.
-
-Units: N, mm, MPa (N/mm2), rad.
-Generated from objects/z.yaml (version 52ff47b6b953) - do not edit by hand.
-"""
+"""z - EN 1992-1-1 cl. 3.1.7(3), 6.1.  Units: N, mm, MPa, rad."""
+# ckb z e4f40cad8b9c
+from .lam import lam as _lam
+from .f_yd import f_yd as _f_yd
+from .eta import eta as _eta
+from .f_cd import f_cd as _f_cd
+from .x import x as _x
 
 
-def z(d):
-    """Lever arm of internal forces [mm]
+def z(d, lam, x):
+    """Lever arm of internal forces in bending [mm]
+    EN 1992-1-1 cl. 3.1.7(3), 6.1
     
-    d  Effective depth of the cross-section [mm]
+    d    Effective depth of the cross-section [mm]
+    lam  Factor for the effective height of the compression zone [-]
+    x    Depth of the neutral axis at the ultimate limit state [mm]
     """
-    return 0.9 * d
+    return d - lam * x / 2
+
+
+def z_chain(d, f_ck, A_s, f_yk, gamma_S, alpha_cc, gamma_C, b):
+    """z from the primary inputs."""
+    lam = _lam(f_ck)
+    f_yd = _f_yd(f_yk, gamma_S)
+    eta = _eta(f_ck)
+    f_cd = _f_cd(alpha_cc, f_ck, gamma_C)
+    x = _x(A_s, f_yd, eta, f_cd, lam, b)
+    return z(d, lam, x)

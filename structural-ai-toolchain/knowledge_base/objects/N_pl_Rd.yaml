@@ -1,0 +1,48 @@
+id: N_pl_Rd
+name: Plastic resistance to compression of a composite cross-section
+formula: A_a * f_yd_a + 0.85 * A_c * f_cd + A_s * f_yd
+params:
+- A_a
+- f_yd_a
+- A_c
+- f_cd
+- A_s
+- f_yd
+var: N_pl_Rd
+symbol: N_{pl,Rd}
+unit: kN
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.2(1)
+eq: (6.30)
+basis: code
+sense: resistance
+check: N_Ed
+fixed:
+  alpha_cc: 1.0
+background:
+- kind: scope
+  text: Concrete-encased and partially encased sections. For concrete-filled sections the coefficient 0.85 may be
+    replaced by 1.0, and circular filled tubes may use the confinement effect (6.33).
+  refs:
+  - id: EN1994-1-1
+    at: 6.7.3.2(1), (6.33)
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+- kind: pitfall
+  text: f_cd here is f_ck/γ_C without α_cc; the reduction to 0.85 is in the expression itself. Using an EN 1992-1-1
+    f_cd with α_cc = 0.85 would apply it twice.
+  refs:
+  - id: EN1994-1-1
+    at: 2.4.1.2, 6.7.3.2
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+  - id: DG-EC4
+    at: '6.7'
+    text: 'Johnson, R.P. Designers'' Guide to Eurocode 4: Design of composite steel and concrete structures, EN
+      1994-1-1. 2nd edition, ICE Publishing, 2012.'
+version: 94097259d69f

@@ -1,0 +1,162 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 3.1.7(3), 6.1).",
+   "No independent implementation available to compare with.",
+   "Reproduces 4 value(s) from 2 independent source(s).",
+   "Some source formulas differ from the code: see how the sources applied it."
+  ]
+ },
+ "evidence": {
+  "sources": 2,
+  "source_ids": [
+   "S1",
+   "S3"
+  ],
+  "formula_instances": 3,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "d - lam * x / 2",
+    "text": "d − λ · x / 2",
+    "relation": "as code",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 2,
+    "compared": 2
+   },
+   {
+    "formula": "0.9 * (d - 60)",
+    "text": "0.9 · (d − 60)",
+    "relation": "differs",
+    "instances": 1,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "not a special case of the code expression"
+   }
+  ],
+  "practice": [
+   "2 formula(s) in S1: as in the code.",
+   "1 formula(s) in S3: 0.9 · (d − 60) - not the code expression; to be reviewed.",
+   "γ_C: the sources use 1.3775 (72×), 1.38 (9×), 1 (3×), 1.4 (2×) against the recommended 1.5."
+  ],
+  "values_seen": {
+   "alpha_cc": {
+    "recommended": 1.0,
+    "seen": [
+     [
+      1.0,
+      2
+     ]
+    ]
+   },
+   "gamma_C": {
+    "recommended": 1.5,
+    "seen": [
+     [
+      1.3775,
+      72
+     ],
+     [
+      1.38,
+      9
+     ],
+     [
+      1.0,
+      3
+     ],
+     [
+      1.4,
+      2
+     ]
+    ]
+   },
+   "gamma_S": {
+    "recommended": 1.15,
+    "seen": [
+     [
+      1.15,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 4,
+  "agree": 4,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 73",
+    "kind": "formula",
+    "expected": 457.35225376532844,
+    "got": 457.35225376532844,
+    "status": "agree",
+    "case": "phase 1",
+    "inputs": {
+     "d": 491.5000000000001,
+     "lam": 0.8,
+     "x": 85.36936558667917
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 118",
+    "kind": "formula",
+    "expected": 835.5761998031624,
+    "got": 835.5761998031622,
+    "status": "agree",
+    "case": "phase 2",
+    "inputs": {
+     "d": 841.5000000000001,
+     "lam": 0.8,
+     "x": 14.809500492094573
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 2",
+    "kind": "printed",
+    "expected": 457.35,
+    "got": 457.3521739130435,
+    "status": "agree",
+    "case": "phase 1",
+    "tolerance": 36.90670906724842,
+    "inputs": {
+     "d": 491.5,
+     "lam": 0.8,
+     "x": 85.36956521739131
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 4",
+    "kind": "printed",
+    "expected": 835.58,
+    "got": 807.3521739130434,
+    "status": "agree",
+    "case": "phase 2",
+    "tolerance": 36.90670906724848,
+    "inputs": {
+     "d": 841.5,
+     "lam": 0.8,
+     "x": 85.36956521739131
+    }
+   }
+  ]
+ }
+}

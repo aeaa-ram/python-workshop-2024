@@ -1,0 +1,17 @@
+id: f_yd_a
+name: Design yield strength of structural steel
+formula: f_y / gamma_M0
+params:
+- f_y
+- gamma_M0
+var: f_yd_a
+symbol: f_{yd}
+unit: MPa
+code: EN 1994-1-1
+topic: '2.4'
+topic_path:
+- 2.4 Verification by the partial factor method
+clause: 2.4.1.2(4)
+basis: code
+sense: resistance
+version: b959c6a36037

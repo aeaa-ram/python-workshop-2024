@@ -1,0 +1,110 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.3(3), expr. (6.11aN) to (6.11cN)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Not reproduced by any source value yet.",
+   "Some source formulas differ from the code: see how the sources applied it."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S3"
+  ],
+  "formula_instances": 4,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "1 if sigma_cp < 1 else 1 + sigma_cp / f_cd if sigma_cp < f_cd / 4 else 1.25 if sigma_cp < f_cd / 2 else 2.5 - 2.5 * sigma_cp / f_cd if sigma_cp < f_cd else 'σcp too great'",
+    "text": "1 if σ_cp < 1 else 1 + σ_cp / f_cd if σ_cp < f_cd / 4 else 1.25 if σ_cp < f_cd / 2 else 2.5 − 2.5 · σ_cp / f_cd if σ_cp < f_cd else \"σcp too great\"",
+    "relation": "differs",
+    "instances": 4,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "not a special case of the code expression"
+   }
+  ],
+  "practice": [
+   "4 formula(s) in S3: 1 if σ_cp < 1 else 1 + σ_cp / f_cd if σ_cp < f_cd / 4 else 1.25 if σ_cp < f_cd / 2 else 2.5 − 2.5 · σ_cp / f_cd if σ_cp < f_cd else \"σcp too great\" - not the code expression; to be reviewed.",
+   "γ_C: the sources use 1.3775 (72×), 1.38 (9×), 1 (3×), 1.4 (2×) against the recommended 1.5."
+  ],
+  "values_seen": {
+   "alpha_cc": {
+    "recommended": 1.0,
+    "seen": [
+     [
+      1.0,
+      2
+     ]
+    ]
+   },
+   "gamma_C": {
+    "recommended": 1.5,
+    "seen": [
+     [
+      1.3775,
+      72
+     ],
+     [
+      1.38,
+      9
+     ],
+     [
+      1.0,
+      3
+     ],
+     [
+      1.4,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 2,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 98",
+    "kind": "printed",
+    "expected": 1.0,
+    "got": null,
+    "status": "not comparable",
+    "case": "phase 1",
+    "detail": "the print does not show every input",
+    "inputs": {}
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 3",
+    "kind": "printed",
+    "expected": 1.0,
+    "got": null,
+    "status": "not comparable",
+    "case": "phase 1",
+    "detail": "the print does not show every input",
+    "inputs": {}
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "shear.alpha_cw(NEd, Ac, fcd)",
+  "samples": 200,
+  "max_relative_difference": 1.96e-16,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

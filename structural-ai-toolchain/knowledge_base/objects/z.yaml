@@ -1,68 +1,24 @@
 id: z
-name: Lever arm of internal forces
-formula: 0.9 * d
+name: Lever arm of internal forces in bending
+formula: d - lam * x / 2
 params:
 - d
+- lam
+- x
 var: z
 unit: mm
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: '6.1'
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.1 Bending with or without axial force
-clause: 6.2.3(1)
-status: disagreement
-support:
-  sources: 1
-  source_ids:
-  - S3
-  formula_instances: 3
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: 0.9 * d
-  text: 0.9 · d
-  instances: 3
-  sources:
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-- formula: d - lam * x / 2
-  text: d − λ · x / 2
-  instances: 2
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-- formula: 0.9 * (d - 60)
-  text: 0.9 · (d − 60)
-  instances: 1
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-benchmarks:
-  total: 5
-  agree: 3
-  deviation: 0
-  not_comparable: 2
-warnings:
-- 'Sources disagree: 2 other formula(s) for this quantity could not be merged with the one shown. The one shown
-  has the most support; an engineer has to decide.'
-examples:
-- label: S3 (Excel workbook) - sheet 5 cell AH19
-  inputs:
-    d: 1000.0
-  expected: 900.0
-  result: 900.0
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 9 cell AA19
-  inputs:
-    d: 342.5
-  expected: 308.25
-  result: 308.25
-  matches_source: true
-version: 52ff47b6b953
+clause: 3.1.7(3), 6.1
+basis: mechanics
+background:
+- kind: guidance
+  text: Design aids commonly limit z to 0.95 d for lightly reinforced sections.
+  refs:
+  - id: HowTo-EC2
+    at: Beams
+    text: The Concrete Centre. How to design concrete structures using Eurocode 2. 2006 and later editions.
+version: e4f40cad8b9c

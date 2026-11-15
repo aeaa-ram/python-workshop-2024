@@ -146,3 +146,26 @@ def mathml(name: str, display: str = "") -> str:
 
 def _esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+# --------------------------------------------------------------------------
+# cases: a heading that names one of several parallel calculations
+# --------------------------------------------------------------------------
+CASE_WORDS = ("load case", "lc", "case", "phase", "stage", "step", "situation", "scenario", "combination",
+              "span", "support", "member", "zone", "option", "alternative")
+_CASE = re.compile(r"\b(" + "|".join(w.replace(" ", r"\s*") for w in CASE_WORDS) + r")\s*[-:#]?\s*"
+                   r"(\d+[a-z]?|[A-Z])(?![.\w])", re.I)
+
+
+def case_of(heading: str) -> str:
+    """``"Phase 2 - temporary works"`` -> ``"phase 2"``; ``"Load case 3"`` -> ``"load case 3"``; else ``""``."""
+    m = _CASE.search(heading or "")
+    if not m:
+        return ""
+    word = " ".join(m.group(1).lower().split())
+    return f"{word} {m.group(2)}"
+
+
+def is_case_label(text: str) -> bool:
+    """A case name that says nothing about the project (safe to keep in an anonymous knowledge base)."""
+    return bool(text) and case_of(text).lower() == text.lower().strip()

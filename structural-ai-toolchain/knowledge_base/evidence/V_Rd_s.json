@@ -1,0 +1,180 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.3(3), expr. (6.8)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 4 value(s) from 2 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 2,
+  "source_ids": [
+   "S1",
+   "S3"
+  ],
+  "formula_instances": 6,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "A_sw / s * z_V * f_ywk / gamma_S * cot(theta)",
+    "text": "A_sw / s · z · f_ywk / γ_S · cot(θ)",
+    "relation": "as code",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 2,
+    "compared": 2
+   },
+   {
+    "formula": "A_sw * z_V * f_ywk * fywd_fywk * cot_theta / s",
+    "text": "A_sw · z · f_ywk · fywd_fywk · cot θ / s",
+    "relation": "project-specific",
+    "instances": 2,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: fywd_fywk"
+   },
+   {
+    "formula": "A_sw * z_V * f_ywk * fywd_fywk_0_8_or_0_87 * cot_theta / s",
+    "text": "A_sw · z · f_ywk · fywd_fywk_0_8_or_0_87 · cot θ / s",
+    "relation": "project-specific",
+    "instances": 1,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: fywd_fywk_0_8_or_0_87"
+   },
+   {
+    "formula": "A_sw * f_ywk * fywd_fywk_0_8_or_0_87 * (cot_theta + 0 / tan(alpha)) * sin(alpha)",
+    "text": "A_sw · f_ywk · fywd_fywk_0_8_or_0_87 · (cot θ + 0 / tan(α)) · sin(α)",
+    "relation": "project-specific",
+    "instances": 1,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: fywd_fywk_0_8_or_0_87"
+   }
+  ],
+  "practice": [
+   "2 formula(s) in S1: as in the code.",
+   "2 formula(s) in S3: written with project-specific quantities (fywd_fywk).",
+   "1 formula(s) in S3: written with project-specific quantities (fywd_fywk_0_8_or_0_87).",
+   "1 formula(s) in S3: written with project-specific quantities (fywd_fywk_0_8_or_0_87)."
+  ],
+  "values_seen": {
+   "gamma_S": {
+    "recommended": 1.15,
+    "seen": [
+     [
+      1.15,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 4,
+  "agree": 4,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 100",
+    "kind": "formula",
+    "expected": 533078.9956756001,
+    "got": 533078.9956756,
+    "status": "agree",
+    "case": "phase 1",
+    "inputs": {
+     "A_sw": 402.1238596594935,
+     "s": 150.0,
+     "z_V": 457.35225376532844,
+     "f_ywk": 500.0,
+     "gamma_S": 1.15,
+     "theta": 0.7853981633974483,
+     "f_ywd": 434.7826086956522
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 139",
+    "kind": "formula",
+    "expected": 973927.9029114778,
+    "got": 973927.9029114778,
+    "status": "agree",
+    "case": "phase 2",
+    "inputs": {
+     "A_sw": 402.1238596594935,
+     "s": 150.0,
+     "z_V": 835.5761998031624,
+     "f_ywk": 500.0,
+     "gamma_S": 1.15,
+     "theta": 0.7853981633974483,
+     "f_ywd": 434.7826086956522
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 3",
+    "kind": "printed",
+    "expected": 533080.0,
+    "got": 533071.2521739133,
+    "status": "agree",
+    "case": "phase 1",
+    "tolerance": 14047.191417431459,
+    "inputs": {
+     "A_sw": 402.12,
+     "s": 150.0,
+     "z_V": 457.35,
+     "f_ywd": 434.7826086956522,
+     "theta": 0.7853981633974483
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 4",
+    "kind": "printed",
+    "expected": 973930.0,
+    "got": 973922.9843478263,
+    "status": "agree",
+    "case": "phase 2",
+    "tolerance": 25655.311677963356,
+    "inputs": {
+     "A_sw": 402.12,
+     "s": 150.0,
+     "z_V": 835.58,
+     "f_ywd": 434.7826086956522,
+     "theta": 0.7853981633974483
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "VRds(Asw, s, z, theta, fyk, alpha=90, gamma_s)",
+  "samples": 200,
+  "max_relative_difference": 5.31e-16,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

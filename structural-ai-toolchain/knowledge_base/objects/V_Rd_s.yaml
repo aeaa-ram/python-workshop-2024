@@ -1,18 +1,16 @@
 id: V_Rd_s
-name: Design shear resistance governed by yielding of the shear reinforcement
-formula: A_sw / s * z * f_ywk / gamma_S * cot(theta)
+name: Shear resistance governed by yielding of the shear reinforcement
+formula: A_sw / s * z_V * f_ywd * cot(theta)
 params:
 - A_sw
 - s
-- z
-- f_ywk
-- gamma_S
+- z_V
+- f_ywd
 - theta
 var: V_Rd_s
 symbol: V_{Rd,s}
 unit: kN
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.3
 topic_path:
 - 6 Ultimate limit states (ULS)
@@ -20,86 +18,29 @@ topic_path:
 - 6.2.3 Members requiring design shear reinforcement
 clause: 6.2.3(3)
 eq: (6.8)
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 2
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: A_sw / s * z * f_ywk / gamma_S * cot(theta)
-  text: A_sw / s · z · f_ywk / γ_S · cot(θ)
-  instances: 2
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-- formula: A_sw * z * f_ywk * fywd_fywk * cot_theta / s
-  text: A_sw · z · f_ywk · fywd_fywk · cot_theta / s
-  instances: 2
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: fywd_fywk, cot_theta'
-- formula: A_sw * z * f_ywk * fywd_fywk_0_8_or_0_87 * cot_theta / s
-  text: A_sw · z · f_ywk · fywd_fywk_0_8_or_0_87 · cot_theta / s
-  instances: 1
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: fywd_fywk_0_8_or_0_87, cot_theta'
-- formula: A_sw * f_ywk * fywd_fywk_0_8_or_0_87 * (cot_theta + 0 / tan(alpha)) * sin(alpha)
-  text: A_sw · f_ywk · fywd_fywk_0_8_or_0_87 · (cot_theta + 0 / tan(α)) · sin(α)
-  instances: 1
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: fywd_fywk_0_8_or_0_87, cot_theta'
-benchmarks:
-  total: 4
-  agree: 4
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: VRds(Asw, s, z, theta, fyk, alpha=90, gamma_s)
-  samples: 200
-  max_relative_difference: 5.31e-16
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S1 (Mathcad worksheet) - region 100 - phase 1
-  inputs:
-    A_sw: 402.1238596594935
-    s: 150.0
-    z: 457.35225376532844
-    f_ywk: 500.0
-    gamma_S: 1.15
-    theta: 0.7853981633974483
-  expected: 533078.9956756001
-  result: 533078.9956756
-  matches_source: true
-  given:
-  - z
-- label: S1 (Mathcad worksheet) - region 139 - phase 2
-  inputs:
-    A_sw: 402.1238596594935
-    s: 150.0
-    z: 835.5761998031624
-    f_ywk: 500.0
-    gamma_S: 1.15
-    theta: 0.7853981633974483
-  expected: 973927.9029114778
-  result: 973927.9029114778
-  matches_source: true
-  given:
-  - z
+basis: code
+sense: resistance
 check: V_Ed
-version: e87f4b3b5693
+checks:
+- when: 1 - 1e-9 <= cot(theta) <= 2.5 + 1e-9
+  text: 1 ≤ cot θ ≤ 2.5 (recommended limits)
+  clause: 6.2.3(2), (6.7N)
+background:
+- kind: scope
+  text: Vertical shear reinforcement. For inclined links use (6.13) with the angle α. The variable strut inclination
+    method lets the designer choose θ within the limits; a flatter strut needs fewer links but increases the additional
+    tensile force in the longitudinal reinforcement (6.2.3(7)).
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.3(2), (6.13), 6.2.3(7)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+- kind: guidance
+  text: Check the maximum effective shear reinforcement (6.12) and the minimum shear reinforcement ratio (9.5N)
+    with the same links.
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.3(3), 9.2.2(5)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 35938a61a10b

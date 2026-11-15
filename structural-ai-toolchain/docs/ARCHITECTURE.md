@@ -1,25 +1,70 @@
 # Architecture notes
 
-How the code maps to the eight stages, the design decisions behind it, and how the concerns raised
-before the workshop are handled. The picture of the stages is in
+How the code maps to the stages, the decisions behind it, and how the concerns raised before the
+workshop are handled. The picture of the stages is in
 [`workshop/calculation-knowledge-architecture.html`](workshop/calculation-knowledge-architecture.html).
 
-## Three decisions everything else rests on
+## Four decisions everything else rests on
 
-**One formula tree.** Every formula, whatever file it came from, becomes the same small tree
-(`ckb/expr.py`). The Python code block, the JavaScript in the web calculator, the Excel formula, the
-equation in the report and the comparison between variants are all produced from that tree. There
-is no second copy of the logic that could drift.
+**The code is the baseline, the sources are evidence.** Most spreadsheets write f_cd = f_ck/γ_C;
+the code writes α_cc·f_ck/γ_C. If the knowledge base distilled only the sources, it would keep
+the simplification. So the expressions come from the codes (`ckb/data/codes/*.yaml`). The
+sources then show how the code is applied in practice: which simplifications are made, how often,
+whether each is on the safe side, and which values are used. An object no source has applied
+yet is still published, as ◐ *not yet checked*.
 
-**One set of units inside.** Inside the knowledge base every number is in N, mm, MPa and radians.
-Units exist only at the boundary: when a source is read and when a result is shown. This is what
-makes `... * 1000 * d / 1000` in a spreadsheet and `200 mm / d` in Mathcad the same formula: once the
-units are resolved, the conversion factors cancel and disappear (`expr.fold`).
+**One formula tree.** Every formula becomes the same small tree (`ckb/expr.py`). The Python code
+block (`to_python`), the web calculator (`to_js`), the Excel formula (`to_excel`), the Mathcad
+regions (`mathcad_export.to_xml`) and the report equations (`to_mathml`) are all printed from it.
+There is no second copy of the logic that could drift. Every output carries the object's version,
+and `ckb verify` reads it back.
 
-**Nothing is trusted until arithmetic agrees.** A converted formula must reproduce the value the
-source shows. A merged formula must contain every variant as a numerical special case. A unified
-object must reproduce the source values and, where a reference exists, agree with it. A formula
-transcribed by a model must reproduce the transcribed result. Each check is a number, not an opinion.
+**One set of units inside.** Every number is in N, mm, MPa and radians. Units exist only at the
+boundary: when a source is read and when a result is shown. That is why `... *1000*d/1000` in a
+spreadsheet and `200 mm/d` in Mathcad are the same formula once read. Display units and decimals
+(`ckb/use/style.py`) never touch the logic.
+
+**Design logic and evidence are stored apart.** `knowledge_base/objects/<id>.yaml` holds the
+formula, clause, unit, conditions, design background and the values a code fixes. That is all a
+calculation, report, code block, workbook or worksheet ever uses.
+`knowledge_base/evidence/<id>.json` holds sources, variants, benchmarks, the reference check and
+the confidence. It is shown on the Status tab and by `ckb status`, never in a calculation.
+
+## The registry (`ckb/data/`, `ckb/distill/taxonomy.py`)
+
+`common.yaml` lists the code-independent quantities (geometry, materials, actions) with their
+spellings and usual units. It also lists the references cited in the design background. Each
+`codes/<code>.yaml` lists that code's chapters (titles and search keywords) and its quantities:
+
+```yaml
+- id: f_cd
+  formula: alpha_cc * f_ck / gamma_C
+  clause: 3.1.6(1)
+  eq: (3.15)
+  sense: resistance
+  background:
+    - kind: pitfall
+      text: α_cc is a Nationally Determined Parameter. Spreadsheets often write f_ck/γ_C ...
+      refs: ["EN1992-1-1:3.1.6(1)"]
+```
+
+Coefficients carry their recommended value, NDP flag and choices (k_2 = 0.5 bending, 1.0 pure
+tension). Objects carry their conditions of application (`checks`), the alternatives the code
+permits (z = 0.9 d), a `basis` (code, standard mechanics, definition) and hints for reading
+ambiguous symbols in context.
+
+When a later code defines a quantity, the registry compares its expression with the objects it
+already has:
+
+| The later code writes | Stored as |
+|---|---|
+| the same expression (EN 1994-1-1 f_sd = f_yk/γ_S) | the existing object, with the other name as an alias |
+| a special case (EN 1994-1-1 f_cd = f_ck/γ_C) | the existing object, plus the values that code fixes (α_cc = 1), applied whenever that code's objects use it |
+| a declared reuse (`same_as`) | the existing object |
+| something else | a new object of that code |
+
+So no expression is stored twice, and N_pl,Rd of EN 1994-1-1 uses the EN 1992-1-1 f_cd with α_cc = 1
+automatically.
 
 ## Stage by stage
 
@@ -27,90 +72,114 @@ transcribed by a model must reproduce the transcribed result. Each check is a nu
 
 | Source | How | Check |
 |---|---|---|
-| Mathcad Prime `.mcdx` | `mcad2py` writes Python with `pint` units; that script goes through the Python converter. Labels are paired with equations by their position on the page; headings and clause references are kept. | Against the results Mathcad stored in the file. |
-| Excel `.xlsx` | Own formula parser (Excel operator rules kept). Names from the label to the left, optional symbol cell, unit in brackets or the next cell, case from the column header, headings from the label column, clause from headings or a reference column. | Against Excel's cached value, cell by cell. |
-| Python `.py`, Jupyter `.ipynb` | Python's own parser for the formulas; functions are inlined; the script is run in a separate process for the values. Unit hints in comments are read. | Tree evaluation against the run. |
-| PDF | Printed quantities from character positions: subscripts are smaller and lower, results follow the last `=` on the baseline, units printed as fractions are reassembled. | Used as benchmarks. |
-| Word `.docx` | Headings, text, tables and equation-editor content; a typed formula is accepted if it reproduces the printed result. | As above. |
-| Scan, photo, handwriting | Vision model transcribes; `records.py` verifies. | Re-evaluation. |
+| Mathcad Prime `.mcdx` | `mcad2py` writes Python with `pint` units, which goes through the Python converter. Labels are paired with equations by position; headings and clauses are kept. | Against the results Mathcad stored in the file. |
+| Excel `.xlsx` | Own formula parser with Excel's operator rules, and defined names (named ranges). Names come from the label column, an optional symbol cell or the defined name. Units come from brackets or the next cell, cases from column headers, clauses from headings. | Against Excel's cached values, cell by cell. |
+| Python, Jupyter | Python's own parser; functions inlined; the script run in a separate process for the values; unit hints in comments. | Tree evaluation against the run. |
+| PDF | Printed quantities from character positions (subscripts, fractions, last `=` on the line). | Benchmarks. |
+| Word | Headings, text, tables and equation-editor content. | A typed formula must reproduce the printed result. |
+| Scans | A vision model transcribes; `records.py` verifies. | Re-evaluation. |
 
-Output per source: `workspace/converted/<id>.json` (statements) and `<id>.py` (the source as a script).
+Headings that name one of several parallel calculations ("Phase 2", "Load case 3", "Span 2") become
+the case of the statements under them (`notation.case_of`).
 
-### 3 Decomposition (`ckb/distill/decompose.py`, `taxonomy.py`)
+### 3 Decomposition (`ckb/distill/decompose.py`)
 
-`Taxonomy.resolve` decides which quantity a name is: the symbol without separators, then the symbol
-with a project qualifier dropped (`d_c` → `d`), then the words of the label. Ambiguous symbols are
-decided by context. Two kinds of context are kept apart on purpose: *where a quantity is defined*
-(its clause and heading) decides what a statement produces; *where it is used* decides its role in a
-formula. The same reinforcement area is `A_s` in the bending formula and `A_sl` in the shear formula.
+`Taxonomy.resolve` decides which quantity a name is: the symbol without separators, the symbol
+with a project qualifier dropped, then the words of the label. Context decides ambiguous symbols:
+the same reinforcement area is `A_s` in bending and `A_sl` in shear. Formulas are rewritten in N,
+mm, MPa with the registry's symbols, and per-metre working (`*1000*d/1000`) is recognised as
+b_w = 1.
 
-A match the value contradicts is rejected: a text result, a wrong dimension, or, for weak evidence,
-a number far outside the usual range.
+### 4 Against the code (`ckb/distill/baseline.py`)
 
-Formulas for *input* quantities (`d = h − cover − bar/2`) are project geometry and are not distilled.
-Formulas of quantities the taxonomy does not know are listed in the run report.
+Every source formula of a quantity with a code expression is put in one group:
 
-### 4 Consolidation (`ckb/distill/consolidate.py`)
+| Group | Meaning |
+|---|---|
+| as code | the code expression however written (checked numerically at random points) |
+| alternative | an alternative the code permits |
+| simplified | a special case: a recommended value typed in, a factor or term left out, a bound omitted, per unit width. Each difference is listed. |
+| differs | not a special case: another method, a National Annex, another edition, or an error |
+| project-specific | uses quantities the registry does not know |
 
-Instances with the same formula form a variant. Variants are merged by four rules, each of which
-only ever generalises:
+Before comparing, derived quantities are expanded only where the other side writes them out, so
+f_cd matches α_cc·f_ck/γ_C but η is not forced into a formula that simply has none. Symbols that
+can be read two ways are tried both ways (A_s for A_sl). A formula that matches another quantity's
+code expression is moved there (0.9·d in a shear sheet is the shear lever arm z_V, not the bending
+z).
 
-| One variant has | The other has | Unified | Recorded for the simpler variant |
-|---|---|---|---|
-| a number | a symbol | the symbol | "fixes γ_C = 1.5" |
-| a factor | nothing | the factor | "per unit width: b_w = 1" (only for widths and dimensionless coefficients, and a missing width only if the source really works per unit width) |
-| a term | nothing | the term | "no term k_1·σ_cp" |
-| `max(X, bound)` | `X` | `max(X, bound)` | "omits the lower bound" |
+For each simplification, `explain` says why it is reasonable *in that case* (σ_cp = 0 there, η = 1
+for f_ck ≤ 50, the recommended α_cc = 1). `effect` says whether the source's result is on the safe
+or unsafe side, from the object's sense (resistance or action effect).
 
-A merge is accepted only if every variant, with its recorded differences applied, gives the same
-number as the unified formula at sixty random points of the parameter range. Anything else is kept
-apart as a disagreement, with the reason.
+Quantities without a code expression are merged among the sources by generalisation
+(`consolidate.py`). A merge is accepted only if every variant is numerically a special case of the
+result.
 
-### 5 Objects, benchmarks, reference (`ckb/pipeline.py`, `ckb/distill/benchmarks.py`, `reference.py`)
+### 5 Objects, benchmarks, reference, confidence
 
-- **Formula benchmarks**: the unified formula is evaluated with the numbers a source used. Where the
-  source formula is a special case, the missing quantity is looked up in the same calculation run,
-  so a simplification that matters for that case shows up as a difference with its reason.
-- **Print benchmarks**: a printed value is recomputed through the chain of objects from the printed
-  inputs and compared within the rounding of the print.
-- **Reference**: the chain is evaluated from primary inputs and compared with `structuralcodes` at
-  200 random points. Adapters are in `reference.py`; an object without one has no reference.
-- **Status**: *consensus* (identical in two or more independent sources), *unified* (variants
-  merged), *single source*, *disagreement*. A print of another source does not count as independent.
+- **Formula benchmarks**: the code expression evaluated with the numbers the source used. Values the
+  source leaves out are taken from the same calculation run, so a simplification that matters in a
+  case shows up there with its reason. A result off by more than a factor of 20 is an input mix-up
+  (units, a full width against a strip), so it is marked not comparable rather than different.
+- **Print benchmarks**: a printed value recomputed from the printed inputs, within the rounding of
+  the print.
+- **Reference**: the object's chain against `structuralcodes` at 200 random points (`reference.py`).
+- **Confidence**: *checked* when the logic is the code's own and an independent check agrees (the
+  reference library or reproduced source values); *not yet checked* when nothing has confirmed it
+  yet; *review needed* when a check disagrees, or the logic rests on sources alone with one source
+  or a disagreement.
 
-### 6 Repository (`ckb/kb/`)
+### 6 Repository and search (`ckb/kb/`)
 
-An object is a short YAML file (`knowledge_base/objects/`), its benchmark list a JSON file beside it.
-`KnowledgeBase.plan` resolves dependencies: asking for `V_Rd,c` pulls in `k`, `ρ_l`, `C_Rd,c`,
-`v_min`, `V_Rd,c,min` and leaves the primary inputs. Any intermediate can be given instead.
-`search.classify` places a new source against the objects.
+`KnowledgeBase.plan` resolves dependencies: asking for V_Rd,c pulls in k, ρ_l, C_Rd,c, v_min and
+V_Rd,c,min, applies the values the object's code fixes, and leaves the primary inputs. Any
+intermediate can be given instead. `checks_for` evaluates every condition in the chain, deriving
+what a condition needs (f_cd for σ_cp ≤ 0.2 f_cd).
 
-### 7 Use (`ckb/use/`) and 8 Maintenance (`ckb/maintain/`)
+Search (`search.py`) is a word search over name, symbol, chapter titles and keywords, code title,
+registry words and, with less weight, the design background. Every word must match, and a word may
+be the start of a longer one. The web calculator runs the same index with the same rules.
 
-See the README. The health check needs no source files, because each object carries its benchmarks.
+### 7 Use (`ckb/use/`)
+
+| Module | Output |
+|---|---|
+| `calc.py` | `run`: inputs in engineering units, every step, conditions, utilisation |
+| `report.py` | templates over many cases; calc, table, chart, text blocks; static HTML; PDF by headless Chromium |
+| `webapp.py` | the single-file web calculator |
+| `excel_bridge.py` | Excel calculator with named ranges; read back and verified with LibreOffice |
+| `mathcad_export.py` | Mathcad Prime worksheet (math50 XML in an .mcdx package); verified by reading it back |
+| `verify.py` | `ckb verify` for xlsx, mcdx, py, html and pdf |
+| `style.py` | decimals, significant digits, display units |
+| `toolschema.py` | tool definitions for an AI assistant |
+
+### 8 Maintenance (`ckb/maintain/health.py`)
+
+Needs no source files. It re-runs every stored benchmark, compares each generated code block and
+checks it carries the current version, re-checks the reference and the dependencies, and catches a
+formula edited without a new version.
 
 ## The concerns raised before the workshop
 
-| Concern | What the MVP does |
+| Concern | What it does |
 |---|---|
-| Variants for project-specific needs; a modified copy should not just look "wrong" | `python -m ckb check` classifies a fed-back file as existing, special case, extension, differs or new topic, formula by formula. In the calculator any intermediate value can be entered directly. |
-| Complex calculations (several steps, checks) | Objects compose automatically; a calculation is a chain of objects with every step shown. Iterative logic, interaction diagrams and plots are not covered yet. |
-| Non-coders extending a module | An object is a YAML file with a formula in plain arithmetic; a new quantity is an entry in `taxonomy.yaml`. Everything else is regenerated. An editing screen is not built. |
-| Immediate fixes before an owner reviews | No approval gate: objects are published with their status. An edit without a new version is caught by the health check. |
-| Small granular pieces, not tools | One object per quantity; larger calculations are resolved, not written. |
-| Quality signal from use | Each run from the command line is logged (`workspace/usage.jsonl`) and counted in the health check. Ratings and comments are not built. |
-| Warnings and limitations for juniors | Notes per quantity in the taxonomy; warnings for single-source, disagreement and reference differences; range warnings on inputs. They appear in every calculation. |
-| Tag everything, test the logic with it; repeated logic becomes valuable | Every statement keeps its label, clause, heading, case and location; every recognised value is a benchmark. Eighty-odd repetitions of `k` are eighty-odd confirmations. |
-| Deterministic source for assistants | `python -m ckb tools` gives tool definitions; `toolschema.call` returns the value with every step and clause. |
-| Health checks when things change | `python -m ckb health`. |
-| Two-way interaction, Excel included | Excel calculator with native formulas out; any workbook back in. |
-| Objects referencing objects | That is how every chain works; circular references are refused. |
-| Provenance without copying sources | The knowledge base holds formulas, numbers and locations, not files. `--anonymous` removes names. |
-| Several languages | Symbols are language-independent; label words in `taxonomy.yaml` can be listed in any language. Only English is seeded. |
-| Scope | One code and one material in the seed. The mechanism does not depend on it. |
+| Variants for project-specific needs; a modified copy should not look "wrong" | `ckb check` classifies a fed-back file formula by formula: as code, simplified, differs, new. In every calculator any intermediate can be entered directly. |
+| Complex calculations | Objects compose; a report or calculator shows every step. Iteration, interaction diagrams and lookups are not covered. |
+| Non-coders extending a module | An object is a few lines of YAML in the registry; everything else is regenerated. No editing screen yet. |
+| Fixes before an owner reviews | No approval gate; confidence is visible on every object, and an edit without a new version is caught. |
+| Small granular pieces | One object per quantity; larger calculations are resolved. |
+| Quality signal from use | Uses from the command line are logged (`workspace/usage.jsonl`). Ratings need a hosted version. |
+| Warnings and limitations for juniors | Design background per object with sources; conditions evaluated in every calculation; out-of-range inputs flagged; NDPs marked. |
+| Tag everything; repeated logic becomes valuable | Every source value is a benchmark; practice (γ_C = 1.3775 72 times) is summarised per object. |
+| Deterministic source for assistants | `ckb tools`; `toolschema.call` returns value, steps, conditions and version. |
+| Health checks | `ckb health`. |
+| Two-way with Excel | Calculator out with named ranges; any workbook back in (`ckb check`); a report from a workbook's inputs (`ckb report --from-excel`). |
+| Several codes | Linked registry, no duplicated expressions. |
+| Provenance without copying sources | Formulas, numbers and locations only; `--anonymous` removes names. |
 
 ## What is not built
 
-An approval workflow and roles, version history beyond a fingerprint per object, a server or
-database, SharePoint retrieval, ratings and comments, design guides generated from reports, and
-national-annex branches (the taxonomy has a `branch` field; one branch is seeded).
+An approval workflow and roles, version history beyond a fingerprint per object, a server, shared
+ratings and usage, an AI search agent, SharePoint retrieval, and National Annex branches (an NDP is
+marked, and its value can be changed per calculation, but there are no stored annex sets).

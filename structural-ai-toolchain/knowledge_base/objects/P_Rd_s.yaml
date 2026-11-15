@@ -1,0 +1,25 @@
+id: P_Rd_s
+name: Design shear resistance of a headed stud, failure of the shank
+formula: 0.8 * f_u * pi * d_s ** 2 / 4 / gamma_V
+params:
+- f_u
+- d_s
+- gamma_V
+var: P_Rd_s
+symbol: P_{Rd,s}
+unit: kN
+code: EN 1994-1-1
+topic: 6.6.3
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.3 Headed stud connectors in solid slabs and concrete encasement
+clause: 6.6.3.1(1)
+eq: (6.18)
+basis: code
+sense: resistance
+checks:
+- when: f_u <= 500
+  text: f_u is limited to 500 N/mm²
+  clause: 6.6.3.1(1)
+version: 163816a4aa57

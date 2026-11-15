@@ -1,7 +1,7 @@
 id: alpha_cw
 name: Coefficient for the state of stress in the compression chord
-formula: 1 if sigma_cp < 1 else 1 + sigma_cp / f_cd if sigma_cp < f_cd / 4 else 1.25 if sigma_cp < f_cd / 2 else
-  2.5 - 2.5 * sigma_cp / f_cd if sigma_cp < f_cd else 'σcp too great'
+formula: 1 if sigma_cp <= 0 else 1 + sigma_cp / f_cd if sigma_cp <= 0.25 * f_cd else 1.25 if sigma_cp <= 0.5 * f_cd
+  else 2.5 * (1 - sigma_cp / f_cd)
 params:
 - sigma_cp
 - f_cd
@@ -9,75 +9,17 @@ var: alpha_cw
 symbol: α_{cw}
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.3
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.2 Shear
 - 6.2.3 Members requiring design shear reinforcement
 clause: 6.2.3(3)
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S3
-  formula_instances: 4
-  variants_merged: 1
-  printed_values: 1
-variants:
-- formula: 1 if sigma_cp < 1 else 1 + sigma_cp / f_cd if sigma_cp < f_cd / 4 else 1.25 if sigma_cp < f_cd / 2 else
-    2.5 - 2.5 * sigma_cp / f_cd if sigma_cp < f_cd else 'σcp too great'
-  text: 1 if σ_cp < 1 else 1 + σ_cp / f_cd if σ_cp < f_cd / 4 else 1.25 if σ_cp < f_cd / 2 else 2.5 − 2.5 · σ_cp
-    / f_cd if σ_cp < f_cd else "σcp too great"
-  instances: 4
-  sources:
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-benchmarks:
-  total: 5
-  agree: 4
-  deviation: 0
-  not_comparable: 1
-reference:
-  library: structuralcodes 0.7.3
-  function: shear.alpha_cw(NEd, Ac, fcd)
-  samples: 200
-  max_relative_difference: 0.0534
-  status: differs
-  agreeing_samples: 174
-  example:
-    inputs:
-      sigma_cp: 0.666923
-      f_cd: 11.8167
-    ours: 1
-    reference: 1.0564388928422765
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-- Differs from the independent reference (structuralcodes 0.7.3, shear.alpha_cw(NEd, Ac, fcd)) in 26 of 200 samples.
-examples:
-- label: S3 (Excel workbook) - sheet 2 cell W21
-  inputs:
-    sigma_cp: 0.0
-    f_ck: 60.0
-    gamma_C: 1.38
-  expected: 1.0
-  result: 1
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 5 cell AH18
-  inputs:
-    sigma_cp: 0.0
-    f_ck: 50.0
-    gamma_C: 1.38
-  expected: 1.0
-  result: 1
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 9 cell AA18
-  inputs:
-    sigma_cp: -1.9520955745993325
-    f_ck: 60.0
-    gamma_C: 1.38
-  expected: 1.0
-  result: 1
-  matches_source: true
-version: 3c1d2c6d1f47
+eq: (6.11aN) to (6.11cN)
+basis: code
+ndp: true
+checks:
+- when: sigma_cp < f_cd
+  text: σ_cp must be below f_cd
+  clause: 6.2.3(3)
+version: a5f62d3f7bda

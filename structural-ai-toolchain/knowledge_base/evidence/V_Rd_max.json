@@ -1,0 +1,249 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.3(3), expr. (6.9)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 7 value(s) from 2 independent source(s).",
+   "Some source formulas differ from the code: see how the sources applied it."
+  ]
+ },
+ "evidence": {
+  "sources": 2,
+  "source_ids": [
+   "S1",
+   "S3"
+  ],
+  "formula_instances": 6,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "alpha_cw * b_w * z_V * nu_1 * f_cd / (cot_theta + 1 / cot_theta)",
+    "text": "α_cw · b_w · z · ν_1 · f_cd / (cot θ + 1 / cot θ)",
+    "relation": "as code",
+    "instances": 3,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 3,
+    "compared": 3
+   },
+   {
+    "formula": "alpha_cw * b_w * z_V * nu_1 * f_ck / gamma_C / (cot(theta) + tan(theta))",
+    "text": "α_cw · b_w · z · ν_1 · f_ck / γ_C / (cot(θ) + tan(θ))",
+    "relation": "simplified",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [
+     "leaves out α_cc: the recommended value 1 is assumed (a National Annex may set another value)"
+    ],
+    "reproduced": 2,
+    "compared": 2
+   },
+   {
+    "formula": "alpha_cw * b_w * z_V * nu_1 * f_cd * tan(radians(22.5))",
+    "text": "α_cw · b_w · z · ν_1 · f_cd · tan(radians(22.5))",
+    "relation": "differs",
+    "instances": 1,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "not a special case of the code expression"
+   }
+  ],
+  "practice": [
+   "3 formula(s) in S3: as in the code.",
+   "2 formula(s) in S1: simplified - leaves out α_cc: the recommended value 1 is assumed (a National Annex may set another value).",
+   "1 formula(s) in S3: α_cw · b_w · z · ν_1 · f_cd · tan(radians(22.5)) - not the code expression; to be reviewed.",
+   "γ_C: the sources use 1.3775 (72×), 1.38 (9×), 1 (3×), 1.4 (2×) against the recommended 1.5."
+  ],
+  "values_seen": {
+   "alpha_cc": {
+    "recommended": 1.0,
+    "seen": [
+     [
+      1.0,
+      2
+     ]
+    ]
+   },
+   "gamma_C": {
+    "recommended": 1.5,
+    "seen": [
+     [
+      1.3775,
+      72
+     ],
+     [
+      1.38,
+      9
+     ],
+     [
+      1.0,
+      3
+     ],
+     [
+      1.4,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 7,
+  "agree": 7,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 2 cell W23",
+    "kind": "formula",
+    "expected": 1712293.8530734635,
+    "got": 1712293.8530734635,
+    "status": "agree",
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 300.0,
+     "z_V": 846.0,
+     "nu_1": 0.45,
+     "f_cd": 43.47826086956522,
+     "cot_theta": 2.5,
+     "theta": 0.3805063771123649
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AH20",
+    "kind": "formula",
+    "expected": 1693480.1847211632,
+    "got": 1693480.1847211632,
+    "status": "agree",
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 300.0,
+     "z_V": 900.0,
+     "nu_1": 0.45,
+     "f_cd": 36.231884057971016,
+     "cot_theta": 2.13,
+     "theta": 0.4389378103867573
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell X19",
+    "kind": "formula",
+    "expected": 1693480.1847211632,
+    "got": 1693480.1847211632,
+    "status": "agree",
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 300.0,
+     "z_V": 900.0,
+     "nu_1": 0.45,
+     "f_cd": 36.231884057971016,
+     "cot_theta": 2.13,
+     "theta": 0.4389378103867573
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 101",
+    "kind": "formula",
+    "expected": 1715070.9516199816,
+    "got": 1715070.9516199816,
+    "status": "agree",
+    "case": "phase 1",
+    "detail": "leaves out α_cc: the recommended value 1 is assumed (a National Annex may set another value)",
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 500.0,
+     "z_V": 457.35225376532844,
+     "nu_1": 0.6,
+     "f_ck": 35.0,
+     "gamma_C": 1.4,
+     "theta": 0.7853981633974483,
+     "alpha_cc": 1.0,
+     "f_cd": 25.0
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 140",
+    "kind": "formula",
+    "expected": 3133410.7492618584,
+    "got": 3133410.749261859,
+    "status": "agree",
+    "case": "phase 2",
+    "detail": "leaves out α_cc: the recommended value 1 is assumed (a National Annex may set another value)",
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 500.0,
+     "z_V": 835.5761998031624,
+     "nu_1": 0.6,
+     "f_ck": 35.0,
+     "gamma_C": 1.4,
+     "theta": 0.7853981633974483,
+     "alpha_cc": 1.0,
+     "f_cd": 25.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 3",
+    "kind": "printed",
+    "expected": 1715070.0,
+    "got": 1715062.5,
+    "status": "agree",
+    "case": "phase 1",
+    "tolerance": 1890632.4701023402,
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 500.0,
+     "z_V": 457.35,
+     "nu_1": 0.6,
+     "f_cd": 25.0,
+     "theta": 0.7853981633974483
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 4",
+    "kind": "printed",
+    "expected": 3133410.0,
+    "got": 3133425.0,
+    "status": "agree",
+    "case": "phase 2",
+    "tolerance": 3454172.2890687943,
+    "inputs": {
+     "alpha_cw": 1.0,
+     "b_w": 500.0,
+     "z_V": 835.58,
+     "nu_1": 0.6,
+     "f_cd": 25.0,
+     "theta": 0.7853981633974483
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "VRdmax(bw, z, fck, theta, NEd=0, Ac, fcd)",
+  "samples": 200,
+  "max_relative_difference": 4.27e-16,
+  "status": "agrees",
+  "agreeing_samples": 200,
+  "note": "compared for σ_cp = 0 (α_cw = 1), vertical links, ν_1 = 0.6(1 − f_ck/250) and α_cc = 1"
+ }
+}

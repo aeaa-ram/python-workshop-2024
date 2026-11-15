@@ -1,0 +1,41 @@
+id: P_Rd
+name: Design shear resistance of a headed stud in a solid slab
+formula: min(P_Rd_s, P_Rd_c)
+params:
+- P_Rd_s
+- P_Rd_c
+var: P_Rd
+symbol: P_{Rd}
+unit: kN
+code: EN 1994-1-1
+topic: 6.6.3
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.3 Headed stud connectors in solid slabs and concrete encasement
+clause: 6.6.3.1(1)
+eq: (6.18), (6.19)
+basis: code
+sense: resistance
+checks:
+- when: 16 <= d_s <= 25
+  text: 16 mm ≤ d ≤ 25 mm
+  clause: 6.6.3.1(1)
+background:
+- kind: scope
+  text: Automatically welded headed studs in a solid slab or concrete encasement. In profiled steel sheeting the
+    resistance is reduced by k_l or k_t (6.6.4).
+  refs:
+  - id: EN1994-1-1
+    at: 6.6.3.1, 6.6.4
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+- kind: guidance
+  text: The concrete properties f_ck and E_cm are those of EN 1992-1-1; this object uses the same E_cm as the concrete
+    objects.
+  refs:
+  - id: EN1994-1-1
+    at: 3.1(1)
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+version: cf8781dd56b1

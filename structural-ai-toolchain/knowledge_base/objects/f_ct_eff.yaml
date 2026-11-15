@@ -1,0 +1,26 @@
+id: f_ct_eff
+name: Mean tensile strength of the concrete when the first cracks may occur
+formula: f_ctm
+params:
+- f_ctm
+var: f_ct_eff
+symbol: f_{ct,eff}
+unit: MPa
+code: EN 1992-1-1
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.4(2)
+basis: code
+background:
+- kind: guidance
+  text: f_ct,eff = f_ctm when cracking is expected after 28 days; use f_ctm(t) if it may occur earlier, e.g. from
+    early thermal effects.
+  refs:
+  - id: EN1992-1-1
+    at: 7.3.2(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 1e41d7990909

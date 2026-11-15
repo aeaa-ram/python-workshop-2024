@@ -1,108 +1,187 @@
 {
  "meta": {
-  "code": "EN 1992-1-1",
-  "branch": "EN 1992-1-1:2004 (recommended values)",
-  "title": "Eurocode 2 - Design of concrete structures - Part 1-1",
   "reference_library": "structuralcodes 0.7.3",
   "units": "N, mm, MPa (N/mm²), rad",
+  "built_from": "3 source file(s)",
   "skipped": []
  },
- "topics": [
+ "codes": [
   {
-   "id": "2",
-   "title": "Basis of design"
+   "code": "EN 1992-1-1",
+   "title": "Eurocode 2: Design of concrete structures, Part 1-1",
+   "edition": "2004 + AC:2010 + A1:2014",
+   "values": "recommended values (no National Annex)",
+   "topics": [
+    {
+     "id": "2",
+     "title": "Basis of design"
+    },
+    {
+     "id": "2.4",
+     "title": "Verification by the partial factor method"
+    },
+    {
+     "id": "3",
+     "title": "Materials",
+     "keywords": [
+      "material",
+      "concrete properties"
+     ]
+    },
+    {
+     "id": "3.1",
+     "title": "Concrete",
+     "keywords": [
+      "concrete"
+     ]
+    },
+    {
+     "id": "3.2",
+     "title": "Reinforcing steel",
+     "keywords": [
+      "reinforcing steel",
+      "reinforcement steel"
+     ]
+    },
+    {
+     "id": "6",
+     "title": "Ultimate limit states (ULS)",
+     "keywords": [
+      "uls",
+      "ultimate"
+     ]
+    },
+    {
+     "id": "6.1",
+     "title": "Bending with or without axial force",
+     "keywords": [
+      "bending",
+      "moment",
+      "flexur"
+     ]
+    },
+    {
+     "id": "6.2",
+     "title": "Shear",
+     "keywords": [
+      "shear"
+     ]
+    },
+    {
+     "id": "6.2.2",
+     "title": "Members not requiring design shear reinforcement",
+     "keywords": [
+      "without shear reinforcement",
+      "unreinforced for shear",
+      "without links"
+     ]
+    },
+    {
+     "id": "6.2.3",
+     "title": "Members requiring design shear reinforcement",
+     "keywords": [
+      "shear link",
+      "reinforced for shear",
+      "shear reinforcement",
+      "stirrup"
+     ]
+    },
+    {
+     "id": "7",
+     "title": "Serviceability limit states (SLS)",
+     "keywords": [
+      "sls",
+      "serviceability"
+     ]
+    },
+    {
+     "id": "7.2",
+     "title": "Stress limitation",
+     "keywords": [
+      "stress limit",
+      "compressive stress",
+      "tensile stress"
+     ]
+    },
+    {
+     "id": "7.3",
+     "title": "Crack control",
+     "keywords": [
+      "crack"
+     ]
+    },
+    {
+     "id": "7.3.4",
+     "title": "Calculation of crack widths",
+     "keywords": [
+      "crack width",
+      "crack-width"
+     ]
+    },
+    {
+     "id": "7.4",
+     "title": "Deflection control",
+     "keywords": [
+      "deflection"
+     ]
+    }
+   ],
+   "fixed": {}
   },
   {
-   "id": "2.4",
-   "title": "Verification by the partial factor method"
-  },
-  {
-   "id": "3",
-   "title": "Materials"
-  },
-  {
-   "id": "3.1",
-   "title": "Concrete"
-  },
-  {
-   "id": "3.2",
-   "title": "Reinforcing steel"
-  },
-  {
-   "id": "4",
-   "title": "Durability and cover to reinforcement"
-  },
-  {
-   "id": "5",
-   "title": "Structural analysis"
-  },
-  {
-   "id": "6",
-   "title": "Ultimate limit states (ULS)"
-  },
-  {
-   "id": "6.1",
-   "title": "Bending with or without axial force"
-  },
-  {
-   "id": "6.2",
-   "title": "Shear"
-  },
-  {
-   "id": "6.2.1",
-   "title": "General verification procedure"
-  },
-  {
-   "id": "6.2.2",
-   "title": "Members not requiring design shear reinforcement"
-  },
-  {
-   "id": "6.2.3",
-   "title": "Members requiring design shear reinforcement"
-  },
-  {
-   "id": "6.3",
-   "title": "Torsion"
-  },
-  {
-   "id": "6.4",
-   "title": "Punching"
-  },
-  {
-   "id": "6.5",
-   "title": "Design with strut and tie models"
-  },
-  {
-   "id": "7",
-   "title": "Serviceability limit states (SLS)"
-  },
-  {
-   "id": "7.2",
-   "title": "Stress limitation"
-  },
-  {
-   "id": "7.3",
-   "title": "Crack control"
-  },
-  {
-   "id": "7.3.2",
-   "title": "Minimum reinforcement areas"
-  },
-  {
-   "id": "7.3.4",
-   "title": "Calculation of crack widths"
-  },
-  {
-   "id": "7.4",
-   "title": "Deflection control"
-  },
-  {
-   "id": "8",
-   "title": "Detailing of reinforcement"
-  },
-  {
-   "id": "9",
-   "title": "Detailing of members and particular rules"
+   "code": "EN 1994-1-1",
+   "title": "Eurocode 4: Design of composite steel and concrete structures, Part 1-1",
+   "edition": "2004 + AC:2009",
+   "values": "recommended values (no National Annex)",
+   "topics": [
+    {
+     "id": "2.4",
+     "title": "Verification by the partial factor method"
+    },
+    {
+     "id": "3.1",
+     "title": "Concrete"
+    },
+    {
+     "id": "6",
+     "title": "Ultimate limit states",
+     "keywords": [
+      "uls",
+      "ultimate"
+     ]
+    },
+    {
+     "id": "6.6",
+     "title": "Shear connection",
+     "keywords": [
+      "shear connection",
+      "shear connector",
+      "stud"
+     ]
+    },
+    {
+     "id": "6.6.3",
+     "title": "Headed stud connectors in solid slabs and concrete encasement",
+     "keywords": [
+      "headed stud",
+      "stud"
+     ]
+    },
+    {
+     "id": "6.7",
+     "title": "Composite columns and composite compression members",
+     "keywords": [
+      "composite column"
+     ]
+    },
+    {
+     "id": "6.7.3",
+     "title": "Simplified method of design"
+    }
+   ],
+   "fixed": {
+    "alpha_cc": 1.0
+   }
   }
  ],
  "sources": [
@@ -115,9 +194,9 @@
    "formulas": 84,
    "formulas_verified": 84,
    "printed_values": 0,
-   "recognised": 72,
-   "instances": 38,
-   "not_recognised": 35,
+   "recognised": 73,
+   "instances": 40,
+   "not_recognised": 34,
    "issues": 0,
    "stored_results": {
     "compared": 80,
@@ -133,7 +212,7 @@
    "formulas": 0,
    "formulas_verified": 0,
    "printed_values": 100,
-   "recognised": 67,
+   "recognised": 68,
    "instances": 0,
    "not_recognised": 0,
    "issues": 0,
@@ -148,164 +227,251 @@
    "formulas": 1040,
    "formulas_verified": 1040,
    "printed_values": 0,
-   "recognised": 1281,
+   "recognised": 1285,
    "instances": 616,
    "not_recognised": 337,
    "issues": 0
   }
  ],
+ "references": {
+  "EN1992-1-1": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings.",
+  "EN1992-1-1:2023": "EN 1992-1-1:2023. Eurocode 2: Design of concrete structures. Part 1-1 (second generation).",
+  "EN1994-1-1": "EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1: General rules and rules for buildings.",
+  "EN1990": "EN 1990:2002 + A1:2005. Eurocode: Basis of structural design.",
+  "EC2-Commentary": "European Concrete Platform. Eurocode 2 Commentary. Brussels, 2008.",
+  "DG-EC2": "Beeby, A.W. and Narayanan, R.S. Designers' Guide to EN 1992-1-1 and EN 1992-1-2. Thomas Telford, 2005.",
+  "HowTo-EC2": "The Concrete Centre. How to design concrete structures using Eurocode 2. 2006 and later editions.",
+  "UK-NA-EC2": "NA to BS EN 1992-1-1:2004+A1:2014. UK National Annex to Eurocode 2 Part 1-1.",
+  "DG-EC4": "Johnson, R.P. Designers' Guide to Eurocode 4: Design of composite steel and concrete structures, EN 1994-1-1. 2nd edition, ICE Publishing, 2012."
+ },
  "quantities": {
-  "f_yk": {
-   "id": "f_yk",
-   "name": "Characteristic yield strength of reinforcement",
-   "var": "f_yk",
-   "unit": "MPa",
+  "A_a": {
+   "id": "A_a",
+   "name": "Cross-sectional area of the structural steel section",
+   "var": "A_a",
+   "symbol": "A_{a}",
+   "unit": "mm²",
    "kind": "input",
-   "topic": "3.2",
-   "clause": "3.2.2",
-   "typical": 500.0,
+   "example": 7800.0,
    "range": [
-    400.0,
-    600.0
-   ],
-   "observed": 2
+    1000.0,
+    60000.0
+   ]
   },
-  "k_2": {
-   "id": "k_2",
-   "name": "Coefficient for the distribution of strain",
-   "var": "k_2",
-   "unit": "-",
-   "kind": "coefficient",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 0.5,
-   "range": [
-    0.5,
-    1.0
-   ],
-   "observed": 2
-  },
-  "E_cm": {
-   "id": "E_cm",
-   "name": "Secant modulus of elasticity of concrete",
-   "var": "E_cm",
-   "unit": "GPa",
+  "A_c": {
+   "id": "A_c",
+   "name": "Cross-sectional area of concrete",
+   "var": "A_c",
+   "symbol": "A_{c}",
+   "unit": "mm²",
    "kind": "input",
-   "topic": "3.1",
-   "clause": "Table 3.1",
-   "typical": 34000.0,
+   "example": 82000.0,
    "range": [
-    27000.0,
-    44000.0
-   ],
-   "observed": 2
-  },
-  "theta": {
-   "id": "theta",
-   "name": "Angle between the concrete compression strut and the beam axis",
-   "var": "theta",
-   "symbol": "θ",
-   "unit": "°",
-   "kind": "input",
-   "topic": "6.2.3",
-   "clause": "6.2.3(2)",
-   "typical": 0.785398,
-   "range": [
-    0.38048177693476387,
-    0.7853981633974483
-   ],
-   "observed": 2
-  },
-  "sigma_cp": {
-   "id": "sigma_cp",
-   "name": "Concrete compressive stress from axial load or prestress (compression positive)",
-   "var": "sigma_cp",
-   "symbol": "σ_{cp}",
-   "unit": "MPa",
-   "kind": "input",
-   "topic": "6.2.2",
-   "clause": "6.2.2(1)",
-   "typical": 0.0,
-   "range": [
-    -2.0,
-    6.0
-   ],
-   "observed": 88
-  },
-  "phi_bar": {
-   "id": "phi_bar",
-   "name": "Bar diameter (equivalent diameter for a mix of sizes)",
-   "var": "phi",
-   "symbol": "ϕ",
-   "unit": "mm",
-   "kind": "input",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 25.0,
-   "range": [
-    8.0,
-    40.0
-   ],
-   "observed": 2
-  },
-  "f_ck": {
-   "id": "f_ck",
-   "name": "Characteristic compressive cylinder strength of concrete at 28 days",
-   "var": "f_ck",
-   "unit": "MPa",
-   "kind": "input",
-   "topic": "3.1",
-   "clause": "3.1.2",
-   "typical": 60.0,
-   "range": [
-    12.0,
-    90.0
-   ],
-   "observed": 86
+    10000.0,
+    2000000.0
+   ]
   },
   "A_s": {
    "id": "A_s",
-   "name": "Cross-sectional area of tension reinforcement",
+   "name": "Area of tension reinforcement",
    "var": "A_s",
+   "symbol": "A_{s}",
    "unit": "mm²",
    "kind": "input",
-   "topic": "6.1",
-   "typical": 1963.5,
+   "example": 942.0,
    "range": [
     200.0,
     20000.0
    ],
-   "observed": 6
+   "seen": [
+    [
+     1963.5,
+     6
+    ],
+    [
+     0.0,
+     2
+    ],
+    [
+     3216.99,
+     1
+    ],
+    [
+     2454.0,
+     1
+    ]
+   ]
   },
-  "w_max": {
-   "id": "w_max",
-   "name": "Limiting calculated crack width",
-   "var": "w_max",
-   "unit": "mm",
+  "A_sl": {
+   "id": "A_sl",
+   "name": "Area of tensile reinforcement extending at least l_bd + d beyond the section",
+   "var": "A_sl",
+   "symbol": "A_{sl}",
+   "unit": "mm²",
    "kind": "input",
-   "topic": "7.3",
-   "clause": "Table 7.1N",
-   "typical": 0.3,
+   "example": 942.0,
    "range": [
-    0.1,
-    0.4
+    100.0,
+    20000.0
    ],
-   "observed": 2
+   "seen": [
+    [
+     402.0,
+     2
+    ],
+    [
+     1608.5,
+     1
+    ],
+    [
+     2454.0,
+     1
+    ]
+   ]
   },
-  "k_3": {
-   "id": "k_3",
-   "name": "Coefficient k3 for crack spacing",
-   "var": "k_3",
-   "unit": "-",
-   "kind": "coefficient",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 3.4,
+  "A_sw": {
+   "id": "A_sw",
+   "name": "Cross-sectional area of the shear reinforcement",
+   "var": "A_sw",
+   "symbol": "A_{sw}",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 157.0,
    "range": [
-    2.0,
-    3.4
+    50.0,
+    2000.0
    ],
-   "observed": 2
+   "seen": [
+    [
+     402.124,
+     2
+    ],
+    [
+     402.12,
+     2
+    ],
+    [
+     402.0,
+     2
+    ],
+    [
+     314.159,
+     1
+    ],
+    [
+     1571.0,
+     1
+    ]
+   ]
+  },
+  "E_s": {
+   "id": "E_s",
+   "name": "Design modulus of elasticity of reinforcing steel",
+   "var": "E_s",
+   "symbol": "E_{s}",
+   "unit": "GPa",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "3.2",
+   "clause": "3.2.7(4)",
+   "value": 200000.0,
+   "example": 200000.0,
+   "range": [
+    190000.0,
+    210000.0
+   ],
+   "seen": [
+    [
+     200000.0,
+     2
+    ]
+   ]
+  },
+  "M_Ed": {
+   "id": "M_Ed",
+   "name": "Design bending moment",
+   "var": "M_Ed",
+   "symbol": "M_{Ed}",
+   "unit": "kNm",
+   "kind": "input",
+   "example": 150000000.0,
+   "range": [
+    10000000.0,
+    20000000000.0
+   ]
+  },
+  "M_SLS": {
+   "id": "M_SLS",
+   "name": "Bending moment in the serviceability combination considered",
+   "var": "M_SLS",
+   "symbol": "M_{SLS}",
+   "unit": "kNm",
+   "kind": "input",
+   "example": 100000000.0,
+   "range": [
+    5000000.0,
+    20000000000.0
+   ]
+  },
+  "N_Ed": {
+   "id": "N_Ed",
+   "name": "Design axial force",
+   "var": "N_Ed",
+   "symbol": "N_{Ed}",
+   "unit": "kN",
+   "kind": "input",
+   "example": 1500000.0,
+   "range": [
+    10000.0,
+    50000000.0
+   ]
+  },
+  "V_Ed": {
+   "id": "V_Ed",
+   "name": "Design shear force",
+   "var": "V_Ed",
+   "symbol": "V_{Ed}",
+   "unit": "kN",
+   "kind": "input",
+   "example": 150000.0,
+   "range": [
+    10000.0,
+    10000000.0
+   ],
+   "seen": [
+    [
+     3300000.0,
+     15
+    ],
+    [
+     2310000.0,
+     4
+    ],
+    [
+     320000.0,
+     3
+    ],
+    [
+     577500.0,
+     3
+    ],
+    [
+     1980000.0,
+     3
+    ],
+    [
+     1320000.0,
+     2
+    ],
+    [
+     1900410.0,
+     2
+    ],
+    [
+     500000.0,
+     2
+    ]
+   ]
   },
   "alpha_cc": {
    "id": "alpha_cc",
@@ -314,149 +480,280 @@
    "symbol": "α_{cc}",
    "unit": "-",
    "kind": "coefficient",
+   "code": "EN 1992-1-1",
    "topic": "3.1",
    "clause": "3.1.6(1)",
-   "typical": 1.0,
+   "value": 1.0,
+   "example": 1.0,
+   "ndp": true,
    "range": [
     0.8,
     1.0
    ],
-   "observed": 2
+   "seen": [
+    [
+     1.0,
+     2
+    ]
+   ],
+   "background": [
+    {
+     "kind": "guidance",
+     "text": "The recommended value is 1.0; it should lie between 0.8 and 1.0. Several National Annexes use 0.85 for flexure and axial load (the UK Annex uses 0.85 for compression in flexure and axial loading and 1.0 otherwise). A calculation that leaves α_cc out has assumed 1.0.",
+     "refs": [
+      {
+       "id": "EN1992-1-1",
+       "at": "3.1.6(1)",
+       "text": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+      },
+      {
+       "id": "UK-NA-EC2",
+       "at": "NA.2",
+       "text": "NA to BS EN 1992-1-1:2004+A1:2014. UK National Annex to Eurocode 2 Part 1-1."
+      }
+     ]
+    }
+   ]
   },
-  "k_1_bond": {
-   "id": "k_1_bond",
-   "name": "Coefficient for the bond properties of the reinforcement",
-   "var": "k_1",
-   "symbol": "k_{1}",
+  "alpha_ct": {
+   "id": "alpha_ct",
+   "name": "Coefficient for long-term effects on the tensile strength",
+   "var": "alpha_ct",
+   "symbol": "α_{ct}",
    "unit": "-",
    "kind": "coefficient",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 0.8,
+   "code": "EN 1992-1-1",
+   "topic": "3.1",
+   "clause": "3.1.6(2)",
+   "value": 1.0,
+   "example": 1.0,
+   "ndp": true,
    "range": [
     0.8,
-    1.6
-   ],
-   "observed": 2
+    1.0
+   ]
   },
-  "phi_creep": {
-   "id": "phi_creep",
-   "name": "Creep coefficient",
-   "var": "phi",
-   "symbol": "φ",
-   "unit": "-",
-   "kind": "input",
-   "topic": "3.1",
-   "clause": "3.1.4",
-   "typical": 1.5,
-   "range": [
-    0.5,
-    3.5
-   ],
-   "observed": 2
-  },
-  "A_sl": {
-   "id": "A_sl",
-   "name": "Area of tensile reinforcement extending at least l_bd + d beyond the section",
-   "var": "A_sl",
-   "unit": "mm²",
-   "kind": "input",
-   "topic": "6.2.2",
-   "clause": "6.2.2(1)",
-   "typical": 402.0,
-   "range": [
-    100.0,
-    20000.0
-   ],
-   "observed": 6
-  },
-  "A_sw": {
-   "id": "A_sw",
-   "name": "Cross-sectional area of the shear reinforcement",
-   "var": "A_sw",
-   "unit": "mm²",
-   "kind": "input",
-   "topic": "6.2.3",
-   "clause": "6.2.3(3)",
-   "typical": 402.124,
-   "range": [
-    50.0,
-    2000.0
-   ],
-   "observed": 8
-  },
-  "E_s": {
-   "id": "E_s",
-   "name": "Design value of modulus of elasticity of reinforcing steel",
-   "var": "E_s",
-   "unit": "GPa",
-   "kind": "input",
-   "topic": "3.2",
-   "clause": "3.2.7(4)",
-   "typical": 200000.0,
-   "range": [
-    190000.0,
-    210000.0
-   ],
-   "observed": 2
-  },
-  "M_Ed": {
-   "id": "M_Ed",
-   "name": "Design bending moment",
-   "var": "M_Ed",
-   "unit": "kNm",
-   "kind": "input",
-   "topic": "6.1",
-   "range": [
-    10000000.0,
-    20000000000.0
-   ],
-   "observed": 0
-  },
-  "k_t": {
-   "id": "k_t",
-   "name": "Factor dependent on the duration of the load",
-   "var": "k_t",
-   "unit": "-",
-   "kind": "coefficient",
-   "topic": "7.3.4",
-   "clause": "7.3.4(2)",
-   "typical": 0.4,
-   "range": [
-    0.4,
-    0.6
-   ],
-   "observed": 2
-  },
-  "h": {
-   "id": "h",
-   "name": "Overall depth of the cross-section",
-   "var": "h",
+  "b": {
+   "id": "b",
+   "name": "Width of the cross-section",
+   "var": "b",
    "unit": "mm",
    "kind": "input",
-   "topic": "6",
-   "typical": 326.0,
+   "example": 300.0,
    "range": [
     150.0,
     3000.0
    ],
-   "observed": 86
+   "seen": [
+    [
+     500.0,
+     2
+    ]
+   ]
   },
-  "gamma_S": {
-   "id": "gamma_S",
-   "name": "Partial factor for reinforcing steel",
-   "var": "gamma_S",
-   "symbol": "γ_{S}",
-   "unit": "-",
-   "kind": "coefficient",
-   "topic": "2.4",
-   "clause": "2.4.2.4(1)",
-   "typical": 1.15,
+  "b_w": {
+   "id": "b_w",
+   "name": "Smallest width of the cross-section in the tensile area",
+   "var": "b_w",
+   "symbol": "b_{w}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 300.0,
    "range": [
-    1.0,
-    1.25
+    100.0,
+    3000.0
    ],
-   "observed": 2
+   "seen": [
+    [
+     300.0,
+     3
+    ],
+    [
+     2305.8,
+     1
+    ],
+    [
+     2306.0,
+     1
+    ],
+    [
+     1000.0,
+     1
+    ]
+   ]
+  },
+  "c": {
+   "id": "c",
+   "name": "Clear cover to the longitudinal reinforcement",
+   "var": "c",
+   "unit": "mm",
+   "kind": "input",
+   "example": 35.0,
+   "range": [
+    20.0,
+    120.0
+   ],
+   "seen": [
+    [
+     80.0,
+     2
+    ],
+    [
+     96.0,
+     2
+    ]
+   ]
+  },
+  "d": {
+   "id": "d",
+   "name": "Effective depth of the cross-section",
+   "var": "d",
+   "unit": "mm",
+   "kind": "input",
+   "example": 450.0,
+   "range": [
+    100.0,
+    2900.0
+   ],
+   "seen": [
+    [
+     273.0,
+     12
+    ],
+    [
+     259.0,
+     10
+    ],
+    [
+     237.5,
+     5
+    ],
+    [
+     217.0,
+     5
+    ],
+    [
+     440.0,
+     5
+    ],
+    [
+     426.0,
+     5
+    ],
+    [
+     1000.0,
+     3
+    ],
+    [
+     347.0,
+     3
+    ]
+   ]
+  },
+  "d_s": {
+   "id": "d_s",
+   "name": "Diameter of the shank of the stud",
+   "var": "d_s",
+   "symbol": "d",
+   "unit": "mm",
+   "kind": "input",
+   "example": 19.0,
+   "range": [
+    16.0,
+    25.0
+   ]
+  },
+  "f_ck": {
+   "id": "f_ck",
+   "name": "Characteristic compressive cylinder strength of concrete at 28 days",
+   "var": "f_ck",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 30.0,
+   "range": [
+    12.0,
+    90.0
+   ],
+   "seen": [
+    [
+     60.0,
+     66
+    ],
+    [
+     50.0,
+     18
+    ],
+    [
+     35.0,
+     2
+    ]
+   ]
+  },
+  "f_u": {
+   "id": "f_u",
+   "name": "Specified ultimate tensile strength of the stud material",
+   "var": "f_u",
+   "symbol": "f_{u}",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 450.0,
+   "range": [
+    400.0,
+    500.0
+   ]
+  },
+  "f_y": {
+   "id": "f_y",
+   "name": "Nominal yield strength of structural steel",
+   "var": "f_y",
+   "symbol": "f_{y}",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 355.0,
+   "range": [
+    235.0,
+    460.0
+   ]
+  },
+  "f_yk": {
+   "id": "f_yk",
+   "name": "Characteristic yield strength of reinforcement",
+   "var": "f_yk",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 500.0,
+   "range": [
+    400.0,
+    600.0
+   ],
+   "seen": [
+    [
+     500.0,
+     2
+    ]
+   ]
+  },
+  "f_ywk": {
+   "id": "f_ywk",
+   "name": "Characteristic yield strength of the shear reinforcement",
+   "var": "f_ywk",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 500.0,
+   "range": [
+    400.0,
+    600.0
+   ],
+   "seen": [
+    [
+     500.0,
+     3
+    ],
+    [
+     550.0,
+     1
+    ]
+   ]
   },
   "gamma_C": {
    "id": "gamma_C",
@@ -465,73 +762,412 @@
    "symbol": "γ_{C}",
    "unit": "-",
    "kind": "coefficient",
+   "code": "EN 1992-1-1",
    "topic": "2.4",
    "clause": "2.4.2.4(1)",
-   "typical": 1.3775,
+   "value": 1.5,
+   "example": 1.5,
+   "choices": [
+    {
+     "value": 1.5,
+     "label": "persistent and transient design situations"
+    },
+    {
+     "value": 1.2,
+     "label": "accidental design situations"
+    }
+   ],
+   "ndp": true,
    "range": [
     1.0,
     1.6
    ],
-   "observed": 86
-  },
-  "f_ywk": {
-   "id": "f_ywk",
-   "name": "Characteristic yield strength of the shear reinforcement",
-   "var": "f_ywk",
-   "unit": "MPa",
-   "kind": "input",
-   "topic": "6.2.3",
-   "typical": 500.0,
-   "range": [
-    400.0,
-    600.0
+   "seen": [
+    [
+     1.3775,
+     72
+    ],
+    [
+     1.38,
+     9
+    ],
+    [
+     1.0,
+     3
+    ],
+    [
+     1.4,
+     2
+    ]
    ],
-   "observed": 4
+   "background": [
+    {
+     "kind": "guidance",
+     "text": "Table 2.1N gives 1.5 for persistent and transient design situations and 1.2 for accidental ones. Annex A allows reduced factors where geometric deviations or material properties are controlled more tightly; a National Annex may set other values.",
+     "refs": [
+      {
+       "id": "EN1992-1-1",
+       "at": "2.4.2.4, Table 2.1N, Annex A",
+       "text": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
+   ]
   },
-  "c": {
-   "id": "c",
-   "name": "Cover to the longitudinal reinforcement",
-   "var": "c",
+  "gamma_M0": {
+   "id": "gamma_M0",
+   "name": "Partial factor for resistance of cross-sections of structural steel",
+   "var": "gamma_M0",
+   "symbol": "γ_{M0}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1994-1-1",
+   "topic": "2.4",
+   "clause": "2.4.1.2(4)",
+   "value": 1.0,
+   "example": 1.0,
+   "ndp": true,
+   "range": [
+    1.0,
+    1.1
+   ],
+   "background": [
+    {
+     "kind": "guidance",
+     "text": "EN 1994-1-1 takes γ_a = γ_M0 from EN 1993-1-1; the recommended value there is 1.0.",
+     "refs": [
+      {
+       "id": "EN1994-1-1",
+       "at": "2.4.1.2",
+       "text": "EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
+   ]
+  },
+  "gamma_S": {
+   "id": "gamma_S",
+   "name": "Partial factor for reinforcing steel",
+   "var": "gamma_S",
+   "symbol": "γ_{S}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "2.4",
+   "clause": "2.4.2.4(1)",
+   "value": 1.15,
+   "example": 1.15,
+   "choices": [
+    {
+     "value": 1.15,
+     "label": "persistent and transient design situations"
+    },
+    {
+     "value": 1.0,
+     "label": "accidental design situations"
+    }
+   ],
+   "ndp": true,
+   "range": [
+    1.0,
+    1.25
+   ],
+   "seen": [
+    [
+     1.15,
+     2
+    ]
+   ]
+  },
+  "gamma_V": {
+   "id": "gamma_V",
+   "name": "Partial factor for design shear resistance of a headed stud",
+   "var": "gamma_V",
+   "symbol": "γ_{V}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1994-1-1",
+   "topic": "6.6.3",
+   "clause": "6.6.3.1(1)",
+   "value": 1.25,
+   "example": 1.25,
+   "ndp": true,
+   "range": [
+    1.0,
+    1.5
+   ]
+  },
+  "h": {
+   "id": "h",
+   "name": "Overall depth of the cross-section",
+   "var": "h",
    "unit": "mm",
    "kind": "input",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 80.0,
+   "example": 500.0,
    "range": [
-    20.0,
-    120.0
+    150.0,
+    3000.0
    ],
-   "observed": 4
+   "seen": [
+    [
+     326.0,
+     22
+    ],
+    [
+     300.0,
+     10
+    ],
+    [
+     493.0,
+     10
+    ],
+    [
+     400.0,
+     6
+    ],
+    [
+     650.0,
+     5
+    ],
+    [
+     330.0,
+     4
+    ],
+    [
+     246.0,
+     4
+    ],
+    [
+     402.0,
+     4
+    ]
+   ]
   },
-  "I_cr": {
-   "id": "I_cr",
-   "name": "Second moment of area of the cracked section",
-   "var": "I_cr",
-   "symbol": "I_{cr}",
-   "unit": "mm⁴",
+  "h_sc": {
+   "id": "h_sc",
+   "name": "Overall nominal height of the stud",
+   "var": "h_sc",
+   "symbol": "h_{sc}",
+   "unit": "mm",
    "kind": "input",
-   "topic": "7.3.4",
-   "typical": 20564900000.0,
+   "example": 100.0,
    "range": [
-    100000000.0,
-    1000000000000.0
-   ],
-   "observed": 2
+    50.0,
+    200.0
+   ]
   },
   "k_1": {
    "id": "k_1",
    "name": "Coefficient for the effect of axial stress on shear resistance",
    "var": "k_1",
+   "symbol": "k_{1}",
    "unit": "-",
    "kind": "coefficient",
+   "code": "EN 1992-1-1",
    "topic": "6.2.2",
    "clause": "6.2.2(1)",
-   "typical": 0.15,
+   "value": 0.15,
+   "example": 0.15,
+   "ndp": true,
    "range": [
     0.1,
     0.2
    ],
-   "observed": 84
+   "seen": [
+    [
+     0.15,
+     70
+    ],
+    [
+     0.1,
+     14
+    ]
+   ]
+  },
+  "k_1_bond": {
+   "id": "k_1_bond",
+   "name": "Coefficient for the bond properties of the reinforcement",
+   "var": "k_1",
+   "symbol": "k_{1}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "value": 0.8,
+   "example": 0.8,
+   "choices": [
+    {
+     "value": 0.8,
+     "label": "high bond bars"
+    },
+    {
+     "value": 1.6,
+     "label": "bars with an effectively plain surface"
+    }
+   ],
+   "range": [
+    0.8,
+    1.6
+   ],
+   "seen": [
+    [
+     0.8,
+     2
+    ]
+   ]
+  },
+  "k_2": {
+   "id": "k_2",
+   "name": "Coefficient for the distribution of strain",
+   "var": "k_2",
+   "symbol": "k_{2}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "value": 0.5,
+   "example": 0.5,
+   "choices": [
+    {
+     "value": 0.5,
+     "label": "bending"
+    },
+    {
+     "value": 1.0,
+     "label": "pure tension"
+    }
+   ],
+   "range": [
+    0.5,
+    1.0
+   ],
+   "seen": [
+    [
+     0.5,
+     2
+    ]
+   ]
+  },
+  "k_3": {
+   "id": "k_3",
+   "name": "Coefficient k3 for crack spacing",
+   "var": "k_3",
+   "symbol": "k_{3}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "value": 3.4,
+   "example": 3.4,
+   "ndp": true,
+   "range": [
+    2.0,
+    3.4
+   ],
+   "seen": [
+    [
+     3.4,
+     2
+    ]
+   ]
+  },
+  "k_4": {
+   "id": "k_4",
+   "name": "Coefficient k4 for crack spacing",
+   "var": "k_4",
+   "symbol": "k_{4}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.4",
+   "clause": "7.3.4(3)",
+   "value": 0.425,
+   "example": 0.425,
+   "ndp": true,
+   "range": [
+    0.4,
+    0.45
+   ],
+   "seen": [
+    [
+     0.425,
+     2
+    ]
+   ]
+  },
+  "k_t": {
+   "id": "k_t",
+   "name": "Factor for the duration of the load",
+   "var": "k_t",
+   "symbol": "k_{t}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.4",
+   "clause": "7.3.4(2)",
+   "value": 0.4,
+   "example": 0.4,
+   "choices": [
+    {
+     "value": 0.6,
+     "label": "short-term loading"
+    },
+    {
+     "value": 0.4,
+     "label": "long-term loading"
+    }
+   ],
+   "range": [
+    0.4,
+    0.6
+   ],
+   "seen": [
+    [
+     0.4,
+     2
+    ]
+   ]
+  },
+  "phi_bar": {
+   "id": "phi_bar",
+   "name": "Bar diameter (equivalent diameter for mixed sizes)",
+   "var": "phi",
+   "symbol": "ϕ",
+   "unit": "mm",
+   "kind": "input",
+   "example": 20.0,
+   "range": [
+    8.0,
+    40.0
+   ],
+   "seen": [
+    [
+     25.0,
+     2
+    ]
+   ]
+  },
+  "phi_creep": {
+   "id": "phi_creep",
+   "name": "Final creep coefficient",
+   "var": "phi_t",
+   "symbol": "φ(∞,t_{0})",
+   "unit": "-",
+   "kind": "input",
+   "example": 2.0,
+   "range": [
+    0.5,
+    3.5
+   ],
+   "seen": [
+    [
+     1.5,
+     2
+    ]
+   ]
   },
   "s": {
    "id": "s",
@@ -539,138 +1175,137 @@
    "var": "s",
    "unit": "mm",
    "kind": "input",
-   "topic": "6.2.3",
-   "clause": "6.2.3(3)",
-   "typical": 200.0,
+   "example": 200.0,
    "range": [
     50.0,
     400.0
    ],
-   "observed": 5
+   "seen": [
+    [
+     200.0,
+     3
+    ],
+    [
+     150.0,
+     2
+    ]
+   ]
   },
-  "lam": {
-   "id": "lam",
-   "name": "Factor defining the effective height of the compression zone",
-   "var": "lam",
-   "symbol": "λ",
-   "unit": "-",
-   "kind": "coefficient",
-   "topic": "6.1",
-   "clause": "3.1.7(3)",
-   "typical": 0.8,
-   "range": [
-    0.7,
-    0.8
-   ],
-   "observed": 2
-  },
-  "d": {
-   "id": "d",
-   "name": "Effective depth of the cross-section",
-   "var": "d",
-   "unit": "mm",
-   "kind": "input",
-   "topic": "6",
-   "typical": 273.0,
-   "range": [
-    100.0,
-    2900.0
-   ],
-   "observed": 88
-  },
-  "V_Ed": {
-   "id": "V_Ed",
-   "name": "Design shear force",
-   "var": "V_Ed",
-   "unit": "kN",
-   "kind": "input",
-   "topic": "6.2",
-   "typical": 3300000.0,
-   "range": [
-    10000.0,
-    10000000.0
-   ],
-   "observed": 46
-  },
-  "f_ct_eff": {
-   "id": "f_ct_eff",
-   "name": "Mean tensile strength of the concrete effective at the time of cracking",
-   "var": "f_ct_eff",
-   "symbol": "f_{ct,eff}",
+  "sigma_cp": {
+   "id": "sigma_cp",
+   "name": "Concrete stress from axial load or prestress (compression positive)",
+   "var": "sigma_cp",
+   "symbol": "σ_{cp}",
    "unit": "MPa",
    "kind": "input",
-   "topic": "7.3.4",
-   "clause": "7.3.4(2)",
+   "example": 0.0,
    "range": [
-    1.6,
-    5.0
+    -2.0,
+    6.0
    ],
-   "observed": 0
+   "seen": [
+    [
+     0.0,
+     78
+    ],
+    [
+     -0.36,
+     2
+    ],
+    [
+     -0.14,
+     1
+    ],
+    [
+     -0.45,
+     1
+    ],
+    [
+     -0.16,
+     1
+    ],
+    [
+     -0.24,
+     1
+    ],
+    [
+     -0.32,
+     1
+    ],
+    [
+     -0.54,
+     1
+    ]
+   ]
   },
-  "b": {
-   "id": "b",
-   "name": "Width of the cross-section (compression zone)",
-   "var": "b",
-   "unit": "mm",
+  "theta": {
+   "id": "theta",
+   "name": "Angle between the concrete strut and the member axis",
+   "var": "theta",
+   "symbol": "θ",
+   "unit": "°",
    "kind": "input",
-   "topic": "6.1",
-   "typical": 500.0,
+   "example": 0.38048177693476387,
    "range": [
-    150.0,
-    3000.0
+    0.38048177693476387,
+    0.7853981633974483
    ],
-   "observed": 2
+   "seen": [
+    [
+     0.785398,
+     2
+    ]
+   ]
   },
-  "k_4": {
-   "id": "k_4",
-   "name": "Coefficient k4 for crack spacing",
-   "var": "k_4",
-   "unit": "-",
+  "w_max": {
+   "id": "w_max",
+   "name": "Limiting calculated crack width",
+   "var": "w_max",
+   "symbol": "w_{max}",
+   "unit": "mm",
    "kind": "coefficient",
-   "topic": "7.3.4",
-   "clause": "7.3.4(3)",
-   "typical": 0.425,
+   "code": "EN 1992-1-1",
+   "topic": "7.3",
+   "clause": "7.3.1(5), Table 7.1N",
+   "value": 0.3,
+   "example": 0.3,
+   "ndp": true,
    "range": [
-    0.4,
-    0.45
+    0.1,
+    0.4
    ],
-   "observed": 2
-  },
-  "nu_1": {
-   "id": "nu_1",
-   "name": "Strength reduction factor for concrete cracked in shear (strut)",
-   "var": "nu_1",
-   "symbol": "ν_{1}",
-   "unit": "-",
-   "kind": "derived",
-   "topic": "6.2.3",
-   "clause": "6.2.3(3)",
-   "typical": 0.45,
-   "range": [
-    0.3,
-    0.6
+   "seen": [
+    [
+     0.3,
+     2
+    ]
    ],
-   "observed": 6
-  },
-  "b_w": {
-   "id": "b_w",
-   "name": "Smallest width of the cross-section in the tensile area",
-   "var": "b_w",
-   "unit": "mm",
-   "kind": "input",
-   "topic": "6.2",
-   "clause": "6.2.2(1)",
-   "typical": 300.0,
-   "range": [
-    100.0,
-    3000.0
-   ],
-   "observed": 6
+   "background": [
+    {
+     "kind": "guidance",
+     "text": "Table 7.1N recommends 0.3 mm under the quasi-permanent combination for exposure classes XC2 to XC4, XD and XS for reinforced members, and 0.4 mm for X0 and XC1 (appearance only).",
+     "refs": [
+      {
+       "id": "EN1992-1-1",
+       "at": "Table 7.1N",
+       "text": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
+   ]
   }
  },
  "objects": [
+  "cot_theta",
+  "f_cm",
+  "f_ctm",
+  "f_ctk_005",
+  "E_cm",
   "f_cd",
-  "E_c_eff",
+  "f_ctd",
+  "lam",
+  "eta",
+  "f_yd",
   "x",
   "z",
   "M_Rd",
@@ -681,17 +1316,31 @@
   "V_Rd_c_min",
   "V_Rd_c",
   "nu",
+  "V_Ed_max",
+  "z_V",
+  "f_ywd",
+  "nu_1",
   "alpha_cw",
   "V_Rd_s",
   "V_Rd_max",
   "alpha_e",
+  "x_el",
+  "I_cr",
   "sigma_s",
   "sigma_c",
   "h_c_ef",
   "A_c_eff",
   "rho_p_eff",
+  "f_ct_eff",
   "s_r_max",
   "eps_sm_cm",
-  "w_k"
+  "w_k",
+  "E_c_eff",
+  "f_yd_a",
+  "alpha_stud",
+  "P_Rd_s",
+  "P_Rd_c",
+  "P_Rd",
+  "N_pl_Rd"
  ]
 }

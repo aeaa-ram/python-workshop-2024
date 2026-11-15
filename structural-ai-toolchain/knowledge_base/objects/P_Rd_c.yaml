@@ -1,0 +1,23 @@
+id: P_Rd_c
+name: Design shear resistance of a headed stud, failure of the concrete
+formula: 0.29 * alpha_stud * d_s ** 2 * sqrt(f_ck * E_cm) / gamma_V
+params:
+- alpha_stud
+- d_s
+- f_ck
+- E_cm
+- gamma_V
+var: P_Rd_c
+symbol: P_{Rd,c}
+unit: kN
+code: EN 1994-1-1
+topic: 6.6.3
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.3 Headed stud connectors in solid slabs and concrete encasement
+clause: 6.6.3.1(1)
+eq: (6.19)
+basis: code
+sense: resistance
+version: 6b0828cca936

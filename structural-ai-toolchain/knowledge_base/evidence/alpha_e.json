@@ -1,0 +1,130 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.3.4(2)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 3 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 2,
+  "printed_values": 2,
+  "variants": [
+   {
+    "formula": "E_s / E_cm",
+    "text": "E_s / E_cm",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   },
+   {
+    "formula": "E_s / E_c_eff",
+    "text": "E_s / E_c,eff",
+    "relation": "alternative",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1,
+    "alternative": "stresses under long-term loads, with the effective modulus (7.4.3(5))"
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code.",
+   "1 formula(s) in S1: the permitted alternative E_s / E_c,eff (stresses under long-term loads, with the effective modulus (7.4.3(5)))."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 4,
+  "agree": 3,
+  "deviation": 1,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 150",
+    "kind": "formula",
+    "expected": 5.882352941176471,
+    "got": 5.882352941176471,
+    "status": "agree",
+    "inputs": {
+     "E_s": 200000.0,
+     "E_cm": 34000.0
+    }
+   },
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 152",
+    "kind": "formula",
+    "expected": 14.705882352941176,
+    "got": 14.705882352941176,
+    "status": "agree",
+    "inputs": {
+     "E_s": 200000.0,
+     "E_c_eff": 13600.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 5",
+    "kind": "printed",
+    "expected": 5.88,
+    "got": 5.869036063963533,
+    "status": "agree",
+    "tolerance": 0.04030210529154853,
+    "inputs": {
+     "E_s": 200000.0,
+     "E_cm": 34077.14619918933
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 5",
+    "kind": "printed",
+    "expected": 14.71,
+    "got": 5.869036063963533,
+    "status": "deviation",
+    "detail": "outside the rounding of the print",
+    "tolerance": 0.04030210529154853,
+    "inputs": {
+     "E_s": 200000.0,
+     "E_cm": 34077.14619918933
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "alpha_e(Es, Ecm)",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

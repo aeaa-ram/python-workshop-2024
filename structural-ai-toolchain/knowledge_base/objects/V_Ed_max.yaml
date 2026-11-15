@@ -1,0 +1,23 @@
+id: V_Ed_max
+name: Upper limit of the shear force in a member without shear reinforcement
+formula: 0.5 * b_w * d * nu * f_cd
+params:
+- b_w
+- d
+- nu
+- f_cd
+var: V_Ed_max
+symbol: V_{Ed,max}
+unit: kN
+code: EN 1992-1-1
+topic: 6.2.2
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.2 Members not requiring design shear reinforcement
+clause: 6.2.2(6)
+eq: (6.5)
+basis: code
+sense: resistance
+check: V_Ed
+version: 51affcebd681

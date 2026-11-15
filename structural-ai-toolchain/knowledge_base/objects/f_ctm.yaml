@@ -1,0 +1,26 @@
+id: f_ctm
+name: Mean axial tensile strength of concrete
+formula: 0.3 * f_ck ** (2 / 3) if f_ck <= 50 else 2.12 * ln(1 + f_cm / 10)
+params:
+- f_ck
+- f_cm
+var: f_ctm
+symbol: f_{ctm}
+unit: MPa
+code: EN 1992-1-1
+topic: '3.1'
+topic_path:
+- 3 Materials
+- 3.1 Concrete
+clause: 3.1.2, Table 3.1
+basis: code
+background:
+- kind: limitation
+  text: 'Table 3.1 gives two expressions: 0.30 f_ck^(2/3) up to C50/60 and 2.12 ln(1 + f_cm/10) above. Tensile strength
+    scatters widely; use the 5 % fractile f_ctk,0.05 = 0.7 f_ctm where a low value is unfavourable.'
+  refs:
+  - id: EN1992-1-1
+    at: 3.1.2, Table 3.1
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: dd3ccf4135da

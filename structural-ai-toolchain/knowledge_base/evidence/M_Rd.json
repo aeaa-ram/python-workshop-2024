@@ -1,0 +1,133 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 6.1).",
+   "No independent implementation available to compare with.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 2,
+  "printed_values": 1,
+  "variants": [
+   {
+    "formula": "A_s * f_yk / gamma_S * z",
+    "text": "A_s · f_yk / γ_S · z",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   },
+   {
+    "formula": "A_s * f_yk / gamma_S * (d - x / 2) if C_flange >= T else C_flange * (d - t_f / 2) + (x - t_f) * b * alpha_cc * f_ck / gamma_C * (d - x / 2 - t_f / 2)",
+    "text": "A_s · f_yk / γ_S · (d − x / 2) if C_flange ≥ T else C_flange · (d − t_f / 2) + (x − t_f) · b · α_cc · f_ck / γ_C · (d − x / 2 − t_f / 2)",
+    "relation": "project-specific",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: C_flange, T, t_f"
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code.",
+   "1 formula(s) in S1: written with project-specific quantities (C_flange, T, t_f).",
+   "γ_C: the sources use 1.3775 (72×), 1.38 (9×), 1 (3×), 1.4 (2×) against the recommended 1.5."
+  ],
+  "values_seen": {
+   "alpha_cc": {
+    "recommended": 1.0,
+    "seen": [
+     [
+      1.0,
+      2
+     ]
+    ]
+   },
+   "gamma_C": {
+    "recommended": 1.5,
+    "seen": [
+     [
+      1.3775,
+      72
+     ],
+     [
+      1.38,
+      9
+     ],
+     [
+      1.0,
+      3
+     ],
+     [
+      1.4,
+      2
+     ]
+    ]
+   },
+   "gamma_S": {
+    "recommended": 1.15,
+    "seen": [
+     [
+      1.15,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 75",
+    "kind": "formula",
+    "expected": 390438717.53583986,
+    "got": 390438717.5358399,
+    "status": "agree",
+    "case": "phase 1",
+    "inputs": {
+     "A_s": 1963.495408493621,
+     "f_yk": 500.0,
+     "gamma_S": 1.15,
+     "z": 457.35225376532844,
+     "f_yd": 434.7826086956522
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 2",
+    "kind": "printed",
+    "expected": 390440000.0,
+    "got": 390439562.38185257,
+    "status": "agree",
+    "case": "phase 1",
+    "tolerance": 33604238.649677455,
+    "inputs": {
+     "A_s": 1963.5,
+     "f_yd": 434.7826086956522,
+     "z": 457.3521739130435
+    }
+   }
+  ]
+ }
+}

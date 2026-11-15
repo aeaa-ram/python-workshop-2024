@@ -31,7 +31,7 @@ from .distill.decompose import LOCAL, Decomposition, canonical_value, decompose
 from .distill.taxonomy import Taxonomy, load as load_taxonomy
 from .ir import SourceDocument, file_sha256
 from .kb.objects import CalcObject, KnowledgeBase, Quantity
-from .notation import symkey
+from .notation import is_case_label, symkey
 
 KIND_LABEL = {"mathcad": "Mathcad worksheet", "excel": "Excel workbook", "pdf": "PDF print",
               "python": "Python script", "notebook": "Jupyter notebook", "word": "Word report",
@@ -277,12 +277,21 @@ def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonym
         rel = v.relation or ("merged" if v.merged else "kept apart")
         benches = [by_inst.get((i.doc, i.loc)) for i in v.instances]
         benches = [b for b in benches if b is not None]
-        first_env = next((b.inputs for b in benches if b.inputs), {})
+        envs = [b.inputs for b in benches if b.inputs] or [{}]
+        pw = any(i.per_width for i in v.instances)
         diffs = []
         for d in v.diffs:
             if d.kind == "alias":
                 continue
-            diffs.append(explain(d, tax, first_env, any(i.per_width for i in v.instances), name))
+            # the explanation must hold for every case of the variant, or say how many it holds for
+            seen = Counter(explain(d, tax, env, pw, name) for env in envs)
+            text, n = seen.most_common(1)[0]
+            if len(envs) > 1:
+                text = text.replace("for this case", "in every case" if n == len(envs) else
+                                    f"in {n} of {len(envs)} cases")
+                if n < len(envs):
+                    text = text.replace(": no effect", ": no effect there")
+            diffs.append(text)
         agree = sum(b.status == "agree" for b in benches)
         dev = [b for b in benches if b.status == "deviation"]
         item = {"formula": X.to_python(v.formula, lambda s: s.lstrip(LOCAL)), "text": X.to_text(v.formula, name),
@@ -337,7 +346,7 @@ def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonym
     for b in rows:
         it = {"source": label[b.doc], "where": _anonymise(b.loc) if anonymous else b.loc, "kind": b.kind,
               "expected": b.expected, "got": b.got, "status": b.status}
-        if b.case and (not anonymous or re.fullmatch(r"(phase|case|stage|lc)\s*\d+", b.case, re.I)):
+        if b.case and (not anonymous or is_case_label(b.case)):
             it["case"] = b.case
         if b.detail:
             it["detail"] = b.detail
@@ -362,7 +371,7 @@ def _confidence(obj: CalcObject, cons, rows, tax) -> dict:
     if cons.baseline:
         what = {"code": "the code's expression", "mechanics": "standard section analysis used with the code",
                 "definition": "a definition"}.get(obj.basis, "the code baseline")
-        reasons.append(f"Logic: {what} ({obj.reference_text}).")
+        reasons.append(f"Logic: {what}" + (f" ({obj.reference_text})." if obj.reference_text else "."))
         if ref == "agrees":
             reasons.append(f"Agrees with {obj.reference['library']} over {obj.reference['samples']} samples.")
         elif ref == "differs":
@@ -370,7 +379,8 @@ def _confidence(obj: CalcObject, cons, rows, tax) -> dict:
         else:
             reasons.append("No independent implementation available to compare with.")
         if merged_agree:
-            reasons.append(f"Reproduces {merged_agree} value(s) from {n_src} independent source(s).")
+            reasons.append(f"Reproduces {merged_agree} value(s) from {n_src} independent source(s)." if n_src
+                           else f"Reproduces {merged_agree} value(s) printed in the sources.")
         elif rows:
             reasons.append("Not reproduced by any source value yet.")
         else:

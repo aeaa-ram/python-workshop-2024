@@ -1,0 +1,35 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 3.2.7(2)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Not yet seen in any source calculation."
+  ]
+ },
+ "evidence": {
+  "sources": 0,
+  "source_ids": [],
+  "formula_instances": 0,
+  "printed_values": 0,
+  "variants": [],
+  "practice": [],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 0,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": []
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "fyd(fyk, gamma_s)",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

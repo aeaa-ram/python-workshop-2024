@@ -1,0 +1,23 @@
+id: alpha_stud
+name: Factor for the stud height in the concrete failure mode
+formula: min(0.2 * (h_sc / d_s + 1), 1)
+params:
+- h_sc
+- d_s
+var: alpha_stud
+symbol: α
+unit: '-'
+code: EN 1994-1-1
+topic: 6.6.3
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.3 Headed stud connectors in solid slabs and concrete encasement
+clause: 6.6.3.1(1)
+eq: (6.20), (6.21)
+basis: code
+checks:
+- when: h_sc >= 3 * d_s
+  text: h_sc/d ≥ 3
+  clause: 6.6.3.1(1)
+version: 4502d988ffdc

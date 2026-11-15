@@ -1,0 +1,10 @@
+id: cot_theta
+name: Cotangent of the strut angle
+formula: cot(theta)
+params:
+- theta
+var: cot_theta
+symbol: cot θ
+unit: '-'
+basis: definition
+version: 84e570e2de92

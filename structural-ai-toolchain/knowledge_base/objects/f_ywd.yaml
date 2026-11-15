@@ -1,0 +1,19 @@
+id: f_ywd
+name: Design yield strength of the shear reinforcement
+formula: f_ywk / gamma_S
+params:
+- f_ywk
+- gamma_S
+var: f_ywd
+symbol: f_{ywd}
+unit: MPa
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(3)
+basis: code
+sense: resistance
+version: 8b0400fbf168

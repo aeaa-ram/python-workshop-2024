@@ -1,63 +1,20 @@
 id: M_Rd
 name: Design moment resistance
-formula: A_s * f_yk / gamma_S * z
+formula: A_s * f_yd * z
 params:
 - A_s
-- f_yk
-- gamma_S
+- f_yd
 - z
 var: M_Rd
+symbol: M_{Rd}
 unit: kNm
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: '6.1'
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.1 Bending with or without axial force
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 1
-  variants_merged: 1
-  printed_values: 1
-variants:
-- formula: A_s * f_yk / gamma_S * z
-  text: A_s · f_yk / γ_S · z
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-- formula: A_s * f_yk / gamma_S * (d - x / 2) if C_flange >= T else C_flange * (d - t_f / 2) + (x - t_f) * b * alpha_cc
-    * f_ck / gamma_C * (d - x / 2 - t_f / 2)
-  text: A_s · f_yk / γ_S · (d − x / 2) if C_flange ≥ T else C_flange · (d − t_f / 2) + (x − t_f) · b · α_cc · f_ck
-    / γ_C · (d − x / 2 − t_f / 2)
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: C_flange, T, t_f'
-benchmarks:
-  total: 2
-  agree: 2
-  deviation: 0
-  not_comparable: 0
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S1 (Mathcad worksheet) - region 75 - phase 1
-  inputs:
-    A_s: 1963.495408493621
-    f_yk: 500.0
-    gamma_S: 1.15
-    z: 457.35225376532844
-  expected: 390438717.53583986
-  result: 390438717.53584
-  matches_source: true
-  given:
-  - z
+clause: '6.1'
+basis: mechanics
+sense: resistance
 check: M_Ed
-version: 54a816402a91
+version: 29a325f104fd

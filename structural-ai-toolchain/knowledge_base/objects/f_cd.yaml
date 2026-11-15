@@ -1,63 +1,36 @@
 id: f_cd
-name: Design value of concrete compressive strength
-formula: f_ck / gamma_C
+name: Design compressive strength of concrete
+formula: alpha_cc * f_ck / gamma_C
 params:
+- alpha_cc
 - f_ck
 - gamma_C
 var: f_cd
+symbol: f_{cd}
 unit: MPa
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: '3.1'
 topic_path:
 - 3 Materials
 - 3.1 Concrete
 clause: 3.1.6(1)
 eq: (3.15)
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S3
-  formula_instances: 4
-  variants_merged: 1
-  printed_values: 0
-variants:
-- formula: f_ck / gamma_C
-  text: f_ck / γ_C
-  instances: 4
-  sources:
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-benchmarks:
-  total: 4
-  agree: 4
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: fcd(fck, alpha_cc, gamma_c)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-  note: the distilled formula has no α_cc; the reference was evaluated with α_cc = 1
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S3 (Excel workbook) - sheet 2 cell W20
-  inputs:
-    f_ck: 60.0
-    gamma_C: 1.38
-  expected: 43.47826086956522
-  result: 43.47826086956522
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 5 cell AH17
-  inputs:
-    f_ck: 50.0
-    gamma_C: 1.38
-  expected: 36.231884057971016
-  result: 36.231884057971016
-  matches_source: true
-version: 005ea82f6bd7
+basis: code
+sense: resistance
+refs:
+- code: EN 1994-1-1
+  clause: 2.4.1.2(2)
+  eq: ''
+  topic: '2.4'
+  symbol: f_cd
+  how: 'special case: α_cc = 1'
+background:
+- kind: pitfall
+  text: α_cc is a Nationally Determined Parameter. Spreadsheets often write f_ck/γ_C, which is the recommended value
+    α_cc = 1.0; with a National Annex value of 0.85 the same sheet overstates f_cd by 18 %.
+  refs:
+  - id: EN1992-1-1
+    at: 3.1.6(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: d67592c9a9f0

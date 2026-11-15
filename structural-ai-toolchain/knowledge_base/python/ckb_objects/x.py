@@ -1,27 +1,29 @@
-"""x - Neutral axis depth
-
-EN 1992-1-1
-6 Ultimate limit states (ULS) > 6.1 Bending with or without axial force
-
-Status: single source - 1 formula instance(s) in 1 independent source(s), 1 variant(s) merged.
-Benchmarks: 2 of 4 source values reproduced.
-WARNING: Seen in one source only: not yet confirmed by a second, independent calculation.
-
-Units: N, mm, MPa (N/mm2), rad.
-Generated from objects/x.yaml (version 62c6ced296c7) - do not edit by hand.
-"""
+"""x - EN 1992-1-1 cl. 3.1.7(3), 6.1.  Units: N, mm, MPa, rad."""
+# ckb x 8ab0e3e4e36e
+from .f_yd import f_yd as _f_yd
+from .eta import eta as _eta
+from .f_cd import f_cd as _f_cd
+from .lam import lam as _lam
 
 
-def x(f_yk, gamma_S, A_s, gamma_C, lam, b, alpha_cc, f_ck):
-    """Neutral axis depth [mm]
+def x(A_s, f_yd, eta, f_cd, lam, b):
+    """Depth of the neutral axis at the ultimate limit state [mm]
+    EN 1992-1-1 cl. 3.1.7(3), 6.1
     
-    f_yk      Characteristic yield strength of reinforcement [MPa]
-    gamma_S   Partial factor for reinforcing steel [-]
-    A_s       Cross-sectional area of tension reinforcement [mm2]
-    gamma_C   Partial factor for concrete [-]
-    lam       Factor defining the effective height of the compression zone [-]
-    b         Width of the cross-section (compression zone) [mm]
-    alpha_cc  Coefficient for long-term effects on the compressive strength [-]
-    f_ck      Characteristic compressive cylinder strength of concrete at 28 days [MPa]
+    A_s   Area of tension reinforcement [mm2]
+    f_yd  Design yield strength of reinforcement [MPa]
+    eta   Factor for the effective strength of the compression zone [-]
+    f_cd  Design compressive strength of concrete [MPa]
+    lam   Factor for the effective height of the compression zone [-]
+    b     Width of the cross-section [mm]
     """
-    return f_yk / gamma_S * A_s * gamma_C / (lam * b * alpha_cc * f_ck)
+    return A_s * f_yd / (eta * f_cd * lam * b)
+
+
+def x_chain(A_s, f_yk, gamma_S, f_ck, alpha_cc, gamma_C, b):
+    """x from the primary inputs."""
+    f_yd = _f_yd(f_yk, gamma_S)
+    eta = _eta(f_ck)
+    f_cd = _f_cd(alpha_cc, f_ck, gamma_C)
+    lam = _lam(f_ck)
+    return x(A_s, f_yd, eta, f_cd, lam, b)

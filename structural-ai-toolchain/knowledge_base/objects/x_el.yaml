@@ -1,0 +1,28 @@
+id: x_el
+name: Depth of the neutral axis of the cracked section (elastic)
+formula: (sqrt((alpha_e * A_s) ** 2 + 2 * b * alpha_e * A_s * d) - alpha_e * A_s) / b
+params:
+- alpha_e
+- A_s
+- b
+- d
+var: x_el
+symbol: x_{el}
+unit: mm
+code: EN 1992-1-1
+topic: 7.3.4
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.4 Calculation of crack widths
+clause: 7.3.4, 7.2
+basis: mechanics
+background:
+- kind: scope
+  text: Rectangular section, tension reinforcement only, concrete in tension ignored, linear elastic materials.
+    For flanged sections with the neutral axis in the web, or with compression reinforcement, the expression changes.
+  refs:
+  - id: DG-EC2
+    at: '7.3'
+    text: Beeby, A.W. and Narayanan, R.S. Designers' Guide to EN 1992-1-1 and EN 1992-1-2. Thomas Telford, 2005.
+version: f3c9b7b30a95

@@ -1,0 +1,26 @@
+id: z_V
+name: Inner lever arm for shear
+formula: 0.9 * d
+params:
+- d
+var: z_V
+symbol: z
+unit: mm
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(1)
+basis: code
+background:
+- kind: guidance
+  text: '0.9 d is the approximation the code allows for reinforced concrete without axial force. The lever arm from
+    the bending analysis may be used instead: enter z directly.'
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.3(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 151e8beb1771

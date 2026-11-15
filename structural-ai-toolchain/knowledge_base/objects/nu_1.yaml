@@ -1,0 +1,22 @@
+id: nu_1
+name: Strength reduction factor for concrete cracked in shear (strut)
+formula: nu
+params:
+- nu
+var: nu_1
+symbol: ν_{1}
+unit: '-'
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(3)
+eq: (6.6N)
+basis: code
+ndp: true
+alternatives:
+- formula: 0.6 if f_ck <= 60 else max(0.9 - f_ck / 200, 0.5)
+  when: the design stress of the shear reinforcement is below 80 % of f_yk (6.2.3(3) Note 2)
+version: 8b3136a8b148

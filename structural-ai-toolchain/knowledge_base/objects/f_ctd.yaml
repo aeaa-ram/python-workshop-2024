@@ -1,0 +1,20 @@
+id: f_ctd
+name: Design tensile strength of concrete
+formula: alpha_ct * f_ctk_005 / gamma_C
+params:
+- alpha_ct
+- f_ctk_005
+- gamma_C
+var: f_ctd
+symbol: f_{ctd}
+unit: MPa
+code: EN 1992-1-1
+topic: '3.1'
+topic_path:
+- 3 Materials
+- 3.1 Concrete
+clause: 3.1.6(2)
+eq: (3.16)
+basis: code
+sense: resistance
+version: b70ac2223e44

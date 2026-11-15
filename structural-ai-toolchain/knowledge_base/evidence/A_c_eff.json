@@ -1,0 +1,68 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.3.2(3)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 1 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 1,
+  "printed_values": 0,
+  "variants": [
+   {
+    "formula": "h_c_ef * b",
+    "text": "h_c,ef · b",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 1,
+  "agree": 1,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 194",
+    "kind": "formula",
+    "expected": 115114.70782225447,
+    "got": 115114.70782225447,
+    "status": "agree",
+    "inputs": {
+     "h_c_ef": 230.22941564450892,
+     "b": 500.0
+    }
+   }
+  ]
+ }
+}

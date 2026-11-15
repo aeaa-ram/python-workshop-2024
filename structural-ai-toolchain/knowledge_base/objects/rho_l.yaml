@@ -1,109 +1,28 @@
 id: rho_l
 name: Longitudinal reinforcement ratio
-formula: min(A_sl / (d * b_w), 0.02)
+formula: min(A_sl / (b_w * d), 0.02)
 params:
 - A_sl
-- d
 - b_w
+- d
 var: rho_l
 symbol: ρ_{l}
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.2
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.2 Shear
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(1)
-status: disagreement
-support:
-  sources: 2
-  source_ids:
-  - S1
-  - S3
-  formula_instances: 86
-  variants_merged: 2
-  printed_values: 2
-variants:
-- formula: min(A_sl / (b_w * d), 0.02)
-  text: min(A_sl / (b_w · d), 0.02)
-  instances: 6
-  sources:
-  - S1 (Mathcad worksheet)
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-- formula: min(A_sl / d, 0.02)
-  text: min(A_sl / d, 0.02)
-  instances: 80
-  sources:
-  - S3 (Excel workbook)
-  merged: true
-  differences:
-  - has no factor b_w (equivalent to b_w = 1)
-- formula: A_sl / h / b_w
-  text: A_sl / h / b_w
-  instances: 4
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-benchmarks:
-  total: 88
-  agree: 88
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: shear._rho_L(Asl, bw, d)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Sources disagree: 1 other formula(s) for this quantity could not be merged with the one shown. The one shown
-  has the most support; an engineer has to decide.'
-examples:
-- label: S1 (Mathcad worksheet) - region 127 - phase 2
-  inputs:
-    A_sl: 1963.495408493621
-    d: 841.5000000000001
-    b_w: 500.0
-  expected: 0.004666655753995533
-  result: 0.004666655753995533
-  matches_source: true
-- label: S1 (Mathcad worksheet) - region 82 - phase 1
-  inputs:
-    A_sl: 1963.495408493621
-    d: 491.5000000000001
-    b_w: 500.0
-  expected: 0.00798980837637282
-  result: 0.00798980837637282
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 2 cell S24
-  inputs:
-    A_sl: 1608.495438637974
-    d: 1000.0
-    b_w: 300.0
-  expected: 0.00536165146212658
-  result: 0.00536165146212658
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 5 cell AD21
-  inputs:
-    A_sl: 402.0
-    d: 1000.0
-    b_w: 300.0
-  expected: 0.00134
-  result: 0.00134
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 9 cell W21
-  inputs:
-    A_sl: 2454.0
-    d: 342.5
-    b_w: 1000.0
-  expected: 0.007164963503649635
-  result: 0.007164963503649635
-  matches_source: true
-version: 42da2ccdd6b3
+basis: code
+background:
+- kind: pitfall
+  text: Only bars anchored at least l_bd + d beyond the section count (Figure 6.3). Near a support or a curtailment
+    this is often less than the reinforcement at mid-span.
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.2(1), Figure 6.3
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 6a047f5ccfb6

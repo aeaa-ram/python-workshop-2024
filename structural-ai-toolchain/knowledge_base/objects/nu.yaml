@@ -7,7 +7,6 @@ var: nu
 symbol: ν
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.2
 topic_path:
 - 6 Ultimate limit states (ULS)
@@ -15,56 +14,6 @@ topic_path:
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(6)
 eq: (6.6N)
-status: disagreement
-support:
-  sources: 1
-  source_ids:
-  - S3
-  formula_instances: 80
-  variants_merged: 1
-  printed_values: 0
-variants:
-- formula: 0.6 * (1 - f_ck / 250)
-  text: 0.6 · (1 − f_ck / 250)
-  instances: 80
-  sources:
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-- formula: max(0.7 - f_ck / 200, 0.45)
-  text: max(0.7 − f_ck / 200, 0.45)
-  instances: 4
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-benchmarks:
-  total: 80
-  agree: 80
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: shear.v(fck)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Sources disagree: 1 other formula(s) for this quantity could not be merged with the one shown. The one shown
-  has the most support; an engineer has to decide.'
-examples:
-- label: S3 (Excel workbook) - sheet 1 cell E32
-  inputs:
-    f_ck: 50.0
-  expected: 0.48
-  result: 0.48
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 10 cell E12
-  inputs:
-    f_ck: 60.0
-  expected: 0.45599999999999996
-  result: 0.45599999999999996
-  matches_source: true
-version: 53e1b871d1ed
+basis: code
+ndp: true
+version: 4b2658657817

@@ -1,19 +1,17 @@
 id: V_Rd_max
-name: Design shear resistance governed by crushing of the compression struts
-formula: alpha_cw * b_w * z * nu_1 * f_ck / gamma_C / (cot(theta) + tan(theta))
+name: Shear resistance governed by crushing of the compression struts
+formula: alpha_cw * b_w * z_V * nu_1 * f_cd / (cot(theta) + tan(theta))
 params:
 - alpha_cw
 - b_w
-- z
+- z_V
 - nu_1
-- f_ck
-- gamma_C
+- f_cd
 - theta
 var: V_Rd_max
 symbol: V_{Rd,max}
 unit: kN
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.3
 topic_path:
 - 6 Ultimate limit states (ULS)
@@ -21,84 +19,7 @@ topic_path:
 - 6.2.3 Members requiring design shear reinforcement
 clause: 6.2.3(3)
 eq: (6.9)
-status: disagreement
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 2
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: alpha_cw * b_w * z * nu_1 * f_ck / gamma_C / (cot(theta) + tan(theta))
-  text: α_cw · b_w · z · ν_1 · f_ck / γ_C / (cot(θ) + tan(θ))
-  instances: 2
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-- formula: alpha_cw * b_w * z * nu_1 * f_cd * tan(radians(22.5))
-  text: α_cw · b_w · z · ν_1 · f_cd · tan(radians(22.5))
-  instances: 1
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-- formula: alpha_cw * b_w * z * nu_1 * f_cd / (cot_theta + 1 / cot_theta)
-  text: α_cw · b_w · z · ν_1 · f_cd / (cot_theta + 1 / cot_theta)
-  instances: 3
-  sources:
-  - S3 (Excel workbook)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: cot_theta'
-benchmarks:
-  total: 4
-  agree: 4
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: VRdmax(bw, z, fck, theta, NEd=0, Ac, fcd)
-  samples: 200
-  max_relative_difference: 4.27e-16
-  status: agrees
-  agreeing_samples: 200
-  note: compared for σ_cp = 0 (α_cw = 1), vertical links, ν_1 = 0.6(1 − f_ck/250) and α_cc = 1
-warnings:
-- 'Sources disagree: 1 other formula(s) for this quantity could not be merged with the one shown. The one shown
-  has the most support; an engineer has to decide.'
-examples:
-- label: S1 (Mathcad worksheet) - region 101 - phase 1
-  inputs:
-    alpha_cw: 1.0
-    b_w: 500.0
-    z: 457.35225376532844
-    nu_1: 0.6
-    f_ck: 35.0
-    gamma_C: 1.4
-    theta: 0.7853981633974483
-  expected: 1715070.9516199816
-  result: 1715070.9516199816
-  matches_source: true
-  given:
-  - alpha_cw
-  - z
-- label: S1 (Mathcad worksheet) - region 140 - phase 2
-  inputs:
-    alpha_cw: 1.0
-    b_w: 500.0
-    z: 835.5761998031624
-    nu_1: 0.6
-    f_ck: 35.0
-    gamma_C: 1.4
-    theta: 0.7853981633974483
-  expected: 3133410.7492618584
-  result: 3133410.749261859
-  matches_source: true
-  given:
-  - alpha_cw
-  - z
+basis: code
+sense: resistance
 check: V_Ed
-version: aeba502c9bb0
+version: 0f69124f6bf7

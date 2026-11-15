@@ -5,9 +5,9 @@ params:
 - s_r_max
 - eps_sm_cm
 var: w_k
+symbol: w_{k}
 unit: mm
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 7.3.4
 topic_path:
 - 7 Serviceability limit states (SLS)
@@ -15,61 +15,7 @@ topic_path:
 - 7.3.4 Calculation of crack widths
 clause: 7.3.4(1)
 eq: (7.8)
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 1
-  variants_merged: 1
-  printed_values: 1
-variants:
-- formula: s_r_max * eps_sm_cm
-  text: s_r,max · ε_sm−ε_cm
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-benchmarks:
-  total: 2
-  agree: 2
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: wk(sr_max, eps_sm_eps_cm)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S1 (Mathcad worksheet) - region 206
-  inputs:
-    k_3: 3.4
-    c: 96.0
-    k_1_bond: 0.8
-    k_2: 0.5
-    k_4: 0.425
-    phi_bar: 25.0
-    A_s: 1963.495408493621
-    h: 950.0000000000001
-    d: 841.5000000000001
-    x: 259.31175306647333
-    b: 500.0
-    alpha_e: 14.705882352941176
-    M_Ed: 196069916.345625
-    I_cr: 20564932872.71287
-    k_t: 0.4
-    f_ct_eff: 3.21
-    E_s: 200000.0
-  expected: 0.1409467414377318
-  result: 0.14094674143773187
-  matches_source: true
-  given:
-  - alpha_e
-  - x
+basis: code
+sense: effect
 check: w_max
-version: 936ee924037d
+version: 1c34e85ebf5c

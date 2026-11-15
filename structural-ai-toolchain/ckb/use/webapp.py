@@ -481,6 +481,12 @@ function renderTree() {
   const box = $("#tree");
   if (state.q.trim()) { renderHits(box); return; }
   let h = "";
+  const general = Object.values(D.objects).filter(o => !o.code);
+  if (general.length && state.code === "all") {
+    h += `<div class="t-code">Definitions used by every code</div>` + general.map(o =>
+      `<button class="t-obj" type="button" data-id="${esc(o.id)}" aria-current="${state.view === "object" && state.target === o.id}">`
+      + `${dot(o)}<span class="s">${esc(o.text)}</span><span class="n">${esc(o.name)}</span></button>`).join("");
+  }
   for (const c of D.codes) {
     if (state.code !== "all" && state.code !== c.code) continue;
     h += `<div class="t-code">${esc(c.code)}</div>`;
@@ -549,7 +555,7 @@ function renderMain() {
   $("#ovw").setAttribute("aria-current", String(state.view === "overview"));
   if (state.view !== "object") { renderOverview(); return; }
   const o = D.objects[state.target], c = conf(o);
-  const crumb = [o.code].concat(o.path || []).join(" › ");
+  const crumb = (o.code ? [o.code] : ["Definition used by every code"]).concat(o.path || []).join(" › ");
   const tabs = [["calc", "Calculate"], ["background", "Design background"], ["chart", "Chart"], ["code", "Code"], ["status", "Status"]];
   $("#main").innerHTML = `<section class="card head"><div class="crumb">${esc(crumb)}</div>
     <h2><math>${o.ml}</math><span>${esc(o.name)}</span></h2>

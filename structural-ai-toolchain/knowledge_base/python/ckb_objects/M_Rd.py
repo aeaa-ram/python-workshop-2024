@@ -1,30 +1,30 @@
-"""M_Rd - Design moment resistance
-
-EN 1992-1-1
-6 Ultimate limit states (ULS) > 6.1 Bending with or without axial force
-
-Status: single source - 1 formula instance(s) in 1 independent source(s), 1 variant(s) merged.
-Benchmarks: 2 of 2 source values reproduced.
-WARNING: Seen in one source only: not yet confirmed by a second, independent calculation.
-
-Units: N, mm, MPa (N/mm2), rad.
-Generated from objects/M_Rd.yaml (version 54a816402a91) - do not edit by hand.
-"""
+"""M_Rd - EN 1992-1-1 cl. 6.1.  Units: N, mm, MPa, rad."""
+# ckb M_Rd 29a325f104fd
+from .f_yd import f_yd as _f_yd
+from .lam import lam as _lam
+from .eta import eta as _eta
+from .f_cd import f_cd as _f_cd
+from .x import x as _x
 from .z import z as _z
 
 
-def M_Rd(A_s, f_yk, gamma_S, z):
+def M_Rd(A_s, f_yd, z):
     """Design moment resistance [Nmm]
+    EN 1992-1-1 cl. 6.1
     
-    A_s      Cross-sectional area of tension reinforcement [mm2]
-    f_yk     Characteristic yield strength of reinforcement [MPa]
-    gamma_S  Partial factor for reinforcing steel [-]
-    z        Lever arm of internal forces [mm]
+    A_s   Area of tension reinforcement [mm2]
+    f_yd  Design yield strength of reinforcement [MPa]
+    z     Lever arm of internal forces in bending [mm]
     """
-    return A_s * f_yk / gamma_S * z
+    return A_s * f_yd * z
 
 
-def M_Rd_chain(A_s, f_yk, gamma_S, d):
-    """M_Rd from the primary inputs, through the objects it depends on."""
-    z = _z(d)
-    return M_Rd(A_s, f_yk, gamma_S, z)
+def M_Rd_chain(A_s, f_yk, gamma_S, d, f_ck, alpha_cc, gamma_C, b):
+    """M_Rd from the primary inputs."""
+    f_yd = _f_yd(f_yk, gamma_S)
+    lam = _lam(f_ck)
+    eta = _eta(f_ck)
+    f_cd = _f_cd(alpha_cc, f_ck, gamma_C)
+    x = _x(A_s, f_yd, eta, f_cd, lam, b)
+    z = _z(d, lam, x)
+    return M_Rd(A_s, f_yd, z)

@@ -1,30 +1,26 @@
-"""h_c,ef - Effective height of the concrete tension zone
-
-EN 1992-1-1 cl. 7.3.2(3)
-7 Serviceability limit states (SLS) > 7.3 Crack control > 7.3.4 Calculation of crack widths
-
-Status: single source - 1 formula instance(s) in 1 independent source(s), 1 variant(s) merged.
-Benchmarks: 2 of 2 source values reproduced.
-Reference: agrees with structuralcodes 0.7.3 hc_eff(h, d, x) (200 samples).
-WARNING: Seen in one source only: not yet confirmed by a second, independent calculation.
-
-Units: N, mm, MPa (N/mm2), rad.
-Generated from objects/h_c_ef.yaml (version 451e89571a76) - do not edit by hand.
-"""
-from .x import x as _x
+"""h_c,ef - EN 1992-1-1 cl. 7.3.2(3).  Units: N, mm, MPa, rad."""
+# ckb h_c_ef a75fff138f75
+from .f_cm import f_cm as _f_cm
+from .E_cm import E_cm as _E_cm
+from .alpha_e import alpha_e as _alpha_e
+from .x_el import x_el as _x_el
 
 
-def h_c_ef(h, d, x):
+def h_c_ef(h, d, x_el):
     """Effective height of the concrete tension zone [mm]
+    EN 1992-1-1 cl. 7.3.2(3)
     
-    h  Overall depth of the cross-section [mm]
-    d  Effective depth of the cross-section [mm]
-    x  Neutral axis depth [mm]
+    h     Overall depth of the cross-section [mm]
+    d     Effective depth of the cross-section [mm]
+    x_el  Depth of the neutral axis of the cracked section (elastic) [mm]
     """
-    return min(2.5 * (h - d), (h - x) / 3, h / 2)
+    return min(2.5 * (h - d), (h - x_el) / 3, h / 2)
 
 
-def h_c_ef_chain(h, d, f_yk, gamma_S, A_s, gamma_C, lam, b, alpha_cc, f_ck):
-    """h_c,ef from the primary inputs, through the objects it depends on."""
-    x = _x(f_yk, gamma_S, A_s, gamma_C, lam, b, alpha_cc, f_ck)
-    return h_c_ef(h, d, x)
+def h_c_ef_chain(h, d, E_s, f_ck, A_s, b):
+    """h_c,ef from the primary inputs."""
+    f_cm = _f_cm(f_ck)
+    E_cm = _E_cm(f_cm)
+    alpha_e = _alpha_e(E_s, E_cm)
+    x_el = _x_el(alpha_e, A_s, b, d)
+    return h_c_ef(h, d, x_el)

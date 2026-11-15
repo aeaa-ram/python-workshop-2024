@@ -1,75 +1,46 @@
 id: x
-name: Neutral axis depth
-formula: f_yk / gamma_S * A_s * gamma_C / (lam * b * alpha_cc * f_ck)
+name: Depth of the neutral axis at the ultimate limit state
+formula: A_s * f_yd / (eta * f_cd * lam * b)
 params:
-- f_yk
-- gamma_S
 - A_s
-- gamma_C
+- f_yd
+- eta
+- f_cd
 - lam
 - b
-- alpha_cc
-- f_ck
 var: x
 unit: mm
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: '6.1'
 topic_path:
 - 6 Ultimate limit states (ULS)
 - 6.1 Bending with or without axial force
-status: single source
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 1
-  variants_merged: 1
-  printed_values: 3
-variants:
-- formula: f_yk / gamma_S * A_s * gamma_C / (lam * b * alpha_cc * f_ck)
-  text: f_yk / γ_S · A_s · γ_C / (λ · b · α_cc · f_ck)
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
-- formula: z_1 if z_1 > 0 else z_2 if z_2 > 0 else 'undefined'
-  text: z_1 if z_1 > 0 else z_2 if z_2 > 0 else "undefined"
-  instances: 2
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: z_1, z_2'
-- formula: T * gamma_C / (alpha_cc * f_ck * b) if C_flange >= T else (T - C_flange) * gamma_C / (alpha_cc * f_ck
-    * b_c) + t_f
-  text: T · γ_C / (α_cc · f_ck · b) if C_flange ≥ T else (T − C_flange) · γ_C / (α_cc · f_ck · b_c) + t_f
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: false
-  differences: []
-  reason: 'uses project-specific quantities: C_flange, T, b_c, t_f'
-benchmarks:
-  total: 4
-  agree: 2
-  deviation: 0
-  not_comparable: 2
-warnings:
-- 'Seen in one source only: not yet confirmed by a second, independent calculation.'
-examples:
-- label: S1 (Mathcad worksheet) - region 71 - phase 1
-  inputs:
-    f_yk: 500.0
-    gamma_S: 1.15
-    A_s: 1963.495408493621
-    gamma_C: 1.4
-    lam: 0.8
-    b: 500.0
-    alpha_cc: 1.0
-    f_ck: 35.0
-  expected: 85.36936558667917
-  result: 85.36936558667917
-  matches_source: true
-version: 62c6ced296c7
+clause: 3.1.7(3), 6.1
+basis: mechanics
+checks:
+- when: x <= 0.0035 / (0.0035 + f_yd / E_s) * d
+  text: the reinforcement yields (x/d within the limit for ε_cu3 = 3.5 ‰); otherwise the expression overstates the
+    steel force
+  clause: 3.1.7, 6.1(2)
+background:
+- kind: scope
+  text: Rectangular section with tension reinforcement only, rectangular stress block of depth λx and stress η f_cd,
+    steel yielding. For flanged sections the compression zone may lie in the flange or reach the web; compression
+    reinforcement and axial force are not included.
+  refs:
+  - id: EN1992-1-1
+    at: 3.1.7(3)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+  - id: HowTo-EC2
+    at: Beams
+    text: The Concrete Centre. How to design concrete structures using Eurocode 2. 2006 and later editions.
+- kind: guidance
+  text: Where moment redistribution or plastic analysis is used, x/d is further limited (5.5, 5.6.3) to ensure rotation
+    capacity.
+  refs:
+  - id: EN1992-1-1
+    at: 5.5(4), 5.6.3(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 8ab0e3e4e36e

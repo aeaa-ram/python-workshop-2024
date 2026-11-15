@@ -1,0 +1,79 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.2.3(1)).",
+   "No independent implementation available to compare with.",
+   "Reproduces 3 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S3"
+  ],
+  "formula_instances": 3,
+  "printed_values": 0,
+  "variants": [
+   {
+    "formula": "0.9 * d",
+    "text": "0.9 · d",
+    "relation": "as code",
+    "instances": 3,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 3,
+    "compared": 3
+   }
+  ],
+  "practice": [
+   "3 formula(s) in S3: as in the code."
+  ],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 3,
+  "agree": 3,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 6 cell X18",
+    "kind": "formula",
+    "expected": 900.0,
+    "got": 900.0,
+    "status": "agree",
+    "inputs": {
+     "d": 1000.0
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 9 cell AA19",
+    "kind": "formula",
+    "expected": 308.25,
+    "got": 308.25,
+    "status": "agree",
+    "inputs": {
+     "d": 342.5
+    }
+   },
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 5 cell AH19",
+    "kind": "formula",
+    "expected": 900.0,
+    "got": 900.0,
+    "status": "agree",
+    "inputs": {
+     "d": 1000.0
+    }
+   }
+  ]
+ }
+}

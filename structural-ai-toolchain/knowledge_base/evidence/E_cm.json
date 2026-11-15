@@ -1,0 +1,60 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 3.1.3, Table 3.1).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 2 value(s) printed in the sources."
+  ]
+ },
+ "evidence": {
+  "sources": 0,
+  "source_ids": [],
+  "formula_instances": 0,
+  "printed_values": 2,
+  "variants": [],
+  "practice": [],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 14",
+    "kind": "printed",
+    "expected": 34000.0,
+    "got": 34077.14619918933,
+    "status": "agree",
+    "tolerance": 500.0,
+    "inputs": {
+     "f_cm": 43.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 1",
+    "kind": "printed",
+    "expected": 34000.0,
+    "got": 34077.14619918933,
+    "status": "agree",
+    "tolerance": 619.360767384569,
+    "inputs": {
+     "f_cm": 43.0
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "Ecm(fcm(fck))",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

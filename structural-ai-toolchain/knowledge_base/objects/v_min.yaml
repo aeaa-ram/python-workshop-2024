@@ -1,13 +1,13 @@
 id: v_min
 name: Minimum shear strength
-formula: 0.035 * k ** (3 / 2) * f_ck ** (1 / 2)
+formula: 0.035 * k ** 1.5 * f_ck ** 0.5
 params:
 - k
 - f_ck
 var: v_min
+symbol: v_{min}
 unit: MPa
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 6.2.2
 topic_path:
 - 6 Ultimate limit states (ULS)
@@ -15,70 +15,6 @@ topic_path:
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(1)
 eq: (6.3N)
-status: consensus
-support:
-  sources: 2
-  source_ids:
-  - S1
-  - S3
-  formula_instances: 86
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: 0.035 * k ** (3 / 2) * f_ck ** (1 / 2)
-  text: 0.035 · k^(3 / 2) · f_ck^(1 / 2)
-  instances: 86
-  sources:
-  - S1 (Mathcad worksheet)
-  - S3 (Excel workbook)
-  merged: true
-  differences: []
-benchmarks:
-  total: 88
-  agree: 88
-  deviation: 0
-  not_comparable: 0
-reference:
-  library: structuralcodes 0.7.3
-  function: shear.vmin(fck, d)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-examples:
-- label: S1 (Mathcad worksheet) - region 131 - phase 2
-  inputs:
-    d: 841.5000000000001
-    f_ck: 35.0
-  expected: 0.3756592396172266
-  result: 0.3756592396172266
-  matches_source: true
-- label: S1 (Mathcad worksheet) - region 86 - phase 1
-  inputs:
-    d: 491.5000000000001
-    f_ck: 35.0
-  expected: 0.43404375462431244
-  result: 0.43404375462431244
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell E38
-  inputs:
-    d: 237.5
-    f_ck: 50.0
-  expected: 0.6572210394922822
-  result: 0.6572210394922822
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell F38
-  inputs:
-    d: 217.0
-    f_ck: 50.0
-  expected: 0.6791213193859645
-  result: 0.6791213193859645
-  matches_source: true
-- label: S3 (Excel workbook) - sheet 1 cell K38
-  inputs:
-    d: 470.5
-    f_ck: 50.0
-  expected: 0.5254855318850048
-  result: 0.5254855318850048
-  matches_source: true
-version: b505f90d4a09
+basis: code
+ndp: true
+version: d9d868be83be

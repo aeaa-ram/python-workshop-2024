@@ -1,0 +1,106 @@
+{
+ "confidence": {
+  "level": "high",
+  "label": "checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 7.3.4(2), expr. (7.9)).",
+   "Agrees with structuralcodes 0.7.3 over 200 samples.",
+   "Reproduces 2 value(s) from 1 independent source(s)."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 1,
+  "printed_values": 1,
+  "variants": [
+   {
+    "formula": "max((sigma_s - k_t * f_ct_eff / rho_p_eff * (1 + alpha_e * rho_p_eff)) / E_s, 0.6 * sigma_s / E_s)",
+    "text": "max((σ_s − k_t · f_ct,eff / ρ_p,eff · (1 + α_e · ρ_p,eff)) / E_s, 0.6 · σ_s / E_s)",
+    "relation": "as code",
+    "instances": 1,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": true,
+    "differences": [],
+    "reproduced": 1,
+    "compared": 1
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S1: as in the code."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   },
+   "k_t": {
+    "recommended": 0.4,
+    "seen": [
+     [
+      0.4,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 2,
+  "agree": 2,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": [
+   {
+    "source": "S1 (Mathcad worksheet)",
+    "where": "region 202",
+    "kind": "formula",
+    "expected": 0.00024488345449121245,
+    "got": 0.00024488345449121245,
+    "status": "agree",
+    "inputs": {
+     "sigma_s": 81.62781816373749,
+     "k_t": 0.4,
+     "f_ct_eff": 3.21,
+     "rho_p_eff": 0.017056859593696766,
+     "alpha_e": 14.705882352941176,
+     "E_s": 200000.0
+    }
+   },
+   {
+    "source": "S2 (PDF print)",
+    "where": "page 6",
+    "kind": "printed",
+    "expected": 0.000245,
+    "got": 0.00024599999999999996,
+    "status": "agree",
+    "tolerance": 2.6165413533834855e-06,
+    "inputs": {
+     "sigma_s": 82.0,
+     "k_t": 0.4,
+     "f_ct_eff": 3.209962441695238,
+     "rho_p_eff": 0.017057638805679384,
+     "alpha_e": 14.71,
+     "E_s": 200000.0
+    }
+   }
+  ]
+ },
+ "reference": {
+  "library": "structuralcodes 0.7.3",
+  "function": "eps_sm_eps_cm(sigma_s, alpha_e, rho_p_eff, kt, fct_eff, Es)",
+  "samples": 200,
+  "max_relative_difference": 0.0,
+  "status": "agrees",
+  "agreeing_samples": 200
+ }
+}

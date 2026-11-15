@@ -1,5 +1,5 @@
 id: alpha_e
-name: Modular ratio E_s / E_c
+name: Modular ratio E_s / E_cm
 formula: E_s / E_cm
 params:
 - E_s
@@ -8,58 +8,14 @@ var: alpha_e
 symbol: α_{e}
 unit: '-'
 code: EN 1992-1-1
-branch: EN 1992-1-1:2004 (recommended values)
 topic: 7.3.4
 topic_path:
 - 7 Serviceability limit states (SLS)
 - 7.3 Crack control
 - 7.3.4 Calculation of crack widths
 clause: 7.3.4(2)
-status: disagreement
-support:
-  sources: 1
-  source_ids:
-  - S1
-  formula_instances: 1
-  variants_merged: 1
-  printed_values: 2
-variants:
-- formula: E_s / E_cm
-  text: E_s / E_cm
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: true
-  differences: []
+basis: code
+alternatives:
 - formula: E_s / E_c_eff
-  text: E_s / E_c,eff
-  instances: 1
-  sources:
-  - S1 (Mathcad worksheet)
-  merged: false
-  differences: []
-  reason: the formulas differ in a way that is not a generalisation of one another
-benchmarks:
-  total: 3
-  agree: 2
-  deviation: 0
-  not_comparable: 1
-reference:
-  library: structuralcodes 0.7.3
-  function: alpha_e(Es, Ecm)
-  samples: 200
-  max_relative_difference: 0.0
-  status: agrees
-  agreeing_samples: 200
-warnings:
-- 'Sources disagree: 1 other formula(s) for this quantity could not be merged with the one shown. The one shown
-  has the most support; an engineer has to decide.'
-examples:
-- label: S1 (Mathcad worksheet) - region 150
-  inputs:
-    E_s: 200000.0
-    E_cm: 34000.0
-  expected: 5.882352941176471
-  result: 5.882352941176471
-  matches_source: true
-version: 56ea4c84fa6c
+  when: stresses under long-term loads, with the effective modulus (7.4.3(5))
+version: 22ba74086a34

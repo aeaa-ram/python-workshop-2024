@@ -1,0 +1,56 @@
+{
+ "confidence": {
+  "level": "medium",
+  "label": "not yet checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 7.3.4, 7.2).",
+   "No independent implementation available to compare with.",
+   "Not yet seen in any source calculation."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S1"
+  ],
+  "formula_instances": 2,
+  "printed_values": 0,
+  "variants": [
+   {
+    "formula": "1 / 12 * b * x_el ** 3 + b * x_el * (x_el / 2) ** 2 + alpha_e * A_s * (d - x_el) ** 2 + (b_f - b) * x_el * (x_el / 2) ** 2",
+    "text": "1 / 12 · b · x_el^3 + b · x_el · (x_el / 2)^2 + α_e · A_s · (d − x_el)^2 + (b_f − b) · x_el · (x_el / 2)^2",
+    "relation": "project-specific",
+    "instances": 2,
+    "sources": [
+     "S1 (Mathcad worksheet)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "uses quantities the registry does not know: b_f"
+   }
+  ],
+  "practice": [
+   "2 formula(s) in S1: written with project-specific quantities (b_f)."
+  ],
+  "values_seen": {
+   "E_s": {
+    "recommended": 200000.0,
+    "seen": [
+     [
+      200000.0,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 0,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": []
+ }
+}

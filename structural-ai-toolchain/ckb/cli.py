@@ -149,11 +149,11 @@ def cmd_codes(args):
 
 def cmd_list(args):
     kb = _kb(args)
-    for code in [c["code"] for c in kb.codes] or [""]:
+    for code in [c["code"] for c in kb.codes] + [""]:
         objs = sorted((o for o in kb.objects.values() if o.code == code), key=_topic_key)
         if not objs:
             continue
-        print(f"\n{code}")
+        print(f"\n{code or 'Definitions used by every code'}")
         topic = None
         for o in objs:
             if o.topic != topic:
@@ -376,8 +376,9 @@ def _print_verify(res: dict) -> None:
     rows = res.get("rows", [])
     bad = [r for r in rows if not r.get("agree")]
     if rows:
-        print(f"  {len(rows) - len(bad)} of {len(rows)} " + ("steps" if "excel" in rows[0] or "mathcad" in rows[0]
-                                                            else "checks") + " agree with the knowledge base")
+        what = ("objects (versions)" if "version_in_file" in rows[0] else
+                "test points" if "inputs" in rows[0] else "steps")
+        print(f"  {len(rows) - len(bad)} of {len(rows)} {what} agree with the knowledge base")
     for r in bad[:10]:
         print("  differs: " + ", ".join(f"{k}={v}" for k, v in r.items() if k != "agree"))
     if res.get("note"):
