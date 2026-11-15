@@ -1,0 +1,18 @@
+id: N_cr_c
+name: Elastic critical normal force of a composite column
+formula: pi ** 2 * EI_eff / L_cr ** 2
+params:
+- EI_eff
+- L_cr
+var: N_cr_c
+symbol: N_{cr}
+unit: kN
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.3(2)
+basis: mechanics
+version: 6b66dc528855

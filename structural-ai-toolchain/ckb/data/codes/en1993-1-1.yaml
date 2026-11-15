@@ -1,0 +1,413 @@
+# Code baseline: EN 1993-1-1 (Eurocode 3), recommended values.  Same format as en1992-1-1.yaml.
+#
+# Written from the code for a fuller registry.  None of these objects has been seen in a
+# source calculation or compared with an independent implementation yet: they start as
+# "not yet checked", and every source that uses them later becomes their evidence.
+
+code: EN 1993-1-1
+title: "Eurocode 3: Design of steel structures, Part 1-1"
+edition: "2005 + AC:2009 + A1:2014"
+values: recommended values (no National Annex)
+order: 2
+
+topics:
+  - {id: "3",     title: "Materials", keywords: [steel, structural steel, material]}
+  - {id: "3.2",   title: "Structural steel", keywords: [steel grade, modulus of elasticity]}
+  - {id: "5",     title: "Structural analysis"}
+  - {id: "5.5",   title: "Classification of cross-sections", keywords: [class, classification, c/t, slenderness of parts, local buckling]}
+  - {id: "6",     title: "Ultimate limit states", keywords: [uls, ultimate, steel member]}
+  - {id: "6.1",   title: "General (partial factors)", keywords: [partial factor, gamma m0, gamma m1]}
+  - {id: "6.2",   title: "Resistance of cross-sections", keywords: [cross-section resistance, steel section]}
+  - {id: "6.2.3", title: "Tension", keywords: [tension, tensile resistance]}
+  - {id: "6.2.4", title: "Compression", keywords: [compression, squash]}
+  - {id: "6.2.5", title: "Bending moment", keywords: [bending, moment resistance, plastic moment]}
+  - {id: "6.2.6", title: "Shear", keywords: [shear, plastic shear]}
+  - {id: "6.2.8", title: "Bending and shear", keywords: [bending and shear, interaction]}
+  - {id: "6.3",   title: "Buckling resistance of members", keywords: [buckling, stability]}
+  - {id: "6.3.1", title: "Uniform members in compression", keywords: [flexural buckling, column buckling, strut, buckling curve]}
+  - {id: "6.3.2", title: "Uniform members in bending", keywords: [lateral torsional buckling, ltb, lateral-torsional]}
+
+quantities:
+  # ---- 3.2, 6.1 material and partial factors ----
+  - id: E_steel
+    symbol: "E"
+    name: Modulus of elasticity of structural steel
+    topic: "3.2"
+    clause: "3.2.6(1)"
+    kind: coefficient
+    value: 210
+    unit: GPa
+    range: [200, 215]
+    aliases: [E_steel, E_a, Ea]
+  - id: gamma_M0
+    symbol: "γ_{M0}"
+    name: Partial factor for resistance of cross-sections
+    topic: "6.1"
+    clause: "6.1(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.0
+    unit: "-"
+    range: [1.0, 1.1]
+    aliases: [γM0, γ_M0, gamma_M0, γa, γ_a]
+  - id: gamma_M1
+    symbol: "γ_{M1}"
+    name: Partial factor for resistance of members to instability
+    topic: "6.1"
+    clause: "6.1(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.0
+    unit: "-"
+    range: [1.0, 1.15]
+    aliases: [γM1, γ_M1, gamma_M1]
+  - id: gamma_M2
+    symbol: "γ_{M2}"
+    name: Partial factor for resistance of cross-sections in tension to fracture, and of bolts and welds
+    topic: "6.1"
+    clause: "6.1(1)"
+    kind: coefficient
+    ndp: true
+    value: 1.25
+    unit: "-"
+    range: [1.1, 1.35]
+    aliases: [γM2, γ_M2, gamma_M2]
+
+  # ---- 5.5 classification ----
+  - id: eps_y
+    symbol: "ε"
+    name: Material factor for the classification of cross-sections
+    topic: "5.5"
+    clause: "5.5.2, Table 5.2"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.7, 1.0]
+    formula: sqrt(235 / f_y)
+    aliases: [eps_y, epsilon_y]
+    words: [material factor]
+  - {id: ct_int_c1, symbol: "(c/t)_{lim,1}", name: "Class 1 limit of c/t, internal part in compression", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [20, 40], formula: 33 * eps_y, aliases: [ct_int_c1]}
+  - {id: ct_int_c2, symbol: "(c/t)_{lim,2}", name: "Class 2 limit of c/t, internal part in compression", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [25, 40], formula: 38 * eps_y, aliases: [ct_int_c2]}
+  - {id: ct_int_c3, symbol: "(c/t)_{lim,3}", name: "Class 3 limit of c/t, internal part in compression", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [28, 45], formula: 42 * eps_y, aliases: [ct_int_c3]}
+  - {id: ct_int_b1, symbol: "(c/t)_{lim,1}", name: "Class 1 limit of c/t, internal part in bending", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [50, 75], formula: 72 * eps_y, aliases: [ct_int_b1]}
+  - {id: ct_int_b2, symbol: "(c/t)_{lim,2}", name: "Class 2 limit of c/t, internal part in bending", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [55, 85], formula: 83 * eps_y, aliases: [ct_int_b2]}
+  - {id: ct_int_b3, symbol: "(c/t)_{lim,3}", name: "Class 3 limit of c/t, internal part in bending", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [85, 125], formula: 124 * eps_y, aliases: [ct_int_b3]}
+  - {id: ct_out_c1, symbol: "(c/t)_{lim,1}", name: "Class 1 limit of c/t, outstand flange in compression", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [6, 9], formula: 9 * eps_y, aliases: [ct_out_c1]}
+  - {id: ct_out_c2, symbol: "(c/t)_{lim,2}", name: "Class 2 limit of c/t, outstand flange in compression", topic: "5.5", clause: "5.5.2, Table 5.2", kind: derived, basis: code, unit: "-", range: [7, 10], formula: 10 * eps_y, aliases: [ct_out_c2]}
+  - id: ct_out_c3
+    symbol: "(c/t)_{lim,3}"
+    name: "Class 3 limit of c/t, outstand flange in compression"
+    topic: "5.5"
+    clause: "5.5.2, Table 5.2"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [9, 14]
+    formula: 14 * eps_y
+    aliases: [ct_out_c3]
+    background:
+      - kind: pitfall
+        text: "c is the flat width of the part, without root radii or welds (Table 5.2), and the limits differ for parts in bending, compression, or both. A part beyond the class 3 limit is class 4: its resistances use effective properties from EN 1993-1-5."
+        refs: ["EN1993-1-1:5.5.2, Table 5.2", "EN1993-1-5:4"]
+
+  # ---- 6.2.3 tension, 6.2.4 compression ----
+  - id: N_pl_Rd_a
+    symbol: "N_{pl,Rd}"
+    name: Design plastic resistance of the gross steel section (tension; compression of class 1 to 3)
+    topic: "6.2.3"
+    clause: "6.2.3(2), 6.2.4(2)"
+    eq: "(6.6), (6.10)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 100000]
+    formula: A_sec * f_y / gamma_M0
+    sense: resistance
+    check: N_Ed
+    aliases: [N_pl_Rd_a, Nc.Rd, "Nc,Rd", N_c_Rd]
+    words: [plastic resistance, squash load of the steel section]
+    background:
+      - kind: guidance
+        text: "One object for two clauses: N_pl,Rd in tension (6.6) and N_c,Rd in compression for class 1, 2 and 3 sections (6.10) are the same expression. Class 4 sections in compression use A_eff."
+        refs: ["EN1993-1-1:6.2.3(2), 6.2.4(2)"]
+  - id: N_u_Rd
+    symbol: "N_{u,Rd}"
+    name: Design ultimate resistance of the net section at holes
+    topic: "6.2.3"
+    clause: "6.2.3(2)"
+    eq: "(6.7)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 100000]
+    formula: 0.9 * A_net * f_u / gamma_M2
+    sense: resistance
+    aliases: [Nu.Rd, "Nu,Rd", N_u_Rd]
+  - id: N_t_Rd
+    symbol: "N_{t,Rd}"
+    name: Design tension resistance
+    topic: "6.2.3"
+    clause: "6.2.3(2)"
+    eq: "(6.6), (6.7)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 100000]
+    formula: min(N_pl_Rd_a, N_u_Rd)
+    sense: resistance
+    check: N_Ed
+    aliases: [Nt.Rd, "Nt,Rd", N_t_Rd]
+    words: [tension resistance]
+    background:
+      - kind: limitation
+        text: "Where ductile behaviour is required (capacity design), N_pl,Rd must be smaller than N_u,Rd (6.2.3(3)). Angles connected by one leg and other eccentric connections follow EN 1993-1-8 3.10.3."
+        refs: ["EN1993-1-1:6.2.3(3)", "EN1993-1-8:3.10.3"]
+
+  # ---- 6.2.5 bending ----
+  - id: M_pl_Rd
+    symbol: "M_{pl,Rd}"
+    name: Design plastic moment resistance (class 1 and 2)
+    topic: "6.2.5"
+    clause: "6.2.5(2)"
+    eq: "(6.13)"
+    kind: derived
+    basis: code
+    unit: kNm
+    range: [1, 50000]
+    formula: W_pl * f_y / gamma_M0
+    sense: resistance
+    check: M_Ed
+    aliases: [Mpl.Rd, "Mpl,Rd", M_pl_Rd]
+    words: [plastic moment resistance]
+    background:
+      - kind: limitation
+        text: "Class 1 and 2 cross-sections only; class 3 uses W_el,min (6.14) and class 4 W_eff,min (6.15). High shear reduces it (6.2.8), and holes in the tension flange may need 6.2.5(4)."
+        refs: ["EN1993-1-1:6.2.5"]
+  - id: M_el_Rd
+    symbol: "M_{el,Rd}"
+    name: Design elastic moment resistance (class 3)
+    topic: "6.2.5"
+    clause: "6.2.5(2)"
+    eq: "(6.14)"
+    kind: derived
+    basis: code
+    unit: kNm
+    range: [1, 50000]
+    formula: W_el * f_y / gamma_M0
+    sense: resistance
+    check: M_Ed
+    aliases: [Mel.Rd, "Mel,Rd", M_el_Rd]
+
+  # ---- 6.2.6 shear, 6.2.8 bending and shear ----
+  - id: eta_w
+    symbol: "η"
+    name: Factor for the shear area of webs (EN 1993-1-5)
+    topic: "6.2.6"
+    clause: "6.2.6(3)"
+    kind: coefficient
+    ndp: true
+    value: 1.2
+    unit: "-"
+    range: [1.0, 1.2]
+    aliases: [eta_w]
+  - id: V_pl_Rd
+    symbol: "V_{pl,Rd}"
+    name: Design plastic shear resistance
+    topic: "6.2.6"
+    clause: "6.2.6(2)"
+    eq: "(6.18)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [5, 50000]
+    formula: A_v * (f_y / sqrt(3)) / gamma_M0
+    sense: resistance
+    check: V_Ed
+    aliases: [Vpl.Rd, "Vpl,Rd", V_pl_Rd]
+    words: [plastic shear resistance]
+    checks:
+      - when: "h_w / t_w <= 72 * eps_y / eta_w"
+        text: "h_w/t_w ≤ 72 ε/η: no shear buckling check of the web needed"
+        clause: "6.2.6(6), (6.22)"
+    background:
+      - kind: pitfall
+        text: "A_v depends on the section and the load direction (6.2.6(3)): for rolled I and H sections loaded parallel to the web A_v = A − 2 b t_f + (t_w + 2r) t_f, but not less than η h_w t_w. Using h t_w underestimates it; using the full area overestimates it."
+        refs: ["EN1993-1-1:6.2.6(3)"]
+  - id: rho_V
+    symbol: "ρ"
+    name: Reduction factor for the yield strength in the shear area (bending and shear)
+    topic: "6.2.8"
+    clause: "6.2.8(3)"
+    eq: "(6.29)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0, 1]
+    formula: (2 * V_Ed / V_pl_Rd - 1) ** 2 if V_Ed > 0.5 * V_pl_Rd else 0
+    aliases: [rho_V]
+    background:
+      - kind: guidance
+        text: "Where V_Ed does not exceed half the plastic shear resistance, the moment resistance need not be reduced; otherwise the yield strength of the shear area is taken as (1 − ρ) f_y."
+        refs: ["EN1993-1-1:6.2.8(2), (3)"]
+
+  # ---- 6.3.1 flexural buckling ----
+  - id: N_cr
+    symbol: "N_{cr}"
+    name: Elastic critical force for flexural buckling
+    topic: "6.3.1"
+    clause: "6.3.1.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: kN
+    range: [10, 1000000]
+    formula: pi() ** 2 * E_steel * I_sec / L_cr ** 2
+    aliases: [Ncr, N_cr]
+    words: [elastic critical force, euler load]
+  - id: lambda_bar
+    symbol: "λ̄"
+    name: Non-dimensional slenderness for flexural buckling (class 1 to 3)
+    topic: "6.3.1"
+    clause: "6.3.1.2(1)"
+    eq: "(6.50)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.05, 4]
+    formula: sqrt(A_sec * f_y / N_cr)
+    aliases: [lambda_bar, λbar]
+    words: [non-dimensional slenderness, relative slenderness]
+  - id: alpha_imp
+    symbol: "α"
+    name: Imperfection factor of the buckling curve
+    topic: "6.3.1"
+    clause: "6.3.1.2(2), Table 6.1"
+    kind: coefficient
+    value: 0.34
+    choices: [{value: 0.13, label: curve a0}, {value: 0.21, label: curve a}, {value: 0.34, label: curve b}, {value: 0.49, label: curve c}, {value: 0.76, label: curve d}]
+    unit: "-"
+    range: [0.13, 0.76]
+    aliases: [alpha_imp]
+    background:
+      - kind: pitfall
+        text: "The curve depends on the section type, the buckling axis, the steel grade and the plate thickness (Table 6.2): a rolled I section with h/b > 1.2 and t_f ≤ 40 mm is curve a about y–y but curve b about z–z. Curve b is the value this object opens with, not a default for every section."
+        refs: ["EN1993-1-1:Table 6.2"]
+  - id: Phi
+    symbol: "Φ"
+    name: Value to determine the reduction factor χ
+    topic: "6.3.1"
+    clause: "6.3.1.2(1)"
+    eq: "(6.49)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.4, 10]
+    formula: 0.5 * (1 + alpha_imp * (lambda_bar - 0.2) + lambda_bar ** 2)
+    aliases: [Phi, Φ]
+  - id: chi
+    symbol: "χ"
+    name: Reduction factor for flexural buckling
+    topic: "6.3.1"
+    clause: "6.3.1.2(1)"
+    eq: "(6.49)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.05, 1]
+    formula: min(1 / (Phi + sqrt(Phi ** 2 - lambda_bar ** 2)), 1)
+    aliases: [chi, χ]
+    words: [reduction factor, buckling reduction factor]
+  - id: N_b_Rd
+    symbol: "N_{b,Rd}"
+    name: Design buckling resistance of a compression member (class 1 to 3)
+    topic: "6.3.1"
+    clause: "6.3.1.1(3)"
+    eq: "(6.47)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 100000]
+    formula: chi * A_sec * f_y / gamma_M1
+    sense: resistance
+    check: N_Ed
+    aliases: [Nb.Rd, "Nb,Rd", N_b_Rd]
+    words: [buckling resistance, flexural buckling resistance, column buckling]
+    background:
+      - kind: guidance
+        text: "Buckling may be ignored and only the cross-section checked where λ̄ ≤ 0.2 or N_Ed/N_cr ≤ 0.04 (6.3.1.2(4)). Check both axes, each with its own buckling length and curve; torsional and torsional-flexural buckling (6.3.1.4) can govern for open sections with low torsional stiffness."
+        refs: ["EN1993-1-1:6.3.1.2(4), 6.3.1.4"]
+      - kind: limitation
+        text: "Members in compression only. Combined bending and compression needs the interaction factors of 6.3.3 (Annex A or B), which are not in this object."
+        refs: ["EN1993-1-1:6.3.3"]
+
+  # ---- 6.3.2 lateral-torsional buckling ----
+  - id: lambda_bar_LT
+    symbol: "λ̄_{LT}"
+    name: Non-dimensional slenderness for lateral-torsional buckling
+    topic: "6.3.2"
+    clause: "6.3.2.2(1)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.05, 4]
+    formula: sqrt(W_y * f_y / M_cr)
+    aliases: [lambda_LT, λLT, lambda_bar_LT]
+  - id: alpha_LT
+    symbol: "α_{LT}"
+    name: Imperfection factor for lateral-torsional buckling
+    topic: "6.3.2"
+    clause: "6.3.2.2(2), Table 6.3"
+    kind: coefficient
+    value: 0.34
+    choices: [{value: 0.21, label: curve a}, {value: 0.34, label: curve b}, {value: 0.49, label: curve c}, {value: 0.76, label: curve d}]
+    unit: "-"
+    range: [0.21, 0.76]
+    aliases: [αLT, alpha_LT]
+  - id: Phi_LT
+    symbol: "Φ_{LT}"
+    name: Value to determine the reduction factor χ_LT (general case)
+    topic: "6.3.2"
+    clause: "6.3.2.2(1)"
+    eq: "(6.56)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.4, 10]
+    formula: 0.5 * (1 + alpha_LT * (lambda_bar_LT - 0.2) + lambda_bar_LT ** 2)
+    aliases: [ΦLT, Phi_LT]
+  - id: chi_LT
+    symbol: "χ_{LT}"
+    name: Reduction factor for lateral-torsional buckling (general case)
+    topic: "6.3.2"
+    clause: "6.3.2.2(1)"
+    eq: "(6.56)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.05, 1]
+    formula: min(1 / (Phi_LT + sqrt(Phi_LT ** 2 - lambda_bar_LT ** 2)), 1)
+    aliases: [χLT, chi_LT]
+    alternatives:
+      - formula: "min(1 / (0.5 * (1 + alpha_LT * (lambda_bar_LT - 0.4) + 0.75 * lambda_bar_LT ** 2) + sqrt((0.5 * (1 + alpha_LT * (lambda_bar_LT - 0.4) + 0.75 * lambda_bar_LT ** 2)) ** 2 - 0.75 * lambda_bar_LT ** 2)), 1, 1 / lambda_bar_LT ** 2)"
+        when: "rolled sections or equivalent welded sections (6.3.2.3), recommended λ̄_LT,0 = 0.4 and β = 0.75, with the curves of Table 6.5"
+  - id: M_b_Rd
+    symbol: "M_{b,Rd}"
+    name: Design buckling resistance moment (lateral-torsional buckling)
+    topic: "6.3.2"
+    clause: "6.3.2.1(3)"
+    eq: "(6.55)"
+    kind: derived
+    basis: code
+    unit: kNm
+    range: [1, 50000]
+    formula: chi_LT * W_y * f_y / gamma_M1
+    sense: resistance
+    check: M_Ed
+    aliases: [Mb.Rd, "Mb,Rd", M_b_Rd]
+    words: [lateral torsional buckling resistance, buckling resistance moment]
+    background:
+      - kind: guidance
+        text: "LTB may be ignored where λ̄_LT ≤ λ̄_LT,0 (0.2 in the general case, 0.4 for rolled sections with 6.3.2.3) or M_Ed/M_cr ≤ λ̄²_LT,0. Members with sufficient restraint to the compression flange are not susceptible."
+        refs: ["EN1993-1-1:6.3.2.2(4), 6.3.2.1(2)"]
+      - kind: pitfall
+        text: "M_cr is not given by EN 1993-1-1. It depends on the moment diagram, the load position relative to the shear centre and the end restraints; an M_cr for a uniform moment used with another moment diagram is conservative, one for the load at the shear centre used with a load on the top flange is not."
+        refs: ["DG-EC3:6.3.2"]

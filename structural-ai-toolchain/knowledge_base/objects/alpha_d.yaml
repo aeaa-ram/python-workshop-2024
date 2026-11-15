@@ -1,0 +1,20 @@
+id: alpha_d
+name: Factor for the end distance (end bolts, bearing)
+formula: e_1 / (3 * d_0)
+params:
+- e_1
+- d_0
+var: alpha_d
+symbol: α_{d}
+unit: '-'
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+alternatives:
+- formula: p_1 / (3 * d_0) - 0.25
+  when: inner bolts in the direction of load transfer
+version: a5ba90ef9bb7

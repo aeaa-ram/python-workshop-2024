@@ -1,0 +1,28 @@
+id: rho_V
+name: Reduction factor for the yield strength in the shear area (bending and shear)
+formula: (2 * V_Ed / V_pl_Rd - 1) ** 2 if V_Ed > 0.5 * V_pl_Rd else 0
+params:
+- V_Ed
+- V_pl_Rd
+var: rho_V
+symbol: ρ
+unit: '-'
+code: EN 1993-1-1
+topic: 6.2.8
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.8 Bending and shear
+clause: 6.2.8(3)
+eq: (6.29)
+basis: code
+background:
+- kind: guidance
+  text: Where V_Ed does not exceed half the plastic shear resistance, the moment resistance need not be reduced;
+    otherwise the yield strength of the shear area is taken as (1 − ρ) f_y.
+  refs:
+  - id: EN1993-1-1
+    at: 6.2.8(2), (3)
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+version: e3c9ac7cf71e

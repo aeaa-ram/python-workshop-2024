@@ -1,0 +1,26 @@
+id: t_ef_i
+name: Effective wall thickness for torsion
+formula: A_tor / u_out
+params:
+- A_tor
+- u_out
+var: t_ef_i
+symbol: t_{ef,i}
+unit: mm
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(1)
+basis: code
+background:
+- kind: limitation
+  text: t_ef,i may not be less than twice the distance between the edge and the centre of the longitudinal reinforcement;
+    for hollow sections it is not more than the real wall thickness.
+  refs:
+  - id: EN1992-1-1
+    at: 6.3.2(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: f1222de51adb

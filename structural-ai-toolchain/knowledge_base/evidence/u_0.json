@@ -1,0 +1,38 @@
+{
+ "confidence": {
+  "level": "medium",
+  "label": "not yet checked",
+  "reasons": [
+   "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 6.4.5(3)).",
+   "No independent implementation available to compare with.",
+   "Not reproduced by any source value yet."
+  ]
+ },
+ "evidence": {
+  "sources": 0,
+  "source_ids": [],
+  "formula_instances": 0,
+  "printed_values": 1,
+  "variants": [],
+  "practice": [],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 1,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 1,
+  "items": [
+   {
+    "source": "S3 (Excel workbook)",
+    "where": "sheet 9 cell AG13",
+    "kind": "printed",
+    "expected": 1000.0,
+    "got": null,
+    "status": "not comparable",
+    "detail": "the print does not show every input",
+    "inputs": {}
+   }
+  ]
+ }
+}

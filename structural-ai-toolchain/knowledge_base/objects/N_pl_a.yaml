@@ -1,0 +1,17 @@
+id: N_pl_a
+name: Plastic resistance of the structural steel section
+formula: A_a * f_yd_a
+params:
+- A_a
+- f_yd_a
+var: N_pl_a
+symbol: N_{pl,a}
+unit: kN
+code: EN 1994-1-1
+topic: '6.2'
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistances of cross-sections of beams
+clause: 6.2.1.2(1)
+basis: mechanics
+version: 549cf6fb446e

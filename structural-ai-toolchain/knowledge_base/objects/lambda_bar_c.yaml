@@ -1,0 +1,23 @@
+id: lambda_bar_c
+name: Relative slenderness of a composite column
+formula: sqrt(N_pl_Rk / N_cr_c)
+params:
+- N_pl_Rk
+- N_cr_c
+var: lambda_bar_c
+symbol: λ̄
+unit: '-'
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.3(2)
+eq: (6.39)
+basis: code
+checks:
+- when: lambda_bar_c <= 2
+  text: λ̄ ≤ 2.0 (scope of the simplified method)
+  clause: 6.7.3.1(1)
+version: 2b39d6b65e9b

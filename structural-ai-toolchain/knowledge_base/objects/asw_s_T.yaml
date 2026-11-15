@@ -1,0 +1,21 @@
+id: asw_s_T
+name: Area of closed links per unit length required for torsion
+formula: T_Ed / (2 * A_k * f_ywd * cot(theta))
+params:
+- T_Ed
+- A_k
+- f_ywd
+- theta
+var: asw_s_T
+symbol: A_{sw}/s
+unit: mm²/m
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(2)
+eq: (6.26)
+basis: code
+sense: effect
+version: f6f1e8732588

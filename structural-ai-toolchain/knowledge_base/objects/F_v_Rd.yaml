@@ -1,0 +1,30 @@
+id: F_v_Rd
+name: Shear resistance of a bolt per shear plane
+formula: alpha_v * f_ub * A_bolt / gamma_M2
+params:
+- alpha_v
+- f_ub
+- A_bolt
+- gamma_M2
+var: F_v_Rd
+symbol: F_{v,Rd}
+unit: kN
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+sense: resistance
+check: F_v_Ed
+background:
+- kind: pitfall
+  text: A is the tensile stress area A_s when the shear plane passes through the thread and the gross area when
+    it passes through the unthreaded shank; α_v changes with it. Packings, long joints and large grip lengths reduce
+    the resistance (3.6.1(12), 3.8, 3.6.1(13)).
+  refs:
+  - id: EN1993-1-8
+    at: Table 3.4, 3.6.1, 3.8
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+version: 7e02e4da3dc2

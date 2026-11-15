@@ -1,0 +1,24 @@
+id: Phi_c
+name: Value to determine χ for a composite column
+formula: 0.5 * (1 + alpha_imp * (lambda_bar_c - 0.2) + lambda_bar_c ** 2)
+params:
+- alpha_imp
+- lambda_bar_c
+var: Phi_c
+symbol: Φ
+unit: '-'
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.5(2)
+basis: code
+background:
+- kind: guidance
+  text: The expression of Φ (EN 1993-1-1 cl. 6.3.1.2(1), expr. (6.49)) with λ̄ of non-dimensional slenderness for
+    flexural buckling (class 1 to 3) → relative slenderness of a composite column. It is taken from that object,
+    so the two cannot drift apart.
+  refs: []
+version: 25c65769678a

@@ -1,0 +1,20 @@
+id: N_c_f
+name: Compressive resistance of the concrete flange (full shear connection)
+formula: 0.85 * f_cd * b_eff_c * h_c_fl
+params:
+- f_cd
+- b_eff_c
+- h_c_fl
+var: N_c_f
+symbol: N_{c,f}
+unit: kN
+code: EN 1994-1-1
+topic: '6.2'
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistances of cross-sections of beams
+clause: 6.2.1.2(1)
+basis: mechanics
+fixed:
+  alpha_cc: 1.0
+version: e6e6e129b733

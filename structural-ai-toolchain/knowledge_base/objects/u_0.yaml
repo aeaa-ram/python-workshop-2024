@@ -1,0 +1,17 @@
+id: u_0
+name: Perimeter of a rectangular internal column
+formula: 2 * (c_1 + c_2)
+params:
+- c_1
+- c_2
+var: u_0
+symbol: u_{0}
+unit: mm
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(3)
+basis: mechanics
+version: b13fb155d29a

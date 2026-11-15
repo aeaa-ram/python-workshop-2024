@@ -215,7 +215,8 @@ def test_search_tools_and_health(built, kb):
     assert search(kb, built.tax, "VRd.c")[0][1] == "V_Rd_c"
     assert "V_Rd_c" in [h[1] for h in search(kb, built.tax, "concrete shear")]
     assert search(kb, built.tax, "crack width")[0][1] == "w_k"
-    assert search(kb, built.tax, "composite column")[0][1] == "N_pl_Rd"
+    assert {"N_pl_Rd", "N_b_Rd_c"} <= {h[1] for h in search(kb, built.tax, "composite column")[:4]}
+    assert search(kb, built.tax, "punching")[0][1] in kb.objects and "v_Rd_c_p" in [h[1] for h in search(kb, built.tax, "punching")]
     tools = toolschema.definitions(kb)
     tool = next(t for t in tools if t["name"] == "calc_V_Rd_c")
     assert set(tool["input_schema"]["required"]) == {"d", "A_sl", "b_w", "f_ck", "sigma_cp"}   # coefficients optional
@@ -256,3 +257,68 @@ def test_command_line(built, tmp_path):
     assert out.returncode == 0, out.stderr
     out = ckb("run", "nothing_like_this")
     assert out.returncode != 0 and "No calculation object" in out.stderr
+
+
+def test_practice_context_reaches_the_object(kb):
+    # the spreadsheet fixture works per metre width: that becomes context on the object and its b_w input
+    notes = [b for b in kb.objects["V_Rd_c"].background if b["kind"] == "practice"]
+    assert notes and notes[0]["about"] == "b_w" and "per metre" in notes[0]["text"]
+
+
+def test_word_report_with_native_equations(kb, tmp_path):
+    from ckb.use.report_docx import render_docx
+    t = R.quick_template("V_Rd_c", PRIMARY, kb, check=60e3)
+    t["blocks"].append({"table": "V_Rd_c"})
+    path = render_docx(kb, t, tmp_path / "r.docx")
+    import zipfile
+    xml = zipfile.ZipFile(path).read("word/document.xml").decode("utf-8")
+    assert xml.count("<m:oMath") > 10 and "<m:f>" in xml and "<m:rad>" in xml       # fractions, roots
+    assert "Heading" in xml or "w:pStyle" in xml
+    pandoc = shutil.which("pandoc")
+    if pandoc:                                                                          # read the equations back
+        md = subprocess.run([pandoc, str(path), "-t", "markdown"], capture_output=True, text=True).stdout
+        assert "\\frac" in md and "\\sqrt" in md
+
+
+def test_pdf_report_has_bookmarks(kb, tmp_path):
+    if not R.find_browser():
+        pytest.skip("no Chromium-based browser")
+    from pypdf import PdfReader
+    t = R.quick_template("V_Rd_c", PRIMARY, kb, check=60e3)
+    t["blocks"].insert(0, {"heading": "Shear check"})
+    html_path = tmp_path / "r.html"
+    html_path.write_text(R.render(kb, t), encoding="utf-8")
+    assert R.to_pdf(html_path, tmp_path / "r.pdf")
+    titles = []
+
+    def walk(items):
+        for it in items:
+            walk(it) if isinstance(it, list) else titles.append(it.title)
+    walk(PdfReader(str(tmp_path / "r.pdf")).outline)
+    assert "Shear check" in titles and any("V_Rd,c" in t for t in titles)
+
+
+def test_excel_form_is_a_report_template(kb, tmp_path):
+    from ckb.use.report_form import read_form, write_form
+    path = write_form(kb, "V_Rd_c", tmp_path / "form.xlsx")
+    t = read_form(path)
+    assert [list(b)[0] for b in t["blocks"]] == ["heading", "calc", "table", "chart"]
+    assert len(t["cases"]) == 3 and "V_Ed [kN]" in t["cases"][0] and t["defaults"]["gamma_C"] == 1.5
+    page = R.render(kb, t)
+    assert 'class="gov"' in page and "<svg" in page
+
+
+def test_excel_calculator_with_cell_references(kb, tmp_path):
+    from openpyxl import load_workbook
+    path = excel_bridge.export_calculator(kb, "V_Rd_c", tmp_path / "c.xlsx", PRIMARY, refs="cells")
+    wb = load_workbook(path)
+    cell = json.loads(wb["_ckb"]["B1"].value)["cells"]["rho_l"]
+    assert wb["Calculation"][cell].value.startswith("=MIN(C") and excel_bridge.verify(kb, path)["same_version"]
+
+
+def test_latex_and_word_printers(kb):
+    from ckb.notation import latex
+    o = kb.objects["k"]
+    assert X.to_latex(o.tree, kb.tex) == "\\min\\left(1 + \\sqrt{\\frac{200}{d}}, 2\\right)"
+    assert latex("V_Rd_c", "V_{Rd,c}") == "V_{\\mathrm{Rd,c}}"
+    assert "<m:sSub>" in kb.omml("V_Rd_c") and "<m:func>" in X.to_omml(o.tree, kb.omml)

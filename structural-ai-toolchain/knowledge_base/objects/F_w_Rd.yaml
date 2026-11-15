@@ -1,0 +1,35 @@
+id: F_w_Rd
+name: Design resistance of a fillet weld per unit length (simplified method)
+formula: f_vw_d * a_weld
+params:
+- f_vw_d
+- a_weld
+var: F_w_Rd
+symbol: F_{w,Rd}
+unit: kN/m
+code: EN 1993-1-8
+topic: '4.5'
+topic_path:
+- 4 Welded connections
+- 4.5 Design resistance of fillet welds
+clause: 4.5.3.3(2)
+eq: (4.3)
+basis: code
+sense: resistance
+check: F_w_Ed
+background:
+- kind: guidance
+  text: The simplified method takes the resultant of all forces per unit length, whatever their direction; the directional
+    method (4.5.3.2) is less conservative for welds loaded perpendicular to their axis. f_u is that of the weaker
+    part joined.
+  refs:
+  - id: EN1993-1-8
+    at: 4.5.3.2, 4.5.3.3
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+- kind: limitation
+  text: Effective throat thickness a ≥ 3 mm; lap welds longer than 150a are reduced by β_Lw (4.11).
+  refs:
+  - id: EN1993-1-8
+    at: 4.5.2(2), 4.11
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+version: 276a8fba08ab

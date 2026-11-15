@@ -1,0 +1,24 @@
+id: T_Rd_max
+name: Design torsional resistance moment (strut crushing)
+formula: 2 * nu * alpha_cw * f_cd * A_k * t_ef_i * sin(theta) * cos(theta)
+params:
+- nu
+- alpha_cw
+- f_cd
+- A_k
+- t_ef_i
+- theta
+var: T_Rd_max
+symbol: T_{Rd,max}
+unit: kNm
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(4)
+eq: (6.30)
+basis: code
+sense: resistance
+check: T_Ed
+version: 9081699e3729

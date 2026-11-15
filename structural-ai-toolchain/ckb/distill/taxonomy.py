@@ -196,6 +196,10 @@ class Taxonomy:
                                         "topic": q.get("topic", ""), "symbol": target.text, "how": "same object"})
                     self.links.append({"code": code, "id": q["id"], "target": target.id, "how": "same object (declared)"})
                     continue
+                if q.get("of"):
+                    self._instance(code, q, order)       # the same expression with other inputs
+                    order += 1
+                    continue
                 if q.get("formula") and (q["id"] in self.concepts or "unit" not in q):
                     pending.append((code, q))            # compare with what exists before creating anything
                     continue
@@ -228,6 +232,42 @@ class Taxonomy:
             c.refs.append({"code": code, "clause": c.clause, "eq": c.eq, "topic": c.topic, "symbol": c.text,
                            "how": "defined here"})
         self.concepts[c.id] = c
+        return c
+
+    def _instance(self, code: str, q: dict, order: int) -> Concept:
+        """``of: k, bind: {d: d_eff}``: the expression of another object with other inputs.
+
+        The expression is taken from that object, never typed again, so a correction to
+        it reaches every instance.  Punching uses the size factor k with the mean effective
+        depth; a composite column uses the steel buckling curve with its own slenderness.
+        """
+        base = self.concepts.get(q["of"])
+        if base is None or not base.formula:
+            raise RegistryError(f"{code}: {q['id']} is an instance of {q['of']!r}, which has no expression")
+        bind = dict(q.get("bind") or {})
+        unknown = [k for k in bind if k not in X.symbols(base.tree)]
+        if unknown:
+            raise RegistryError(f"{code}: {q['id']} binds {unknown}, which {base.id} does not use")
+        tree = X.substitute(base.tree, bind)
+        fields = {k: getattr(base, k) for k in ("name", "kind", "basis", "sense", "range")}
+        fields["unit"] = base.unit
+        fields.update({k: v for k, v in q.items() if k not in ("of", "bind")})
+        fields["formula"] = X.to_python(tree)
+        def label(sid):
+            c = self.concepts.get(sid)
+            return c.text if c is not None else sid
+        said = ", ".join(f"{label(k)} → {label(v)}" if label(k) != label(v) else
+                         f"{label(k)} of {self.concepts[k].name.lower()} → {self.concepts[v].name.lower()}"
+                         if k in self.concepts and v in self.concepts else f"{k} → {v}"
+                         for k, v in bind.items())
+        fields["background"] = list(fields.get("background") or []) + [{
+            "kind": "guidance", "text": f"The expression of {base.text} ({base.code or ''} {base.reference}) with "
+                                        f"{said}. It is taken from that object, so the two cannot drift apart.",
+            "refs": []}]
+        c = self._add(fields, code, order)
+        base.refs.append({"code": code, "clause": q.get("clause", ""), "eq": q.get("eq", ""),
+                          "topic": q.get("topic", ""), "symbol": c.text, "how": f"same expression with {said}"})
+        self.links.append({"code": code, "id": c.id, "target": base.id, "how": f"instance with {said}"})
         return c
 
     def _link(self, code: str, q: dict, order: int) -> None:

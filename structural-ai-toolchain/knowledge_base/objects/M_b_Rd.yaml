@@ -1,0 +1,41 @@
+id: M_b_Rd
+name: Design buckling resistance moment (lateral-torsional buckling)
+formula: chi_LT * W_y * f_y / gamma_M1
+params:
+- chi_LT
+- W_y
+- f_y
+- gamma_M1
+var: M_b_Rd
+symbol: M_{b,Rd}
+unit: kNm
+code: EN 1993-1-1
+topic: 6.3.2
+topic_path:
+- 6 Ultimate limit states
+- 6.3 Buckling resistance of members
+- 6.3.2 Uniform members in bending
+clause: 6.3.2.1(3)
+eq: (6.55)
+basis: code
+sense: resistance
+check: M_Ed
+background:
+- kind: guidance
+  text: LTB may be ignored where λ̄_LT ≤ λ̄_LT,0 (0.2 in the general case, 0.4 for rolled sections with 6.3.2.3)
+    or M_Ed/M_cr ≤ λ̄²_LT,0. Members with sufficient restraint to the compression flange are not susceptible.
+  refs:
+  - id: EN1993-1-1
+    at: 6.3.2.2(4), 6.3.2.1(2)
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+- kind: pitfall
+  text: M_cr is not given by EN 1993-1-1. It depends on the moment diagram, the load position relative to the shear
+    centre and the end restraints; an M_cr for a uniform moment used with another moment diagram is conservative,
+    one for the load at the shear centre used with a load on the top flange is not.
+  refs:
+  - id: DG-EC3
+    at: 6.3.2
+    text: 'Gardner, L. and Nethercot, D.A. Designers'' Guide to Eurocode 3: Design of steel buildings, EN 1993-1-1,
+      -1-3 and -1-8. 2nd edition, ICE Publishing, 2011.'
+version: 2546e59b0a0b

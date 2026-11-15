@@ -155,6 +155,10 @@ td.c { text-align: center; }
 .timeline .n { width: 32px; height: 32px; border-radius: 50%; background: var(--c); color: var(--sheet); display: grid; place-items: center; font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
 .timeline li > div { display: grid; gap: 2px; min-width: 0; padding-top: 4px; }
 .timeline b { font-family: var(--f-display); font-size: 19px; font-weight: 600; color: var(--c); }
+.cf { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--c, var(--muted)); white-space: nowrap; }
+.qs p.ans { font-style: normal; color: var(--ink); }
+.qs p.ans::before { content: "→"; color: var(--c); }
+.oq .start { border-top: 1.5px solid var(--rule); padding-top: 10px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 
@@ -166,8 +170,8 @@ td.c { text-align: center; }
       <h1>Calculation Knowledge Architecture</h1>
     </div>
     <div><span class="label">Status</span><span class="val">Issued for workshop</span></div>
-    <div><span class="label">Revision</span><span class="val">E</span></div>
-    <div><span class="label">Date</span><span class="val">2026-10-14</span></div>
+    <div><span class="label">Revision</span><span class="val">F</span></div>
+    <div><span class="label">Date</span><span class="val">2026-11-15</span></div>
   </header>
 
   <!-- ================= page one ================= -->
@@ -176,26 +180,23 @@ td.c { text-align: center; }
       <div>
         <h2>Problem</h2>
         <ul>
-          <li>Thousands of calculation files on servers and project folders, in many formats.</li>
-          <li>The same checks are rebuilt on every project; copies diverge, corrections do not propagate.</li>
-          <li>Origin, author, code edition and quality are often unknown.</li>
-          <li>Spreadsheets are readable but hard to version and reuse; code is reusable but does not read as a calculation.</li>
+          <li>Thousands of calculations in Excel, Mathcad, Python and on paper are rebuilt on every project.</li>
+          <li>Copies drift, fixes never propagate, and nobody knows which version to trust or whether it was checked.</li>
+          <li>Collecting our tools has failed before: reviewing every variation, QA'ing it and learning to use it was a monstrous effort, with QA marks nobody could fully rely on.</li>
         </ul>
       </div>
       <div>
         <h2>Objective</h2>
-        <p>An ingestion pipeline that retrieves every calculation we own, distils the design logic inside it into modular calculation objects, and consolidates those objects, under engineer review, into a unified design logic for each topic of structural engineering. The result is a version-controlled knowledge base that maps what we know and where the gaps are, produces tested tools and self-documenting calculations, and improves with every project that uses it.</p>
+        <p>Small, verified calculation objects that every tool, workflow and engineer can use. The design codes are written as objects first; AI then reads, converts and distils our own calculations against them, so every source becomes a benchmark and every simplification a documented, explained case. The result is a version-controlled knowledge base that maps what we know, feeds Excel, reports and AI assistants from one logic, and improves with every project that uses it. We don't build tools; we build the pieces.</p>
       </div>
     </div>
 
     <figure>
       <div class="drawing">
-        <svg viewBox="0 0 1110 720" role="img" aria-label="Flowchart in four phases, flowing down. Ingestion: 1 retrieval and curation, 2 conversion. Distillation: 3 decomposition into calculation objects and topic mapping, 4 consolidation by consensus into unified design logic. Knowledge base: 5 object generation, 6 central repository. Use and maintenance: 7 self-documenting calculations, 8 maintenance. Feedback returns from maintenance to consolidation as a new version.">
+        <svg viewBox="0 0 1110 720" role="img" aria-label="Flowchart in four phases, flowing down. Ingestion: 1 retrieval and curation, 2 conversion. Distillation: 3 code seed and decomposition, 4 consolidation against the code. Knowledge base: 5 object generation, 6 repository and search. Use and maintenance: 7 self-documenting calculations, 8 maintenance. Feedback returns from maintenance to consolidation as a new version.">
           <defs>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
           </defs>
-
-          <!-- phase labels -->
           <rect x="20" y="40" width="4" height="120" rx="2" class="f1"/>
           <text x="36" y="104" class="t-phase f1">INGESTION</text>
           <rect x="20" y="215" width="4" height="120" rx="2" class="f2"/>
@@ -206,353 +207,270 @@ td.c { text-align: center; }
           <rect x="20" y="565" width="4" height="120" rx="2" class="f4"/>
           <text x="36" y="620" class="t-phase f4">USE AND</text>
           <text x="36" y="638" class="t-phase f4">MAINTENANCE</text>
-
-          <!-- ===== row 1 ===== -->
           <a href="#c1" class="node">
             <rect x="170" y="40" width="380" height="120" rx="16" class="box b1"/>
             <circle cx="220" cy="100" r="30" class="disc"/>
-            <g transform="translate(200 80)" class="ic k1">
-              <rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/>
-              <circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/>
-            </g>
+            <g transform="translate(200 80)" class="ic k1"><rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/><circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/></g>
             <text x="266" y="74" class="t-title"><tspan class="t-no f1">1 </tspan>Retrieval and curation</text>
-            <text x="266" y="99" class="t-build">Agent that scans the servers and</text>
-            <text x="266" y="118" class="t-build">curates the calculation files</text>
-            <circle cx="271" cy="140" r="5" class="f1"/><circle cx="285" cy="140" r="5" class="f1"/><circle cx="299" cy="140" r="5" class="f1"/><circle cx="313" cy="140" r="4.3" class="dot-off k1"/><circle cx="327" cy="140" r="4.3" class="dot-off k1"/>
-            <text x="342" y="144" class="t-diff">medium</text>
+            <text x="266" y="99" class="t-build">Dump folders as they are; AI</text>
+            <text x="266" y="118" class="t-build">sorts, links and deduplicates</text>
+            <circle cx="271" cy="140" r="5" class="f1"/><circle cx="285" cy="140" r="5" class="f1"/><circle cx="299" cy="140" r="5" class="f1"/><circle cx="313" cy="140" r="5" class="f1"/><circle cx="327" cy="140" r="4.3" class="dot-off k1"/>
+            <text x="342" y="144" class="t-diff">high</text>
           </a>
-          <path d="M550 100 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c2" class="node">
             <rect x="630" y="40" width="380" height="120" rx="16" class="box b1"/>
             <circle cx="680" cy="100" r="30" class="disc"/>
-            <g transform="translate(660 80)" class="ic k1">
-              <path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/>
-              <text x="19" y="31" text-anchor="middle" class="t-ic f1" stroke="none">{ }</text>
-            </g>
+            <g transform="translate(660 80)" class="ic k1"><path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/><text x="19" y="31" text-anchor="middle" class="t-ic f1" stroke="none">{ }</text></g>
             <text x="726" y="74" class="t-title"><tspan class="t-no f1">2 </tspan>Conversion</text>
-            <text x="726" y="99" class="t-build">Parser that converts every format</text>
-            <text x="726" y="118" class="t-build">into machine-readable content</text>
+            <text x="726" y="99" class="t-build">Every format read, every formula</text>
+            <text x="726" y="118" class="t-build">re-run against the file's value</text>
             <circle cx="731" cy="140" r="5" class="f1"/><circle cx="745" cy="140" r="5" class="f1"/><circle cx="759" cy="140" r="4.3" class="dot-off k1"/><circle cx="773" cy="140" r="4.3" class="dot-off k1"/><circle cx="787" cy="140" r="4.3" class="dot-off k1"/>
             <text x="802" y="144" class="t-diff">low</text>
           </a>
-          <path d="M820 160 V187 H360 V213" class="wire" marker-end="url(#ah)"/>
-
-          <!-- ===== row 2 ===== -->
           <a href="#c3" class="node">
             <rect x="170" y="215" width="380" height="120" rx="16" class="box b2"/>
             <circle cx="220" cy="275" r="30" class="disc"/>
-            <g transform="translate(200 255)" class="ic k2">
-              <rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="25" y="25" width="15" height="15" rx="3"/>
-            </g>
-            <text x="266" y="249" class="t-title"><tspan class="t-no f2">3 </tspan>Decomposition</text>
-            <text x="266" y="274" class="t-build">AI that distils files into calculation</text>
-            <text x="266" y="293" class="t-build">objects and maps the design topics</text>
-            <circle cx="271" cy="315" r="5" class="f2"/><circle cx="285" cy="315" r="5" class="f2"/><circle cx="299" cy="315" r="5" class="f2"/><circle cx="313" cy="315" r="5" class="f2"/><circle cx="327" cy="315" r="5" class="f2"/>
-            <text x="342" y="319" class="t-diff">very high</text>
+            <g transform="translate(200 255)" class="ic k2"><rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="25" y="25" width="15" height="15" rx="3"/></g>
+            <text x="266" y="249" class="t-title"><tspan class="t-no f2">3 </tspan>Code seed and decomposition</text>
+            <text x="266" y="274" class="t-build">Code clauses first; files distilled</text>
+            <text x="266" y="293" class="t-build">against them into small objects</text>
+            <circle cx="271" cy="315" r="5" class="f2"/><circle cx="285" cy="315" r="5" class="f2"/><circle cx="299" cy="315" r="5" class="f2"/><circle cx="313" cy="315" r="5" class="f2"/><circle cx="327" cy="315" r="4.3" class="dot-off k2"/>
+            <text x="342" y="319" class="t-diff">high</text>
           </a>
-          <path d="M550 275 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c4" class="node">
             <rect x="630" y="215" width="380" height="120" rx="16" class="box b2"/>
             <circle cx="680" cy="275" r="30" class="disc"/>
-            <g transform="translate(660 255)" class="ic k2">
-              <path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/>
-            </g>
-            <text x="726" y="249" class="t-title"><tspan class="t-no f2">4 </tspan>Consolidation</text>
-            <text x="726" y="274" class="t-build">Consensus rules that merge objects</text>
-            <text x="726" y="293" class="t-build">into one unified design logic</text>
+            <g transform="translate(660 255)" class="ic k2"><path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/></g>
+            <text x="726" y="249" class="t-title"><tspan class="t-no f2">4 </tspan>Consolidation against the code</text>
+            <text x="726" y="274" class="t-build">Each source compared with the code;</text>
+            <text x="726" y="293" class="t-build">every difference explained</text>
             <circle cx="731" cy="315" r="5" class="f2"/><circle cx="745" cy="315" r="5" class="f2"/><circle cx="759" cy="315" r="5" class="f2"/><circle cx="773" cy="315" r="5" class="f2"/><circle cx="787" cy="315" r="4.3" class="dot-off k2"/>
             <text x="802" y="319" class="t-diff">high</text>
           </a>
-          <path d="M820 335 V362 H360 V388" class="wire" marker-end="url(#ah)"/>
-
-          <!-- ===== row 3 ===== -->
           <a href="#c5" class="node">
             <rect x="170" y="390" width="380" height="120" rx="16" class="box b3"/>
             <circle cx="220" cy="450" r="30" class="disc"/>
-            <g transform="translate(200 430)" class="ic k3">
-              <rect x="3" y="6" width="34" height="28" rx="5"/>
-              <text x="20" y="25" text-anchor="middle" class="t-ic f3" stroke="none">&lt;/&gt;</text>
-            </g>
+            <g transform="translate(200 430)" class="ic k3"><rect x="3" y="6" width="34" height="28" rx="5"/><text x="20" y="25" text-anchor="middle" class="t-ic f3" stroke="none">&lt;/&gt;</text></g>
             <text x="266" y="424" class="t-title"><tspan class="t-no f3">5 </tspan>Object generation</text>
-            <text x="266" y="449" class="t-build">LLM that turns unified logic into</text>
-            <text x="266" y="468" class="t-build">tested Python calculation objects</text>
-            <circle cx="271" cy="490" r="5" class="f3"/><circle cx="285" cy="490" r="5" class="f3"/><circle cx="299" cy="490" r="5" class="f3"/><circle cx="313" cy="490" r="4.3" class="dot-off k3"/><circle cx="327" cy="490" r="4.3" class="dot-off k3"/>
-            <text x="342" y="494" class="t-diff">medium</text>
+            <text x="266" y="449" class="t-build">One specification per object; every</text>
+            <text x="266" y="468" class="t-build">output generated from it</text>
+            <circle cx="271" cy="490" r="5" class="f3"/><circle cx="285" cy="490" r="5" class="f3"/><circle cx="299" cy="490" r="4.3" class="dot-off k3"/><circle cx="313" cy="490" r="4.3" class="dot-off k3"/><circle cx="327" cy="490" r="4.3" class="dot-off k3"/>
+            <text x="342" y="494" class="t-diff">low</text>
           </a>
-          <path d="M550 450 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c6" class="node">
             <rect x="630" y="390" width="380" height="120" rx="16" class="box b3"/>
             <circle cx="680" cy="450" r="30" class="disc"/>
-            <g transform="translate(660 430)" class="ic k3">
-              <ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/>
-            </g>
+            <g transform="translate(660 430)" class="ic k3"><ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/></g>
             <text x="726" y="424" class="t-title"><tspan class="t-no f3">6 </tspan>Repository and search</text>
-            <text x="726" y="449" class="t-build">Knowledge base with an AI-curated</text>
-            <text x="726" y="468" class="t-build">search engine</text>
+            <text x="726" y="449" class="t-build">Versioned base, word search,</text>
+            <text x="726" y="468" class="t-build">two-way bridge to Excel</text>
             <circle cx="731" cy="490" r="5" class="f3"/><circle cx="745" cy="490" r="5" class="f3"/><circle cx="759" cy="490" r="5" class="f3"/><circle cx="773" cy="490" r="4.3" class="dot-off k3"/><circle cx="787" cy="490" r="4.3" class="dot-off k3"/>
             <text x="802" y="494" class="t-diff">medium</text>
           </a>
-          <path d="M820 510 V537 H360 V563" class="wire" marker-end="url(#ah)"/>
-
-          <!-- ===== row 4 ===== -->
           <a href="#c7" class="node">
             <rect x="170" y="565" width="380" height="120" rx="16" class="box b4"/>
             <circle cx="220" cy="625" r="30" class="disc"/>
-            <g transform="translate(200 605)" class="ic k4">
-              <rect x="7" y="3" width="26" height="34" rx="3"/>
-              <text x="15" y="20" text-anchor="middle" class="t-ic f4" stroke="none">Σ</text>
-              <path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/>
-            </g>
+            <g transform="translate(200 605)" class="ic k4"><rect x="7" y="3" width="26" height="34" rx="3"/><path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/><text x="15" y="20" text-anchor="middle" class="t-ic f4" stroke="none">Σ</text></g>
             <text x="266" y="599" class="t-title"><tspan class="t-no f4">7 </tspan>Self-documenting calculations</text>
-            <text x="266" y="624" class="t-build">Human-readable calculations at the</text>
-            <text x="266" y="643" class="t-build">quality of our existing ones</text>
-            <circle cx="271" cy="665" r="5" class="f4"/><circle cx="285" cy="665" r="5" class="f4"/><circle cx="299" cy="665" r="5" class="f4"/><circle cx="313" cy="665" r="5" class="f4"/><circle cx="327" cy="665" r="5" class="f4"/>
-            <text x="342" y="669" class="t-diff">very high</text>
+            <text x="266" y="624" class="t-build">Report templates over many cases;</text>
+            <text x="266" y="643" class="t-build">PDF with bookmarks or Word</text>
+            <circle cx="271" cy="665" r="5" class="f4"/><circle cx="285" cy="665" r="5" class="f4"/><circle cx="299" cy="665" r="5" class="f4"/><circle cx="313" cy="665" r="5" class="f4"/><circle cx="327" cy="665" r="4.3" class="dot-off k4"/>
+            <text x="342" y="669" class="t-diff">high</text>
           </a>
-          <path d="M550 625 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c8" class="node">
             <rect x="630" y="565" width="380" height="120" rx="16" class="box b4"/>
             <circle cx="680" cy="625" r="30" class="disc"/>
-            <g transform="translate(660 605)" class="ic k4">
-              <path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/>
-              <path d="M15 20 L19 24 L26 16"/>
-            </g>
+            <g transform="translate(660 605)" class="ic k4"><path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/><path d="M15 20 L19 24 L26 16"/></g>
             <text x="726" y="599" class="t-title"><tspan class="t-no f4">8 </tspan>Maintenance</text>
-            <text x="726" y="624" class="t-build">Auditing, health checks and</text>
-            <text x="726" y="643" class="t-build">feedback released as new versions</text>
-            <circle cx="731" cy="665" r="5" class="f4"/><circle cx="745" cy="665" r="5" class="f4"/><circle cx="759" cy="665" r="4.3" class="dot-off k4"/><circle cx="773" cy="665" r="4.3" class="dot-off k4"/><circle cx="787" cy="665" r="4.3" class="dot-off k4"/>
-            <text x="802" y="669" class="t-diff">low</text>
+            <text x="726" y="624" class="t-build">Health checks, flags and fixes;</text>
+            <text x="726" y="643" class="t-build">AI writes, gatekeepers approve</text>
+            <circle cx="731" cy="665" r="5" class="f4"/><circle cx="745" cy="665" r="5" class="f4"/><circle cx="759" cy="665" r="5" class="f4"/><circle cx="773" cy="665" r="4.3" class="dot-off k4"/><circle cx="787" cy="665" r="4.3" class="dot-off k4"/>
+            <text x="802" y="669" class="t-diff">medium</text>
           </a>
-
-          <!-- human review: after stages 3, 4, 5 and 8 -->
-          <g>
-            <circle cx="589" cy="275" r="16" class="hr-c"/>
-            <circle cx="589" cy="271" r="4.5" class="hr-p"/>
-            <path d="M581 285 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="589" y="308" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="589" y="320" text-anchor="middle" class="t-hr">REVIEW</text>
-          </g>
-          <g>
-            <circle cx="590" cy="362" r="16" class="hr-c"/>
-            <circle cx="590" cy="358" r="4.5" class="hr-p"/>
-            <path d="M582 372 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="613" y="354" class="t-hr">HUMAN REVIEW</text>
-          </g>
-          <g>
-            <circle cx="589" cy="450" r="16" class="hr-c"/>
-            <circle cx="589" cy="446" r="4.5" class="hr-p"/>
-            <path d="M581 460 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="589" y="483" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="589" y="495" text-anchor="middle" class="t-hr">REVIEW</text>
-          </g>
-
-          <!-- feedback loop: 8 back to 4 -->
+          <path d="M550 100 H628" class="wire" marker-end="url(#ah)"/>
+          <path d="M820 160 V187 H360 V213" class="wire" marker-end="url(#ah)"/>
+          <path d="M550 275 H628" class="wire" marker-end="url(#ah)"/>
+          <path d="M820 335 V362 H360 V388" class="wire" marker-end="url(#ah)"/>
+          <path d="M550 450 H628" class="wire" marker-end="url(#ah)"/>
+          <path d="M820 510 V537 H360 V563" class="wire" marker-end="url(#ah)"/>
+          <path d="M550 625 H628" class="wire" marker-end="url(#ah)"/>
+          <g><circle cx="590" cy="362" r="16" class="hr-c"/><circle cx="590" cy="358" r="4.5" class="hr-p"/><path d="M582 372 a8 7.5 0 0 1 16 0 z" class="hr-p"/><text x="613" y="354" class="t-hr">HUMAN REVIEW</text></g>
+          <g><circle cx="589" cy="450" r="16" class="hr-c"/><circle cx="589" cy="446" r="4.5" class="hr-p"/><path d="M581 460 a8 7.5 0 0 1 16 0 z" class="hr-p"/><text x="589" y="483" text-anchor="middle" class="t-hr">HUMAN</text><text x="589" y="495" text-anchor="middle" class="t-hr">REVIEW</text></g>
           <path d="M1010 625 H1062 V275 H1013" class="wire-loop" marker-end="url(#ah)"/>
-          <g>
-            <circle cx="1036" cy="625" r="16" class="hr-c"/>
-            <circle cx="1036" cy="621" r="4.5" class="hr-p"/>
-            <path d="M1028 635 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="1036" y="658" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="1036" y="670" text-anchor="middle" class="t-hr">REVIEW</text>
-          </g>
+          <g><circle cx="1036" cy="625" r="16" class="hr-c"/><circle cx="1036" cy="621" r="4.5" class="hr-p"/><path d="M1028 635 a8 7.5 0 0 1 16 0 z" class="hr-p"/><text x="1036" y="658" text-anchor="middle" class="t-hr">HUMAN</text><text x="1036" y="670" text-anchor="middle" class="t-hr">REVIEW</text></g>
           <text x="1086" y="450" text-anchor="middle" transform="rotate(-90 1086 450)" class="t-loop">FEEDBACK → NEW VERSION</text>
         </svg>
       </div>
-      <figcaption>Each box names a component to be built; dots show the estimated difficulty. <svg class="inline-person" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg>marks where human review is required. Select a box for how it could be achieved.</figcaption>
+      <figcaption>Each box names a component to be built; dots show the estimated difficulty after the MVP. <svg class="inline-person" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg>marks where human review is required. Select a box for its problems, proposed solutions and their confidence.</figcaption>
     </figure>
+  </section>
+
+  <!-- ================= general concerns ================= -->
+  <section class="band" id="concerns">
+    <h2>General concerns</h2>
+    <div class="oq">
+      <div class="start"><span class="label">Scope</span><p>Bridges, on major projects at most; other groups join later. Within that scope aim for volume, not a small curated set. We build granular pieces, not tools.</p></div>
+      <div class="start"><span class="label">Feasibility</span><p>Collecting tools failed because people did all the work. Now AI reads, converts and writes, and pieces exist (mcad2py, structuralcodes). The hard parts are distilling messy files and readable output.</p></div>
+      <div class="start"><span class="label">Scalability</span><p>Effort scales worst in distilling thousands of messy files. Human review must stay light or it becomes the bottleneck. Each new model can re-check the whole base.</p></div>
+      <div class="start"><span class="label">Adoption</span><p>The biggest risk is a system nobody uses. Logic must drop into Excel and people's own workflows, and quick work must flow back. Everyone keeps their local tools, on one shared basis.</p></div>
+      <div class="start"><span class="label">Investment</span><p>The payoff is quality, not hours: a benchmark we QA'd ourselves for every AI tool, and independent QA even when SOFiSTiK or FAGUS design. Prove it with a minimum viable product first.</p></div>
+      <div class="start"><span class="label">Why now</span><p>AI does the heavy lifting. With our own benchmarked pieces as their source, Copilot, RamGPT and new tools give traceable, repeatable results instead of hallucinations.</p></div>
+    </div>
   </section>
 
   <!-- ================= components ================= -->
   <section class="band" id="components">
     <h2>What has to be built, and how</h2>
+    <p class="label">? potential problem &nbsp;·&nbsp; bullet: potential solution, with its confidence</p>
     <div class="cards">
-
       <article class="card" id="c1" style="--c: var(--p1); --ct: var(--p1t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/><circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/></g></svg>
           <div><span class="label">Ingestion · 1</span><h3>Retrieval and curation</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">An agent that scans the company servers, catalogues every calculation file and curates what enters the pipeline.</p>
-          <ul>
-            <li>Tags each file: project, department, author, date, code, design topics</li>
-            <li>Curation criteria: relevance, completeness, known origin, current code edition</li>
-            <li>New files and new calculations enter through the same route</li>
-          </ul>
-          <div class="qs"><p>How broad should the scraping be, and how much should be curated by hand?</p></div>
+          <p class="build">Dump whole folders without sorting and let AI sort, link and deduplicate them. Don't rely on metadata.</p>
+          <div class="qs"><p>Calculations sit in SharePoint, ProjectWise, local drives, PCs and decades of paper; the metadata is messy.</p><p>Volume may bring sources that never agree, and AI may be too weak or too costly to process it all.</p><p>NDA and permission status is unknown: scanning may open and tag material that should stay private.</p><p>Should each logic keep a record of its sources, without copying files to new servers?</p></div>
+          <ul><li>Start with what is already accessible: SharePoint is easy with Copilot, ProjectWise is painful. <span class="cf">high</span></li><li>Volume plus consensus instead of hand curation, with capacity and cost measured on a pilot first. <span class="cf">low</span></li><li>Link to sources where they live (path and hash); store what is cheapest for AI to retrieve. <span class="cf">medium</span></li><li>MVP: exact duplicates dropped; a PDF recognised as the print of a worksheet and used only as a benchmark.</li></ul>
+          
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Known technology; access rights, NDAs and volume are the work.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>Access rights and NDAs, not technology, are the work.</span></div>
       </article>
-
       <article class="card" id="c2" style="--c: var(--p1); --ct: var(--p1t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/></g><text x="19" y="31" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">{ }</text></svg>
           <div><span class="label">Ingestion · 2</span><h3>Conversion</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">A parser that converts each format into machine-readable content.</p>
-          <ul>
-            <li>Readers exist for Excel, Mathcad, Python, Jupyter and MATLAB</li>
-            <li>Recalculated values compared with the original before acceptance</li>
-          </ul>
-          <div class="qs"><p>How do we convert each format reliably?</p></div>
+          <p class="build">Readers for every format. Every formula is re-run and must reproduce the value the file shows.</p>
+          <div class="qs"><p>Mathcad sheets, old and Prime, are hard to read for people and AI alike.</p><p>Excel files hide hard-coded numbers, hidden sheets, Goal Seek, Solver, VBA and broken links.</p><p>Much logic survives only in PDF printouts or on handwritten pages.</p><p>A parser that keeps only the formulas loses the context, assumptions and edge cases.</p></div>
+          <ul><li>mcad2py converts Mathcad to runnable Python with units. <span class="cf">high</span></li><li>Excel formulas extracted as text and recreated; files that won't run are flagged, not guessed. <span class="cf">medium</span></li><li>PDFs accepted: the recreated logic must reproduce the printed output from the printed input. <span class="cf">medium</span></li><li>Tag everything: labels, clauses, headings and cases; every input and output becomes a test case. <span class="cf">medium</span></li><li>MVP: Excel 1,040 of 1,040 formulas, Mathcad 84 of 84 plus 80 of 80 stored results reproduced.</li></ul>
+          
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Mostly solved by existing file readers.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Reliability is measured file by file, not assumed.</span></div>
       </article>
-
       <article class="card" id="c3" style="--c: var(--p2); --ct: var(--p2t)">
         <div class="card-head">
-          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="22" y="22" width="15" height="15" rx="3"/></g></svg>
-          <div><span class="label">Distillation · 3</span><h3>Decomposition</h3></div>
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="25" y="25" width="15" height="15" rx="3"/></g></svg>
+          <div><span class="label">Distillation · 3</span><h3>Code seed and decomposition</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">An AI that reads a calculation, distils its logic into modular calculation objects and maps each object to a topic of structural engineering.</p>
-          <ul>
-            <li>Design logic separated from project data</li>
-            <li>One taxonomy: topic, element, code clause</li>
-            <li>A topic map: what is covered, what is missing, where sources are many</li>
-          </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer checks the extracted objects and their classification. Drafts never enter the knowledge base.</p></div>
-          <div class="qs"><p>How reliable is the AI at reading engineering logic?</p><p>What granularity: one equation, one clause or one design check?</p></div>
+          <p class="build">Seed first: the code clauses are written as objects before any extraction; the files then act as benchmarks that expose errors and add edge cases.</p>
+          <div class="qs"><p>Extracting logic from scratch out of hundreds of messy files is slow, token-heavy and error-prone.</p><p>Project assumptions and simplifications multiply the approaches to one problem, in several languages.</p><p>Some checks are more than formulas: interaction diagrams, multi-step procedures, 3D geometry.</p><p>The same logic gets duplicated across objects, topics and codes.</p></div>
+          <ul><li>Code seed for EC2, EC3 and EC4: 146 objects, each starting as “not yet checked”. <span class="cf">medium</span></li><li>AI reads the context and matches sources despite their simplifications; each simplification becomes a note juniors see. <span class="cf">low</span></li><li>Objects call objects, so a tool is a larger object built from smaller ones. <span class="cf">low</span></li><li>Objects as small as possible, taxonomy from the clause structure; a later code links to an existing object instead of copying it. <span class="cf">high</span></li></ul>
+          
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>Very high</b><span>Turning an existing file into logic requires engineering understanding.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>Needs engineering understanding; the seed makes it tractable.</span></div>
       </article>
-
-
       <article class="card" id="c4" style="--c: var(--p2); --ct: var(--p2t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/></g></svg>
-          <div><span class="label">Distillation · 4</span><h3>Consolidation by consensus</h3></div>
+          <div><span class="label">Distillation · 4</span><h3>Consolidation against the code</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Deterministic rules that cluster logic from many sources into one unified design logic with little human effort.</p>
-          <p>Each calculation object is run over a common parameter domain. Sources that agree within tolerance are clustered and merged, so one logic is reviewed instead of many, much as a distributed ledger accepts an entry when independent parties agree. Where sources disagree, the difference goes to an engineer.</p>
-          <p>Consensus is a clustering method, not proof of correctness. Accuracy comes from benchmarks, independent references (code worked examples, design guides, hand calculations, FE results), sampling and engineer review.</p>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer reviews each unified logic and settles every disagreement.</p></div>
-          <div class="qs"><p>What tolerance, and how many agreeing sources, constitute consensus?</p><p>What level of human supervision does each stage require?</p></div>
+          <p class="build">Each source is compared with the seeded object, not with the other sources: as code, simplified (with why and with what effect), different, or project-specific.</p>
+          <div class="qs"><p>AI may not tell inputs, outputs and assumptions apart across sources.</p><p>Agreement needs a tolerance, and codes, editions and national annexes differ.</p><p>Experts may never settle on one approach, and most topics have one source only.</p></div>
+          <ul><li>Compare against the code object, so sources never have to agree with each other. <span class="cf">low</span></li><li>0 % for closed-form checks, every difference explained; about 1 % for numerical ones. Each code generation, national annex and guideline is a branch. <span class="cf">medium</span></li><li>Large differences are investigated first: an input read from another calculation, per-metre against full width, a unit, one different value. What stays unexplained becomes a question for an engineer. <span class="cf">medium</span></li><li>An expert group decides, keeping alternatives; single-source topics are published as “seen once”. <span class="cf">low</span></li></ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer answers the questions the distillation cannot, and settles real disagreements. Each answer becomes design background of the object.</p></div>
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>A new method; tolerances and test domains have to be defined per topic.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>A new method; the code seed removes most of the guesswork.</span></div>
       </article>
-
       <article class="card" id="c5" style="--c: var(--p3); --ct: var(--p3t)">
         <div class="card-head">
-          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="6" width="34" height="28" rx="5"/></g><text x="20" y="25" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="500" fill="currentColor">&lt;/&gt;</text></svg>
+          <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="3" y="6" width="34" height="28" rx="5"/></g><text x="20" y="25" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">&lt;/&gt;</text></svg>
           <div><span class="label">Knowledge base · 5</span><h3>Object generation</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">An LLM that turns each unified design logic into a tested Python calculation object.</p>
-          <ul>
-            <li>Written from a structured specification per object</li>
-            <li>Benchmarked against the original files, other checked projects and independent references</li>
-          </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer signs off each block before it enters the knowledge base; full review at first, sampling once confidence is established.</p></div>
-          <div class="qs"><p>How do we set up the benchmarks?</p></div>
+          <p class="build">One specification per object: formula, clause, units, conditions and design background. Python, Excel, Mathcad and report equations are generated from it, never written by hand.</p>
+          <div class="qs"><p>There are no shared coding conventions; everyone codes their own way.</p><p>Formal QA marks need a dedicated checker and budget, and still miss errors; no team exists to build benchmarks.</p></div>
+          <ul><li>Open-source libraries such as structuralcodes as independent references. <span class="cf">high</span></li><li>Real project use is the benchmark; every value a source shows is re-run, and every fix is pushed back. <span class="cf">medium</span></li><li>A version fingerprint in every file; one command tells whether a file still carries the current logic.</li></ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Sign-off confirms an object is sound; whoever uses it stays responsible.</p></div>
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Code generation is mature; the benchmarks are the work.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Generation is mechanical; trust comes from the benchmarks.</span></div>
       </article>
-
       <article class="card" id="c6" style="--c: var(--p3); --ct: var(--p3t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/></g></svg>
           <div><span class="label">Knowledge base · 6</span><h3>Repository and search</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">A secure, version-controlled knowledge base with an AI-curated search engine.</p>
-          <ul>
-            <li>Finds the relevant calculation object for a design task</li>
-            <li>Checks every new calculation: already covered, an extension, or a new design topic</li>
-            <li>Versions, access rights, approvals and written rules for contributors and the AI</li>
-          </ul>
-          <p>In this way most topics of structural engineering can be mapped.</p>
-          <div class="qs"><p>What is the ideal hosting platform?</p><p>How scalable is the system?</p></div>
+          <p class="build">A versioned knowledge base whose objects drop into people's own Excel sheets and workflows, with quick Excel work flowing back.</p>
+          <div class="qs"><p>Most people want to use the logic, not Python, and web apps are stiff.</p><p>An adapted copy fed back looks “wrong”, and non-coders can't extend a module.</p><p>AI assistants produce calculations that can't be traced and may hallucinate.</p><p>Search may return the wrong object, and no one owns a topic.</p></div>
+          <ul><li>Two-way bridge: Excel calculators out (named ranges or cell references), any workbook back in and classified. <span class="cf">low</span></li><li>Project variants stored as branches, not corrections; AI turns an Excel extension into an object. <span class="cf">low</span></li><li>The repository as the source for Copilot and RamGPT: tool definitions with every step and clause. <span class="cf">medium</span></li><li>The engineer always QAs; anyone can flag, gatekeepers keep it healthy, AI proposes fixes. <span class="cf">medium</span></li></ul>
+          
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Hosting is standard; classifying new entries reliably is the work.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Hosting is standard; adoption is the risk.</span></div>
       </article>
-
       <article class="card" id="c7" style="--c: var(--p4); --ct: var(--p4t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="7" y="3" width="26" height="34" rx="3"/><path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/></g><text x="15" y="20" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">Σ</text></svg>
           <div><span class="label">Use and maintenance · 7</span><h3>Self-documenting calculations</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">A framework that makes every Python calculation print itself as a human-readable calculation document, at the same quality as our existing calculations.</p>
-          <ul>
-            <li>Each step typeset: equation, substituted values, result, clause</li>
-            <li>Produced by the same run that computes the numbers</li>
-            <li>Company template; QA status on the document</li>
-            <li>Signed off by the project engineer and checker, as today</li>
-          </ul>
-          <div class="qs"><p>How do we make modular code human-readable?</p></div>
+          <p class="build">A report template set up once and run over any number of cases: the governing case written out, a summary table, charts and remarks. PDF with bookmarks, or Word with native equations.</p>
+          <div class="qs"><p>Code with ifs and loops doesn't read like a hand calculation; an earlier LaTeX wrapper on SymPy was inflexible.</p><p>Reports must meet the company standard: equation look, sketches, inline clauses, colour-coded utilisation, QA block.</p><p>Lessons, warnings and competing interpretations stay in individual heads.</p></div>
+          <ul><li>Equations printed from the formula tree, not from the code: MathML, Word equations, LaTeX. <span class="cf">medium</span></li><li>Templates filled in an Excel form or in the web page, never in code: a locked look, chosen content. <span class="cf">low</span></li><li>Design guides generated from the objects' background: scope, pitfalls, where interpretations differ. <span class="cf">medium</span></li></ul>
+          
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><b>Very high</b><span>Readability and modularity pull in opposite directions.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><b>High</b><span>The company standard and sketches are the open work.</span></div>
       </article>
-
       <article class="card" id="c8" style="--c: var(--p4); --ct: var(--p4t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/><path d="M15 20 L19 24 L26 16"/></g></svg>
           <div><span class="label">Use and maintenance · 8</span><h3>Maintenance</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Auditing of the knowledge base, scheduled health checks, and a route for corrections and new components.</p>
-          <ul>
-            <li>Health checks re-run every benchmark</li>
-            <li>Changes pass consolidation and testing again</li>
-            <li>Maturity: harvested, converted, consolidated, verified, approved</li>
-          </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Engineers review calculations in use and approve every correction and new component.</p></div>
-          <div class="qs"><p>How many people and departments should be involved?</p></div>
+          <p class="build">Health checks, flags and fixes. The AI writes and repairs; gatekeepers approve; everything is versioned.</p>
+          <div class="qs"><p>No one owns, hosts or funds the system or its gatekeepers.</p><p>Someone flags an error and needs the fix now; waiting for an approver blocks them.</p><p>Fixes and code revisions change objects already used on projects.</p><p>Mistakes already in the knowledge base go unnoticed; people may not bother to contribute.</p></div>
+          <ul><li>Hosting and sizing to the tech department; automate as much as possible. <span class="cf">low</span></li><li>The fix is deployed as an unapproved copy until the person responsible reviews it. <span class="cf">medium</span></li><li>Users of a version are notified of updates; old and new codes sit side by side. <span class="cf">medium</span></li><li>Health checks re-run over the whole base with each more capable model. <span class="cf">high</span></li><li>Finished calculations go into a folder the AI absorbs and checks. <span class="cf">medium</span></li></ul>
+          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Gatekeepers approve corrections and new components; a short meeting settles disagreements.</p></div>
         </div>
-        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><b>Low</b><span>Process and ownership more than technology.</span></div>
+        <div class="card-foot"><span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><b>Medium</b><span>Ownership and funding more than technology.</span></div>
       </article>
     </div>
   </section>
 
   <!-- ================= worked example ================= -->
   <section class="band" id="example">
-    <h2>Worked example: four bridge calculations</h2>
-    <p>Four files from four bridge projects. They overlap only partly and use different national annexes.</p>
+    <h2>Worked example: the MVP on three real files</h2>
+    <p>One Mathcad worksheet, its PDF print and one Excel workbook went through the whole chain in about five seconds.</p>
     <div class="files">
       <table>
-        <thead><tr><th>File</th><th>Format</th><th>Project</th><th>Bending</th><th>Shear</th><th>National annex</th></tr></thead>
+        <thead><tr><th>File</th><th>Format</th><th>Content</th><th>Role</th></tr></thead>
         <tbody>
-          <tr><td>A</td><td>Python script</td><td>Bridge 1</td><td class="c">✓</td><td class="c">✓</td><td>DK</td></tr>
-          <tr><td>B</td><td>Jupyter notebook</td><td>Bridge 2</td><td class="c">✓</td><td class="c">–</td><td>UK</td></tr>
-          <tr><td>C</td><td>Excel workbook</td><td>Bridge 3</td><td class="c">–</td><td class="c">✓</td><td>DK</td></tr>
-          <tr><td>D</td><td>Mathcad sheet</td><td>Bridge 4</td><td class="c">✓</td><td class="c">✓</td><td>NO</td></tr>
+          <tr><td>S1</td><td>Mathcad Prime worksheet</td><td>Precast beam: bending, shear, cracking, two phases</td><td>Source</td></tr>
+          <tr><td>S2</td><td>PDF print of S1</td><td>100 printed values</td><td>Benchmark only</td></tr>
+          <tr><td>S3</td><td>Excel workbook</td><td>Ten sheets of slab shear and punching checks</td><td>Source</td></tr>
         </tbody>
       </table>
     </div>
     <ol class="timeline">
-      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Ingestion</b><p>The four files are retrieved, tagged and converted. Recalculated values match the originals.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">2</span><div><b>Decomposition</b><p>Six draft calculation objects: three for bending (A, B, D) and three for shear (A, C, D). An engineer checks them.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">3</span><div><b>Consensus on bending</b><p>National annex coefficients are separated out as parameters. The three objects then agree within tolerance over the whole domain, giving one unified bending object with the national annex as an input. An engineer reviews it.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">4</span><div><b>No consensus on shear</b><p>The objects assume different lever arms: one uses an approximate value, the other calculates it precisely. The rest of the logic agrees and is merged; an engineer decides which lever arm is correct.</p></div></li>
-      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Object generation</b><p>Python objects are generated and benchmarked against the four original files, other checked bridge projects and a code worked example. An engineer signs off each block and they are released as version 0.1.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>An engineer on a fifth bridge searches for shear design. The search engine returns the unified object; the engineer runs it and receives a self-documenting calculation.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>A torsion calculation is submitted. The search engine identifies it as a new component, not yet covered. It passes the consensus rules and the benchmarks, an engineer signs it off, and it is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
+      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Ingestion</b><p>Every formula re-runs to the value in its file; the PDF is recognised as a print of the worksheet.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">2</span><div><b>Code seed</b><p>146 objects from EC2, EC3 and EC4, with the full expressions: f_cd = α_cc·f_ck/γ_C, not the f_ck/γ_C the sheets write.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">3</span><div><b>Against the code</b><p>All 86 source formulas for V_Rd,c are simplifications: the lower bound V_Rd,c,min is left out (it governs in 22 of 80 cases, on the safe side) and k₁σ_cp is dropped where σ_cp ≠ 0 (8 cases, unsafe). γ_C = 1.3775 is used 72 times.</p></div></li>
+      <li style="--c: var(--p2)"><span class="n">4</span><div><b>Understanding</b><p>A 540× difference was traced to one spreadsheet column holding two calculations; the lookup was fixed rather than tolerated. Per-metre working became context on the object: “usually calculated per metre width for slabs”.</p></div></li>
+      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Objects</b><p>31 checked (the code's own expression, confirmed by an independent library or by source values) and 115 not yet checked, each with design background and sources.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">6</span><div><b>Use</b><p>Web calculator, Excel calculator, Mathcad worksheet and report templates (PDF with bookmarks, Word); one command confirms each file carries the current logic.</p></div></li>
+      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Maintenance</b><p>The wider seed immediately flagged f_ywd,ef = 250 + 0.2·d in the workbook against 250 + 0.25·d in the code. Every health check re-runs the 672 stored benchmarks.</p></div></li>
     </ol>
   </section>
 
-  <!-- ================= open questions ================= -->
+  <!-- ================= pressing questions ================= -->
   <section class="band" id="questions">
-    <h2>Open questions for everyone</h2>
+    <h2>Pressing questions, with a first answer</h2>
     <div class="oq">
-      <div class="start qs">
-        <span class="label">Scale and starting point</span>
-        <p>Retrieving and distilling everything we own is a very large task. How do we start simpler, for example with a few topics and a small set of trusted calculations, and let the knowledge base grow?</p>
-        <p>Where will the effort scale badly: curation, human review, or consensus across many sources?</p>
-        <p>How do we find out early whether it works, before investing in the full pipeline?</p>
-      </div>
-      <div class="start qs">
-        <span class="label">Consensus and correctness</span>
-        <p>Sources that copied the same template, or share the same mistake, agree and are still wrong. Which independent references do we check against: code worked examples, design guides, hand calculations, FE results?</p>
-      </div>
-      <div class="start qs">
-        <span class="label">Adoption</span>
-        <p>How do engineers actually use it, given that it is Python?</p>
-        <p>Who owns each topic, and why would people contribute?</p>
-        <p>How do we measure success: coverage, reuse, hours saved?</p>
-      </div>
+      <div class="start qs"><span class="label">Logic we don't own</span><p>Can we take design logic from other firms' reports, or from codes we don't hold a licence for?</p><p class="ans">Formulas and methods are not protected as such; the text of standards and reports is. Store the logic in our own words with clause references, never copied text, and keep client reports under their NDA: logic in, project data out, a link to the file.</p></div>
+      <div class="start qs"><span class="label">Metadata</span><p>What metadata is realistic or necessary to harvest?</p><p class="ans">Only what is cheap and reliable: file hash, a link to where it lives, format, date, project number from the path, code and edition referenced; per value its label, unit, clause, heading and location. Author and QA status are rarely reliable.</p></div>
+      <div class="start qs"><span class="label">Specification format</span><p>What format is best for the specifications and the code blocks?</p><p class="ans">A plain-text specification per object (YAML now, JSON or a database later) with formulas in a small arithmetic language; code, Excel, Mathcad and equations are generated from it. Git gives history and review.</p></div>
+      <div class="start qs"><span class="label">Reports and hosting</span><p>How hard is report formatting, with which tools, hosted where?</p><p class="ans">One template, filled in an Excel form or the web page; output as PDF with bookmarks, or Word with native equations for editing. Knowledge base in Git (Azure DevOps or GitHub), calculator on SharePoint or Azure Static Web Apps, checks in CI.</p></div>
+      <div class="start qs"><span class="label">People</span><p>How many humans, and where?</p><p class="ans">A part-time lead and one or two developers; one gatekeeper per code part (five to eight engineers, a few hours a month); IT for hosting. Everyone else uses, flags and answers questions.</p></div>
+      <div class="start qs"><span class="label">Distilled files</span><p>Do we keep the files we distilled, or throw them away?</p><p class="ans">Keep a manifest (hash, link, date, what was extracted) plus the extracted statements and benchmark numbers, which are small. Not the files: they stay where they live, and the hash proves what was used.</p></div>
+      <div class="start qs"><span class="label">Sharing</span><p>How do we share it with everyone easily?</p><p class="ans">The calculator is one HTML file: a Teams tab or SharePoint page. Excel calculators and reports travel as files; a Python package on an internal feed; tool definitions for Copilot.</p></div>
+      <div class="start qs"><span class="label">Access and curation</span><p>Curate by hand, open ProjectWise and SharePoint safely, or just dump logic in a folder? Access and QA are a nightmare.</p><p class="ans">Don't curate by hand. A drop folder for finished calculations plus read-only access to selected SharePoint sites; ProjectWise exports per project when needed. QA by arithmetic, through benchmarks, not by reading files.</p></div>
+      <div class="start qs"><span class="label">Parser reliability</span><p>How reliable are the parsers, and do they need improving?</p><p class="ans">Measured per file: every formula is re-run against the value the file shows. Weak spots are VBA, Goal Seek, lookups, iteration and scans; they are flagged, not guessed, and improved as volume shows what matters.</p></div>
+      <div class="start qs"><span class="label">Sampling</span><p>How much sampling is needed? Millions of variations per file? How is it tracked?</p><p class="ans">Not millions: 200 random points per object against an independent library, plus every value the sources show. Next step: sample both sides of every min, max and condition on purpose. Counts are stored per object and re-run by each health check.</p></div>
+      <div class="start qs"><span class="label">Who updates</span><p>Who updates the blocks: a responsible bottleneck, or AI keeping everything healthy?</p><p class="ans">The AI writes and fixes; every change is a proposal with its evidence (benchmarks re-run, differences explained); a topic gatekeeper approves. The consensus and confidence rules are public, like an AI-written encyclopedia with visible rules and history.</p></div>
+      <div class="start qs"><span class="label">Software-agnostic</span><p>What do software-agnostic specifications buy us, and do they lose information?</p><p class="ans">The specification outlives the software: if Python is replaced, the generators change, not the knowledge. It holds everything the MVP needs; iteration, tables and plots need extensions to the format.</p></div>
     </div>
   </section>
 

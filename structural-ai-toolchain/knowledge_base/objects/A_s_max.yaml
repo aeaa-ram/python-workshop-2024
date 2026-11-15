@@ -1,0 +1,17 @@
+id: A_s_max
+name: Maximum area of tension or compression reinforcement outside lap locations
+formula: 0.04 * A_c
+params:
+- A_c
+var: A_s_max
+symbol: A_{s,max}
+unit: mm²
+code: EN 1992-1-1
+topic: '9.2'
+topic_path:
+- 9 Detailing of members and particular rules
+- 9.2 Beams
+clause: 9.2.1.1(3)
+basis: code
+ndp: true
+version: 34bd70409327

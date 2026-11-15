@@ -1,0 +1,16 @@
+id: ct_int_b3
+name: Class 3 limit of c/t, internal part in bending
+formula: 124 * eps_y
+params:
+- eps_y
+var: ct_int_b3
+symbol: (c/t)_{lim,3}
+unit: '-'
+code: EN 1993-1-1
+topic: '5.5'
+topic_path:
+- 5 Structural analysis
+- 5.5 Classification of cross-sections
+clause: 5.5.2, Table 5.2
+basis: code
+version: ecb500ef2980

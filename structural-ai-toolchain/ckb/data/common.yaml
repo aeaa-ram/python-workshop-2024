@@ -35,6 +35,14 @@ references:
     text: "NA to BS EN 1992-1-1:2004+A1:2014. UK National Annex to Eurocode 2 Part 1-1."
   - id: DG-EC4
     text: "Johnson, R.P. Designers' Guide to Eurocode 4: Design of composite steel and concrete structures, EN 1994-1-1. 2nd edition, ICE Publishing, 2012."
+  - id: EN1993-1-1
+    text: "EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules and rules for buildings."
+  - id: EN1993-1-5
+    text: "EN 1993-1-5:2006 + AC:2009. Eurocode 3: Design of steel structures. Part 1-5: Plated structural elements."
+  - id: EN1993-1-8
+    text: "EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints."
+  - id: DG-EC3
+    text: "Gardner, L. and Nethercot, D.A. Designers' Guide to Eurocode 3: Design of steel buildings, EN 1993-1-1, -1-3 and -1-8. 2nd edition, ICE Publishing, 2011."
 
 quantities:
   # ---- material grades -------------------------------------------------------
@@ -75,10 +83,10 @@ quantities:
     words: [structural steel yield strength, yield strength of structural steel, steel grade]
   - id: f_u
     symbol: "f_{u}"
-    name: Specified ultimate tensile strength of the stud material
+    name: Ultimate tensile strength of the steel (plate, section or stud material)
     kind: input
     unit: MPa
-    range: [400, 500]
+    range: [300, 700]
     example: 450
     aliases: [fu, f_u]
     words: [ultimate tensile strength]
@@ -297,3 +305,69 @@ quantities:
     example: 2.0
     aliases: [φ_c, φc, phi_c, "φ(∞,t0)", φ, phi_inf]
     words: [creep factor, creep coefficient]
+
+  # ---- added with the wider registry (EN 1992-1-1, EN 1993-1-1, EN 1993-1-8, EN 1994-1-1) ----
+  # concrete members
+  - {id: c_min_dur, symbol: "c_{min,dur}", name: Minimum cover for the exposure class (durability), kind: input, unit: mm, range: [10, 65], example: 25, aliases: [cmin.dur, c_min.dur, cmindur]}
+  - {id: b_1, symbol: "b_{1}", name: Half the clear distance to the next web (or the flange outstand) on side 1, kind: input, unit: mm, range: [0, 6000], example: 1500, aliases: [b1, b_1]}
+  - {id: b_2, symbol: "b_{2}", name: Half the clear distance to the next web (or the flange outstand) on side 2, kind: input, unit: mm, range: [0, 6000], example: 1500, aliases: [b2, b_2]}
+  - {id: b_fl, symbol: "b", name: Total width of the flange, kind: input, unit: mm, range: [300, 12000], example: 3300, aliases: [b_fl, bfl, b_flange]}
+  - {id: l_0_b, symbol: "l_{0}", name: Distance between points of zero moment (effective flange width), kind: input, unit: m, range: [1, 60], example: 8, aliases: [l0.beff], words: [distance between points of zero moment]}
+  - {id: l_0, symbol: "l_{0}", name: Effective length of the column, kind: input, unit: m, range: [1, 30], example: 3.5, aliases: [l0, l_0, l_eff], words: [effective length], context: ["5.8"]}
+  - {id: I_conc, symbol: "I_{c}", name: Second moment of area of the concrete section, kind: input, unit: mm⁴, range: [1.0e+7, 1.0e+12], example: 2.13e+9, aliases: [I_conc]}
+  - {id: A_tor, symbol: "A", name: Area within the outer circumference of the section (torsion; hollow areas included), kind: input, unit: mm², range: [10000, 5000000], example: 150000, aliases: [A_tor]}
+  - {id: u_out, symbol: "u", name: Outer circumference of the cross-section, kind: input, unit: mm, range: [400, 20000], example: 1600, aliases: [u_out]}
+  - {id: T_Ed, symbol: "T_{Ed}", name: Design torsional moment, kind: input, unit: kNm, range: [0.1, 20000], example: 30, aliases: [TEd, T_Ed]}
+  - {id: c_1, symbol: "c_{1}", name: Column dimension parallel to the eccentricity (punching), kind: input, unit: mm, range: [150, 2000], example: 400, aliases: [c1, c_1]}
+  - {id: c_2, symbol: "c_{2}", name: Column dimension perpendicular to the eccentricity (punching), kind: input, unit: mm, range: [150, 2000], example: 400, aliases: [c2, c_2]}
+  - {id: d_y, symbol: "d_{y}", name: Effective depth in the y direction, kind: input, unit: mm, range: [100, 2900], example: 260, aliases: [dy, d_y]}
+  - {id: d_z, symbol: "d_{z}", name: Effective depth in the z direction, kind: input, unit: mm, range: [100, 2900], example: 240, aliases: [dz, d_z]}
+  - {id: rho_ly, symbol: "ρ_{ly}", name: Bonded tension reinforcement ratio in the y direction (over the slab width c + 3d each side), kind: input, unit: "-", range: [0.001, 0.04], example: 0.008, aliases: [ρly, rho_ly]}
+  - {id: rho_lz, symbol: "ρ_{lz}", name: Bonded tension reinforcement ratio in the z direction, kind: input, unit: "-", range: [0.001, 0.04], example: 0.006, aliases: [ρlz, rho_lz]}
+  - {id: s_r, symbol: "s_{r}", name: Radial spacing of the perimeters of punching shear reinforcement, kind: input, unit: mm, range: [50, 400], example: 150, aliases: [sr, s_r]}
+  - {id: A_sw_p, symbol: "A_{sw}", name: Area of punching shear reinforcement in one perimeter around the column, kind: input, unit: mm², range: [50, 10000], example: 900, aliases: [A_sw_p]}
+  - {id: A_ct, symbol: "A_{ct}", name: Area of concrete in the tensile zone before the first crack, kind: input, unit: mm², range: [5000, 5000000], example: 75000, aliases: [Act, A_ct]}
+  - {id: b_t, symbol: "b_{t}", name: Mean width of the tension zone, kind: input, unit: mm, range: [100, 3000], example: 300, aliases: [bt, b_t]}
+  - {id: sigma_s_cr, symbol: "σ_{s}", name: Stress permitted in the reinforcement immediately after cracking, kind: input, unit: MPa, range: [100, 600], example: 500, aliases: [σs.cr, sigma_s_cr]}
+  - {id: rho_req, symbol: "ρ", name: Required tension reinforcement ratio at mid-span (at the support for cantilevers), kind: input, unit: "-", range: [0.0005, 0.04], example: 0.005, aliases: [rho_req]}
+  - {id: rho_c, symbol: "ρ'", name: Required compression reinforcement ratio at mid-span, kind: input, unit: "-", range: [0, 0.04], example: 0, aliases: [rho_c]}
+  - {id: sigma_sd, symbol: "σ_{sd}", name: Design stress of the bar where the anchorage is measured from, kind: input, unit: MPa, range: [50, 500], example: 435, aliases: [σsd, sigma_sd]}
+  - {id: rho_1_lap, symbol: "ρ_{1}", name: Percentage of reinforcement lapped within 0.65 l_0 of the centre of the lap considered, kind: input, unit: "%", range: [0, 100], example: 50, aliases: [rho_1_lap]}
+  # steel members
+  - {id: A_sec, symbol: "A", name: Cross-sectional area of the steel section, kind: input, unit: cm², range: [1, 2000], example: 53.8, aliases: [A_sec, A_gross], words: [cross-sectional area of the steel section]}
+  - {id: A_net, symbol: "A_{net}", name: Net cross-sectional area at holes for fasteners, kind: input, unit: cm², range: [1, 2000], example: 48, aliases: [Anet, A_net]}
+  - {id: A_v, symbol: "A_{v}", name: Shear area of the steel section, kind: input, unit: cm², range: [1, 1000], example: 25.7, aliases: [Av, A_v], words: [shear area]}
+  - {id: I_sec, symbol: "I", name: Second moment of area of the steel section about the buckling axis, kind: input, unit: cm⁴, range: [10, 5000000], example: 8356, aliases: [I_sec]}
+  - {id: W_pl, symbol: "W_{pl}", name: Plastic section modulus, kind: input, unit: cm³, range: [1, 100000], example: 628, aliases: [Wpl, W_pl, Wpl.y, W_pl.y]}
+  - {id: W_el, symbol: "W_{el,min}", name: Elastic section modulus (the smaller value), kind: input, unit: cm³, range: [1, 100000], example: 557, aliases: [Wel, W_el, Wel.min, Wel.y]}
+  - {id: W_y, symbol: "W_{y}", name: Section modulus for lateral-torsional buckling (W_pl,y for class 1 and 2, W_el,y for class 3), kind: input, unit: cm³, range: [1, 100000], example: 628, aliases: [W_y, Wy]}
+  - {id: L_cr, symbol: "L_{cr}", name: Buckling length in the plane considered, kind: input, unit: m, range: [0.5, 40], example: 5, aliases: [Lcr, L_cr], words: [buckling length]}
+  - {id: M_cr, symbol: "M_{cr}", name: Elastic critical moment for lateral-torsional buckling, kind: input, unit: kNm, range: [1, 100000], example: 300, aliases: [Mcr, M_cr], words: [elastic critical moment]}
+  - {id: h_w, symbol: "h_{w}", name: Depth of the web between the flanges, kind: input, unit: mm, range: [50, 5000], example: 278.6, aliases: [hw, h_w]}
+  - {id: t_w, symbol: "t_{w}", name: Web thickness, kind: input, unit: mm, range: [3, 80], example: 7.1, aliases: [tw, t_w]}
+  # bolts and welds
+  - {id: d_bolt, symbol: "d", name: Nominal diameter of the bolt, kind: input, unit: mm, range: [8, 64], example: 20, aliases: [d_bolt]}
+  - {id: d_0, symbol: "d_{0}", name: Hole diameter, kind: input, unit: mm, range: [9, 70], example: 22, aliases: [d0, d_0]}
+  - {id: A_bolt, symbol: "A", name: Bolt area in the shear plane (A_s if the plane passes through the thread, else the gross area), kind: input, unit: mm², range: [50, 3000], example: 245, aliases: [A_bolt]}
+  - {id: A_s_bolt, symbol: "A_{s}", name: Tensile stress area of the bolt, kind: input, unit: mm², range: [50, 3000], example: 245, aliases: [A_s_bolt, As.bolt]}
+  - {id: f_ub, symbol: "f_{ub}", name: Ultimate tensile strength of the bolt, kind: input, unit: MPa, range: [400, 1000], example: 800, aliases: [fub, f_ub]}
+  - {id: e_1, symbol: "e_{1}", name: End distance in the direction of load transfer, kind: input, unit: mm, range: [10, 300], example: 50, aliases: [e1, e_1]}
+  - {id: e_2, symbol: "e_{2}", name: Edge distance at right angles to the load, kind: input, unit: mm, range: [10, 300], example: 40, aliases: [e2, e_2]}
+  - {id: p_1, symbol: "p_{1}", name: Spacing of bolts in the direction of load transfer, kind: input, unit: mm, range: [20, 500], example: 70, aliases: [p1, p_1]}
+  - {id: p_2, symbol: "p_{2}", name: Spacing of bolt lines at right angles to the load, kind: input, unit: mm, range: [20, 500], example: 70, aliases: [p2, p_2]}
+  - {id: t_plate, symbol: "t", name: Thickness of the connected part, kind: input, unit: mm, range: [3, 100], example: 10, aliases: [t_plate, tp, t_p]}
+  - {id: d_m, symbol: "d_{m}", name: Mean of the across-points and across-flats dimensions of the bolt head or nut, kind: input, unit: mm, range: [10, 120], example: 32.3, aliases: [dm, d_m]}
+  - {id: F_v_Ed, symbol: "F_{v,Ed}", name: Design shear force per bolt, kind: input, unit: kN, range: [0.1, 2000], example: 60, aliases: [FvEd, "Fv,Ed", F_v.Ed]}
+  - {id: F_t_Ed, symbol: "F_{t,Ed}", name: Design tensile force per bolt, kind: input, unit: kN, range: [0, 2000], example: 50, aliases: [FtEd, "Ft,Ed", F_t.Ed]}
+  - {id: a_weld, symbol: "a", name: Effective throat thickness of the fillet weld, kind: input, unit: mm, range: [3, 30], example: 5, aliases: [a_weld, a_w]}
+  - {id: F_w_Ed, symbol: "F_{w,Ed}", name: Design force per unit length of the weld, kind: input, unit: kN/m, range: [1, 5000], example: 500, aliases: [FwEd, "Fw,Ed"]}
+  # composite members
+  - {id: b_0, symbol: "b_{0}", name: Distance between the centres of the outstand shear connectors, kind: input, unit: mm, range: [0, 1000], example: 100, aliases: [b0, b_0]}
+  - {id: L_e, symbol: "L_{e}", name: Equivalent span (distance between points of zero bending moment), kind: input, unit: m, range: [2, 60], example: 12, aliases: [Le, L_e], words: [equivalent span]}
+  - {id: h_a, symbol: "h_{a}", name: Depth of the steel section, kind: input, unit: mm, range: [100, 2000], example: 450, aliases: [ha, h_a]}
+  - {id: h_c_fl, symbol: "h_{c}", name: Thickness of the concrete flange (above any sheeting), kind: input, unit: mm, range: [50, 500], example: 150, aliases: [h_c_fl]}
+  - {id: h_p, symbol: "h_{p}", name: Overall depth of the profiled steel sheeting, kind: input, unit: mm, range: [20, 120], example: 60, aliases: [hp, h_p]}
+  - {id: b_0_rib, symbol: "b_{0}", name: Width of a concrete-filled rib (mean width of a trapezoidal rib), kind: input, unit: mm, range: [30, 300], example: 150, aliases: [b_0_rib]}
+  - {id: n_r, symbol: "n_{r}", name: Number of stud connectors in one rib at a beam intersection, kind: input, unit: "-", range: [1, 3], example: 1, aliases: [nr, n_r]}
+  - {id: I_a, symbol: "I_{a}", name: Second moment of area of the structural steel section, kind: input, unit: cm⁴, range: [100, 5000000], example: 23130, aliases: [Ia, I_a]}
+  - {id: I_s, symbol: "I_{s}", name: Second moment of area of the reinforcement, kind: input, unit: cm⁴, range: [0, 1000000], example: 1000, aliases: [Is, I_s]}

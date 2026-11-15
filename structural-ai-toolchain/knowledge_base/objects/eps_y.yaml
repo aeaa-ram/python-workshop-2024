@@ -1,0 +1,16 @@
+id: eps_y
+name: Material factor for the classification of cross-sections
+formula: sqrt(235 / f_y)
+params:
+- f_y
+var: eps_y
+symbol: ε
+unit: '-'
+code: EN 1993-1-1
+topic: '5.5'
+topic_path:
+- 5 Structural analysis
+- 5.5 Classification of cross-sections
+clause: 5.5.2, Table 5.2
+basis: code
+version: 422b3c56d0a7

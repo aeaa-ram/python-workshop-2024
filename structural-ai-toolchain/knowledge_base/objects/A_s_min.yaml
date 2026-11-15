@@ -1,0 +1,21 @@
+id: A_s_min
+name: Minimum area of longitudinal tension reinforcement in beams
+formula: max(0.26 * f_ctm / f_yk * b_t * d, 0.0013 * b_t * d)
+params:
+- f_ctm
+- f_yk
+- b_t
+- d
+var: A_s_min
+symbol: A_{s,min}
+unit: mm²
+code: EN 1992-1-1
+topic: '9.2'
+topic_path:
+- 9 Detailing of members and particular rules
+- 9.2 Beams
+clause: 9.2.1.1(1)
+eq: (9.1N)
+basis: code
+ndp: true
+version: 92bb66569379

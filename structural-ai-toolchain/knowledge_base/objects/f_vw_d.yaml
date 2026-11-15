@@ -1,0 +1,19 @@
+id: f_vw_d
+name: Design shear strength of a fillet weld
+formula: f_u / sqrt(3) / (beta_w * gamma_M2)
+params:
+- f_u
+- beta_w
+- gamma_M2
+var: f_vw_d
+symbol: f_{vw,d}
+unit: MPa
+code: EN 1993-1-8
+topic: '4.5'
+topic_path:
+- 4 Welded connections
+- 4.5 Design resistance of fillet welds
+clause: 4.5.3.3(3)
+eq: (4.4)
+basis: code
+version: 87380314f729

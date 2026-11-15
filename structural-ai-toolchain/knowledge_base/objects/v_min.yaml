@@ -17,4 +17,11 @@ clause: 6.2.2(1)
 eq: (6.3N)
 basis: code
 ndp: true
+refs:
+- code: EN 1992-1-1
+  clause: 6.4.4(1)
+  eq: ''
+  topic: '6.4'
+  symbol: v_min
+  how: same expression with k of size factor for shear → size factor for punching
 version: d9d868be83be

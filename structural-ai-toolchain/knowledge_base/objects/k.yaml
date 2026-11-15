@@ -13,6 +13,13 @@ topic_path:
 - 6.2.2 Members not requiring design shear reinforcement
 clause: 6.2.2(1)
 basis: code
+refs:
+- code: EN 1992-1-1
+  clause: 6.4.4(1)
+  eq: ''
+  topic: '6.4'
+  symbol: k
+  how: same expression with d → d_eff
 background:
 - kind: pitfall
   text: 'The expression is empirical and not dimensionally consistent: d must be in millimetres. k reaches its cap

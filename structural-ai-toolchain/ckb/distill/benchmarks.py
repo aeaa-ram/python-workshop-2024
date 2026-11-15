@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from .. import expr as X
 from ..ir import Statement, close
 from .consolidate import Consolidation, Variant
+from .investigate import SCALE, apply_answer, investigate, question_id
 from .decompose import Decomposition, Instance, canonical_value
 from .taxonomy import Taxonomy
 
@@ -39,6 +40,9 @@ class Benchmark:
     inputs: dict = field(default_factory=dict)
     assumed: dict = field(default_factory=dict)
     per_width: bool = False
+    cause: str = ""                    # why it differs, when investigated: reading | width | unit | value | unexplained
+    lesson: str = ""                   # general context the investigation found
+    question: dict | None = None       # for an engineer, when nothing explains it
 
     def to_json(self) -> dict:
         return {k: v for k, v in self.__dict__.items() if v not in ("", None, {}, 0.0) or k in ("expected", "got")}
@@ -92,8 +96,13 @@ class Context:
                 continue
             if self.sequential and not before:
                 continue
-            # the same calculation run first, then the surest match, then the nearest
-            key = (0 if same or self.sequential else 1, -round(score, 1), abs(i - here))
+            # the same calculation run first: same column or sequence, then the same case and the
+            # same section (one spreadsheet column can hold two calculations), then the surest
+            # match, then the nearest
+            same_case = st.case == near.case
+            same_section = list(st.section or []) == list(near.section or [])
+            key = (0 if same or self.sequential else 1, 0 if same_case else 1, 0 if same_section else 1,
+                   -round(score, 1), abs(i - here))
             if best_key is None or key < best_key:
                 best, best_key = st, key
         return best
@@ -167,11 +176,8 @@ def _inverse(pid: str, env: dict, tax: Taxonomy):
     return None
 
 
-SCALE_MISMATCH = 20.0     # a result this far from the source's is an input mix-up, not a code difference
-
-
 def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Context, tax: Taxonomy,
-                  formulas: dict, typical: dict, name) -> Benchmark:
+                  formulas: dict, typical: dict, name, answers: dict | None = None, llm=None) -> Benchmark:
     from .baseline import effect, explain
     b = Benchmark(inst.concept, inst.doc, "formula", inst.loc, inst.case, inst.name, inst.value)
     b.per_width = inst.per_width
@@ -246,14 +252,6 @@ def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Co
         b.status = "agree"
         b.detail = "; ".join(n for n in notes if n)
         return b
-    ratio = abs(b.got / inst.value) if isinstance(b.got, (int, float)) and isinstance(inst.value, (int, float)) \
-        and inst.value and b.got else 1.0
-    if ratio > SCALE_MISMATCH or ratio < 1 / SCALE_MISMATCH:
-        # no code simplification changes a result this much: the values taken from the source
-        # for the inputs are on different scales (another unit, a full width against a strip)
-        b.detail = (f"not comparable: the inputs found in the source are on different scales "
-                    f"(the results differ by a factor of {max(ratio, 1 / ratio):.0f})")
-        return b
     b.status = "deviation"
     reasons = []
     for d in variant.diffs:
@@ -281,6 +279,24 @@ def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Co
     b.detail = "; ".join(reasons) or "different result"
     if eff:
         b.detail += f": {eff}"
+    # a difference nothing explains, or one far larger than any simplification makes: investigate
+    ratio = abs(b.got / inst.value) if isinstance(b.got, (int, float)) and isinstance(inst.value, (int, float)) \
+        and inst.value and b.got else 1.0
+    if not reasons or ratio > SCALE or ratio < 1 / SCALE:
+        f = investigate(b, reference, ctx, tax, concept, st, name, llm)
+        b.cause, b.lesson, b.question = f.cause, f.lesson, f.question
+        b.detail = f.text
+        if f.status:
+            b.status = f.status
+        if f.got is not None:
+            b.got = f.got
+        if f.inputs:
+            b.inputs = f.inputs
+        if f.status == "agree":
+            b.detail = f"agrees once explained: {f.text}"
+    if answers and question_id(b.concept, b.doc, b.loc) in answers:
+        apply_answer(b, answers[question_id(b.concept, b.doc, b.loc)])
+        b.question = None
     return b
 
 
@@ -362,7 +378,7 @@ def bench_printed(inst: Instance, ctx: Context, tax: Taxonomy, formulas: dict, n
 
 
 def run(consolidations: dict[str, Consolidation], decs: list[Decomposition], tax: Taxonomy,
-        observed: dict, name) -> dict[str, list[Benchmark]]:
+        observed: dict, name, answers: dict | None = None, llm=None) -> dict[str, list[Benchmark]]:
     formulas = {c.id: c.tree for c in tax.concepts.values() if c.formula}
     formulas.update({cid: c.unified for cid, c in consolidations.items() if c.unified is not None})
     neutral = {cid: c.neutral for cid, c in consolidations.items()}
@@ -381,7 +397,7 @@ def run(consolidations: dict[str, Consolidation], decs: list[Decomposition], tax
         rows = out.setdefault(cid, [])
         for v in cons.merged:
             for inst in v.instances:
-                rows.append(bench_formula(inst, v, cons, ctx[inst.doc], tax, formulas, typical, name))
+                rows.append(bench_formula(inst, v, cons, ctx[inst.doc], tax, formulas, typical, name, answers, llm))
     for dec in decs:
         for inst in dec.instances:
             if inst.kind == "printed" and inst.concept in formulas:

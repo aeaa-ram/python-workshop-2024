@@ -1,0 +1,31 @@
+id: M_pl_Rd
+name: Design plastic moment resistance (class 1 and 2)
+formula: W_pl * f_y / gamma_M0
+params:
+- W_pl
+- f_y
+- gamma_M0
+var: M_pl_Rd
+symbol: M_{pl,Rd}
+unit: kNm
+code: EN 1993-1-1
+topic: 6.2.5
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.5 Bending moment
+clause: 6.2.5(2)
+eq: (6.13)
+basis: code
+sense: resistance
+check: M_Ed
+background:
+- kind: limitation
+  text: Class 1 and 2 cross-sections only; class 3 uses W_el,min (6.14) and class 4 W_eff,min (6.15). High shear
+    reduces it (6.2.8), and holes in the tension flange may need 6.2.5(4).
+  refs:
+  - id: EN1993-1-1
+    at: 6.2.5
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 252b7226be4a

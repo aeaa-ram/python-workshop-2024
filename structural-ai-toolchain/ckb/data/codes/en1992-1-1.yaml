@@ -32,16 +32,30 @@ topics:
   - {id: "3",     title: "Materials", keywords: [material, concrete properties]}
   - {id: "3.1",   title: "Concrete", keywords: [concrete]}
   - {id: "3.2",   title: "Reinforcing steel", keywords: [reinforcing steel, reinforcement steel]}
+  - {id: "4",     title: "Durability and cover to reinforcement", keywords: [durability, cover, concrete cover]}
+  - {id: "4.4",   title: "Methods of verification (cover)", keywords: [nominal cover, minimum cover]}
+  - {id: "5",     title: "Structural analysis", keywords: [analysis]}
+  - {id: "5.3",   title: "Idealisation of the structure", keywords: [effective width, flange width, t-beam]}
+  - {id: "5.8",   title: "Analysis of second order effects with axial load", keywords: [slenderness, second order, column, buckling]}
   - {id: "6",     title: "Ultimate limit states (ULS)", keywords: [uls, ultimate]}
   - {id: "6.1",   title: "Bending with or without axial force", keywords: [bending, moment, flexur]}
   - {id: "6.2",   title: "Shear", keywords: [shear]}
   - {id: "6.2.2", title: "Members not requiring design shear reinforcement", keywords: [without shear reinforcement, unreinforced for shear, without links]}
   - {id: "6.2.3", title: "Members requiring design shear reinforcement", keywords: [shear link, reinforced for shear, shear reinforcement, stirrup]}
+  - {id: "6.3",   title: "Torsion", keywords: [torsion, torsional]}
+  - {id: "6.4",   title: "Punching", keywords: [punching, punching shear, flat slab, column head]}
   - {id: "7",     title: "Serviceability limit states (SLS)", keywords: [sls, serviceability]}
   - {id: "7.2",   title: "Stress limitation", keywords: [stress limit, compressive stress, tensile stress]}
   - {id: "7.3",   title: "Crack control", keywords: [crack]}
+  - {id: "7.3.2", title: "Minimum reinforcement areas", keywords: [minimum reinforcement, crack control]}
   - {id: "7.3.4", title: "Calculation of crack widths", keywords: [crack width, crack-width]}
   - {id: "7.4",   title: "Deflection control", keywords: [deflection]}
+  - {id: "7.4.2", title: "Cases where calculations may be omitted", keywords: [span depth, span/depth, slenderness, deflection]}
+  - {id: "8",     title: "Detailing of reinforcement - general", keywords: [detailing]}
+  - {id: "8.4",   title: "Anchorage of longitudinal reinforcement", keywords: [anchorage, bond, anchorage length]}
+  - {id: "8.7",   title: "Laps and mechanical couplers", keywords: [lap, lap length, splice]}
+  - {id: "9",     title: "Detailing of members and particular rules", keywords: [detailing]}
+  - {id: "9.2",   title: "Beams", keywords: [beam, minimum reinforcement, maximum reinforcement, links]}
 
 quantities:
   # ---- 2.4 partial factors ----------------------------------------------------------
@@ -839,3 +853,792 @@ quantities:
     formula: E_cm / (1 + phi_creep)
     aliases: [Ec.eff, "Ec,eff", Eceff, E_c.eff, E_c.long, Ec.long, Eclong]
     words: [effective modulus, long e-modulus, long term e-modulus, long-term modulus]
+
+  # =================================================================================================
+  # Added for a fuller baseline.  Written from the code, not yet seen in a source and not yet
+  # compared with an independent implementation: they start as "not yet checked".
+  # =================================================================================================
+  # ---- 3.1 materials ----
+  - id: f_ctk_095
+    symbol: "f_{ctk,0.95}"
+    name: Characteristic axial tensile strength of concrete (95 % fractile)
+    topic: "3.1"
+    clause: "3.1.2, Table 3.1"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [1.5, 7.0]
+    formula: 1.3 * f_ctm
+    aliases: [fctk0.95, fctk.0.95, "fctk,0.95"]
+
+  # ---- 4.4.1 cover ----
+  - id: dc_dev
+    symbol: "Δc_{dev}"
+    name: Allowance in design for deviation (cover)
+    topic: "4.4"
+    clause: "4.4.1.3(1)"
+    kind: coefficient
+    ndp: true
+    value: 10
+    unit: mm
+    range: [0, 15]
+    aliases: [Δcdev, dc_dev, delta_c_dev]
+  - id: c_min
+    symbol: "c_{min}"
+    name: Minimum cover
+    topic: "4.4"
+    clause: "4.4.1.2(2)"
+    eq: "(4.2)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [10, 80]
+    formula: max(phi_bar, c_min_dur, 10)
+    aliases: [cmin, c_min]
+    background:
+      - kind: limitation
+        text: "Written with the additive terms Δc_dur,γ, Δc_dur,st and Δc_dur,add at their recommended value 0. c_min,b is the bar diameter for separated bars; for bundled bars use the equivalent diameter, and increase it by 5 mm if the nominal aggregate size exceeds 32 mm."
+        refs: ["EN1992-1-1:4.4.1.2(3), Table 4.2"]
+  - id: cover_nom
+    symbol: "c_{nom}"
+    name: Nominal cover
+    topic: "4.4"
+    clause: "4.4.1.1(2)"
+    eq: "(4.1)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [15, 100]
+    formula: c_min + dc_dev
+    aliases: [cover_nom]
+    words: [nominal cover]
+    background:
+      - kind: pitfall
+        text: "The cover shown on drawings is c_nom; the minimum c_min is the value that must be achieved on site. Δc_dev may be reduced where quality control measures the cover (4.4.1.3(3))."
+        refs: ["EN1992-1-1:4.4.1.3"]
+
+  # ---- 5.3.2.1 effective flange width ----
+  - id: b_eff
+    symbol: "b_{eff}"
+    name: Effective width of a T-beam flange
+    topic: "5.3"
+    clause: "5.3.2.1(3)"
+    eq: "(5.7), (5.7a), (5.7b)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [100, 12000]
+    formula: min(min(0.2 * b_1 + 0.1 * l_0_b, 0.2 * l_0_b, b_1) + min(0.2 * b_2 + 0.1 * l_0_b, 0.2 * l_0_b, b_2) + b_w, b_fl)
+    aliases: [beff, b_eff]
+    words: [effective flange width, effective width]
+    background:
+      - kind: guidance
+        text: "l_0 is the distance between points of zero moment; Figure 5.2 gives it from the spans (0.85 l_1 in an end span, 0.70 l_2 in an internal span, 0.15 (l_1 + l_2) over a support)."
+        refs: ["EN1992-1-1:5.3.2.1(2), Figure 5.2"]
+
+  # ---- 5.8.3.1 slenderness ----
+  - id: i_c
+    symbol: "i"
+    name: Radius of gyration of the uncracked concrete section
+    topic: "5.8"
+    clause: "5.8.3.2(1)"
+    kind: derived
+    basis: definition
+    unit: mm
+    range: [20, 2000]
+    formula: sqrt(I_conc / A_c)
+    aliases: [i_c]
+  - id: lambda_c
+    symbol: "λ"
+    name: Slenderness ratio of the column
+    topic: "5.8"
+    clause: "5.8.3.2(1)"
+    eq: "(5.14)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [5, 200]
+    formula: l_0 / i_c
+    aliases: [lambda_c]
+    words: [slenderness ratio]
+  - id: n_rel
+    symbol: "n"
+    name: Relative normal force
+    topic: "5.8"
+    clause: "5.8.3.1(1)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.01, 1.5]
+    formula: N_Ed / (A_c * f_cd)
+    aliases: [n_rel]
+    words: [relative normal force, relative axial force]
+  - {id: A_phi, symbol: "A", name: "Factor A for creep (1/(1 + 0.2 φ_ef))", topic: "5.8", clause: "5.8.3.1(1)", kind: coefficient, value: 0.7, unit: "-", range: [0.5, 1.0], aliases: [A_phi]}
+  - {id: B_omega, symbol: "B", name: "Factor B for the mechanical reinforcement ratio (√(1 + 2ω))", topic: "5.8", clause: "5.8.3.1(1)", kind: coefficient, value: 1.1, unit: "-", range: [1.0, 2.0], aliases: [B_omega]}
+  - {id: C_rm, symbol: "C", name: "Factor C for the moment ratio (1.7 − r_m)", topic: "5.8", clause: "5.8.3.1(1)", kind: coefficient, value: 0.7, unit: "-", range: [0.7, 2.7], aliases: [C_rm]}
+  - id: lambda_lim
+    symbol: "λ_{lim}"
+    name: Slenderness below which second order effects may be ignored
+    topic: "5.8"
+    clause: "5.8.3.1(1)"
+    eq: "(5.13N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [5, 200]
+    formula: 20 * A_phi * B_omega * C_rm / sqrt(n_rel)
+    aliases: [λlim, lambda_lim]
+    words: [limiting slenderness]
+    background:
+      - kind: guidance
+        text: "Second order effects may be ignored if λ ≤ λ_lim. A = 0.7, B = 1.1 and C = 0.7 are the values to use when φ_ef, ω and r_m are not known; C = 0.7 is conservative for most members, but r_m = −1 (double curvature) gives C = 2.7."
+        refs: ["EN1992-1-1:5.8.3.1(1)"]
+      - kind: pitfall
+        text: "A low axial force gives a high λ_lim: (5.13N) is not meant for very small n, and some National Annexes set a minimum. Check the National Annex for (5.13N)."
+        refs: ["EN1992-1-1:5.8.3.1(1)", "DG-EC2:5.8"]
+
+  # ---- 6.2.3 shear reinforcement: inclined links, limits ----
+  - id: V_Rd_s_a
+    symbol: "V_{Rd,s}"
+    name: Shear resistance of inclined shear reinforcement
+    topic: "6.2.3"
+    clause: "6.2.3(4)"
+    eq: "(6.13)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 10000]
+    formula: A_sw / s * z_V * f_ywd * (cot(theta) + cot(alpha)) * sin(alpha)
+    sense: resistance
+    check: V_Ed
+    aliases: [VRd.s.a]
+    words: [inclined links, inclined shear reinforcement, bent-up bars]
+    background:
+      - kind: guidance
+        text: "With vertical links (α = 90°) this is expression (6.8)."
+        refs: ["EN1992-1-1:6.2.3(3), (6.8)"]
+  - id: V_Rd_max_a
+    symbol: "V_{Rd,max}"
+    name: Strut crushing resistance with inclined shear reinforcement
+    topic: "6.2.3"
+    clause: "6.2.3(4)"
+    eq: "(6.14)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [50, 50000]
+    formula: alpha_cw * b_w * z_V * nu_1 * f_cd * (cot(theta) + cot(alpha)) / (1 + cot(theta) ** 2)
+    sense: resistance
+    check: V_Ed
+    aliases: [VRd.max.a]
+  - id: A_sw_max
+    symbol: "A_{sw,max}"
+    name: Maximum effective area of vertical shear reinforcement (cot θ = 1)
+    topic: "6.2.3"
+    clause: "6.2.3(3)"
+    eq: "(6.12)"
+    kind: derived
+    basis: code
+    unit: mm²
+    range: [50, 20000]
+    formula: 0.5 * alpha_cw * nu_1 * f_cd * b_w * s / f_ywd
+    aliases: [Asw.max, A_sw_max]
+  - id: dF_td
+    symbol: "ΔF_{td}"
+    name: Additional tensile force in the longitudinal reinforcement due to shear
+    topic: "6.2.3"
+    clause: "6.2.3(7)"
+    eq: "(6.18)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [0, 10000]
+    formula: 0.5 * V_Ed * (cot(theta) - cot(alpha))
+    sense: effect
+    aliases: [ΔFtd, dF_td, delta_F_td]
+    words: [shift rule, additional tensile force]
+    background:
+      - kind: limitation
+        text: "M_Ed/z + ΔF_td need not exceed M_Ed,max/z, with M_Ed,max the maximum moment along the beam."
+        refs: ["EN1992-1-1:6.2.3(7)"]
+
+  # ---- 6.3 torsion ----
+  - id: t_ef_i
+    symbol: "t_{ef,i}"
+    name: Effective wall thickness for torsion
+    topic: "6.3"
+    clause: "6.3.2(1)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [20, 1000]
+    formula: A_tor / u_out
+    aliases: [tef, t_ef, tef.i, t_ef_i]
+    background:
+      - kind: limitation
+        text: "t_ef,i may not be less than twice the distance between the edge and the centre of the longitudinal reinforcement; for hollow sections it is not more than the real wall thickness."
+        refs: ["EN1992-1-1:6.3.2(1)"]
+  - id: A_k
+    symbol: "A_{k}"
+    name: Area enclosed by the centre-lines of the connecting walls (rectangular section)
+    topic: "6.3"
+    clause: "6.3.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: mm²
+    range: [1000, 5000000]
+    formula: (b - t_ef_i) * (h - t_ef_i)
+    aliases: [Ak, A_k]
+  - id: u_k
+    symbol: "u_{k}"
+    name: Perimeter of the area A_k (rectangular section)
+    topic: "6.3"
+    clause: "6.3.2(3)"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [200, 20000]
+    formula: 2 * ((b - t_ef_i) + (h - t_ef_i))
+    aliases: [uk, u_k]
+  - id: T_Rd_max
+    symbol: "T_{Rd,max}"
+    name: Design torsional resistance moment (strut crushing)
+    topic: "6.3"
+    clause: "6.3.2(4)"
+    eq: "(6.30)"
+    kind: derived
+    basis: code
+    unit: kNm
+    range: [1, 50000]
+    formula: 2 * nu * alpha_cw * f_cd * A_k * t_ef_i * sin(theta) * cos(theta)
+    sense: resistance
+    check: T_Ed
+    aliases: [TRd.max, "TRd,max", T_Rd_max]
+    words: [torsional resistance]
+  - id: A_sl_T
+    symbol: "ΣA_{sl}"
+    name: Longitudinal reinforcement required for torsion
+    topic: "6.3"
+    clause: "6.3.2(3)"
+    eq: "(6.28)"
+    kind: derived
+    basis: code
+    unit: mm²
+    range: [10, 50000]
+    formula: T_Ed * u_k * cot(theta) / (2 * A_k * f_yd)
+    sense: effect
+    aliases: [Asl.T, A_sl_T]
+  - id: asw_s_T
+    symbol: "A_{sw}/s"
+    name: Area of closed links per unit length required for torsion
+    topic: "6.3"
+    clause: "6.3.2(2)"
+    eq: "(6.26)"
+    kind: derived
+    basis: code
+    unit: mm²/m
+    range: [10, 20000]
+    formula: T_Ed / (2 * A_k * f_ywd * cot(theta))
+    sense: effect
+    aliases: [asw_s_T]
+  - id: util_TV
+    symbol: "η_{T+V}"
+    name: Utilisation of the concrete struts under torsion and shear
+    topic: "6.3"
+    clause: "6.3.2(4)"
+    eq: "(6.29)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0, 3]
+    formula: T_Ed / T_Rd_max + V_Ed / V_Rd_max
+    sense: effect
+    aliases: [util_TV]
+    checks:
+      - when: "util_TV <= 1"
+        text: "T_Ed/T_Rd,max + V_Ed/V_Rd,max ≤ 1.0"
+        clause: "6.3.2(4), (6.29)"
+
+  # ---- 6.4 punching (EN 1992-1-1:2004 + A1:2014) ----
+  - id: d_eff_p
+    symbol: "d_{eff}"
+    name: Effective depth of the slab for punching
+    topic: "6.4"
+    clause: "6.4.2(1)"
+    eq: "(6.32)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [100, 2000]
+    formula: (d_y + d_z) / 2
+    aliases: [d_eff_p]
+  - id: k_p
+    of: k
+    bind: {d: d_eff_p}
+    symbol: "k"
+    name: Size factor for punching
+    topic: "6.4"
+    clause: "6.4.4(1)"
+  - id: v_min_p
+    of: v_min
+    bind: {k: k_p}
+    symbol: "v_{min}"
+    name: Minimum punching shear strength
+    topic: "6.4"
+    clause: "6.4.4(1)"
+  - id: rho_l_p
+    symbol: "ρ_{l}"
+    name: Reinforcement ratio for punching
+    topic: "6.4"
+    clause: "6.4.4(1)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.001, 0.02]
+    formula: min(sqrt(rho_ly * rho_lz), 0.02)
+    aliases: [rho_l_p]
+  - id: k_1_p
+    symbol: "k_{1}"
+    name: Coefficient for the axial stress in punching
+    topic: "6.4"
+    clause: "6.4.4(1)"
+    kind: coefficient
+    ndp: true
+    value: 0.1
+    unit: "-"
+    range: [0.05, 0.15]
+    aliases: [k_1_p]
+    context: ["6.4"]
+  - id: beta_p
+    symbol: "β"
+    name: Factor for the eccentricity of the support reaction (punching)
+    topic: "6.4"
+    clause: "6.4.3(6)"
+    kind: coefficient
+    ndp: true
+    value: 1.15
+    choices: [{value: 1.15, label: internal column}, {value: 1.4, label: edge column}, {value: 1.5, label: corner column}]
+    unit: "-"
+    range: [1.0, 1.6]
+    aliases: [β_punch, beta_p]
+    background:
+      - kind: limitation
+        text: "These approximate values (Figure 6.21N) apply to braced structures where adjacent spans differ by no more than 25 %; otherwise β follows from (6.39) with the unbalanced moment."
+        refs: ["EN1992-1-1:6.4.3(6), Figure 6.21N"]
+  - id: u_1
+    symbol: "u_{1}"
+    name: Basic control perimeter at 2d from a rectangular internal column
+    topic: "6.4"
+    clause: "6.4.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [500, 30000]
+    formula: 2 * (c_1 + c_2) + 4 * pi() * d_eff_p
+    aliases: [u1, u_1]
+    words: [basic control perimeter, control perimeter]
+    background:
+      - kind: limitation
+        text: "An internal rectangular column without nearby openings; edge and corner columns, openings within 6d and column heads change the perimeter (Figures 6.14 to 6.15)."
+        refs: ["EN1992-1-1:6.4.2(3), (4), 6.4.4"]
+  - id: u_0
+    symbol: "u_{0}"
+    name: Perimeter of a rectangular internal column
+    topic: "6.4"
+    clause: "6.4.5(3)"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [400, 20000]
+    formula: 2 * (c_1 + c_2)
+    aliases: [u0, u_0]
+  - id: v_Ed_p
+    symbol: "v_{Ed}"
+    name: Punching shear stress at the basic control perimeter
+    topic: "6.4"
+    clause: "6.4.3(3)"
+    eq: "(6.38)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [0.01, 10]
+    formula: beta_p * V_Ed / (u_1 * d_eff_p)
+    sense: effect
+    aliases: [vEd, v_Ed]
+  - id: v_Ed_0
+    symbol: "v_{Ed,0}"
+    name: Punching shear stress at the column face
+    topic: "6.4"
+    clause: "6.4.5(3)"
+    eq: "(6.53)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [0.01, 20]
+    formula: beta_p * V_Ed / (u_0 * d_eff_p)
+    sense: effect
+    aliases: [vEd.0, v_Ed_0]
+  - id: v_Rd_c_p
+    symbol: "v_{Rd,c}"
+    name: Punching shear resistance of a slab without shear reinforcement
+    topic: "6.4"
+    clause: "6.4.4(1)"
+    eq: "(6.47)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [0.1, 3]
+    formula: max(C_Rd_c * k_p * (100 * rho_l_p * f_ck) ** (1 / 3) + k_1_p * sigma_cp, v_min_p + k_1_p * sigma_cp)
+    sense: resistance
+    aliases: [vRd.c, "vRd,c", v_Rd_c]
+    words: [punching shear resistance]
+    background:
+      - kind: guidance
+        text: "Verify v_Ed ≤ v_Rd,c at the basic control perimeter u_1, and v_Ed,0 ≤ v_Rd,max at the column face. Where v_Ed > v_Rd,c, provide punching shear reinforcement (6.52) and find the perimeter u_out,ef beyond which it is not needed (6.54)."
+        refs: ["EN1992-1-1:6.4.3(2), 6.4.5"]
+      - kind: pitfall
+        text: "k_1 = 0.1 in punching, not the 0.15 of 6.2.2; and ρ_l is the geometric mean of both directions over a width of the column plus 3d each side, limited to 0.02."
+        refs: ["EN1992-1-1:6.4.4(1)"]
+      - kind: history
+        text: "EN 1992-1-1:2004 limited the stress at the column face to 0.5 ν f_cd; amendment A1:2014 made v_Rd,max a Nationally Determined Parameter with the recommended value 0.4 ν f_cd. Check which edition a calculation follows."
+        refs: ["EN1992-1-1:6.4.5(3)"]
+  - id: v_Rd_max_p
+    symbol: "v_{Rd,max}"
+    name: Maximum punching shear stress at the column face
+    topic: "6.4"
+    clause: "6.4.5(3)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: MPa
+    range: [1, 15]
+    formula: 0.4 * nu * f_cd
+    sense: resistance
+    aliases: [vRd.max, "vRd,max", v_Rd_max]
+  - id: f_ywd_ef
+    symbol: "f_{ywd,ef}"
+    name: Effective design strength of the punching shear reinforcement
+    topic: "6.4"
+    clause: "6.4.5(1)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [250, 450]
+    formula: min(250 + 0.25 * d_eff_p, f_ywd)
+    aliases: [fywd.ef, f_ywd_ef]
+  - id: v_Rd_cs
+    symbol: "v_{Rd,cs}"
+    name: Punching shear resistance of a slab with shear reinforcement
+    topic: "6.4"
+    clause: "6.4.5(1)"
+    eq: "(6.52)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [0.1, 5]
+    formula: 0.75 * v_Rd_c_p + 1.5 * (d_eff_p / s_r) * A_sw_p * f_ywd_ef / (u_1 * d_eff_p) * sin(alpha)
+    sense: resistance
+    aliases: [vRd.cs, "vRd,cs", v_Rd_cs]
+  - id: u_out_ef
+    symbol: "u_{out,ef}"
+    name: Control perimeter beyond which punching shear reinforcement is not needed
+    topic: "6.4"
+    clause: "6.4.5(4)"
+    eq: "(6.54)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [500, 50000]
+    formula: beta_p * V_Ed / (v_Rd_c_p * d_eff_p)
+    aliases: [uout.ef, u_out_ef]
+    background:
+      - kind: guidance
+        text: "The outermost perimeter of shear reinforcement is placed at a distance not greater than k d (recommended k = 1.5) inside u_out,ef."
+        refs: ["EN1992-1-1:6.4.5(4)"]
+
+  # ---- 7.3.2 minimum reinforcement for crack control ----
+  - id: k_c
+    symbol: "k_{c}"
+    name: Coefficient for the stress distribution in the section before cracking
+    topic: "7.3.2"
+    clause: "7.3.2(2)"
+    kind: coefficient
+    value: 0.4
+    choices: [{value: 1.0, label: pure tension}, {value: 0.4, label: "bending of a rectangular section (no axial force)"}]
+    unit: "-"
+    range: [0.4, 1.0]
+    aliases: [kc, k_c]
+  - id: k_h_cr
+    symbol: "k"
+    name: Coefficient for non-uniform self-equilibrating stresses (minimum reinforcement)
+    topic: "7.3.2"
+    clause: "7.3.2(2)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [0.65, 1.0]
+    formula: 1.0 if h <= 300 else (0.65 if h >= 800 else 1.0 - 0.35 * (h - 300) / 500)
+    aliases: [k_h_cr]
+  - id: A_s_min_cr
+    symbol: "A_{s,min}"
+    name: Minimum reinforcement area for crack control
+    topic: "7.3.2"
+    clause: "7.3.2(2)"
+    eq: "(7.1)"
+    kind: derived
+    basis: code
+    unit: mm²
+    range: [10, 50000]
+    formula: k_c * k_h_cr * f_ct_eff * A_ct / sigma_s_cr
+    aliases: [As.min.cr, A_s_min_cr]
+    background:
+      - kind: guidance
+        text: "σ_s may be taken as f_yk, or lower to satisfy the crack width limit with Table 7.2N (bar size) or 7.3N (spacing). f_ct,eff = f_ctm, or lower if cracking is expected earlier than 28 days."
+        refs: ["EN1992-1-1:7.3.2(2)"]
+
+  # ---- 7.4.2 span/depth ratios ----
+  - id: K_sys
+    symbol: "K"
+    name: Factor for the structural system (span/depth ratio)
+    topic: "7.4.2"
+    clause: "7.4.2(2), Table 7.4N"
+    kind: coefficient
+    ndp: true
+    value: 1.0
+    choices: [{value: 1.0, label: simply supported}, {value: 1.3, label: end span of a continuous member}, {value: 1.5, label: interior span}, {value: 1.2, label: flat slab}, {value: 0.4, label: cantilever}]
+    unit: "-"
+    range: [0.4, 1.5]
+    aliases: [K_sys]
+  - id: rho_0
+    symbol: "ρ_{0}"
+    name: Reference reinforcement ratio
+    topic: "7.4.2"
+    clause: "7.4.2(2)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.003, 0.01]
+    formula: 0.001 * sqrt(f_ck)
+    aliases: [ρ0, rho_0]
+  - id: ld_lim
+    symbol: "l/d"
+    name: Limiting span/depth ratio
+    topic: "7.4.2"
+    clause: "7.4.2(2)"
+    eq: "(7.16a), (7.16b)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [5, 60]
+    formula: "K_sys * (11 + 1.5 * sqrt(f_ck) * rho_0 / rho_req + 3.2 * sqrt(f_ck) * (rho_0 / rho_req - 1) ** 1.5) if rho_req <= rho_0 else K_sys * (11 + 1.5 * sqrt(f_ck) * rho_0 / (rho_req - rho_c) + sqrt(f_ck) * sqrt(rho_c / rho_0) / 12)"
+    aliases: [ld_lim, "l/d"]
+    words: [span depth ratio, span/depth]
+    background:
+      - kind: limitation
+        text: "Assumes σ_s = 310 MPa at the SLS under the design loads: multiply by 310/σ_s (≈ 500/(f_yk A_s,req/A_s,prov)). For flanged sections with b/b_w > 3 multiply by 0.8; for spans over 7 m supporting partitions liable to damage multiply by 7/l_eff (flat slabs: 8.5/l_eff)."
+        refs: ["EN1992-1-1:7.4.2(2)"]
+
+  # ---- 8.4 anchorage, 8.7 laps ----
+  - id: eta_1
+    symbol: "η_{1}"
+    name: Coefficient for the bond conditions
+    topic: "8.4"
+    clause: "8.4.2(2)"
+    kind: coefficient
+    value: 1.0
+    choices: [{value: 1.0, label: good bond conditions}, {value: 0.7, label: all other cases}]
+    unit: "-"
+    range: [0.7, 1.0]
+    aliases: [η1, eta_1]
+  - id: eta_2
+    symbol: "η_{2}"
+    name: Coefficient for the bar diameter (bond)
+    topic: "8.4"
+    clause: "8.4.2(2)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.6, 1.0]
+    formula: 1.0 if phi_bar <= 32 else (132 - phi_bar) / 100
+    aliases: [η2, eta_2]
+  - id: f_bd
+    symbol: "f_{bd}"
+    name: Design value of the ultimate bond stress
+    topic: "8.4"
+    clause: "8.4.2(2)"
+    eq: "(8.2)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [1, 8]
+    formula: 2.25 * eta_1 * eta_2 * f_ctd
+    aliases: [fbd, f_bd]
+    words: [bond stress]
+    background:
+      - kind: pitfall
+        text: "For bond, f_ctd is limited to the value for C60/75 (8.4.2(2) and 3.1.6(2)), because of the brittleness of higher strength concrete; this object does not apply that cap."
+        refs: ["EN1992-1-1:8.4.2(2)"]
+  - id: l_b_rqd
+    symbol: "l_{b,rqd}"
+    name: Basic required anchorage length
+    topic: "8.4"
+    clause: "8.4.3(2)"
+    eq: "(8.3)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [50, 3000]
+    formula: phi_bar / 4 * sigma_sd / f_bd
+    aliases: [lb.rqd, l_b_rqd]
+  - id: alpha_anch
+    symbol: "α_{1}α_{2}α_{3}α_{4}α_{5}"
+    name: Product of the anchorage coefficients α1 to α5 (Table 8.2)
+    topic: "8.4"
+    clause: "8.4.4(1), Table 8.2"
+    kind: coefficient
+    value: 1.0
+    unit: "-"
+    range: [0.49, 1.0]
+    aliases: [alpha_anch]
+    background:
+      - kind: limitation
+        text: "α2 α3 α5 ≥ 0.7. Each coefficient follows from Table 8.2 (bar shape, cover, confinement by transverse reinforcement and by transverse pressure); 1.0 is always on the safe side."
+        refs: ["EN1992-1-1:8.4.4(1), (8.5)"]
+  - id: l_b_min
+    symbol: "l_{b,min}"
+    name: Minimum anchorage length in tension
+    topic: "8.4"
+    clause: "8.4.4(1)"
+    eq: "(8.6)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [100, 1500]
+    formula: max(0.3 * l_b_rqd, 10 * phi_bar, 100)
+    aliases: [lb.min, l_b_min]
+  - id: l_bd
+    symbol: "l_{bd}"
+    name: Design anchorage length
+    topic: "8.4"
+    clause: "8.4.4(1)"
+    eq: "(8.4)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [100, 4000]
+    formula: max(alpha_anch * l_b_rqd, l_b_min)
+    aliases: [lbd, l_bd]
+    words: [anchorage length, design anchorage length]
+  - id: alpha_6
+    symbol: "α_{6}"
+    name: Coefficient for the percentage of lapped bars
+    topic: "8.7"
+    clause: "8.7.3(1), Table 8.3"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [1.0, 1.5]
+    formula: min(max(sqrt(rho_1_lap / 0.25), 1.0), 1.5)
+    aliases: [α6, alpha_6]
+  - id: l_0_min
+    symbol: "l_{0,min}"
+    name: Minimum lap length
+    topic: "8.7"
+    clause: "8.7.3(1)"
+    eq: "(8.11)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [200, 2000]
+    formula: max(0.3 * alpha_6 * l_b_rqd, 15 * phi_bar, 200)
+    aliases: [l0.min, l_0_min]
+  - id: l_lap
+    symbol: "l_{0}"
+    name: Design lap length
+    topic: "8.7"
+    clause: "8.7.3(1)"
+    eq: "(8.10)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [200, 6000]
+    formula: max(alpha_anch * alpha_6 * l_b_rqd, l_0_min)
+    aliases: [l_lap, l0.lap]
+    words: [lap length]
+    background:
+      - kind: limitation
+        text: "Laps use α1, α2, α3 and α5 of Table 8.2 but not α4 (welded transverse bars); writing the full anchorage product here is only correct with α4 = 1."
+        refs: ["EN1992-1-1:8.7.3(1)"]
+
+  # ---- 9.2 beams ----
+  - id: A_s_min
+    symbol: "A_{s,min}"
+    name: Minimum area of longitudinal tension reinforcement in beams
+    topic: "9.2"
+    clause: "9.2.1.1(1)"
+    eq: "(9.1N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: mm²
+    range: [10, 50000]
+    formula: max(0.26 * f_ctm / f_yk * b_t * d, 0.0013 * b_t * d)
+    aliases: [As.min, A_s_min]
+    words: [minimum reinforcement]
+  - id: A_s_max
+    symbol: "A_{s,max}"
+    name: Maximum area of tension or compression reinforcement outside lap locations
+    topic: "9.2"
+    clause: "9.2.1.1(3)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: mm²
+    range: [100, 500000]
+    formula: 0.04 * A_c
+    aliases: [As.max, A_s_max]
+  - id: rho_w
+    symbol: "ρ_{w}"
+    name: Shear reinforcement ratio
+    topic: "9.2"
+    clause: "9.2.2(5)"
+    eq: "(9.4)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.0005, 0.02]
+    formula: A_sw / (s * b_w * sin(alpha))
+    aliases: [ρw, rho_w]
+    checks:
+      - when: "rho_w >= rho_w_min"
+        text: "ρ_w ≥ ρ_w,min"
+        clause: "9.2.2(5)"
+  - id: rho_w_min
+    symbol: "ρ_{w,min}"
+    name: Minimum shear reinforcement ratio
+    topic: "9.2"
+    clause: "9.2.2(5)"
+    eq: "(9.5N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: "-"
+    range: [0.0005, 0.003]
+    formula: 0.08 * sqrt(f_ck) / f_yk
+    aliases: [ρw.min, rho_w_min]
+  - id: s_l_max
+    symbol: "s_{l,max}"
+    name: Maximum longitudinal spacing of shear assemblies
+    topic: "9.2"
+    clause: "9.2.2(6)"
+    eq: "(9.6N)"
+    kind: derived
+    basis: code
+    ndp: true
+    unit: mm
+    range: [50, 2000]
+    formula: 0.75 * d * (1 + cot(alpha))
+    aliases: [sl.max, s_l_max]

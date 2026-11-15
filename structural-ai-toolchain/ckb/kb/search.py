@@ -48,7 +48,7 @@ def index(kb: KnowledgeBase, tax: Taxonomy | None = None) -> dict:
     ``name``: the object's name and symbol.  ``chapter``: titles and keywords of its
     chapter.  ``other``: clause, code and code title, words the registry lists.
     ``weak``: the design background.  ``keys``: symbol spellings.  ``rank``: 1 for
-    results checked against an action (V_Rd,c, w_k), which come before the
+    resistances and results checked against an action (V_Rd,c, w_k), which come before the
     intermediate quantities when the words fit both equally.
     """
     codes = {c["code"]: c for c in kb.codes}
@@ -68,7 +68,7 @@ def index(kb: KnowledgeBase, tax: Taxonomy | None = None) -> dict:
         other = ([o.clause, o.eq, o.code, code.get("title", "")] + list(c.words if c else [])
                  + [codes.get(r["code"], {}).get("title", "") + " " + r["code"] for r in o.refs])
         weak = [b.get("text", "") for b in o.background]
-        out[o.id] = {"keys": keys, "rank": 1 if o.check else 0,
+        out[o.id] = {"keys": keys, "rank": 1 if (o.check or o.sense == "resistance") else 0,
                      **{f: " ".join(dict.fromkeys(words(" ".join(t))))
                         for f, t in (("name", [o.name, o.text]), ("chapter", chapter), ("other", other),
                                      ("weak", weak))}}

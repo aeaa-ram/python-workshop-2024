@@ -1,0 +1,24 @@
+id: v_Rd_cs
+name: Punching shear resistance of a slab with shear reinforcement
+formula: 0.75 * v_Rd_c_p + 1.5 * d_eff_p / s_r * A_sw_p * f_ywd_ef / (u_1 * d_eff_p) * sin(alpha)
+params:
+- v_Rd_c_p
+- d_eff_p
+- s_r
+- A_sw_p
+- f_ywd_ef
+- u_1
+- alpha
+var: v_Rd_cs
+symbol: v_{Rd,cs}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(1)
+eq: (6.52)
+basis: code
+sense: resistance
+version: b396740c525a

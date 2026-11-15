@@ -20,4 +20,11 @@ clause: 6.2.2(1)
 eq: (6.2.b)
 basis: code
 sense: resistance
+background:
+- kind: practice
+  from: sources
+  about: b_w
+  text: 'Usually calculated per metre width in calculations of slabs, cantilevers: 80 of 86 source formulas work
+    per metre (b_w = 1000 mm, results per metre). Every force in such a calculation must then be per metre too.'
+  refs: []
 version: 7e0ae2bd7cc8

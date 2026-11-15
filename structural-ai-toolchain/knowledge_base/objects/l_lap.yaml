@@ -1,0 +1,29 @@
+id: l_lap
+name: Design lap length
+formula: max(alpha_anch * alpha_6 * l_b_rqd, l_0_min)
+params:
+- alpha_anch
+- alpha_6
+- l_b_rqd
+- l_0_min
+var: l_lap
+symbol: l_{0}
+unit: mm
+code: EN 1992-1-1
+topic: '8.7'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.7 Laps and mechanical couplers
+clause: 8.7.3(1)
+eq: (8.10)
+basis: code
+background:
+- kind: limitation
+  text: Laps use α1, α2, α3 and α5 of Table 8.2 but not α4 (welded transverse bars); writing the full anchorage
+    product here is only correct with α4 = 1.
+  refs:
+  - id: EN1992-1-1
+    at: 8.7.3(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: fb94b0311568

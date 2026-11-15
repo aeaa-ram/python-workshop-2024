@@ -1,0 +1,27 @@
+{
+ "confidence": {
+  "level": "medium",
+  "label": "not yet checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.3.2(4), expr. (6.30)).",
+   "No independent implementation available to compare with.",
+   "Not yet seen in any source calculation."
+  ]
+ },
+ "evidence": {
+  "sources": 0,
+  "source_ids": [],
+  "formula_instances": 0,
+  "printed_values": 0,
+  "variants": [],
+  "practice": [],
+  "values_seen": {}
+ },
+ "benchmarks": {
+  "total": 0,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": []
+ }
+}

@@ -1,0 +1,29 @@
+id: u_out_ef
+name: Control perimeter beyond which punching shear reinforcement is not needed
+formula: beta_p * V_Ed / (v_Rd_c_p * d_eff_p)
+params:
+- beta_p
+- V_Ed
+- v_Rd_c_p
+- d_eff_p
+var: u_out_ef
+symbol: u_{out,ef}
+unit: mm
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(4)
+eq: (6.54)
+basis: code
+background:
+- kind: guidance
+  text: The outermost perimeter of shear reinforcement is placed at a distance not greater than k d (recommended
+    k = 1.5) inside u_out,ef.
+  refs:
+  - id: EN1992-1-1
+    at: 6.4.5(4)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: b6f6d72a5f5b

@@ -1,0 +1,35 @@
+id: ld_lim
+name: Limiting span/depth ratio
+formula: K_sys * (11 + 1.5 * sqrt(f_ck) * rho_0 / rho_req + 3.2 * sqrt(f_ck) * (rho_0 / rho_req - 1) ** 1.5) if
+  rho_req <= rho_0 else K_sys * (11 + 1.5 * sqrt(f_ck) * rho_0 / (rho_req - rho_c) + sqrt(f_ck) * sqrt(rho_c / rho_0)
+  / 12)
+params:
+- rho_req
+- rho_0
+- K_sys
+- f_ck
+- rho_c
+var: ld_lim
+symbol: l/d
+unit: '-'
+code: EN 1992-1-1
+topic: 7.4.2
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.4 Deflection control
+- 7.4.2 Cases where calculations may be omitted
+clause: 7.4.2(2)
+eq: (7.16a), (7.16b)
+basis: code
+ndp: true
+background:
+- kind: limitation
+  text: 'Assumes σ_s = 310 MPa at the SLS under the design loads: multiply by 310/σ_s (≈ 500/(f_yk A_s,req/A_s,prov)).
+    For flanged sections with b/b_w > 3 multiply by 0.8; for spans over 7 m supporting partitions liable to damage
+    multiply by 7/l_eff (flat slabs: 8.5/l_eff).'
+  refs:
+  - id: EN1992-1-1
+    at: 7.4.2(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: a1c9b7cdf802

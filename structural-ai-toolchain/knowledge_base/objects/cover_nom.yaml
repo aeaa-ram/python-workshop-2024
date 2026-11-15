@@ -1,0 +1,27 @@
+id: cover_nom
+name: Nominal cover
+formula: c_min + dc_dev
+params:
+- c_min
+- dc_dev
+var: cover_nom
+symbol: c_{nom}
+unit: mm
+code: EN 1992-1-1
+topic: '4.4'
+topic_path:
+- 4 Durability and cover to reinforcement
+- 4.4 Methods of verification (cover)
+clause: 4.4.1.1(2)
+eq: (4.1)
+basis: code
+background:
+- kind: pitfall
+  text: The cover shown on drawings is c_nom; the minimum c_min is the value that must be achieved on site. Δc_dev
+    may be reduced where quality control measures the cover (4.4.1.3(3)).
+  refs:
+  - id: EN1992-1-1
+    at: 4.4.1.3
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 617b4d98dc97

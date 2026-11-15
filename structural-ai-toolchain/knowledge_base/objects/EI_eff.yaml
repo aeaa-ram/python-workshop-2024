@@ -1,0 +1,32 @@
+id: EI_eff
+name: Effective flexural stiffness of a composite column
+formula: E_steel * (I_a + I_s) + K_e * E_cm * I_conc
+params:
+- E_steel
+- I_a
+- I_s
+- K_e
+- E_cm
+- I_conc
+var: EI_eff
+symbol: (EI)_{eff}
+unit: kN·m²
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.3(3)
+eq: (6.40)
+basis: code
+background:
+- kind: guidance
+  text: E_s of the reinforcement is taken equal to E_a = 210 GPa (3.2(2)), so both steel parts use E_steel. For
+    long-term loading E_cm is replaced by the effective modulus E_c,eff (6.41).
+  refs:
+  - id: EN1994-1-1
+    at: 3.2(2), 6.7.3.3(4)
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+version: f67896ecf78e

@@ -1,0 +1,19 @@
+id: v_Rd_max_p
+name: Maximum punching shear stress at the column face
+formula: 0.4 * nu * f_cd
+params:
+- nu
+- f_cd
+var: v_Rd_max_p
+symbol: v_{Rd,max}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(3)
+basis: code
+ndp: true
+sense: resistance
+version: cca7abea2010

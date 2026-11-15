@@ -1,0 +1,28 @@
+id: c_min
+name: Minimum cover
+formula: max(phi_bar, c_min_dur, 10)
+params:
+- phi_bar
+- c_min_dur
+var: c_min
+symbol: c_{min}
+unit: mm
+code: EN 1992-1-1
+topic: '4.4'
+topic_path:
+- 4 Durability and cover to reinforcement
+- 4.4 Methods of verification (cover)
+clause: 4.4.1.2(2)
+eq: (4.2)
+basis: code
+background:
+- kind: limitation
+  text: Written with the additive terms Δc_dur,γ, Δc_dur,st and Δc_dur,add at their recommended value 0. c_min,b
+    is the bar diameter for separated bars; for bundled bars use the equivalent diameter, and increase it by 5 mm
+    if the nominal aggregate size exceeds 32 mm.
+  refs:
+  - id: EN1992-1-1
+    at: 4.4.1.2(3), Table 4.2
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: e1096505d7c0

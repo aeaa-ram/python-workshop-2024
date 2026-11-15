@@ -1,0 +1,28 @@
+id: F_t_Rd
+name: Tension resistance of a bolt
+formula: k_2_bolt * f_ub * A_s_bolt / gamma_M2
+params:
+- k_2_bolt
+- f_ub
+- A_s_bolt
+- gamma_M2
+var: F_t_Rd
+symbol: F_{t,Rd}
+unit: kN
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+sense: resistance
+check: F_t_Ed
+background:
+- kind: guidance
+  text: Prying forces are included in F_t,Ed; the T-stub model of 6.2.4 gives them for end plates and flanges.
+  refs:
+  - id: EN1993-1-8
+    at: 3.11, 6.2.4
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+version: 03b0ce562807

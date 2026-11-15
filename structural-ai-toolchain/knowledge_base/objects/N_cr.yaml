@@ -1,0 +1,19 @@
+id: N_cr
+name: Elastic critical force for flexural buckling
+formula: pi ** 2 * E_steel * I_sec / L_cr ** 2
+params:
+- E_steel
+- I_sec
+- L_cr
+var: N_cr
+symbol: N_{cr}
+unit: kN
+code: EN 1993-1-1
+topic: 6.3.1
+topic_path:
+- 6 Ultimate limit states
+- 6.3 Buckling resistance of members
+- 6.3.1 Uniform members in compression
+clause: 6.3.1.2(1)
+basis: mechanics
+version: f0f4ea1b2764

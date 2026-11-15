@@ -1,0 +1,31 @@
+id: F_b_Rd
+name: Bearing resistance of a bolt
+formula: k_1_bolt * alpha_b * f_u * d_bolt * t_plate / gamma_M2
+params:
+- k_1_bolt
+- alpha_b
+- f_u
+- d_bolt
+- t_plate
+- gamma_M2
+var: F_b_Rd
+symbol: F_{b,Rd}
+unit: kN
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+sense: resistance
+check: F_v_Ed
+background:
+- kind: limitation
+  text: Normal round holes; oversized and slotted holes reduce it (0.8 and 0.6). The minimum end and edge distances
+    of Table 3.3 (1.2 d_0) still apply.
+  refs:
+  - id: EN1993-1-8
+    at: Table 3.3, Table 3.4
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+version: 8a94dcfc548b

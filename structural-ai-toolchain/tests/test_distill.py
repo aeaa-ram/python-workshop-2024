@@ -156,3 +156,70 @@ def test_disagreement_and_project_specific_variants_are_kept_apart():
 def test_a_wrong_merge_is_caught_numerically():
     v = Variant(X.parse("0.5 * a + b"))
     assert not is_special_case(X.parse("a + b"), v, tax, {})
+
+
+def test_four_codes_share_objects_and_instances():
+    assert {"EN 1992-1-1", "EN 1993-1-1", "EN 1993-1-8", "EN 1994-1-1"} <= {c["code"] for c in tax.codes}
+    # an instance takes the expression from its object: punching k is k with the mean effective depth
+    assert X.same(tax.concepts["k_p"].tree, X.parse("min(1 + sqrt(200 / d_eff_p), 2)"))
+    assert any("same expression with" in r["how"] for r in tax.concepts["k"].refs)
+    # the composite column buckles on the steel buckling curve, with its own slenderness
+    assert X.same(tax.concepts["chi_c"].tree, X.parse("min(1 / (Phi_c + sqrt(Phi_c ** 2 - lambda_bar_c ** 2)), 1)"))
+    # EN 1994-1-1 uses the partial factor and modulus of EN 1993-1-1 instead of its own copies
+    assert any(r["code"] == "EN 1994-1-1" for r in tax.concepts["gamma_M0"].refs)
+    assert "E_a" not in tax.concepts and any(r["code"] == "EN 1994-1-1" for r in tax.concepts["E_steel"].refs)
+
+
+class _St:
+    def __init__(self, sid, name, value, loc):
+        self.id, self.name, self.value, self.loc, self.unit, self.canonical = sid, name, value, loc, "", True
+        self.label, self.section, self.case, self.raw, self.precision = name, [], "", "", 0.0
+
+    def best_value(self):
+        return self.value
+
+
+class _Ctx:
+    """The part of a benchmark context the investigation uses: values of quantities in the file."""
+    def __init__(self, values):
+        self.tax = tax
+        self.statements = [_St(f"s{i}", q, v, f"cell {q}{i}") for i, (q, v) in enumerate(values)]
+        self._roles = {}
+        for i, (q, _) in enumerate(values):
+            self._roles.setdefault(q, []).append((i, 1.0))
+
+    def roles(self, scope):
+        return self._roles
+
+
+def _bench(expected, inputs, assumed=None):
+    from ckb.distill.benchmarks import Benchmark
+    tree = tax.concepts["V_Rd_c_min"].tree
+    b = Benchmark("V_Rd_c_min", "S1", "formula", "sheet 1 cell C9", "", "VRdcmin", expected)
+    b.inputs, b.assumed = dict(inputs), dict(assumed or {})
+    b.got = X.evaluate(tree, b.inputs)
+    return b, tree
+
+
+def test_differences_are_investigated_before_they_are_reported():
+    from ckb.distill.investigate import apply_answer, investigate
+    env = dict(v_min=0.5, k_1=0.15, sigma_cp=0.0, b_w=1.0, d=250.0)        # per metre: 125 N/mm = 125 kN/m
+    name = lambda s: s                                                      # noqa: E731
+    # width: the source value is for the full width b_w = 300 mm of another calculation in the file
+    b, tree = _bench(125.0 * 300, env)
+    f = investigate(b, tree, _Ctx([("b_w", 300.0)]), tax, tax.concepts["V_Rd_c_min"], None, name)
+    assert f.cause == "width" and f.status == "not comparable" and "per metre" in f.lesson
+    # reading: d was read from another calculation; the file also holds the right one
+    b, tree = _bench(0.5 * 1.0 * 400.0, env, {"d": "from d (cell d0)"})
+    f = investigate(b, tree, _Ctx([("d", 250.0), ("d", 400.0)]), tax, tax.concepts["V_Rd_c_min"], None, name)
+    assert f.cause == "reading" and f.status == "agree"
+    # unit: v_min typed in kPa-like magnitude, a factor of 1000
+    b, tree = _bench(125.0 / 1000, env)
+    f = investigate(b, tree, _Ctx([]), tax, tax.concepts["V_Rd_c_min"], None, name)
+    assert f.cause in ("unit", "width")
+    # nothing explains it: a question for an engineer, with what would make it agree
+    b, tree = _bench(131.0, env)
+    f = investigate(b, tree, _Ctx([]), tax, tax.concepts["V_Rd_c_min"], None, name)
+    assert f.cause == "unexplained" and f.question["id"].startswith("Q") and f.question["would_agree_if"]
+    apply_answer(b, {"verdict": "explained", "answer": "a project value of v_min"})
+    assert b.status == "not comparable" and b.detail.startswith("engineer:")

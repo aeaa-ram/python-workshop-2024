@@ -112,7 +112,10 @@ def parse_unit(text: str) -> UnitInfo:
             shown.append((sign, f"{disp}{sup}"))
     top = "·".join(t for sg, t in shown if sg > 0) or "1"
     bot = "/".join(t for sg, t in shown if sg < 0)
-    tidy = (top + ("/" + bot if bot else "")).replace("kN·m", "kNm").replace("N·mm", "Nmm")
+    tidy = top + ("/" + bot if bot else "")
+    # kNm and Nmm for moments; kN·m² stays as it is (kNm² would read as (kNm)²)
+    tidy = re.sub(r"kN·m(?![²³⁴^m])", "kNm", tidy)
+    tidy = re.sub(r"(?<![k])N·mm(?![²³⁴^])", "Nmm", tidy)
     return UnitInfo(tidy, factor, tuple(dims))
 
 

@@ -1,0 +1,16 @@
+id: eta_2
+name: Coefficient for the bar diameter (bond)
+formula: 1 if phi_bar <= 32 else (132 - phi_bar) / 100
+params:
+- phi_bar
+var: eta_2
+symbol: η_{2}
+unit: '-'
+code: EN 1992-1-1
+topic: '8.4'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.4 Anchorage of longitudinal reinforcement
+clause: 8.4.2(2)
+basis: code
+version: 92327bafcdba

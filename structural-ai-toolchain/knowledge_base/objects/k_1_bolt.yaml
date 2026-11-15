@@ -1,0 +1,21 @@
+id: k_1_bolt
+name: Factor for bearing perpendicular to the load transfer (edge bolts)
+formula: min(2.8 * e_2 / d_0 - 1.7, 1.4 * p_2 / d_0 - 1.7, 2.5)
+params:
+- e_2
+- d_0
+- p_2
+var: k_1_bolt
+symbol: k_{1}
+unit: '-'
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+alternatives:
+- formula: min(1.4 * p_2 / d_0 - 1.7, 2.5)
+  when: inner bolts perpendicular to the load transfer
+version: 6598e66ab1eb

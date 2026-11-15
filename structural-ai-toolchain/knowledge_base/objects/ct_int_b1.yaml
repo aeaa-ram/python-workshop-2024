@@ -1,0 +1,16 @@
+id: ct_int_b1
+name: Class 1 limit of c/t, internal part in bending
+formula: 72 * eps_y
+params:
+- eps_y
+var: ct_int_b1
+symbol: (c/t)_{lim,1}
+unit: '-'
+code: EN 1993-1-1
+topic: '5.5'
+topic_path:
+- 5 Structural analysis
+- 5.5 Classification of cross-sections
+clause: 5.5.2, Table 5.2
+basis: code
+version: 396463d90e00

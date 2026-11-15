@@ -1,0 +1,19 @@
+id: l_bd
+name: Design anchorage length
+formula: max(alpha_anch * l_b_rqd, l_b_min)
+params:
+- alpha_anch
+- l_b_rqd
+- l_b_min
+var: l_bd
+symbol: l_{bd}
+unit: mm
+code: EN 1992-1-1
+topic: '8.4'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.4 Anchorage of longitudinal reinforcement
+clause: 8.4.4(1)
+eq: (8.4)
+basis: code
+version: a8e45a8b1bc9

@@ -1,0 +1,50 @@
+id: v_Rd_c_p
+name: Punching shear resistance of a slab without shear reinforcement
+formula: max(C_Rd_c * k_p * (100 * rho_l_p * f_ck) ** (1 / 3) + k_1_p * sigma_cp, v_min_p + k_1_p * sigma_cp)
+params:
+- C_Rd_c
+- k_p
+- rho_l_p
+- f_ck
+- k_1_p
+- sigma_cp
+- v_min_p
+var: v_Rd_c_p
+symbol: v_{Rd,c}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.4(1)
+eq: (6.47)
+basis: code
+sense: resistance
+background:
+- kind: guidance
+  text: Verify v_Ed ≤ v_Rd,c at the basic control perimeter u_1, and v_Ed,0 ≤ v_Rd,max at the column face. Where
+    v_Ed > v_Rd,c, provide punching shear reinforcement (6.52) and find the perimeter u_out,ef beyond which it is
+    not needed (6.54).
+  refs:
+  - id: EN1992-1-1
+    at: 6.4.3(2), 6.4.5
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+- kind: pitfall
+  text: k_1 = 0.1 in punching, not the 0.15 of 6.2.2; and ρ_l is the geometric mean of both directions over a width
+    of the column plus 3d each side, limited to 0.02.
+  refs:
+  - id: EN1992-1-1
+    at: 6.4.4(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+- kind: history
+  text: EN 1992-1-1:2004 limited the stress at the column face to 0.5 ν f_cd; amendment A1:2014 made v_Rd,max a
+    Nationally Determined Parameter with the recommended value 0.4 ν f_cd. Check which edition a calculation follows.
+  refs:
+  - id: EN1992-1-1
+    at: 6.4.5(3)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: d774aec8d1b2

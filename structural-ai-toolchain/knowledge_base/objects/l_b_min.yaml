@@ -1,0 +1,18 @@
+id: l_b_min
+name: Minimum anchorage length in tension
+formula: max(0.3 * l_b_rqd, 10 * phi_bar, 100)
+params:
+- l_b_rqd
+- phi_bar
+var: l_b_min
+symbol: l_{b,min}
+unit: mm
+code: EN 1992-1-1
+topic: '8.4'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.4 Anchorage of longitudinal reinforcement
+clause: 8.4.4(1)
+eq: (8.6)
+basis: code
+version: 9720ca2e3fa5

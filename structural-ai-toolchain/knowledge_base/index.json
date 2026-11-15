@@ -44,6 +44,49 @@
      ]
     },
     {
+     "id": "4",
+     "title": "Durability and cover to reinforcement",
+     "keywords": [
+      "durability",
+      "cover",
+      "concrete cover"
+     ]
+    },
+    {
+     "id": "4.4",
+     "title": "Methods of verification (cover)",
+     "keywords": [
+      "nominal cover",
+      "minimum cover"
+     ]
+    },
+    {
+     "id": "5",
+     "title": "Structural analysis",
+     "keywords": [
+      "analysis"
+     ]
+    },
+    {
+     "id": "5.3",
+     "title": "Idealisation of the structure",
+     "keywords": [
+      "effective width",
+      "flange width",
+      "t-beam"
+     ]
+    },
+    {
+     "id": "5.8",
+     "title": "Analysis of second order effects with axial load",
+     "keywords": [
+      "slenderness",
+      "second order",
+      "column",
+      "buckling"
+     ]
+    },
+    {
      "id": "6",
      "title": "Ultimate limit states (ULS)",
      "keywords": [
@@ -87,6 +130,24 @@
      ]
     },
     {
+     "id": "6.3",
+     "title": "Torsion",
+     "keywords": [
+      "torsion",
+      "torsional"
+     ]
+    },
+    {
+     "id": "6.4",
+     "title": "Punching",
+     "keywords": [
+      "punching",
+      "punching shear",
+      "flat slab",
+      "column head"
+     ]
+    },
+    {
      "id": "7",
      "title": "Serviceability limit states (SLS)",
      "keywords": [
@@ -111,6 +172,14 @@
      ]
     },
     {
+     "id": "7.3.2",
+     "title": "Minimum reinforcement areas",
+     "keywords": [
+      "minimum reinforcement",
+      "crack control"
+     ]
+    },
+    {
      "id": "7.3.4",
      "title": "Calculation of crack widths",
      "keywords": [
@@ -123,6 +192,245 @@
      "title": "Deflection control",
      "keywords": [
       "deflection"
+     ]
+    },
+    {
+     "id": "7.4.2",
+     "title": "Cases where calculations may be omitted",
+     "keywords": [
+      "span depth",
+      "span/depth",
+      "slenderness",
+      "deflection"
+     ]
+    },
+    {
+     "id": "8",
+     "title": "Detailing of reinforcement - general",
+     "keywords": [
+      "detailing"
+     ]
+    },
+    {
+     "id": "8.4",
+     "title": "Anchorage of longitudinal reinforcement",
+     "keywords": [
+      "anchorage",
+      "bond",
+      "anchorage length"
+     ]
+    },
+    {
+     "id": "8.7",
+     "title": "Laps and mechanical couplers",
+     "keywords": [
+      "lap",
+      "lap length",
+      "splice"
+     ]
+    },
+    {
+     "id": "9",
+     "title": "Detailing of members and particular rules",
+     "keywords": [
+      "detailing"
+     ]
+    },
+    {
+     "id": "9.2",
+     "title": "Beams",
+     "keywords": [
+      "beam",
+      "minimum reinforcement",
+      "maximum reinforcement",
+      "links"
+     ]
+    }
+   ],
+   "fixed": {}
+  },
+  {
+   "code": "EN 1993-1-1",
+   "title": "Eurocode 3: Design of steel structures, Part 1-1",
+   "edition": "2005 + AC:2009 + A1:2014",
+   "values": "recommended values (no National Annex)",
+   "topics": [
+    {
+     "id": "3",
+     "title": "Materials",
+     "keywords": [
+      "steel",
+      "structural steel",
+      "material"
+     ]
+    },
+    {
+     "id": "3.2",
+     "title": "Structural steel",
+     "keywords": [
+      "steel grade",
+      "modulus of elasticity"
+     ]
+    },
+    {
+     "id": "5",
+     "title": "Structural analysis"
+    },
+    {
+     "id": "5.5",
+     "title": "Classification of cross-sections",
+     "keywords": [
+      "class",
+      "classification",
+      "c/t",
+      "slenderness of parts",
+      "local buckling"
+     ]
+    },
+    {
+     "id": "6",
+     "title": "Ultimate limit states",
+     "keywords": [
+      "uls",
+      "ultimate",
+      "steel member"
+     ]
+    },
+    {
+     "id": "6.1",
+     "title": "General (partial factors)",
+     "keywords": [
+      "partial factor",
+      "gamma m0",
+      "gamma m1"
+     ]
+    },
+    {
+     "id": "6.2",
+     "title": "Resistance of cross-sections",
+     "keywords": [
+      "cross-section resistance",
+      "steel section"
+     ]
+    },
+    {
+     "id": "6.2.3",
+     "title": "Tension",
+     "keywords": [
+      "tension",
+      "tensile resistance"
+     ]
+    },
+    {
+     "id": "6.2.4",
+     "title": "Compression",
+     "keywords": [
+      "compression",
+      "squash"
+     ]
+    },
+    {
+     "id": "6.2.5",
+     "title": "Bending moment",
+     "keywords": [
+      "bending",
+      "moment resistance",
+      "plastic moment"
+     ]
+    },
+    {
+     "id": "6.2.6",
+     "title": "Shear",
+     "keywords": [
+      "shear",
+      "plastic shear"
+     ]
+    },
+    {
+     "id": "6.2.8",
+     "title": "Bending and shear",
+     "keywords": [
+      "bending and shear",
+      "interaction"
+     ]
+    },
+    {
+     "id": "6.3",
+     "title": "Buckling resistance of members",
+     "keywords": [
+      "buckling",
+      "stability"
+     ]
+    },
+    {
+     "id": "6.3.1",
+     "title": "Uniform members in compression",
+     "keywords": [
+      "flexural buckling",
+      "column buckling",
+      "strut",
+      "buckling curve"
+     ]
+    },
+    {
+     "id": "6.3.2",
+     "title": "Uniform members in bending",
+     "keywords": [
+      "lateral torsional buckling",
+      "ltb",
+      "lateral-torsional"
+     ]
+    }
+   ],
+   "fixed": {}
+  },
+  {
+   "code": "EN 1993-1-8",
+   "title": "Eurocode 3: Design of steel structures, Part 1-8: Design of joints",
+   "edition": "2005 + AC:2009",
+   "values": "recommended values (no National Annex)",
+   "topics": [
+    {
+     "id": "2.2",
+     "title": "Partial factors for joints",
+     "keywords": [
+      "partial factor",
+      "bolt",
+      "weld"
+     ]
+    },
+    {
+     "id": "3",
+     "title": "Connections made with bolts, rivets or pins",
+     "keywords": [
+      "bolt",
+      "bolted connection",
+      "fastener"
+     ]
+    },
+    {
+     "id": "3.6",
+     "title": "Design resistance of individual fasteners",
+     "keywords": [
+      "bolt shear",
+      "bearing",
+      "bolt tension"
+     ]
+    },
+    {
+     "id": "4",
+     "title": "Welded connections",
+     "keywords": [
+      "weld",
+      "welded connection"
+     ]
+    },
+    {
+     "id": "4.5",
+     "title": "Design resistance of fillet welds",
+     "keywords": [
+      "fillet weld",
+      "throat thickness"
      ]
     }
    ],
@@ -171,7 +479,49 @@
      "id": "6.7",
      "title": "Composite columns and composite compression members",
      "keywords": [
-      "composite column"
+      "composite column",
+      "encased column",
+      "filled tube"
+     ]
+    },
+    {
+     "id": "3.3",
+     "title": "Structural steel",
+     "keywords": [
+      "steel"
+     ]
+    },
+    {
+     "id": "5.4",
+     "title": "Methods of global analysis",
+     "keywords": [
+      "effective width",
+      "shear lag"
+     ]
+    },
+    {
+     "id": "6.2",
+     "title": "Resistances of cross-sections of beams",
+     "keywords": [
+      "composite beam",
+      "plastic moment"
+     ]
+    },
+    {
+     "id": "6.6.1",
+     "title": "Shear connection - general",
+     "keywords": [
+      "degree of shear connection",
+      "partial shear connection"
+     ]
+    },
+    {
+     "id": "6.6.4",
+     "title": "Headed studs used with profiled steel sheeting",
+     "keywords": [
+      "profiled sheeting",
+      "deck",
+      "metal deck"
      ]
     },
     {
@@ -227,9 +577,9 @@
    "formulas": 1040,
    "formulas_verified": 1040,
    "printed_values": 0,
-   "recognised": 1285,
-   "instances": 616,
-   "not_recognised": 337,
+   "recognised": 1287,
+   "instances": 617,
+   "not_recognised": 336,
    "issues": 0
   }
  ],
@@ -242,7 +592,11 @@
   "DG-EC2": "Beeby, A.W. and Narayanan, R.S. Designers' Guide to EN 1992-1-1 and EN 1992-1-2. Thomas Telford, 2005.",
   "HowTo-EC2": "The Concrete Centre. How to design concrete structures using Eurocode 2. 2006 and later editions.",
   "UK-NA-EC2": "NA to BS EN 1992-1-1:2004+A1:2014. UK National Annex to Eurocode 2 Part 1-1.",
-  "DG-EC4": "Johnson, R.P. Designers' Guide to Eurocode 4: Design of composite steel and concrete structures, EN 1994-1-1. 2nd edition, ICE Publishing, 2012."
+  "DG-EC4": "Johnson, R.P. Designers' Guide to Eurocode 4: Design of composite steel and concrete structures, EN 1994-1-1. 2nd edition, ICE Publishing, 2012.",
+  "EN1993-1-1": "EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules and rules for buildings.",
+  "EN1993-1-5": "EN 1993-1-5:2006 + AC:2009. Eurocode 3: Design of steel structures. Part 1-5: Plated structural elements.",
+  "EN1993-1-8": "EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.",
+  "DG-EC3": "Gardner, L. and Nethercot, D.A. Designers' Guide to Eurocode 3: Design of steel buildings, EN 1993-1-1, -1-3 and -1-8. 2nd edition, ICE Publishing, 2011."
  },
  "quantities": {
   "A_a": {
@@ -258,6 +612,19 @@
     60000.0
    ]
   },
+  "A_bolt": {
+   "id": "A_bolt",
+   "name": "Bolt area in the shear plane (A_s if the plane passes through the thread",
+   "var": "A_bolt",
+   "symbol": "A",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 245.0,
+   "range": [
+    50.0,
+    3000.0
+   ]
+  },
   "A_c": {
    "id": "A_c",
    "name": "Cross-sectional area of concrete",
@@ -269,6 +636,49 @@
    "range": [
     10000.0,
     2000000.0
+   ]
+  },
+  "A_ct": {
+   "id": "A_ct",
+   "name": "Area of concrete in the tensile zone before the first crack",
+   "var": "A_ct",
+   "symbol": "A_{ct}",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 75000.0,
+   "range": [
+    5000.0,
+    5000000.0
+   ]
+  },
+  "A_net": {
+   "id": "A_net",
+   "name": "Net cross-sectional area at holes for fasteners",
+   "var": "A_net",
+   "symbol": "A_{net}",
+   "unit": "cm²",
+   "kind": "input",
+   "example": 4800.0,
+   "range": [
+    100.0,
+    200000.0
+   ]
+  },
+  "A_phi": {
+   "id": "A_phi",
+   "name": "Factor A for creep (1/(1 + 0.2 φ_ef))",
+   "var": "A_phi",
+   "symbol": "A",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "5.8",
+   "clause": "5.8.3.1(1)",
+   "value": 0.7,
+   "example": 0.7,
+   "range": [
+    0.5,
+    1.0
    ]
   },
   "A_s": {
@@ -300,6 +710,32 @@
      2454.0,
      1
     ]
+   ]
+  },
+  "A_s_bolt": {
+   "id": "A_s_bolt",
+   "name": "Tensile stress area of the bolt",
+   "var": "A_s_bolt",
+   "symbol": "A_{s}",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 245.0,
+   "range": [
+    50.0,
+    3000.0
+   ]
+  },
+  "A_sec": {
+   "id": "A_sec",
+   "name": "Cross-sectional area of the steel section",
+   "var": "A_sec",
+   "symbol": "A",
+   "unit": "cm²",
+   "kind": "input",
+   "example": 5380.0,
+   "range": [
+    100.0,
+    200000.0
    ]
   },
   "A_sl": {
@@ -364,6 +800,79 @@
     ]
    ]
   },
+  "A_sw_p": {
+   "id": "A_sw_p",
+   "name": "Area of punching shear reinforcement in one perimeter around the column",
+   "var": "A_sw_p",
+   "symbol": "A_{sw}",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 900.0,
+   "range": [
+    50.0,
+    10000.0
+   ]
+  },
+  "A_tor": {
+   "id": "A_tor",
+   "name": "Area within the outer circumference of the section (torsion; hollow areas included)",
+   "var": "A_tor",
+   "symbol": "A",
+   "unit": "mm²",
+   "kind": "input",
+   "example": 150000.0,
+   "range": [
+    10000.0,
+    5000000.0
+   ]
+  },
+  "A_v": {
+   "id": "A_v",
+   "name": "Shear area of the steel section",
+   "var": "A_v",
+   "symbol": "A_{v}",
+   "unit": "cm²",
+   "kind": "input",
+   "example": 2570.0,
+   "range": [
+    100.0,
+    100000.0
+   ]
+  },
+  "B_omega": {
+   "id": "B_omega",
+   "name": "Factor B for the mechanical reinforcement ratio (√(1 + 2ω))",
+   "var": "B_omega",
+   "symbol": "B",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "5.8",
+   "clause": "5.8.3.1(1)",
+   "value": 1.1,
+   "example": 1.1,
+   "range": [
+    1.0,
+    2.0
+   ]
+  },
+  "C_rm": {
+   "id": "C_rm",
+   "name": "Factor C for the moment ratio (1.7 − r_m)",
+   "var": "C_rm",
+   "symbol": "C",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "5.8",
+   "clause": "5.8.3.1(1)",
+   "value": 0.7,
+   "example": 0.7,
+   "range": [
+    0.7,
+    2.7
+   ]
+  },
   "E_s": {
    "id": "E_s",
    "name": "Design modulus of elasticity of reinforcing steel",
@@ -385,6 +894,197 @@
      200000.0,
      2
     ]
+   ]
+  },
+  "E_steel": {
+   "id": "E_steel",
+   "name": "Modulus of elasticity of structural steel",
+   "var": "E_steel",
+   "symbol": "E",
+   "unit": "GPa",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "3.2",
+   "clause": "3.2.6(1)",
+   "value": 210000.0,
+   "example": 210000.0,
+   "range": [
+    200000.0,
+    215000.0
+   ]
+  },
+  "F_t_Ed": {
+   "id": "F_t_Ed",
+   "name": "Design tensile force per bolt",
+   "var": "F_t_Ed",
+   "symbol": "F_{t,Ed}",
+   "unit": "kN",
+   "kind": "input",
+   "example": 50000.0,
+   "range": [
+    0.0,
+    2000000.0
+   ]
+  },
+  "F_v_Ed": {
+   "id": "F_v_Ed",
+   "name": "Design shear force per bolt",
+   "var": "F_v_Ed",
+   "symbol": "F_{v,Ed}",
+   "unit": "kN",
+   "kind": "input",
+   "example": 60000.0,
+   "range": [
+    100.0,
+    2000000.0
+   ]
+  },
+  "F_w_Ed": {
+   "id": "F_w_Ed",
+   "name": "Design force per unit length of the weld",
+   "var": "F_w_Ed",
+   "symbol": "F_{w,Ed}",
+   "unit": "kN/m",
+   "kind": "input",
+   "example": 500.0,
+   "range": [
+    1.0,
+    5000.0
+   ]
+  },
+  "I_a": {
+   "id": "I_a",
+   "name": "Second moment of area of the structural steel section",
+   "var": "I_a",
+   "symbol": "I_{a}",
+   "unit": "cm⁴",
+   "kind": "input",
+   "example": 231300000.0,
+   "range": [
+    1000000.0,
+    50000000000.0
+   ]
+  },
+  "I_conc": {
+   "id": "I_conc",
+   "name": "Second moment of area of the concrete section",
+   "var": "I_conc",
+   "symbol": "I_{c}",
+   "unit": "mm⁴",
+   "kind": "input",
+   "example": 2130000000.0,
+   "range": [
+    10000000.0,
+    1000000000000.0
+   ]
+  },
+  "I_s": {
+   "id": "I_s",
+   "name": "Second moment of area of the reinforcement",
+   "var": "I_s",
+   "symbol": "I_{s}",
+   "unit": "cm⁴",
+   "kind": "input",
+   "example": 10000000.0,
+   "range": [
+    0.0,
+    10000000000.0
+   ]
+  },
+  "I_sec": {
+   "id": "I_sec",
+   "name": "Second moment of area of the steel section about the buckling axis",
+   "var": "I_sec",
+   "symbol": "I",
+   "unit": "cm⁴",
+   "kind": "input",
+   "example": 83560000.0,
+   "range": [
+    100000.0,
+    50000000000.0
+   ]
+  },
+  "K_e": {
+   "id": "K_e",
+   "name": "Correction factor for the effective flexural stiffness of a composite column",
+   "var": "K_e",
+   "symbol": "K_{e}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1994-1-1",
+   "topic": "6.7.3",
+   "clause": "6.7.3.3(3)",
+   "value": 0.6,
+   "example": 0.6,
+   "range": [
+    0.5,
+    0.6
+   ]
+  },
+  "K_sys": {
+   "id": "K_sys",
+   "name": "Factor for the structural system (span/depth ratio)",
+   "var": "K_sys",
+   "symbol": "K",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.4.2",
+   "clause": "7.4.2(2), Table 7.4N",
+   "value": 1.0,
+   "example": 1.0,
+   "choices": [
+    {
+     "value": 1.0,
+     "label": "simply supported"
+    },
+    {
+     "value": 1.3,
+     "label": "end span of a continuous member"
+    },
+    {
+     "value": 1.5,
+     "label": "interior span"
+    },
+    {
+     "value": 1.2,
+     "label": "flat slab"
+    },
+    {
+     "value": 0.4,
+     "label": "cantilever"
+    }
+   ],
+   "ndp": true,
+   "range": [
+    0.4,
+    1.5
+   ]
+  },
+  "L_cr": {
+   "id": "L_cr",
+   "name": "Buckling length in the plane considered",
+   "var": "L_cr",
+   "symbol": "L_{cr}",
+   "unit": "m",
+   "kind": "input",
+   "example": 5000.0,
+   "range": [
+    500.0,
+    40000.0
+   ]
+  },
+  "L_e": {
+   "id": "L_e",
+   "name": "Equivalent span (distance between points of zero bending moment)",
+   "var": "L_e",
+   "symbol": "L_{e}",
+   "unit": "m",
+   "kind": "input",
+   "example": 12000.0,
+   "range": [
+    2000.0,
+    60000.0
    ]
   },
   "M_Ed": {
@@ -413,6 +1113,19 @@
     20000000000.0
    ]
   },
+  "M_cr": {
+   "id": "M_cr",
+   "name": "Elastic critical moment for lateral-torsional buckling",
+   "var": "M_cr",
+   "symbol": "M_{cr}",
+   "unit": "kNm",
+   "kind": "input",
+   "example": 300000000.0,
+   "range": [
+    1000000.0,
+    100000000000.0
+   ]
+  },
   "N_Ed": {
    "id": "N_Ed",
    "name": "Design axial force",
@@ -424,6 +1137,19 @@
    "range": [
     10000.0,
     50000000.0
+   ]
+  },
+  "T_Ed": {
+   "id": "T_Ed",
+   "name": "Design torsional moment",
+   "var": "T_Ed",
+   "symbol": "T_{Ed}",
+   "unit": "kNm",
+   "kind": "input",
+   "example": 30000000.0,
+   "range": [
+    100000.0,
+    20000000000.0
    ]
   },
   "V_Ed": {
@@ -471,6 +1197,146 @@
      500000.0,
      2
     ]
+   ]
+  },
+  "W_el": {
+   "id": "W_el",
+   "name": "Elastic section modulus (the smaller value)",
+   "var": "W_el",
+   "symbol": "W_{el,min}",
+   "unit": "cm³",
+   "kind": "input",
+   "example": 557000.0,
+   "range": [
+    1000.0,
+    100000000.0
+   ]
+  },
+  "W_pl": {
+   "id": "W_pl",
+   "name": "Plastic section modulus",
+   "var": "W_pl",
+   "symbol": "W_{pl}",
+   "unit": "cm³",
+   "kind": "input",
+   "example": 628000.0,
+   "range": [
+    1000.0,
+    100000000.0
+   ]
+  },
+  "W_y": {
+   "id": "W_y",
+   "name": "Section modulus for lateral-torsional buckling (W_pl",
+   "var": "W_y",
+   "symbol": "W_{y}",
+   "unit": "cm³",
+   "kind": "input",
+   "example": 628000.0,
+   "range": [
+    1000.0,
+    100000000.0
+   ]
+  },
+  "a_weld": {
+   "id": "a_weld",
+   "name": "Effective throat thickness of the fillet weld",
+   "var": "a_weld",
+   "symbol": "a",
+   "unit": "mm",
+   "kind": "input",
+   "example": 5.0,
+   "range": [
+    3.0,
+    30.0
+   ]
+  },
+  "alpha": {
+   "id": "alpha",
+   "name": "Angle between the shear reinforcement and the member axis",
+   "var": "alpha",
+   "symbol": "α",
+   "unit": "°",
+   "kind": "input",
+   "example": 1.5707963267948966,
+   "range": [
+    0.7853981633974483,
+    1.5707963267948966
+   ],
+   "seen": [
+    [
+     0.959931,
+     2
+    ],
+    [
+     0.506145,
+     2
+    ]
+   ]
+  },
+  "alpha_LT": {
+   "id": "alpha_LT",
+   "name": "Imperfection factor for lateral-torsional buckling",
+   "var": "alpha_LT",
+   "symbol": "α_{LT}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "6.3.2",
+   "clause": "6.3.2.2(2), Table 6.3",
+   "value": 0.34,
+   "example": 0.34,
+   "choices": [
+    {
+     "value": 0.21,
+     "label": "curve a"
+    },
+    {
+     "value": 0.34,
+     "label": "curve b"
+    },
+    {
+     "value": 0.49,
+     "label": "curve c"
+    },
+    {
+     "value": 0.76,
+     "label": "curve d"
+    }
+   ],
+   "range": [
+    0.21,
+    0.76
+   ]
+  },
+  "alpha_anch": {
+   "id": "alpha_anch",
+   "name": "Product of the anchorage coefficients α1 to α5 (Table 8.2)",
+   "var": "alpha_anch",
+   "symbol": "α_{1}α_{2}α_{3}α_{4}α_{5}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "8.4",
+   "clause": "8.4.4(1), Table 8.2",
+   "value": 1.0,
+   "example": 1.0,
+   "range": [
+    0.49,
+    1.0
+   ],
+   "background": [
+    {
+     "kind": "limitation",
+     "text": "α2 α3 α5 ≥ 0.7. Each coefficient follows from Table 8.2 (bar shape, cover, confinement by transverse reinforcement and by transverse pressure); 1.0 is always on the safe side.",
+     "refs": [
+      {
+       "id": "EN1992-1-1",
+       "at": "8.4.4(1), (8.5)",
+       "text": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
    ]
   },
   "alpha_cc": {
@@ -533,6 +1399,85 @@
     1.0
    ]
   },
+  "alpha_imp": {
+   "id": "alpha_imp",
+   "name": "Imperfection factor of the buckling curve",
+   "var": "alpha_imp",
+   "symbol": "α",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "6.3.1",
+   "clause": "6.3.1.2(2), Table 6.1",
+   "value": 0.34,
+   "example": 0.34,
+   "choices": [
+    {
+     "value": 0.13,
+     "label": "curve a0"
+    },
+    {
+     "value": 0.21,
+     "label": "curve a"
+    },
+    {
+     "value": 0.34,
+     "label": "curve b"
+    },
+    {
+     "value": 0.49,
+     "label": "curve c"
+    },
+    {
+     "value": 0.76,
+     "label": "curve d"
+    }
+   ],
+   "range": [
+    0.13,
+    0.76
+   ],
+   "background": [
+    {
+     "kind": "pitfall",
+     "text": "The curve depends on the section type, the buckling axis, the steel grade and the plate thickness (Table 6.2): a rolled I section with h/b > 1.2 and t_f ≤ 40 mm is curve a about y–y but curve b about z–z. Curve b is the value this object opens with, not a default for every section.",
+     "refs": [
+      {
+       "id": "EN1993-1-1",
+       "at": "Table 6.2",
+       "text": "EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
+   ]
+  },
+  "alpha_v": {
+   "id": "alpha_v",
+   "name": "Factor for the shear resistance of a bolt",
+   "var": "alpha_v",
+   "symbol": "α_{v}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-8",
+   "topic": "3.6",
+   "clause": "3.6.1(1), Table 3.4",
+   "value": 0.6,
+   "example": 0.6,
+   "choices": [
+    {
+     "value": 0.6,
+     "label": "classes 4.6, 5.6, 8.8 through the thread; any class through the shank"
+    },
+    {
+     "value": 0.5,
+     "label": "classes 4.8, 5.8, 6.8, 10.9 through the thread"
+    }
+   ],
+   "range": [
+    0.5,
+    0.6
+   ]
+  },
   "b": {
    "id": "b",
    "name": "Width of the cross-section",
@@ -549,6 +1494,84 @@
      500.0,
      2
     ]
+   ]
+  },
+  "b_0": {
+   "id": "b_0",
+   "name": "Distance between the centres of the outstand shear connectors",
+   "var": "b_0",
+   "symbol": "b_{0}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 100.0,
+   "range": [
+    0.0,
+    1000.0
+   ]
+  },
+  "b_0_rib": {
+   "id": "b_0_rib",
+   "name": "Width of a concrete-filled rib (mean width of a trapezoidal rib)",
+   "var": "b_0_rib",
+   "symbol": "b_{0}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 150.0,
+   "range": [
+    30.0,
+    300.0
+   ]
+  },
+  "b_1": {
+   "id": "b_1",
+   "name": "Half the clear distance to the next web (or the flange outstand) on side 1",
+   "var": "b_1",
+   "symbol": "b_{1}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 1500.0,
+   "range": [
+    0.0,
+    6000.0
+   ]
+  },
+  "b_2": {
+   "id": "b_2",
+   "name": "Half the clear distance to the next web (or the flange outstand) on side 2",
+   "var": "b_2",
+   "symbol": "b_{2}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 1500.0,
+   "range": [
+    0.0,
+    6000.0
+   ]
+  },
+  "b_fl": {
+   "id": "b_fl",
+   "name": "Total width of the flange",
+   "var": "b_fl",
+   "symbol": "b",
+   "unit": "mm",
+   "kind": "input",
+   "example": 3300.0,
+   "range": [
+    300.0,
+    12000.0
+   ]
+  },
+  "b_t": {
+   "id": "b_t",
+   "name": "Mean width of the tension zone",
+   "var": "b_t",
+   "symbol": "b_{t}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 300.0,
+   "range": [
+    100.0,
+    3000.0
    ]
   },
   "b_w": {
@@ -582,6 +1605,86 @@
     ]
    ]
   },
+  "beta_p": {
+   "id": "beta_p",
+   "name": "Factor for the eccentricity of the support reaction (punching)",
+   "var": "beta_p",
+   "symbol": "β",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "6.4",
+   "clause": "6.4.3(6)",
+   "value": 1.15,
+   "example": 1.15,
+   "choices": [
+    {
+     "value": 1.15,
+     "label": "internal column"
+    },
+    {
+     "value": 1.4,
+     "label": "edge column"
+    },
+    {
+     "value": 1.5,
+     "label": "corner column"
+    }
+   ],
+   "ndp": true,
+   "range": [
+    1.0,
+    1.6
+   ],
+   "background": [
+    {
+     "kind": "limitation",
+     "text": "These approximate values (Figure 6.21N) apply to braced structures where adjacent spans differ by no more than 25 %; otherwise β follows from (6.39) with the unbalanced moment.",
+     "refs": [
+      {
+       "id": "EN1992-1-1",
+       "at": "6.4.3(6), Figure 6.21N",
+       "text": "EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules and rules for buildings."
+      }
+     ]
+    }
+   ]
+  },
+  "beta_w": {
+   "id": "beta_w",
+   "name": "Correlation factor for fillet welds",
+   "var": "beta_w",
+   "symbol": "β_{w}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-8",
+   "topic": "4.5",
+   "clause": "4.5.3.2(6), Table 4.1",
+   "value": 0.9,
+   "example": 0.9,
+   "choices": [
+    {
+     "value": 0.8,
+     "label": "S235"
+    },
+    {
+     "value": 0.85,
+     "label": "S275"
+    },
+    {
+     "value": 0.9,
+     "label": "S355"
+    },
+    {
+     "value": 1.0,
+     "label": "S420, S460"
+    }
+   ],
+   "range": [
+    0.8,
+    1.0
+   ]
+  },
   "c": {
    "id": "c",
    "name": "Clear cover to the longitudinal reinforcement",
@@ -602,6 +1705,45 @@
      96.0,
      2
     ]
+   ]
+  },
+  "c_1": {
+   "id": "c_1",
+   "name": "Column dimension parallel to the eccentricity (punching)",
+   "var": "c_1",
+   "symbol": "c_{1}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 400.0,
+   "range": [
+    150.0,
+    2000.0
+   ]
+  },
+  "c_2": {
+   "id": "c_2",
+   "name": "Column dimension perpendicular to the eccentricity (punching)",
+   "var": "c_2",
+   "symbol": "c_{2}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 400.0,
+   "range": [
+    150.0,
+    2000.0
+   ]
+  },
+  "c_min_dur": {
+   "id": "c_min_dur",
+   "name": "Minimum cover for the exposure class (durability)",
+   "var": "c_min_dur",
+   "symbol": "c_{min,dur}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 25.0,
+   "range": [
+    10.0,
+    65.0
    ]
   },
   "d": {
@@ -650,6 +1792,45 @@
     ]
    ]
   },
+  "d_0": {
+   "id": "d_0",
+   "name": "Hole diameter",
+   "var": "d_0",
+   "symbol": "d_{0}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 22.0,
+   "range": [
+    9.0,
+    70.0
+   ]
+  },
+  "d_bolt": {
+   "id": "d_bolt",
+   "name": "Nominal diameter of the bolt",
+   "var": "d_bolt",
+   "symbol": "d",
+   "unit": "mm",
+   "kind": "input",
+   "example": 20.0,
+   "range": [
+    8.0,
+    64.0
+   ]
+  },
+  "d_m": {
+   "id": "d_m",
+   "name": "Mean of the across-points and across-flats dimensions of the bolt head or nut",
+   "var": "d_m",
+   "symbol": "d_{m}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 32.3,
+   "range": [
+    10.0,
+    120.0
+   ]
+  },
   "d_s": {
    "id": "d_s",
    "name": "Diameter of the shank of the stud",
@@ -661,6 +1842,121 @@
    "range": [
     16.0,
     25.0
+   ]
+  },
+  "d_y": {
+   "id": "d_y",
+   "name": "Effective depth in the y direction",
+   "var": "d_y",
+   "symbol": "d_{y}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 260.0,
+   "range": [
+    100.0,
+    2900.0
+   ]
+  },
+  "d_z": {
+   "id": "d_z",
+   "name": "Effective depth in the z direction",
+   "var": "d_z",
+   "symbol": "d_{z}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 240.0,
+   "range": [
+    100.0,
+    2900.0
+   ]
+  },
+  "dc_dev": {
+   "id": "dc_dev",
+   "name": "Allowance in design for deviation (cover)",
+   "var": "dc_dev",
+   "symbol": "Δc_{dev}",
+   "unit": "mm",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "4.4",
+   "clause": "4.4.1.3(1)",
+   "value": 10.0,
+   "example": 10.0,
+   "ndp": true,
+   "range": [
+    0.0,
+    15.0
+   ]
+  },
+  "e_1": {
+   "id": "e_1",
+   "name": "End distance in the direction of load transfer",
+   "var": "e_1",
+   "symbol": "e_{1}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 50.0,
+   "range": [
+    10.0,
+    300.0
+   ]
+  },
+  "e_2": {
+   "id": "e_2",
+   "name": "Edge distance at right angles to the load",
+   "var": "e_2",
+   "symbol": "e_{2}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 40.0,
+   "range": [
+    10.0,
+    300.0
+   ]
+  },
+  "eta_1": {
+   "id": "eta_1",
+   "name": "Coefficient for the bond conditions",
+   "var": "eta_1",
+   "symbol": "η_{1}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "8.4",
+   "clause": "8.4.2(2)",
+   "value": 1.0,
+   "example": 1.0,
+   "choices": [
+    {
+     "value": 1.0,
+     "label": "good bond conditions"
+    },
+    {
+     "value": 0.7,
+     "label": "all other cases"
+    }
+   ],
+   "range": [
+    0.7,
+    1.0
+   ]
+  },
+  "eta_w": {
+   "id": "eta_w",
+   "name": "Factor for the shear area of webs (EN 1993-1-5)",
+   "var": "eta_w",
+   "symbol": "η",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "6.2.6",
+   "clause": "6.2.6(3)",
+   "value": 1.2,
+   "example": 1.2,
+   "ndp": true,
+   "range": [
+    1.0,
+    1.2
    ]
   },
   "f_ck": {
@@ -691,15 +1987,28 @@
   },
   "f_u": {
    "id": "f_u",
-   "name": "Specified ultimate tensile strength of the stud material",
+   "name": "Ultimate tensile strength of the steel (plate, section or stud material)",
    "var": "f_u",
    "symbol": "f_{u}",
    "unit": "MPa",
    "kind": "input",
    "example": 450.0,
    "range": [
+    300.0,
+    700.0
+   ]
+  },
+  "f_ub": {
+   "id": "f_ub",
+   "name": "Ultimate tensile strength of the bolt",
+   "var": "f_ub",
+   "symbol": "f_{ub}",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 800.0,
+   "range": [
     400.0,
-    500.0
+    1000.0
    ]
   },
   "f_y": {
@@ -816,33 +2125,56 @@
   },
   "gamma_M0": {
    "id": "gamma_M0",
-   "name": "Partial factor for resistance of cross-sections of structural steel",
+   "name": "Partial factor for resistance of cross-sections",
    "var": "gamma_M0",
    "symbol": "γ_{M0}",
    "unit": "-",
    "kind": "coefficient",
-   "code": "EN 1994-1-1",
-   "topic": "2.4",
-   "clause": "2.4.1.2(4)",
+   "code": "EN 1993-1-1",
+   "topic": "6.1",
+   "clause": "6.1(1)",
    "value": 1.0,
    "example": 1.0,
    "ndp": true,
    "range": [
     1.0,
     1.1
-   ],
-   "background": [
-    {
-     "kind": "guidance",
-     "text": "EN 1994-1-1 takes γ_a = γ_M0 from EN 1993-1-1; the recommended value there is 1.0.",
-     "refs": [
-      {
-       "id": "EN1994-1-1",
-       "at": "2.4.1.2",
-       "text": "EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1: General rules and rules for buildings."
-      }
-     ]
-    }
+   ]
+  },
+  "gamma_M1": {
+   "id": "gamma_M1",
+   "name": "Partial factor for resistance of members to instability",
+   "var": "gamma_M1",
+   "symbol": "γ_{M1}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "6.1",
+   "clause": "6.1(1)",
+   "value": 1.0,
+   "example": 1.0,
+   "ndp": true,
+   "range": [
+    1.0,
+    1.15
+   ]
+  },
+  "gamma_M2": {
+   "id": "gamma_M2",
+   "name": "Partial factor for resistance of cross-sections in tension to fracture, and of bolts and welds",
+   "var": "gamma_M2",
+   "symbol": "γ_{M2}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-1",
+   "topic": "6.1",
+   "clause": "6.1(1)",
+   "value": 1.25,
+   "example": 1.25,
+   "ndp": true,
+   "range": [
+    1.1,
+    1.35
    ]
   },
   "gamma_S": {
@@ -943,6 +2275,45 @@
     ]
    ]
   },
+  "h_a": {
+   "id": "h_a",
+   "name": "Depth of the steel section",
+   "var": "h_a",
+   "symbol": "h_{a}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 450.0,
+   "range": [
+    100.0,
+    2000.0
+   ]
+  },
+  "h_c_fl": {
+   "id": "h_c_fl",
+   "name": "Thickness of the concrete flange (above any sheeting)",
+   "var": "h_c_fl",
+   "symbol": "h_{c}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 150.0,
+   "range": [
+    50.0,
+    500.0
+   ]
+  },
+  "h_p": {
+   "id": "h_p",
+   "name": "Overall depth of the profiled steel sheeting",
+   "var": "h_p",
+   "symbol": "h_{p}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 60.0,
+   "range": [
+    20.0,
+    120.0
+   ]
+  },
   "h_sc": {
    "id": "h_sc",
    "name": "Overall nominal height of the stud",
@@ -954,6 +2325,19 @@
    "range": [
     50.0,
     200.0
+   ]
+  },
+  "h_w": {
+   "id": "h_w",
+   "name": "Depth of the web between the flanges",
+   "var": "h_w",
+   "symbol": "h_{w}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 278.6,
+   "range": [
+    50.0,
+    5000.0
    ]
   },
   "k_1": {
@@ -1017,6 +2401,24 @@
     ]
    ]
   },
+  "k_1_p": {
+   "id": "k_1_p",
+   "name": "Coefficient for the axial stress in punching",
+   "var": "k_1_p",
+   "symbol": "k_{1}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "6.4",
+   "clause": "6.4.4(1)",
+   "value": 0.1,
+   "example": 0.1,
+   "ndp": true,
+   "range": [
+    0.05,
+    0.15
+   ]
+  },
   "k_2": {
    "id": "k_2",
    "name": "Coefficient for the distribution of strain",
@@ -1048,6 +2450,33 @@
      0.5,
      2
     ]
+   ]
+  },
+  "k_2_bolt": {
+   "id": "k_2_bolt",
+   "name": "Factor for the tension resistance of a bolt",
+   "var": "k_2_bolt",
+   "symbol": "k_{2}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1993-1-8",
+   "topic": "3.6",
+   "clause": "3.6.1(1), Table 3.4",
+   "value": 0.9,
+   "example": 0.9,
+   "choices": [
+    {
+     "value": 0.9,
+     "label": "normal bolts"
+    },
+    {
+     "value": 0.63,
+     "label": "countersunk bolts"
+    }
+   ],
+   "range": [
+    0.63,
+    0.9
    ]
   },
   "k_3": {
@@ -1098,6 +2527,33 @@
     ]
    ]
   },
+  "k_c": {
+   "id": "k_c",
+   "name": "Coefficient for the stress distribution in the section before cracking",
+   "var": "k_c",
+   "symbol": "k_{c}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1992-1-1",
+   "topic": "7.3.2",
+   "clause": "7.3.2(2)",
+   "value": 0.4,
+   "example": 0.4,
+   "choices": [
+    {
+     "value": 1.0,
+     "label": "pure tension"
+    },
+    {
+     "value": 0.4,
+     "label": "bending of a rectangular section (no axial force)"
+    }
+   ],
+   "range": [
+    0.4,
+    1.0
+   ]
+  },
   "k_t": {
    "id": "k_t",
    "name": "Factor for the duration of the load",
@@ -1129,6 +2585,93 @@
      0.4,
      2
     ]
+   ]
+  },
+  "k_t_max": {
+   "id": "k_t_max",
+   "name": "Upper limit of the reduction factor k_t",
+   "var": "k_t_max",
+   "symbol": "k_{t,max}",
+   "unit": "-",
+   "kind": "coefficient",
+   "code": "EN 1994-1-1",
+   "topic": "6.6.4",
+   "clause": "6.6.4.2(2), Table 6.2",
+   "value": 0.85,
+   "example": 0.85,
+   "choices": [
+    {
+     "value": 0.85,
+     "label": "1 stud per rib, sheeting t ≤ 1 mm, through-deck welded"
+    },
+    {
+     "value": 1.0,
+     "label": "1 stud per rib, t > 1 mm, through-deck welded"
+    },
+    {
+     "value": 0.7,
+     "label": "2 studs per rib, t ≤ 1 mm"
+    },
+    {
+     "value": 0.8,
+     "label": "2 studs per rib, t > 1 mm"
+    }
+   ],
+   "range": [
+    0.5,
+    1.0
+   ]
+  },
+  "l_0": {
+   "id": "l_0",
+   "name": "Effective length of the column",
+   "var": "l_0",
+   "symbol": "l_{0}",
+   "unit": "m",
+   "kind": "input",
+   "example": 3500.0,
+   "range": [
+    1000.0,
+    30000.0
+   ]
+  },
+  "l_0_b": {
+   "id": "l_0_b",
+   "name": "Distance between points of zero moment (effective flange width)",
+   "var": "l_0_b",
+   "symbol": "l_{0}",
+   "unit": "m",
+   "kind": "input",
+   "example": 8000.0,
+   "range": [
+    1000.0,
+    60000.0
+   ]
+  },
+  "n_r": {
+   "id": "n_r",
+   "name": "Number of stud connectors in one rib at a beam intersection",
+   "var": "n_r",
+   "symbol": "n_{r}",
+   "unit": "-",
+   "kind": "input",
+   "example": 1.0,
+   "range": [
+    1.0,
+    3.0
+   ]
+  },
+  "p_2": {
+   "id": "p_2",
+   "name": "Spacing of bolt lines at right angles to the load",
+   "var": "p_2",
+   "symbol": "p_{2}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 70.0,
+   "range": [
+    20.0,
+    500.0
    ]
   },
   "phi_bar": {
@@ -1169,6 +2712,71 @@
     ]
    ]
   },
+  "rho_1_lap": {
+   "id": "rho_1_lap",
+   "name": "Percentage of reinforcement lapped within 0.65 l_0 of the centre of the lap considered",
+   "var": "rho_1_lap",
+   "symbol": "ρ_{1}",
+   "unit": "%",
+   "kind": "input",
+   "example": 0.5,
+   "range": [
+    0.0,
+    1.0
+   ]
+  },
+  "rho_c": {
+   "id": "rho_c",
+   "name": "Required compression reinforcement ratio at mid-span",
+   "var": "rho_c",
+   "symbol": "ρ'",
+   "unit": "-",
+   "kind": "input",
+   "example": 0.0,
+   "range": [
+    0.0,
+    0.04
+   ]
+  },
+  "rho_ly": {
+   "id": "rho_ly",
+   "name": "Bonded tension reinforcement ratio in the y direction (over the slab width c + 3d each side)",
+   "var": "rho_ly",
+   "symbol": "ρ_{ly}",
+   "unit": "-",
+   "kind": "input",
+   "example": 0.008,
+   "range": [
+    0.001,
+    0.04
+   ]
+  },
+  "rho_lz": {
+   "id": "rho_lz",
+   "name": "Bonded tension reinforcement ratio in the z direction",
+   "var": "rho_lz",
+   "symbol": "ρ_{lz}",
+   "unit": "-",
+   "kind": "input",
+   "example": 0.006,
+   "range": [
+    0.001,
+    0.04
+   ]
+  },
+  "rho_req": {
+   "id": "rho_req",
+   "name": "Required tension reinforcement ratio at mid-span (at the support for cantilevers)",
+   "var": "rho_req",
+   "symbol": "ρ",
+   "unit": "-",
+   "kind": "input",
+   "example": 0.005,
+   "range": [
+    0.0005,
+    0.04
+   ]
+  },
   "s": {
    "id": "s",
    "name": "Spacing of the stirrups",
@@ -1189,6 +2797,19 @@
      150.0,
      2
     ]
+   ]
+  },
+  "s_r": {
+   "id": "s_r",
+   "name": "Radial spacing of the perimeters of punching shear reinforcement",
+   "var": "s_r",
+   "symbol": "s_{r}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 150.0,
+   "range": [
+    50.0,
+    400.0
    ]
   },
   "sigma_cp": {
@@ -1238,6 +2859,58 @@
     ]
    ]
   },
+  "sigma_s_cr": {
+   "id": "sigma_s_cr",
+   "name": "Stress permitted in the reinforcement immediately after cracking",
+   "var": "sigma_s_cr",
+   "symbol": "σ_{s}",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 500.0,
+   "range": [
+    100.0,
+    600.0
+   ]
+  },
+  "sigma_sd": {
+   "id": "sigma_sd",
+   "name": "Design stress of the bar where the anchorage is measured from",
+   "var": "sigma_sd",
+   "symbol": "σ_{sd}",
+   "unit": "MPa",
+   "kind": "input",
+   "example": 435.0,
+   "range": [
+    50.0,
+    500.0
+   ]
+  },
+  "t_plate": {
+   "id": "t_plate",
+   "name": "Thickness of the connected part",
+   "var": "t_plate",
+   "symbol": "t",
+   "unit": "mm",
+   "kind": "input",
+   "example": 10.0,
+   "range": [
+    3.0,
+    100.0
+   ]
+  },
+  "t_w": {
+   "id": "t_w",
+   "name": "Web thickness",
+   "var": "t_w",
+   "symbol": "t_{w}",
+   "unit": "mm",
+   "kind": "input",
+   "example": 7.1,
+   "range": [
+    3.0,
+    80.0
+   ]
+  },
   "theta": {
    "id": "theta",
    "name": "Angle between the concrete strut and the member axis",
@@ -1255,6 +2928,19 @@
      0.785398,
      2
     ]
+   ]
+  },
+  "u_out": {
+   "id": "u_out",
+   "name": "Outer circumference of the cross-section",
+   "var": "u_out",
+   "symbol": "u",
+   "unit": "mm",
+   "kind": "input",
+   "example": 1600.0,
+   "range": [
+    400.0,
+    20000.0
    ]
   },
   "w_max": {
@@ -1336,11 +3022,111 @@
   "eps_sm_cm",
   "w_k",
   "E_c_eff",
+  "f_ctk_095",
+  "c_min",
+  "cover_nom",
+  "b_eff",
+  "i_c",
+  "lambda_c",
+  "n_rel",
+  "lambda_lim",
+  "V_Rd_s_a",
+  "V_Rd_max_a",
+  "A_sw_max",
+  "dF_td",
+  "t_ef_i",
+  "A_k",
+  "u_k",
+  "T_Rd_max",
+  "A_sl_T",
+  "asw_s_T",
+  "util_TV",
+  "d_eff_p",
+  "k_p",
+  "v_min_p",
+  "rho_l_p",
+  "u_1",
+  "u_0",
+  "v_Ed_p",
+  "v_Ed_0",
+  "v_Rd_c_p",
+  "v_Rd_max_p",
+  "f_ywd_ef",
+  "v_Rd_cs",
+  "u_out_ef",
+  "k_h_cr",
+  "A_s_min_cr",
+  "rho_0",
+  "ld_lim",
+  "eta_2",
+  "f_bd",
+  "l_b_rqd",
+  "l_b_min",
+  "l_bd",
+  "alpha_6",
+  "l_0_min",
+  "l_lap",
+  "A_s_min",
+  "A_s_max",
+  "rho_w",
+  "rho_w_min",
+  "s_l_max",
+  "eps_y",
+  "ct_int_c1",
+  "ct_int_c2",
+  "ct_int_c3",
+  "ct_int_b1",
+  "ct_int_b2",
+  "ct_int_b3",
+  "ct_out_c1",
+  "ct_out_c2",
+  "ct_out_c3",
+  "N_pl_Rd_a",
+  "N_u_Rd",
+  "N_t_Rd",
+  "M_pl_Rd",
+  "M_el_Rd",
+  "V_pl_Rd",
+  "rho_V",
+  "N_cr",
+  "lambda_bar",
+  "Phi",
+  "chi",
+  "N_b_Rd",
+  "lambda_bar_LT",
+  "Phi_LT",
+  "chi_LT",
+  "M_b_Rd",
+  "F_v_Rd",
+  "alpha_d",
+  "alpha_b",
+  "k_1_bolt",
+  "F_b_Rd",
+  "F_t_Rd",
+  "B_p_Rd",
+  "util_vt",
+  "f_vw_d",
+  "F_w_Rd",
   "f_yd_a",
   "alpha_stud",
   "P_Rd_s",
   "P_Rd_c",
   "P_Rd",
-  "N_pl_Rd"
+  "N_pl_Rd",
+  "b_eff_c",
+  "N_pl_a",
+  "N_c_f",
+  "x_pl",
+  "M_pl_Rd_c",
+  "eta_min_sc",
+  "k_t_rib",
+  "EI_eff",
+  "N_cr_c",
+  "N_pl_Rk",
+  "lambda_bar_c",
+  "Phi_c",
+  "chi_c",
+  "N_b_Rd_c",
+  "delta_a"
  ]
 }

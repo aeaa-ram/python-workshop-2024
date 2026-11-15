@@ -1,0 +1,20 @@
+id: lambda_bar
+name: Non-dimensional slenderness for flexural buckling (class 1 to 3)
+formula: sqrt(A_sec * f_y / N_cr)
+params:
+- A_sec
+- f_y
+- N_cr
+var: lambda_bar
+symbol: λ̄
+unit: '-'
+code: EN 1993-1-1
+topic: 6.3.1
+topic_path:
+- 6 Ultimate limit states
+- 6.3 Buckling resistance of members
+- 6.3.1 Uniform members in compression
+clause: 6.3.1.2(1)
+eq: (6.50)
+basis: code
+version: d5c4bbeac05c

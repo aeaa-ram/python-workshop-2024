@@ -1,0 +1,28 @@
+id: f_bd
+name: Design value of the ultimate bond stress
+formula: 2.25 * eta_1 * eta_2 * f_ctd
+params:
+- eta_1
+- eta_2
+- f_ctd
+var: f_bd
+symbol: f_{bd}
+unit: MPa
+code: EN 1992-1-1
+topic: '8.4'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.4 Anchorage of longitudinal reinforcement
+clause: 8.4.2(2)
+eq: (8.2)
+basis: code
+background:
+- kind: pitfall
+  text: For bond, f_ctd is limited to the value for C60/75 (8.4.2(2) and 3.1.6(2)), because of the brittleness of
+    higher strength concrete; this object does not apply that cap.
+  refs:
+  - id: EN1992-1-1
+    at: 8.4.2(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 024e12c1116d

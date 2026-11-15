@@ -1,0 +1,24 @@
+id: rho_w
+name: Shear reinforcement ratio
+formula: A_sw / (s * b_w * sin(alpha))
+params:
+- A_sw
+- s
+- b_w
+- alpha
+var: rho_w
+symbol: ρ_{w}
+unit: '-'
+code: EN 1992-1-1
+topic: '9.2'
+topic_path:
+- 9 Detailing of members and particular rules
+- 9.2 Beams
+clause: 9.2.2(5)
+eq: (9.4)
+basis: code
+checks:
+- when: rho_w >= rho_w_min
+  text: ρ_w ≥ ρ_w,min
+  clause: 9.2.2(5)
+version: b81ed25a820b

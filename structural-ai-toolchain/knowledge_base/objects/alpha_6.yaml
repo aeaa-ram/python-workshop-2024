@@ -1,0 +1,16 @@
+id: alpha_6
+name: Coefficient for the percentage of lapped bars
+formula: min(max(sqrt(rho_1_lap / 0.25), 1), 1.5)
+params:
+- rho_1_lap
+var: alpha_6
+symbol: α_{6}
+unit: '-'
+code: EN 1992-1-1
+topic: '8.7'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.7 Laps and mechanical couplers
+clause: 8.7.3(1), Table 8.3
+basis: code
+version: 12b6a2c6412d

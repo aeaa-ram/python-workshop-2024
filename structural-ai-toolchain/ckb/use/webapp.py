@@ -81,6 +81,7 @@ def payload(kb: KnowledgeBase, tax=None) -> dict:
             "ref": o.reference_text, "code": o.code, "topic": o.topic, "path": o.topic_path, "basis": o.basis,
             "params": o.params, "check": o.check, "sense": o.sense, "fixed": o.fixed, "refs": o.refs,
             "mlF": X.to_mathml(o.tree, kb.ml), "mlS": X.to_mathml(o.tree, kb.ml, slots=True),
+            "tex": f"{o.tex} = {X.to_latex(o.tree, kb.tex)}",
             "checks": [{"text": c.get("text", c["when"]), "clause": c.get("clause", ""),
                         "syms": X.symbols(X.parse(c["when"]))} for c in o.checks],
             "background": o.background,
@@ -216,7 +217,7 @@ h4{font-size:12px;margin:14px 0 6px;font-weight:600;letter-spacing:.05em;text-tr
 .ctl .u{border-color:transparent;background:none;color:var(--muted)}
 .hint{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center}
 .tag{border:1px solid var(--rule);border-radius:3px;padding:0 5px;font-size:10.5px;letter-spacing:.03em}
-.warn-text{color:var(--bad-ink)}
+.warn-text{color:var(--bad-ink)} .hint .practice{font-style:italic}
 .choice{border:1px dashed var(--rule);background:none;border-radius:3px;padding:0 6px;font-size:11.5px;cursor:pointer;color:var(--ink2)}
 .opts{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--ink2);padding-bottom:8px;border-bottom:1px solid var(--rule);margin-bottom:6px}
 .opts label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
@@ -242,10 +243,13 @@ table.cases th:first-child,table.cases td:first-child{text-align:left}
 table.cases th{font-weight:600;border-bottom-color:var(--rule)} table.cases th small{display:block;font-weight:400;color:var(--muted)}
 table.cases tr.gov td{background:var(--accent-soft);font-weight:600}
 .scroll{overflow-x:auto}
+.rb{display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;font-size:12.5px}
+.rb label{display:flex;flex-direction:column;gap:2px;color:var(--ink2)} .rb label.ck{flex-direction:row;align-items:center;gap:5px}
+.rb input:not([type=checkbox]),.rb select{padding:3px 7px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;min-width:9em}
 textarea.yaml{width:100%;min-height:220px;font:12px/1.45 var(--mono);border:1px solid var(--rule);background:var(--raised);padding:8px;border-radius:4px}
 pre.code{font:12px/1.5 var(--mono);background:var(--raised);border:1px solid var(--soft);padding:10px 12px;overflow:auto;border-radius:4px;margin:6px 0 12px}
 .note{border-left:3px solid var(--rule);padding:4px 0 4px 10px;margin:8px 0}
-.note.pitfall{border-left-color:var(--serious)} .note.limitation{border-left-color:var(--warn)} .note.scope{border-left-color:var(--s1)}
+.note.pitfall{border-left-color:var(--serious)} .note.limitation{border-left-color:var(--warn)} .note.scope{border-left-color:var(--s1)} .note.practice{border-left-color:var(--s2)}
 .note .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .note .src{font-size:12px;color:var(--muted);margin-top:2px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0 4px}
@@ -589,6 +593,10 @@ function inputRow(p, value, isCheck) {
     hint.push(`<button type="button" class="choice" data-set="${esc(p)}" data-v="${ch.value}" title="${esc(ch.label)}">${esc(fmt(shown(p, ch.value)))} ${esc(ch.label)}</button>`);
   if (D.objects[p] && w.given.has(p)) hint.push(`<button type="button" class="give" data-ungive="${esc(p)}">calculate instead</button>`);
   if (q && q.ref) hint.push(`<span>${esc(q.ref)}</span>`);
+  const tips = new Set();
+  for (const s of plan(state.target, w.given).steps) for (const b of D.objects[s].background || [])
+    if (b.kind === "practice" && b.about === p) tips.add(b.text.split(": ")[0]);
+  for (const t of tips) hint.push(`<span class="practice">${esc(t)}</span>`);
   if (q && q.range && typeof value === "number" && (value < q.range[0] - 1e-9 || value > q.range[1] + 1e-9))
     hint.push(`<span class="warn-text">outside the usual range ${esc(fmt(shown(p, q.range[0])))} to ${esc(fmt(shown(p, q.range[1])))} ${esc(ulabel(u))}</span>`);
   return `<div class="inp"><label for="in-${esc(p)}"><span class="nm">${esc(it ? it.name : p)}${isCheck ? " (to check against)" : ""}</span><math>${symML(p)}</math></label>
@@ -681,7 +689,7 @@ function renderCases() {
   const id = state.target, o = D.objects[id], list = cases();
   let h = `<h4>Cases</h4><p class="small muted">Add the current inputs as a case to compare several members. The governing case is highlighted; a case opens again when you click its name.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" type="button" id="add-case">Add current inputs as a case</button>
-    <button class="btn small" type="button" id="tpl">Report template${list.length ? ` (${list.length} case${list.length > 1 ? "s" : ""})` : ""}</button>
+    <button class="btn small" type="button" id="tpl">Build a report${list.length ? ` (${list.length} case${list.length > 1 ? "s" : ""})` : ""}</button>
     ${list.length ? `<button class="btn small" type="button" id="clear-cases">Remove all cases</button>` : ""}</div>`;
   if (list.length) {
     const res = list.map(caseResult);
@@ -716,8 +724,11 @@ function templateYAML() {
   const id = state.target, o = D.objects[id], w = W(id);
   let list = cases();
   if (!list.length) list = [currentCase("Case 1")];
-  const L = [`# Report template for ${o.text} (${o.ref}).`, `# Save as ${id}_report.yaml and run:`, `#   python -m ckb report --template ${id}_report.yaml --pdf`,
-    `title: ${o.name}`, `project: ''`, `number: ''`, `made_by: ''`, `checked_by: ''`, `style:`, `  decimals: ${S.decimals}`, `  min_significant: ${S.minsig}`];
+  const rb = reportOpts();
+  const q = v => JSON.stringify(String(v || ""));
+  const L = [`# Report template for ${o.text} (${o.ref}).`, `# Save as ${id}_report.yaml and run:`, `#   python -m ckb report --template ${id}_report.yaml --pdf --docx`,
+    `title: ${q(rb.title)}`, `project: ${q(rb.project)}`, `number: ${q(rb.number)}`, `made_by: ${q(rb.made_by)}`, `checked_by: ${q(rb.checked_by)}`,
+    `style:`, `  decimals: ${S.decimals}`, `  min_significant: ${S.minsig}`];
   const units = Object.entries(S.units).filter(([k]) => item(k));
   L.push(`  units: {${units.map(([k, u]) => `${k}: ${u}`).join(", ")}}`);
   L.push(`cases:          # values in the usual units: ${[...new Set(list.flatMap(c => Object.keys(c.values)))].map(k => `${k} [${item(k) ? item(k).units[0][0] : ""}]`).join(", ")}`);
@@ -727,13 +738,37 @@ function templateYAML() {
     L.push(`  - {${cells.join(", ")}}`);
   }
   const show = Object.keys(w.show).filter(k => w.show[k]);
-  L.push(`blocks:`, `  - heading: ${o.name}`, `  - calc: ${id}`, `    case: governing          # governing | first | a case name`,
+  const remarks = Object.entries(rb.remarks).filter(([, v]) => v.trim());
+  L.push(`blocks:`);
+  if (rb.heading) L.push(`  - heading: ${q(rb.heading)}`);
+  if (rb.text) L.push(`  - text: ${q(rb.text)}`);
+  if (rb.calc) L.push(`  - calc: ${id}`, `    case: governing          # governing | first | a case name`,
     `    show: [${show.join(", ")}]`, `    steps: ${w.steps === "result" ? "result" : "all"}                # all | result | [k, rho_l, ...]`,
-    `    remarks: {}              # e.g. {d: "from drawing 123"}`, `    limitations: false`);
-  if (list.length > 1) L.push(`  - table: ${id}`, `    sort: ${o.check ? "utilisation desc" : ""}`);
-  const x = plan(id, w.given).inputs.find(p => D.quantities[p] && D.quantities[p].kind === "input");
-  if (x) L.push(`  - chart: ${id}`, `    x: ${x}`);
+    `    remarks: {${remarks.map(([k, v]) => `${k}: ${q(v)}`).join(", ")}}`, `    limitations: ${rb.limitations ? "true" : "false"}`);
+  if (rb.table && list.length > 1) L.push(`  - table: ${id}`, `    sort: ${o.check ? "utilisation desc" : ""}`);
+  if (rb.chart && rb.x) L.push(`  - chart: ${id}`, `    x: ${rb.x}`);
   return L.join("\n") + "\n";
+}
+function reportOpts() {
+  const id = state.target, o = D.objects[id], w = W(id);
+  if (!w.report) {
+    const x = plan(id, w.given).inputs.find(p => D.quantities[p] && D.quantities[p].kind === "input") || "";
+    w.report = {title: o.name, project: "", number: "", made_by: "", checked_by: "", heading: o.name, text: "",
+                calc: true, table: true, chart: true, limitations: false, x, remarks: {}};
+  }
+  return w.report;
+}
+function renderBuilder() {
+  const id = state.target, w = W(id), rb = reportOpts(), {inputs} = plan(id, w.given);
+  const fld = (k, l) => `<label>${l}<input data-rb="${k}" value="${esc(rb[k])}"></label>`;
+  const chk = (k, l) => `<label class="ck"><input type="checkbox" data-rb="${k}" ${rb[k] ? "checked" : ""}>${l}</label>`;
+  const xs = inputs.filter(p => D.quantities[p] && D.quantities[p].kind === "input");
+  $("#tpl-box").innerHTML = `<h4>Report</h4><p class="small muted">Choose what the report shows; the template below follows. Save it as a file and run the command in its first lines (or use the Excel form: <code>python -m ckb report-template ${esc(id)} -o report.xlsx</code>). What is shown per step follows the Show options above the calculation; decimals and units follow Settings.</p>
+    <div class="rb">${fld("title", "Title")}${fld("project", "Project")}${fld("number", "Calc. no.")}${fld("made_by", "Made by")}${fld("checked_by", "Checked by")}${fld("heading", "Heading")}${fld("text", "Text under the heading")}</div>
+    <div class="rb">${chk("calc", "Calculation of the governing case")}${chk("limitations", "Scope and limitations")}${chk("table", "Summary table of all cases")}${chk("chart", "Chart against")}
+      <select data-rb="x">${xs.map(p => `<option value="${esc(p)}" ${p === rb.x ? "selected" : ""}>${esc(symText(p))}</option>`).join("")}</select></div>
+    <details><summary>Remarks beside the inputs</summary><div class="rb">${inputs.map(p => `<label>${esc(symText(p))}<input data-rem="${esc(p)}" value="${esc(rb.remarks[p] || "")}"></label>`).join("")}</div></details>
+    <textarea class="yaml" id="yaml" spellcheck="false" readonly>${esc(templateYAML())}</textarea><button class="btn small" type="button" id="copy">Copy</button> <span id="copied" class="small muted"></span>`;
 }
 function currentCase(name) {
   const id = state.target, w = W(id), vals = valuesFor(id), {inputs} = plan(id, w.given), values = {};
@@ -745,9 +780,10 @@ function currentCase(name) {
 }
 
 // ---------------------------------------------------------------- Design background
-const KINDS = [["scope", "Scope"], ["limitation", "Limitations"], ["pitfall", "Pitfalls"], ["guidance", "Guidance"], ["history", "History"]];
+const KINDS = [["scope", "Scope"], ["limitation", "Limitations"], ["pitfall", "Pitfalls"], ["guidance", "Guidance"], ["practice", "From practice"], ["history", "History"]];
 function noteHTML(b) {
-  const refs = (b.refs || []).map(r => `<span title="${esc(r.text || D.references[r.id] || "")}">${esc(r.id)}${r.at ? " " + esc(r.at) : ""}</span>`).join("; ");
+  let refs = (b.refs || []).map(r => `<span title="${esc(r.text || D.references[r.id] || "")}">${esc(r.id)}${r.at ? " " + esc(r.at) : ""}</span>`).join("; ");
+  if (b.kind === "practice") refs = b.from === "engineer" ? "an engineer's answer to a question from the distillation" : "how the source calculations use it";
   return `<div class="note ${esc(b.kind)}"><div>${esc(b.text)}</div>${refs ? `<div class="src">${refs}</div>` : ""}</div>`;
 }
 function renderBackground() {
@@ -916,6 +952,7 @@ function renderCode() {
   $("#panel").innerHTML = `<h4>Python code block</h4><p class="small muted">Design logic only: the expression, its clause and units, and one line that identifies the version.</p>
     <pre class="code">${esc(o.python)}</pre>
     <h4>The function this page runs</h4><pre class="code">${esc(F[o.id].toString())}</pre>
+    <h4>LaTeX</h4><p class="small muted">For a LaTeX document, or Word's equation editor in LaTeX mode.</p><pre class="code">${esc(o.tex)}</pre>
     <h4>The same logic as a file</h4><p class="small">Every output is printed from the same formula tree and carries the version <code>${esc(o.version)}</code>:</p>
     <pre class="code">python -m ckb excel ${esc(o.id)}            # Excel calculator, named ranges, live formulas
 python -m ckb mathcad ${esc(o.id)}          # Mathcad Prime worksheet
@@ -1042,11 +1079,7 @@ document.addEventListener("click", ev => {
   if (t.id === "reset") { const w = W(id); w.values = {}; w.entered = new Set(); w.given = new Set(); w.check = null; saveWork(id); renderInputs(); renderSheet(); return; }
   if (t.id === "add-case") { const l = cases(); l.push(currentCase(`Case ${l.length + 1}`)); setCases(l); renderCases(); return; }
   if (t.id === "clear-cases") { setCases([]); renderCases(); return; }
-  if (t.id === "tpl") {
-    $("#tpl-box").innerHTML = `<h4>Report template</h4><p class="small muted">Copy this into a file and run the command in its first lines. Change the cases, what is shown, units and remarks there; the report is regenerated from the knowledge base every time.</p>
-      <textarea class="yaml" id="yaml" spellcheck="false" readonly>${esc(templateYAML())}</textarea><button class="btn small" type="button" id="copy">Copy</button> <span id="copied" class="small muted"></span>`;
-    return;
-  }
+  if (t.id === "tpl") { renderBuilder(); return; }
   if (t.id === "copy") {
     const ta = $("#yaml"); ta.select();
     let ok = false;
@@ -1079,6 +1112,13 @@ document.addEventListener("input", ev => {
     tmp.innerHTML = inputRow(p, c, p === o.check);
     const old = row.querySelector(".hint"), nu = tmp.querySelector(".hint");
     if (old && nu) old.replaceWith(nu); else if (old) old.remove(); else if (nu) row.appendChild(nu);
+    return;
+  }
+  if (t.dataset.rb !== undefined || t.dataset.rem !== undefined) {
+    const rb = reportOpts();
+    if (t.dataset.rem !== undefined) rb.remarks[t.dataset.rem] = t.value;
+    else rb[t.dataset.rb] = t.type === "checkbox" ? t.checked : t.value;
+    $("#yaml").value = templateYAML();
     return;
   }
   if (t.id === "clo" || t.id === "chi") { const w = W(state.target), f = unitOf(w.chart.x)[1]; const a = parseFloat($("#clo").value.replace(",", ".")), b = parseFloat($("#chi").value.replace(",", ".")); if (isFinite(a) && isFinite(b)) { w.chart.lo = a * f; w.chart.hi = b * f; } drawSweep(); return; }

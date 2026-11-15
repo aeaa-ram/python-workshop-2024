@@ -1,0 +1,42 @@
+id: lambda_lim
+name: Slenderness below which second order effects may be ignored
+formula: 20 * A_phi * B_omega * C_rm / sqrt(n_rel)
+params:
+- A_phi
+- B_omega
+- C_rm
+- n_rel
+var: lambda_lim
+symbol: λ_{lim}
+unit: '-'
+code: EN 1992-1-1
+topic: '5.8'
+topic_path:
+- 5 Structural analysis
+- 5.8 Analysis of second order effects with axial load
+clause: 5.8.3.1(1)
+eq: (5.13N)
+basis: code
+ndp: true
+background:
+- kind: guidance
+  text: Second order effects may be ignored if λ ≤ λ_lim. A = 0.7, B = 1.1 and C = 0.7 are the values to use when
+    φ_ef, ω and r_m are not known; C = 0.7 is conservative for most members, but r_m = −1 (double curvature) gives
+    C = 2.7.
+  refs:
+  - id: EN1992-1-1
+    at: 5.8.3.1(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+- kind: pitfall
+  text: 'A low axial force gives a high λ_lim: (5.13N) is not meant for very small n, and some National Annexes
+    set a minimum. Check the National Annex for (5.13N).'
+  refs:
+  - id: EN1992-1-1
+    at: 5.8.3.1(1)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+  - id: DG-EC2
+    at: '5.8'
+    text: Beeby, A.W. and Narayanan, R.S. Designers' Guide to EN 1992-1-1 and EN 1992-1-2. Thomas Telford, 2005.
+version: 0fa19bb5a12b

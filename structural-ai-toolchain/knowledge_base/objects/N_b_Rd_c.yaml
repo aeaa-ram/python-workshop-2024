@@ -1,0 +1,23 @@
+id: N_b_Rd_c
+name: Buckling resistance of a composite column in axial compression
+formula: chi_c * N_pl_Rd
+params:
+- chi_c
+- N_pl_Rd
+var: N_b_Rd_c
+symbol: χ N_{pl,Rd}
+unit: kN
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.5(2)
+eq: (6.44)
+basis: code
+sense: resistance
+check: N_Ed
+fixed:
+  alpha_cc: 1.0
+version: 6e4f99869e81

@@ -1,0 +1,33 @@
+id: V_Rd_s_a
+name: Shear resistance of inclined shear reinforcement
+formula: A_sw / s * z_V * f_ywd * (cot(theta) + cot(alpha)) * sin(alpha)
+params:
+- A_sw
+- s
+- z_V
+- f_ywd
+- theta
+- alpha
+var: V_Rd_s_a
+symbol: V_{Rd,s}
+unit: kN
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(4)
+eq: (6.13)
+basis: code
+sense: resistance
+check: V_Ed
+background:
+- kind: guidance
+  text: With vertical links (α = 90°) this is expression (6.8).
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.3(3), (6.8)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 91f59b03c0f9

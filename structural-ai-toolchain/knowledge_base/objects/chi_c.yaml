@@ -1,0 +1,33 @@
+id: chi_c
+name: Reduction factor for flexural buckling of a composite column
+formula: min(1 / (Phi_c + sqrt(Phi_c ** 2 - lambda_bar_c ** 2)), 1)
+params:
+- Phi_c
+- lambda_bar_c
+var: chi_c
+symbol: χ
+unit: '-'
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.5(2)
+basis: code
+background:
+- kind: pitfall
+  text: 'The buckling curve comes from Table 6.5 of EN 1994-1-1, not from EN 1993-1-1 Table 6.2: concrete-filled
+    tubes up to 3 % reinforcement use curve a, encased I sections curve b about y–y and c about z–z.'
+  refs:
+  - id: EN1994-1-1
+    at: 6.7.3.5(2), Table 6.5
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+- kind: guidance
+  text: The expression of χ (EN 1993-1-1 cl. 6.3.1.2(1), expr. (6.49)) with Φ of value to determine the reduction
+    factor χ → value to determine χ for a composite column, λ̄ of non-dimensional slenderness for flexural buckling
+    (class 1 to 3) → relative slenderness of a composite column. It is taken from that object, so the two cannot
+    drift apart.
+  refs: []
+version: 34deb08f42d1

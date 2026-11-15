@@ -1,0 +1,29 @@
+id: dF_td
+name: Additional tensile force in the longitudinal reinforcement due to shear
+formula: 0.5 * V_Ed * (cot(theta) - cot(alpha))
+params:
+- V_Ed
+- theta
+- alpha
+var: dF_td
+symbol: ΔF_{td}
+unit: kN
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(7)
+eq: (6.18)
+basis: code
+sense: effect
+background:
+- kind: limitation
+  text: M_Ed/z + ΔF_td need not exceed M_Ed,max/z, with M_Ed,max the maximum moment along the beam.
+  refs:
+  - id: EN1992-1-1
+    at: 6.2.3(7)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 22ef6a39ce3e

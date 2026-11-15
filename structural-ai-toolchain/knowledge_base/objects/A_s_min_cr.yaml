@@ -1,0 +1,31 @@
+id: A_s_min_cr
+name: Minimum reinforcement area for crack control
+formula: k_c * k_h_cr * f_ct_eff * A_ct / sigma_s_cr
+params:
+- k_c
+- k_h_cr
+- f_ct_eff
+- A_ct
+- sigma_s_cr
+var: A_s_min_cr
+symbol: A_{s,min}
+unit: mm²
+code: EN 1992-1-1
+topic: 7.3.2
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.3 Crack control
+- 7.3.2 Minimum reinforcement areas
+clause: 7.3.2(2)
+eq: (7.1)
+basis: code
+background:
+- kind: guidance
+  text: σ_s may be taken as f_yk, or lower to satisfy the crack width limit with Table 7.2N (bar size) or 7.3N (spacing).
+    f_ct,eff = f_ctm, or lower if cracking is expected earlier than 28 days.
+  refs:
+  - id: EN1992-1-1
+    at: 7.3.2(2)
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: ad9059d2bfbe

@@ -1,0 +1,18 @@
+id: lambda_c
+name: Slenderness ratio of the column
+formula: l_0 / i_c
+params:
+- l_0
+- i_c
+var: lambda_c
+symbol: λ
+unit: '-'
+code: EN 1992-1-1
+topic: '5.8'
+topic_path:
+- 5 Structural analysis
+- 5.8 Analysis of second order effects with axial load
+clause: 5.8.3.2(1)
+eq: (5.14)
+basis: code
+version: 5519345f64be

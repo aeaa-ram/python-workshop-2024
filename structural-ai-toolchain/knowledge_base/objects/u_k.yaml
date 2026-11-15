@@ -1,0 +1,18 @@
+id: u_k
+name: Perimeter of the area A_k (rectangular section)
+formula: 2 * (b - t_ef_i + h - t_ef_i)
+params:
+- b
+- t_ef_i
+- h
+var: u_k
+symbol: u_{k}
+unit: mm
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(3)
+basis: mechanics
+version: 5f362b46be24

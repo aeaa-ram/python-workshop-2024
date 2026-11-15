@@ -1,0 +1,21 @@
+id: v_Ed_0
+name: Punching shear stress at the column face
+formula: beta_p * V_Ed / (u_0 * d_eff_p)
+params:
+- beta_p
+- V_Ed
+- u_0
+- d_eff_p
+var: v_Ed_0
+symbol: v_{Ed,0}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(3)
+eq: (6.53)
+basis: code
+sense: effect
+version: f8be3f0fadc1

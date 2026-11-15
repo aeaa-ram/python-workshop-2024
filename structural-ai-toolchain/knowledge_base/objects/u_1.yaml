@@ -1,0 +1,27 @@
+id: u_1
+name: Basic control perimeter at 2d from a rectangular internal column
+formula: 2 * (c_1 + c_2) + 4 * pi * d_eff_p
+params:
+- c_1
+- c_2
+- d_eff_p
+var: u_1
+symbol: u_{1}
+unit: mm
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.2(1)
+basis: mechanics
+background:
+- kind: limitation
+  text: An internal rectangular column without nearby openings; edge and corner columns, openings within 6d and
+    column heads change the perimeter (Figures 6.14 to 6.15).
+  refs:
+  - id: EN1992-1-1
+    at: 6.4.2(3), (4), 6.4.4
+    text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 47d68a402424

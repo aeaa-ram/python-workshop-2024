@@ -7,7 +7,7 @@ def P_Rd_s(f_u, d_s, gamma_V):
     """Design shear resistance of a headed stud, failure of the shank [N]
     EN 1994-1-1 cl. 6.6.3.1(1), expr. (6.18)
     
-    f_u      Specified ultimate tensile strength of the stud material [MPa]
+    f_u      Ultimate tensile strength of the steel (plate, section or stud material) [MPa]
     d_s      Diameter of the shank of the stud [mm]
     gamma_V  Partial factor for design shear resistance of a headed stud [-]
     """

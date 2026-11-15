@@ -1,0 +1,31 @@
+id: N_pl_Rd_a
+name: Design plastic resistance of the gross steel section (tension; compression of class 1 to 3)
+formula: A_sec * f_y / gamma_M0
+params:
+- A_sec
+- f_y
+- gamma_M0
+var: N_pl_Rd_a
+symbol: N_{pl,Rd}
+unit: kN
+code: EN 1993-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.3 Tension
+clause: 6.2.3(2), 6.2.4(2)
+eq: (6.6), (6.10)
+basis: code
+sense: resistance
+check: N_Ed
+background:
+- kind: guidance
+  text: 'One object for two clauses: N_pl,Rd in tension (6.6) and N_c,Rd in compression for class 1, 2 and 3 sections
+    (6.10) are the same expression. Class 4 sections in compression use A_eff.'
+  refs:
+  - id: EN1993-1-1
+    at: 6.2.3(2), 6.2.4(2)
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+version: 330d436ac46d

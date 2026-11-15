@@ -1,0 +1,36 @@
+id: V_pl_Rd
+name: Design plastic shear resistance
+formula: A_v * f_y / sqrt(3) / gamma_M0
+params:
+- A_v
+- f_y
+- gamma_M0
+var: V_pl_Rd
+symbol: V_{pl,Rd}
+unit: kN
+code: EN 1993-1-1
+topic: 6.2.6
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.6 Shear
+clause: 6.2.6(2)
+eq: (6.18)
+basis: code
+sense: resistance
+check: V_Ed
+checks:
+- when: h_w / t_w <= 72 * eps_y / eta_w
+  text: 'h_w/t_w ≤ 72 ε/η: no shear buckling check of the web needed'
+  clause: 6.2.6(6), (6.22)
+background:
+- kind: pitfall
+  text: 'A_v depends on the section and the load direction (6.2.6(3)): for rolled I and H sections loaded parallel
+    to the web A_v = A − 2 b t_f + (t_w + 2r) t_f, but not less than η h_w t_w. Using h t_w underestimates it; using
+    the full area overestimates it.'
+  refs:
+  - id: EN1993-1-1
+    at: 6.2.6(3)
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+version: f601d6fa6cd4

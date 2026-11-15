@@ -1,0 +1,17 @@
+id: i_c
+name: Radius of gyration of the uncracked concrete section
+formula: sqrt(I_conc / A_c)
+params:
+- I_conc
+- A_c
+var: i_c
+symbol: i
+unit: mm
+code: EN 1992-1-1
+topic: '5.8'
+topic_path:
+- 5 Structural analysis
+- 5.8 Analysis of second order effects with axial load
+clause: 5.8.3.2(1)
+basis: definition
+version: b6466bef40c7

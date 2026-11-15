@@ -1,0 +1,17 @@
+id: rho_0
+name: Reference reinforcement ratio
+formula: 0.001 * sqrt(f_ck)
+params:
+- f_ck
+var: rho_0
+symbol: ρ_{0}
+unit: '-'
+code: EN 1992-1-1
+topic: 7.4.2
+topic_path:
+- 7 Serviceability limit states (SLS)
+- 7.4 Deflection control
+- 7.4.2 Cases where calculations may be omitted
+clause: 7.4.2(2)
+basis: code
+version: aff59a0d367c

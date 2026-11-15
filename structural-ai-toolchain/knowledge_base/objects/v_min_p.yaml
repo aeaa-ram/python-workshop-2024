@@ -1,0 +1,22 @@
+id: v_min_p
+name: Minimum punching shear strength
+formula: 0.035 * k_p ** 1.5 * f_ck ** 0.5
+params:
+- k_p
+- f_ck
+var: v_min_p
+symbol: v_{min}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.4(1)
+basis: code
+background:
+- kind: guidance
+  text: The expression of v_min (EN 1992-1-1 cl. 6.2.2(1), expr. (6.3N)) with k of size factor for shear → size
+    factor for punching. It is taken from that object, so the two cannot drift apart.
+  refs: []
+version: 147a74785531

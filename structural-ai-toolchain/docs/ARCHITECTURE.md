@@ -64,7 +64,10 @@ already has:
 | something else | a new object of that code |
 
 So no expression is stored twice, and N_pl,Rd of EN 1994-1-1 uses the EN 1992-1-1 f_cd with α_cc = 1
-automatically.
+automatically. An object can also be an *instance* of another: `of: k, bind: {d: d_eff_p}` takes the
+expression of k with the punching effective depth (and records the link on k), so a correction to k
+reaches punching too. The registry now holds EN 1992-1-1, EN 1993-1-1, EN 1993-1-8 and EN 1994-1-1;
+objects no source has used yet are published as *not yet checked*.
 
 ## Stage by stage
 
@@ -108,6 +111,15 @@ can be read two ways are tried both ways (A_s for A_sl). A formula that matches 
 code expression is moved there (0.9·d in a shear sheet is the shear lever arm z_V, not the bending
 z).
 
+Before a difference is reported it is investigated (`investigate.py`): an input read from another
+calculation in the file, a width between the two results (per metre against full width), a unit
+factor on one input, one input with another value. Each hypothesis is tested by recalculating. An
+explained difference keeps its explanation; a lesson (per-metre working, units) becomes design
+background of the object. An unexplained one becomes a question for an engineer
+(`workspace/questions.yaml`, `ckb answer`), whose answer is applied in the next build. Values are
+looked up in the same calculation run first: same column, then same case and section, because one
+spreadsheet column can hold two calculations.
+
 For each simplification, `explain` says why it is reasonable *in that case* (σ_cp = 0 there, η = 1
 for f_ck ≤ 50, the recommended α_cc = 1). `effect` says whether the source's result is on the safe
 or unsafe side, from the object's sense (resistance or action effect).
@@ -146,7 +158,9 @@ be the start of a longer one. The web calculator runs the same index with the sa
 | Module | Output |
 |---|---|
 | `calc.py` | `run`: inputs in engineering units, every step, conditions, utilisation |
-| `report.py` | templates over many cases; calc, table, chart, text blocks; static HTML; PDF by headless Chromium |
+| `report.py` | templates over many cases; calc, table, chart, text blocks; static HTML; PDF by headless Chromium, with bookmarks |
+| `report_docx.py` | the same report as Word, equations as native Office Math (`expr.to_omml`) |
+| `report_form.py` | the report template as an Excel form (read and written), for people who don't edit YAML |
 | `webapp.py` | the single-file web calculator |
 | `excel_bridge.py` | Excel calculator with named ranges; read back and verified with LibreOffice |
 | `mathcad_export.py` | Mathcad Prime worksheet (math50 XML in an .mcdx package); verified by reading it back |

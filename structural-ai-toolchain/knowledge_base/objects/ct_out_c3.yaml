@@ -1,0 +1,29 @@
+id: ct_out_c3
+name: Class 3 limit of c/t, outstand flange in compression
+formula: 14 * eps_y
+params:
+- eps_y
+var: ct_out_c3
+symbol: (c/t)_{lim,3}
+unit: '-'
+code: EN 1993-1-1
+topic: '5.5'
+topic_path:
+- 5 Structural analysis
+- 5.5 Classification of cross-sections
+clause: 5.5.2, Table 5.2
+basis: code
+background:
+- kind: pitfall
+  text: 'c is the flat width of the part, without root radii or welds (Table 5.2), and the limits differ for parts
+    in bending, compression, or both. A part beyond the class 3 limit is class 4: its resistances use effective
+    properties from EN 1993-1-5.'
+  refs:
+  - id: EN1993-1-1
+    at: 5.5.2, Table 5.2
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+  - id: EN1993-1-5
+    at: '4'
+    text: 'EN 1993-1-5:2006 + AC:2009. Eurocode 3: Design of steel structures. Part 1-5: Plated structural elements.'
+version: 5d2268d7d5c5

@@ -1,0 +1,22 @@
+id: N_pl_Rk
+name: Characteristic plastic resistance to compression of a composite section
+formula: A_a * f_y + 0.85 * A_c * f_ck + A_s * f_yk
+params:
+- A_a
+- f_y
+- A_c
+- f_ck
+- A_s
+- f_yk
+var: N_pl_Rk
+symbol: N_{pl,Rk}
+unit: kN
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.3.3(2)
+basis: code
+version: 180efcd4e164

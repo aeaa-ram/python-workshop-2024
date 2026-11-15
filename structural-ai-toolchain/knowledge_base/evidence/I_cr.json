@@ -5,7 +5,7 @@
   "reasons": [
    "Logic: standard section analysis used with the code (EN 1992-1-1 cl. 7.3.4, 7.2).",
    "No independent implementation available to compare with.",
-   "Not yet seen in any source calculation."
+   "Seen in 2 source formula(s), none of them the code expression: nothing confirms it yet."
   ]
  },
  "evidence": {

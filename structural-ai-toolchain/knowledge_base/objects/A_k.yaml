@@ -1,0 +1,18 @@
+id: A_k
+name: Area enclosed by the centre-lines of the connecting walls (rectangular section)
+formula: (b - t_ef_i) * (h - t_ef_i)
+params:
+- b
+- t_ef_i
+- h
+var: A_k
+symbol: A_{k}
+unit: mm²
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(1)
+basis: mechanics
+version: e88c5dc793a4

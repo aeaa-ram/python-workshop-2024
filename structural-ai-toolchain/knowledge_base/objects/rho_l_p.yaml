@@ -1,0 +1,17 @@
+id: rho_l_p
+name: Reinforcement ratio for punching
+formula: min(sqrt(rho_ly * rho_lz), 0.02)
+params:
+- rho_ly
+- rho_lz
+var: rho_l_p
+symbol: ρ_{l}
+unit: '-'
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.4(1)
+basis: code
+version: 4a33cdc3032f

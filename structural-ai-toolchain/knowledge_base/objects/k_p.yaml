@@ -1,0 +1,21 @@
+id: k_p
+name: Size factor for punching
+formula: min(1 + sqrt(200 / d_eff_p), 2)
+params:
+- d_eff_p
+var: k_p
+symbol: k
+unit: '-'
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.4(1)
+basis: code
+background:
+- kind: guidance
+  text: The expression of k (EN 1992-1-1 cl. 6.2.2(1)) with d → d_eff. It is taken from that object, so the two
+    cannot drift apart.
+  refs: []
+version: 23ced03ca5ce

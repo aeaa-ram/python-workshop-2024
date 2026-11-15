@@ -1,0 +1,17 @@
+id: f_ywd_ef
+name: Effective design strength of the punching shear reinforcement
+formula: min(250 + 0.25 * d_eff_p, f_ywd)
+params:
+- d_eff_p
+- f_ywd
+var: f_ywd_ef
+symbol: f_{ywd,ef}
+unit: MPa
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.5(1)
+basis: code
+version: 7d4f451cddaa

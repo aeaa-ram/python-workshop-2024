@@ -1,0 +1,21 @@
+id: B_p_Rd
+name: Punching shear resistance of the plate under the bolt head or nut
+formula: 0.6 * pi * d_m * t_plate * f_u / gamma_M2
+params:
+- d_m
+- t_plate
+- f_u
+- gamma_M2
+var: B_p_Rd
+symbol: B_{p,Rd}
+unit: kN
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+sense: resistance
+check: F_t_Ed
+version: 3bf128b5527c

@@ -72,7 +72,9 @@ def formula_for(kb: KnowledgeBase, oid: str, names: dict, style: Style) -> str:
 
 
 def export_calculator(kb: KnowledgeBase, target: str, path: Path, values: dict | None = None,
-                      given=(), style: Style | None = None) -> Path:
+                      given=(), style: Style | None = None, refs: str = "names") -> Path:
+    """Excel calculator.  ``refs="names"`` writes =MIN(A_sl/(b_w*d),0.02); ``refs="cells"`` writes
+    =MIN(C8/(C9*C7),0.02).  The cells are named in both cases."""
     from openpyxl import Workbook
     from openpyxl.formatting.rule import CellIsRule
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -84,6 +86,7 @@ def export_calculator(kb: KnowledgeBase, target: str, path: Path, values: dict |
     if values is None:
         values, _ = starting_values(kb, target, given)
     names = excel_names(kb, list(cells))
+    refmap = names if refs == "names" else {sid: cells[sid] for sid in cells}
     wb = Workbook()
     ws = wb.active
     ws.title = SHEET
@@ -135,7 +138,7 @@ def export_calculator(kb: KnowledgeBase, target: str, path: Path, values: dict |
         r = int(cells[sid][1:])
         o = kb.objects[sid]
         put(sid, r, None, False)
-        ws[f"C{r}"] = formula_for(kb, sid, names, style)
+        ws[f"C{r}"] = formula_for(kb, sid, refmap, style)
         ws[f"C{r}"].number_format = style.excel_format(_typical(kb, sid, style))
         ws[f"F{r}"], ws[f"F{r}"].font = f"{o.text} = {X.to_text(o.tree, kb.name)}", grey
         if sid == target:
@@ -176,9 +179,9 @@ def export_calculator(kb: KnowledgeBase, target: str, path: Path, values: dict |
             tree = X.parse(chk["when"])
             ws[f"A{r}"] = chk.get("text", chk["when"])
             ws[f"B{r}"] = X.to_text(tree, kb.name)
-            if all(s in names for s in X.symbols(tree)):
-                cond = X.to_excel(tree, lambda s: names[s] if abs(U.parse_unit(style.unit(kb, s)).factor - 1) < 1e-12
-                                  else f"({names[s]}*{U.parse_unit(style.unit(kb, s)).factor!r})")
+            if all(s in refmap for s in X.symbols(tree)):
+                cond = X.to_excel(tree, lambda s: refmap[s] if abs(U.parse_unit(style.unit(kb, s)).factor - 1) < 1e-12
+                                  else f"({refmap[s]}*{U.parse_unit(style.unit(kb, s)).factor!r})")
                 ws[f"C{r}"] = f'=IF({cond},"yes","NO")'
             else:
                 ws[f"C{r}"] = "check"
@@ -198,8 +201,8 @@ def export_calculator(kb: KnowledgeBase, target: str, path: Path, values: dict |
     meta.sheet_state = "hidden"
     record = {"object": target, "version": obj.version, "code": obj.code,
               "generated": _dt.date.today().isoformat(), "given": list(given), "cells": cells,
-              "names": names, "style": style.to_dict(),
-              "formulas": {sid: formula_for(kb, sid, names, style) for sid in steps}}
+              "names": names, "refs": refs, "style": style.to_dict(),
+              "formulas": {sid: formula_for(kb, sid, refmap, style) for sid in steps}}
     meta["A1"], meta["B1"] = "ckb", json.dumps(record)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

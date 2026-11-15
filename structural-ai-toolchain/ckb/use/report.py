@@ -38,6 +38,7 @@ import datetime as _dt
 import html
 import math
 import os
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass, field
@@ -209,7 +210,8 @@ def calc_block(kb: KnowledgeBase, res: Result, opts: dict) -> str:
     remarks = {lookup(kb, k) or k: v for k, v in (opts.get("remarks") or {}).items()}
     P = ['<div class="calc">']
     if opts.get("title", True):
-        P.append(f"<h3><math>{obj.ml}</math> &nbsp;{_e(obj.name)}</h3>")
+        P.append(f'<h3 data-outline="{_e(obj.text + " – " + obj.name)}" data-find="{_e(obj.name)}">'
+                 f"<math>{obj.ml}</math> &nbsp;{_e(obj.name)}</h3>")
         P.append(f'<p class="ref">{_e(obj.reference_text)}</p>')
     if opts.get("inputs", True):
         P.append('<div class="grp">Input</div>')
@@ -352,10 +354,10 @@ def _cell_value(kb, c: Case, col: str):
     return r.env().get(sid)
 
 
-def chart_block(kb: KnowledgeBase, target: str, case: Case, opts: dict, style: Style) -> str:
-    """A parameter study as a static SVG line chart."""
+def chart_data(kb: KnowledgeBase, target: str, case: Case, opts: dict, style: Style) -> dict | None:
+    """A parameter study: the result (and optionally one more step) against one input."""
     if case is None or case.result is None:
-        return ""
+        return None
     x = lookup(kb, str(opts.get("x", ""))) or ""
     _, inputs = kb.plan(target, case.given)
     if x not in inputs:
@@ -389,16 +391,22 @@ def chart_block(kb: KnowledgeBase, target: str, case: Case, opts: dict, style: S
             v = env.get(s)
             pts[s].append(style.show(kb, s, v) if isinstance(v, (int, float)) else None)
     if not xs:
-        return ""
+        return None
     ref = None
     if case.check is not None and kb.objects[target].check and series[0] == target:
         ref = style.show(kb, target, case.check)
-    return svg_line_chart(xs, [(kb.name(s), pts[s]) for s in series],
-                          x_label=f"{kb.name(x)} [{style.unit(kb, x)}]", y_label=f"[{u_y}]",
-                          marker=(style.show(kb, x, x0), style.show(kb, series[0], case.result.env().get(series[0]))),
-                          ref=(kb.name(kb.objects[target].check), ref) if ref is not None else None,
-                          caption=opts.get("caption") or f"{kb.name(series[0])} against {kb.name(x)} "
-                                                          f"({case.name}; other inputs as in that case)")
+    return {"xs": xs, "series": [(kb.name(s), pts[s]) for s in series],
+            "x_label": f"{kb.name(x)} [{style.unit(kb, x)}]", "y_label": f"[{u_y}]",
+            "marker": (style.show(kb, x, x0), style.show(kb, series[0], case.result.env().get(series[0]))),
+            "ref": (kb.name(kb.objects[target].check), ref) if ref is not None else None,
+            "caption": opts.get("caption") or f"{kb.name(series[0])} against {kb.name(x)} "
+                                               f"({case.name}; other inputs as in that case)"}
+
+
+def chart_block(kb: KnowledgeBase, target: str, case: Case, opts: dict, style: Style) -> str:
+    """A parameter study as a static SVG line chart."""
+    data = chart_data(kb, target, case, opts, style)
+    return svg_line_chart(**data) if data else ""
 
 
 def _nice(lo: float, hi: float, n: int = 5) -> list[float]:
@@ -469,11 +477,16 @@ def _tick(v: float) -> str:
 # the report
 # --------------------------------------------------------------------------
 def load_template(path: Path) -> dict:
+    """A template from YAML, or from the Excel form (``report_form``)."""
+    if Path(path).suffix.lower() in (".xlsx", ".xlsm"):
+        from .report_form import read_form
+        return read_form(Path(path))
     return yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
 
 
-def render(kb: KnowledgeBase, template: dict, base: Path | None = None, with_objects: bool = False):
-    """The report as one static HTML page (with ``with_objects``: also the objects it used)."""
+def layout(kb: KnowledgeBase, template: dict, base: Path | None = None) -> tuple[list[dict], list[str], Style]:
+    """The report as a list of blocks with everything calculated: what every renderer
+    (HTML for PDF, Word) draws.  Returns (items, objects used, style)."""
     style = Style.load(template.get("style") or {})
     blocks = template.get("blocks") or []
     targets = [lookup(kb, str(b.get(k))) for b in blocks for k in ("calc", "table", "chart") if b.get(k)]
@@ -499,56 +512,92 @@ def render(kb: KnowledgeBase, template: dict, base: Path | None = None, with_obj
             return cs[0]
         return next((c for c in cs if c.name == str(which)), None)
 
-    P = []
-    tb = {k: template.get(k, "") for k in ("project", "number", "made_by", "checked_by", "approved_by", "date")}
-    if template.get("title_block", True):
-        date = tb["date"] or _dt.date.today().isoformat()
-        P.append('<table class="tb"><tr>'
-                 f'<td style="width:40%"><small>Project</small>{_e(tb["project"])}&nbsp;</td>'
-                 f'<td style="width:40%"><small>Subject</small>{_e(template.get("subject", template.get("title", "")))}</td>'
-                 f'<td><small>Calc. no.</small>{_e(tb["number"])}&nbsp;</td></tr><tr>'
-                 f'<td><small>Made by / date</small>{_e(tb["made_by"])} &nbsp; {_e(date)}</td>'
-                 f'<td><small>Checked by / date</small>{_e(tb["checked_by"])}&nbsp;</td>'
-                 f'<td><small>Approved by / date</small>{_e(tb["approved_by"])}&nbsp;</td></tr></table>')
-    if template.get("title"):
-        P.append(f"<h1>{_e(template['title'])}</h1>")
-    used = set()
+    items, used = [], set()
     for b in blocks:
-        if "heading" in b:
-            P.append(f"<h2>{_e(b['heading'])}</h2>")
+        if b == "pagebreak" or (isinstance(b, dict) and "pagebreak" in b):
+            items.append({"type": "pagebreak"})
+        elif "heading" in b:
+            items.append({"type": "heading", "text": str(b["heading"])})
         elif "text" in b:
-            P.append(f'<p class="text">{_e(b["text"])}</p>')
-        elif "pagebreak" in b or b == "pagebreak":
-            P.append('<div class="pb"></div>')
+            items.append({"type": "text", "text": str(b["text"])})
         elif "calc" in b:
             t = lookup(kb, str(b["calc"]))
             c = pick(t, b.get("case"))
             if c is None or c.result is None:
-                P.append(f'<p class="bad">{_e(b["calc"])}: no case to calculate ({_e(c.error if c else "")})</p>')
+                items.append({"type": "error", "text": f"{b['calc']}: no case to calculate ({c.error if c else ''})"})
                 continue
+            label = ""
             if len(cases_for(t)) > 1 and b.get("label", True):
-                P.append(f'<p class="ref">Case: {_e(c.name)}'
-                         + (" (governing)" if c is governing(cases_for(t), kb, t) else "") + "</p>")
-            P.append(calc_block(kb, c.result, b))
+                label = f"Case: {c.name}" + (" (governing)" if c is governing(cases_for(t), kb, t) else "")
+            items.append({"type": "calc", "result": c.result, "opts": b, "label": label})
             used |= {s.id for s in c.result.steps}
         elif "table" in b:
             t = lookup(kb, str(b["table"]))
-            P.append(table_block(kb, t, cases_for(t), b, style, governing(cases_for(t), kb, t)))
+            items.append({"type": "table", "target": t, "cases": cases_for(t), "opts": b,
+                          "gov": governing(cases_for(t), kb, t)})
             used |= set(kb.plan(t)[0])
         elif "chart" in b:
             t = lookup(kb, str(b["chart"]))
-            P.append(chart_block(kb, t, pick(t, b.get("case")), b, style))
+            data = chart_data(kb, t, pick(t, b.get("case")), b, style)
+            if data:
+                items.append({"type": "chart", "data": data})
             used |= set(kb.plan(t)[0])
-    trace = " · ".join(f"ckb {oid} {kb.objects[oid].version}" for oid in sorted(used) if oid in kb.objects)
-    codes = sorted({kb.objects[o].code for o in used if o in kb.objects})
-    P.append(f'<div class="foot"><span>{_e(", ".join(codes))}; recommended values unless stated. '
-             f'Substituted values are in N, mm and MPa.</span><span>{_e(trace)}</span></div>')
+    return items, sorted(o for o in used if o in kb.objects), style
+
+
+def title_block(template: dict) -> list[list[tuple[str, str]]]:
+    """Rows of (label, text) for the title block."""
+    date = template.get("date") or _dt.date.today().isoformat()
+    return [[("Project", template.get("project", "")), ("Subject", template.get("subject", template.get("title", ""))),
+             ("Calc. no.", template.get("number", ""))],
+            [("Made by / date", f"{template.get('made_by', '')}   {date}"), ("Checked by / date", template.get("checked_by", "")),
+             ("Approved by / date", template.get("approved_by", ""))]]
+
+
+def footer_text(kb: KnowledgeBase, used: list[str]) -> tuple[str, str]:
+    codes = sorted({kb.objects[o].code for o in used if kb.objects[o].code})
+    return (f"{', '.join(codes)}; recommended values unless stated. Substituted values are in N, mm and MPa.",
+            " · ".join(f"ckb {oid} {kb.objects[oid].version}" for oid in used))
+
+
+def render(kb: KnowledgeBase, template: dict, base: Path | None = None, with_objects: bool = False):
+    """The report as one static HTML page (with ``with_objects``: also the objects it used)."""
+    items, used, style = layout(kb, template, base)
+    P = []
+    if template.get("title_block", True):
+        rows = title_block(template)
+        widths = ("40%", "40%", "")
+        P.append('<table class="tb">' + "".join(
+            "<tr>" + "".join(f'<td{f" style=width:{w}" if w else ""}><small>{_e(k)}</small>{_e(v)}&nbsp;</td>'
+                             for (k, v), w in zip(r, widths)) + "</tr>" for r in rows) + "</table>")
+    if template.get("title"):
+        P.append(f'<h1 data-outline="{_e(template["title"])}">{_e(template["title"])}</h1>')
+    for it in items:
+        t = it["type"]
+        if t == "heading":
+            P.append(f'<h2 data-outline="{_e(it["text"])}">{_e(it["text"])}</h2>')
+        elif t == "text":
+            P.append(f'<p class="text">{_e(it["text"])}</p>')
+        elif t == "pagebreak":
+            P.append('<div class="pb"></div>')
+        elif t == "error":
+            P.append(f'<p class="bad">{_e(it["text"])}</p>')
+        elif t == "calc":
+            if it["label"]:
+                P.append(f'<p class="ref">{_e(it["label"])}</p>')
+            P.append(calc_block(kb, it["result"], it["opts"]))
+        elif t == "table":
+            P.append(table_block(kb, it["target"], it["cases"], it["opts"], style, it["gov"]))
+        elif t == "chart":
+            P.append(svg_line_chart(**it["data"]))
+    left, right = footer_text(kb, used)
+    P.append(f'<div class="foot"><span>{_e(left)}</span><span>{_e(right)}</span></div>')
     title = template.get("title") or "Calculation"
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<meta name="generator" content="calculation knowledge base"><title>{_e(title)}</title>'
             f"<style>{CSS}</style></head><body><div class=\"sheet\">{''.join(P)}</div></body></html>")
-    return (page, sorted(used)) if with_objects else page
+    return (page, used) if with_objects else page
 
 
 def cases_from_calculator(kb: KnowledgeBase, path: Path) -> list[dict]:
@@ -687,7 +736,8 @@ def find_browser() -> str | None:
 
 
 def to_pdf(html_path: Path, pdf_path: Path) -> bool:
-    """Print the report to PDF with a Chromium-based browser (Edge or Chrome on Windows)."""
+    """Print the report to PDF with a Chromium-based browser (Edge or Chrome on Windows), then add
+    bookmarks for the title, the headings and every calculation, and the document title."""
     browser = find_browser()
     if not browser:
         return False
@@ -697,4 +747,49 @@ def to_pdf(html_path: Path, pdf_path: Path) -> bool:
         subprocess.run(cmd, capture_output=True, timeout=120, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return False
-    return Path(pdf_path).exists() and Path(pdf_path).stat().st_size > 1000
+    ok = Path(pdf_path).exists() and Path(pdf_path).stat().st_size > 1000
+    if ok:
+        try:
+            add_bookmarks(Path(pdf_path), Path(html_path).read_text(encoding="utf-8"))
+        except Exception:                                        # noqa: BLE001 - bookmarks are a nicety
+            pass
+    return ok
+
+
+def outline(page_html: str) -> list[tuple[int, str, str]]:
+    """(level, bookmark text, text to find on the page) for every h1/h2/h3 with data-outline."""
+    out = []
+    for m in re.finditer(r'<h([123])\s+data-outline="([^"]*)"(?:\s+data-find="([^"]*)")?', page_html):
+        text = html.unescape(m.group(2))
+        out.append((int(m.group(1)), text, html.unescape(m.group(3) or m.group(2))))
+    return out
+
+
+def add_bookmarks(pdf_path: Path, page_html: str) -> int:
+    """Bookmarks for the report's headings, found page by page in reading order."""
+    from pypdf import PdfReader, PdfWriter
+    marks = outline(page_html)
+    reader = PdfReader(str(pdf_path))
+    key = lambda t: re.sub(r"[^0-9a-z]+", "", t.lower())       # noqa: E731
+    pages = [key(p.extract_text() or "") for p in reader.pages]
+    writer = PdfWriter(clone_from=reader)
+    parents: dict[int, object] = {}
+    page, n = 0, 0
+    for level, text, find in marks:
+        k = key(find)
+        hit = next((i for i in range(page, len(pages)) if k and k in pages[i]), None)
+        if hit is None:
+            continue
+        page = hit
+        parent = next((parents[lv] for lv in range(level - 1, 0, -1) if lv in parents), None)
+        parents[level] = writer.add_outline_item(title=text, page_number=hit, parent=parent)
+        for deeper in [lv for lv in parents if lv > level]:
+            del parents[deeper]
+        n += 1
+    title = re.search(r"<title>(.*?)</title>", page_html)
+    if title:
+        writer.add_metadata({"/Title": html.unescape(title.group(1))})
+    writer.page_mode = "/UseOutlines"
+    with open(pdf_path, "wb") as fh:
+        writer.write(fh)
+    return n

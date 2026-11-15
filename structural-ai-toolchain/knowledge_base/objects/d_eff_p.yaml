@@ -1,0 +1,18 @@
+id: d_eff_p
+name: Effective depth of the slab for punching
+formula: (d_y + d_z) / 2
+params:
+- d_y
+- d_z
+var: d_eff_p
+symbol: d_{eff}
+unit: mm
+code: EN 1992-1-1
+topic: '6.4'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.4 Punching
+clause: 6.4.2(1)
+eq: (6.32)
+basis: code
+version: 64261f0241d7

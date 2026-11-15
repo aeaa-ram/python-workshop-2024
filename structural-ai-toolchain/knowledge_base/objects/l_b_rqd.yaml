@@ -1,0 +1,19 @@
+id: l_b_rqd
+name: Basic required anchorage length
+formula: phi_bar / 4 * sigma_sd / f_bd
+params:
+- phi_bar
+- sigma_sd
+- f_bd
+var: l_b_rqd
+symbol: l_{b,rqd}
+unit: mm
+code: EN 1992-1-1
+topic: '8.4'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.4 Anchorage of longitudinal reinforcement
+clause: 8.4.3(2)
+eq: (8.3)
+basis: code
+version: e0e809fae30f

@@ -26,7 +26,7 @@ import yaml
 
 from .. import expr as X
 from .. import units as U
-from ..notation import mathml, pretty
+from ..notation import latex, mathml, omml, pretty
 
 
 @dataclass
@@ -56,6 +56,14 @@ class Quantity:
     @property
     def ml(self) -> str:
         return mathml(self.var or self.id, self.symbol)
+
+    @property
+    def tex(self) -> str:
+        return latex(self.var or self.id, self.symbol)
+
+    @property
+    def omml(self) -> str:
+        return omml(self.var or self.id, self.symbol)
 
     @property
     def start(self):
@@ -119,6 +127,14 @@ class CalcObject:
         return mathml(self.var or self.id, self.symbol)
 
     @property
+    def tex(self) -> str:
+        return latex(self.var or self.id, self.symbol)
+
+    @property
+    def omml(self) -> str:
+        return omml(self.var or self.id, self.symbol)
+
+    @property
     def reference_text(self) -> str:
         bits = []
         if self.clause:
@@ -174,6 +190,14 @@ class KnowledgeBase:
     def ml(self, sid: str) -> str:
         item = self.item(sid)
         return item.ml if item else mathml(sid.lstrip("~"))
+
+    def tex(self, sid: str) -> str:
+        item = self.item(sid)
+        return item.tex if item else latex(sid.lstrip("~"))
+
+    def omml(self, sid: str) -> str:
+        item = self.item(sid)
+        return item.omml if item else omml(sid.lstrip("~"))
 
     def unit(self, sid: str) -> str:
         item = self.item(sid)

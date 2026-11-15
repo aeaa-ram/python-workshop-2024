@@ -20,6 +20,8 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import yaml
+
 from . import expr as X
 from . import units as U
 from .convert import ConversionError, convert_file, kind_of
@@ -48,6 +50,7 @@ class Build:
     observed: dict = field(default_factory=dict)
     kb: KnowledgeBase | None = None
     tax: Taxonomy | None = None
+    questions: list = field(default_factory=list)
 
 
 # --------------------------------------------------------------------------
@@ -98,7 +101,7 @@ def _anonymise(text: str) -> str:
 
 
 def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False, llm=None,
-          vision: bool = False, log=print) -> Build:
+          vision: bool = False, ask_model: bool = False, log=print) -> Build:
     out = Build(tax=load_taxonomy())
     tax = out.tax
     workspace, kb_dir = Path(workspace), Path(kb_dir)
@@ -169,7 +172,14 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
             continue
         out.consolidations[c.id] = cons
     name = lambda s: tax.concepts[s].text if s in tax.concepts else s.lstrip(LOCAL)   # noqa: E731
-    out.benchmarks = B.run(out.consolidations, out.decs, tax, observed, name)
+    answers = load_answers(workspace)
+    out.benchmarks = B.run(out.consolidations, out.decs, tax, observed, name, answers, llm if ask_model else None)
+    out.questions = _questions(out.benchmarks, {d.id: d.label for d in out.docs}, workspace, answers)
+    explained = Counter(b.cause for rows in out.benchmarks.values() for b in rows if b.cause and b.cause != "unexplained")
+    if explained or out.questions:
+        log("[4] differences investigated: " + ", ".join(f"{n} explained by {k}" for k, n in explained.items())
+            + (f"; {len(out.questions)} question(s) for an engineer -> {workspace / 'questions.yaml'}"
+               if out.questions else ""))
     for cid, cons in out.consolidations.items():
         if not cons.variants:
             continue
@@ -179,13 +189,14 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
     # ---- 5: objects ---------------------------------------------------------
     kb = KnowledgeBase()
     label = {d.id: d.label for d in out.docs}
+    stmt_of = {(d.id, st.id): st for d in out.docs for st in d.statements}
     formulas = {c.id: c.tree for c in tax.concepts.values() if c.formula}
     formulas.update({cid: c.unified for cid, c in out.consolidations.items() if c.unified is not None})
     for cid, cons in out.consolidations.items():
         if cons.unified is None:
             continue
         kb.objects[cid] = _object(cid, cons, out.benchmarks.get(cid, []), tax, formulas, observed,
-                                  label, independent, anonymous)
+                                  label, independent, anonymous, stmt_of, answers)
 
     # ---- quantities (parameters) --------------------------------------------
     needed: set[str] = set()
@@ -253,7 +264,8 @@ def _background(b: dict, tax: Taxonomy) -> dict:
     return {"kind": b.get("kind", "guidance"), "text": b["text"], "refs": refs}
 
 
-def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonymous) -> CalcObject:
+def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonymous,
+            stmt_of=None, answers=None) -> CalcObject:
     from .distill.baseline import explain
     c = tax.concepts[cid]
     name = lambda s: tax.concepts[s].text if s in tax.concepts else s.lstrip(LOCAL)   # noqa: E731
@@ -335,6 +347,7 @@ def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonym
                 f"{X._short(U.from_canonical(v, qc.unit))} ({n}×)" for v, n in sorted(other, key=lambda t: -t[1]))
                 + (f" against the recommended {X._short(U.from_canonical(qc.canonical_value, qc.unit))}"
                    if qc.canonical_value is not None else "") + ".")
+    obj.background += _practice_notes(cid, cons, rows, tax, stmt_of or {}, answers or {}, name)
     obj.evidence = {"sources": len(srcs), "source_ids": srcs, "formula_instances": n_inst,
                     "printed_values": sum(b.kind == "printed" for b in rows),
                     "variants": variants, "practice": practice, "values_seen": values_seen}
@@ -354,6 +367,10 @@ def _object(cid, cons, rows, tax, formulas, observed, label, independent, anonym
             it["tolerance"] = b.tolerance
         if b.per_width:
             it["per_width"] = True
+        if b.cause:
+            it["cause"] = b.cause
+        if b.question:
+            it["question"] = b.question["id"]
         it["inputs"] = {k: v for k, v in b.inputs.items() if not k.startswith(LOCAL)}
         obj.benchmarks["items"].append(it)
     obj.reference = R.check(cid, formulas, tax)
@@ -383,6 +400,9 @@ def _confidence(obj: CalcObject, cons, rows, tax) -> dict:
                            else f"Reproduces {merged_agree} value(s) printed in the sources.")
         elif rows:
             reasons.append("Not reproduced by any source value yet.")
+        elif cons.variants:
+            reasons.append(f"Seen in {sum(len(v.instances) for v in cons.variants)} source formula(s), none of them "
+                           "the code expression: nothing confirms it yet.")
         else:
             reasons.append("Not yet seen in any source calculation.")
         if ref == "differs":
@@ -459,3 +479,79 @@ def _write_report(out: Build, workspace: Path, label: dict) -> None:
     (workspace / "instances.json").write_text(json.dumps(
         [i.to_json() for dec in out.decs for i in dec.instances], indent=1, ensure_ascii=False, default=str),
         encoding="utf-8")
+
+
+# --------------------------------------------------------------------------
+# questions for an engineer, and practice context
+# --------------------------------------------------------------------------
+MEMBER_WORDS = ("slab", "wall", "beam", "column", "footing", "foundation", "pile cap", "deck", "cantilever",
+                "girder", "pier", "abutment", "diaphragm", "panel", "plate")
+
+
+def load_answers(workspace: Path) -> dict:
+    """An engineer's answers to earlier questions (``ckb answer``), by question id."""
+    f = Path(workspace) / "answers.yaml"
+    if not f.exists():
+        return {}
+    data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    return {k: v for k, v in data.items() if isinstance(v, dict)}
+
+
+def _questions(benchmarks: dict, label: dict, workspace: Path, answers: dict) -> list[dict]:
+    """Every difference nothing explains, written for an engineer (stays in the local workspace)."""
+    qs = []
+    for rows in benchmarks.values():
+        for b in rows:
+            if b.question and b.question["id"] not in answers:
+                q = dict(b.question)
+                q["source"] = label.get(q["source"], q["source"])
+                qs.append(q)
+    f = Path(workspace) / "questions.yaml"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    head = ("# Differences between the sources and the code that nothing explained.\n"
+            "# Answer with:  python -m ckb answer <id> --verdict explained|source-error|project-specific "
+            "--text '...' [--lesson '...']\n")
+    f.write_text(head + yaml.safe_dump(qs, sort_keys=False, allow_unicode=True, width=110), encoding="utf-8")
+    return qs
+
+
+def _practice_notes(cid, cons, rows, tax, stmt_of, answers, name) -> list[dict]:
+    """Context from how the sources use the object: per-metre working, lessons from differences."""
+    notes = []
+    insts = [i for v in cons.variants if v.merged for i in v.instances]
+    strips = [s for s in tax.dependencies(cid) if tax.concepts.get(s) is not None and tax.concepts[s].strip] \
+        if hasattr(tax, "dependencies") else []
+    per_width = [i for i in insts if i.per_width]
+    if per_width and strips:
+        words = Counter()
+        for i in per_width:
+            st = stmt_of.get((i.doc, i.stmt))
+            text = " ".join([*(st.section or []), st.label or "", st.case or ""]).lower() if st else ""
+            for w in MEMBER_WORDS:
+                if w in text:
+                    words[w] += 1
+        kinds = [w for w, _ in words.most_common(3)]
+        what = (" in calculations of " + ", ".join(f"{w}s" for w in kinds)) if kinds else ""
+        notes.append({"kind": "practice", "from": "sources", "about": strips[0],
+                      "text": f"Usually calculated per metre width{what}: {len(per_width)} of {len(insts)} source "
+                              f"formulas work per metre ({name(strips[0])} = 1000 mm, results per metre). "
+                              "Every force in such a calculation must then be per metre too.",
+                      "refs": []})
+    lessons = Counter(b.lesson for b in rows if b.lesson)
+    for text, n in lessons.items():
+        notes.append({"kind": "practice", "from": "sources", "text": f"{text} (found {n}× in the sources)", "refs": []})
+    for b in rows:
+        a = answers.get(question_of(b))
+        if a and a.get("lesson"):
+            notes.append({"kind": "practice", "from": "engineer", "text": a["lesson"], "refs": []})
+    seen, out = set(), []
+    for n in notes:
+        if n["text"] not in seen:
+            seen.add(n["text"])
+            out.append(n)
+    return out
+
+
+def question_of(b) -> str:
+    from .distill.investigate import question_id
+    return question_id(b.concept, b.doc, b.loc)

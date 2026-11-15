@@ -1,0 +1,22 @@
+id: A_sl_T
+name: Longitudinal reinforcement required for torsion
+formula: T_Ed * u_k * cot(theta) / (2 * A_k * f_yd)
+params:
+- T_Ed
+- u_k
+- theta
+- A_k
+- f_yd
+var: A_sl_T
+symbol: ΣA_{sl}
+unit: mm²
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(3)
+eq: (6.28)
+basis: code
+sense: effect
+version: e64cb745f714

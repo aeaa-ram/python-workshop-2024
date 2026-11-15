@@ -74,4 +74,10 @@ background:
     at: 6.2.2(6)
     text: 'EN 1992-1-1:2004 + AC:2010 + A1:2014. Eurocode 2: Design of concrete structures. Part 1-1: General rules
       and rules for buildings.'
+- kind: practice
+  from: sources
+  about: b_w
+  text: 'Usually calculated per metre width in calculations of slabs, cantilevers: 80 of 86 source formulas work
+    per metre (b_w = 1000 mm, results per metre). Every force in such a calculation must then be per metre too.'
+  refs: []
 version: 5b3fb119fcd5

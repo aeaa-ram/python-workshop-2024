@@ -1,0 +1,57 @@
+{
+ "confidence": {
+  "level": "medium",
+  "label": "not yet checked",
+  "reasons": [
+   "Logic: the code's expression (EN 1992-1-1 cl. 6.4.5(1)).",
+   "No independent implementation available to compare with.",
+   "Seen in 1 source formula(s), none of them the code expression: nothing confirms it yet.",
+   "Some source formulas differ from the code: see how the sources applied it."
+  ]
+ },
+ "evidence": {
+  "sources": 1,
+  "source_ids": [
+   "S3"
+  ],
+  "formula_instances": 1,
+  "printed_values": 0,
+  "variants": [
+   {
+    "formula": "250 + 0.2 * d",
+    "text": "250 + 0.2 · d",
+    "relation": "differs",
+    "instances": 1,
+    "sources": [
+     "S3 (Excel workbook)"
+    ],
+    "merged": false,
+    "differences": [],
+    "reproduced": 0,
+    "compared": 0,
+    "reason": "not a special case of the code expression"
+   }
+  ],
+  "practice": [
+   "1 formula(s) in S3: 250 + 0.2 · d - not the code expression; to be reviewed."
+  ],
+  "values_seen": {
+   "gamma_S": {
+    "recommended": 1.15,
+    "seen": [
+     [
+      1.15,
+      2
+     ]
+    ]
+   }
+  }
+ },
+ "benchmarks": {
+  "total": 0,
+  "agree": 0,
+  "deviation": 0,
+  "not_comparable": 0,
+  "items": []
+ }
+}

@@ -1,0 +1,19 @@
+id: lambda_bar_LT
+name: Non-dimensional slenderness for lateral-torsional buckling
+formula: sqrt(W_y * f_y / M_cr)
+params:
+- W_y
+- f_y
+- M_cr
+var: lambda_bar_LT
+symbol: λ̄_{LT}
+unit: '-'
+code: EN 1993-1-1
+topic: 6.3.2
+topic_path:
+- 6 Ultimate limit states
+- 6.3 Buckling resistance of members
+- 6.3.2 Uniform members in bending
+clause: 6.3.2.2(1)
+basis: code
+version: 8625f8ae4f0a

@@ -1,0 +1,18 @@
+id: n_rel
+name: Relative normal force
+formula: N_Ed / (A_c * f_cd)
+params:
+- N_Ed
+- A_c
+- f_cd
+var: n_rel
+symbol: n
+unit: '-'
+code: EN 1992-1-1
+topic: '5.8'
+topic_path:
+- 5 Structural analysis
+- 5.8 Analysis of second order effects with axial load
+clause: 5.8.3.1(1)
+basis: code
+version: ad8ab7846c4a

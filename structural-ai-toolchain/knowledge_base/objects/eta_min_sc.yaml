@@ -1,0 +1,32 @@
+id: eta_min_sc
+name: Minimum degree of shear connection (steel sections with equal flanges)
+formula: max(1 - 355 / f_y * (0.75 - 0.03 * L_e / 1000), 0.4)
+params:
+- f_y
+- L_e
+var: eta_min_sc
+symbol: η_{min}
+unit: '-'
+code: EN 1994-1-1
+topic: 6.6.1
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.1 Shear connection - general
+clause: 6.6.1.2(1)
+eq: (6.12)
+basis: code
+checks:
+- when: L_e <= 25000
+  text: L_e ≤ 25 m (above this, full shear connection)
+  clause: 6.6.1.2(1)
+background:
+- kind: limitation
+  text: Ductile studs (overall length after welding ≥ 4d, 16 mm ≤ d ≤ 25 mm). Unequal flanges use (6.13); (6.14)
+    and (6.15) apply to studs in sheeting under conditions of 6.6.1.2(3).
+  refs:
+  - id: EN1994-1-1
+    at: 6.6.1.2, 6.6.1.1(5)
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+version: 9171f33ecdfc

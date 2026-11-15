@@ -1,0 +1,26 @@
+id: delta_a
+name: Steel contribution ratio of a composite column
+formula: A_a * f_yd_a / N_pl_Rd
+params:
+- A_a
+- f_yd_a
+- N_pl_Rd
+var: delta_a
+symbol: δ
+unit: '-'
+code: EN 1994-1-1
+topic: 6.7.3
+topic_path:
+- 6 Ultimate limit states
+- 6.7 Composite columns and composite compression members
+- 6.7.3 Simplified method of design
+clause: 6.7.1(4)
+eq: (6.38)
+basis: code
+fixed:
+  alpha_cc: 1.0
+checks:
+- when: 0.2 <= delta_a <= 0.9
+  text: 0.2 ≤ δ ≤ 0.9 (a composite column; otherwise a reinforced concrete or a steel column)
+  clause: 6.7.1(4)
+version: 3bf329c2ad4e

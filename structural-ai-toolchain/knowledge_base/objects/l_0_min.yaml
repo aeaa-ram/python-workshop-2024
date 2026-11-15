@@ -1,0 +1,19 @@
+id: l_0_min
+name: Minimum lap length
+formula: max(0.3 * alpha_6 * l_b_rqd, 15 * phi_bar, 200)
+params:
+- alpha_6
+- l_b_rqd
+- phi_bar
+var: l_0_min
+symbol: l_{0,min}
+unit: mm
+code: EN 1992-1-1
+topic: '8.7'
+topic_path:
+- 8 Detailing of reinforcement - general
+- 8.7 Laps and mechanical couplers
+clause: 8.7.3(1)
+eq: (8.11)
+basis: code
+version: ec47ebee398c

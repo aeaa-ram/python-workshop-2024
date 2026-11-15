@@ -14,7 +14,7 @@ code: EN 1994-1-1
 title: "Eurocode 4: Design of composite steel and concrete structures, Part 1-1"
 edition: "2004 + AC:2009"
 values: recommended values (no National Annex)
-order: 2
+order: 4
 
 topics:
   - {id: "2.4",   title: "Verification by the partial factor method"}
@@ -22,7 +22,12 @@ topics:
   - {id: "6",     title: "Ultimate limit states", keywords: [uls, ultimate]}
   - {id: "6.6",   title: "Shear connection", keywords: [shear connection, shear connector, stud]}
   - {id: "6.6.3", title: "Headed stud connectors in solid slabs and concrete encasement", keywords: [headed stud, stud]}
-  - {id: "6.7",   title: "Composite columns and composite compression members", keywords: [composite column]}
+  - {id: "6.7",   title: "Composite columns and composite compression members", keywords: [composite column, encased column, filled tube]}
+  - {id: "3.3",   title: "Structural steel", keywords: [steel]}
+  - {id: "5.4",   title: "Methods of global analysis", keywords: [effective width, shear lag]}
+  - {id: "6.2",   title: "Resistances of cross-sections of beams", keywords: [composite beam, plastic moment]}
+  - {id: "6.6.1", title: "Shear connection - general", keywords: [degree of shear connection, partial shear connection]}
+  - {id: "6.6.4", title: "Headed studs used with profiled steel sheeting", keywords: [profiled sheeting, deck, metal deck]}
   - {id: "6.7.3", title: "Simplified method of design"}
 
 quantities:
@@ -44,20 +49,13 @@ quantities:
     clause: "3.1(1)"
     same_as: E_cm
   - id: gamma_M0
-    symbol: "γ_{M0}"
-    name: Partial factor for resistance of cross-sections of structural steel
     topic: "2.4"
     clause: "2.4.1.2(4)"
-    kind: coefficient
-    ndp: true
-    value: 1.0
-    unit: "-"
-    range: [1.0, 1.1]
-    aliases: [γM0, γ_M0, gamma_M0, γa, γ_a]
-    background:
-      - kind: guidance
-        text: "EN 1994-1-1 takes γ_a = γ_M0 from EN 1993-1-1; the recommended value there is 1.0."
-        refs: ["EN1994-1-1:2.4.1.2"]
+    same_as: gamma_M0
+  - id: E_a
+    topic: "3.3"
+    clause: "3.3(1)"
+    same_as: E_steel
   - id: f_yd_a
     symbol: "f_{yd}"
     name: Design yield strength of structural steel
@@ -178,3 +176,252 @@ quantities:
       - kind: pitfall
         text: "f_cd here is f_ck/γ_C without α_cc; the reduction to 0.85 is in the expression itself. Using an EN 1992-1-1 f_cd with α_cc = 0.85 would apply it twice."
         refs: ["EN1994-1-1:2.4.1.2, 6.7.3.2", "DG-EC4:6.7"]
+
+  # =================================================================================================
+  # Added for a fuller baseline: written from the code, not yet seen in a source ("not yet checked").
+  # =================================================================================================
+  # ---- 5.4.1.2 effective width ----
+  - id: b_eff_c
+    symbol: "b_{eff}"
+    name: Effective width of the concrete flange of a composite beam (mid-span, internal support)
+    topic: "5.4"
+    clause: "5.4.1.2(5)"
+    eq: "(5.3)"
+    kind: derived
+    basis: code
+    unit: mm
+    range: [300, 10000]
+    formula: b_0 + min(L_e / 8, b_1) + min(L_e / 8, b_2)
+    aliases: [beff.c, b_eff_c]
+    words: [effective width]
+    background:
+      - kind: guidance
+        text: "L_e is the distance between points of zero moment (Figure 5.1: 0.85 L_1 in an end span, 0.70 L_2 internal, 0.25 (L_1 + L_2) over a support). At an end support (5.4) reduces the outer widths with β_i."
+        refs: ["EN1994-1-1:5.4.1.2(5), (6), Figure 5.1"]
+
+  # ---- 6.2.1.2 plastic moment, neutral axis in the slab ----
+  - id: N_pl_a
+    symbol: "N_{pl,a}"
+    name: Plastic resistance of the structural steel section
+    topic: "6.2"
+    clause: "6.2.1.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: kN
+    range: [100, 50000]
+    formula: A_a * f_yd_a
+    aliases: [Npl.a, N_pl_a]
+  - id: N_c_f
+    symbol: "N_{c,f}"
+    name: Compressive resistance of the concrete flange (full shear connection)
+    topic: "6.2"
+    clause: "6.2.1.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: kN
+    range: [100, 100000]
+    formula: 0.85 * f_cd * b_eff_c * h_c_fl
+    aliases: [Nc.f, N_c_f]
+  - id: x_pl
+    symbol: "x_{pl}"
+    name: Depth of the plastic neutral axis below the top of the slab (neutral axis in the slab)
+    topic: "6.2"
+    clause: "6.2.1.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: mm
+    range: [5, 500]
+    formula: N_pl_a / (0.85 * f_cd * b_eff_c)
+    aliases: [xpl, x_pl]
+  - id: M_pl_Rd_c
+    symbol: "M_{pl,Rd}"
+    name: Plastic moment resistance of a composite beam, sagging, neutral axis in a solid slab
+    topic: "6.2"
+    clause: "6.2.1.2(1)"
+    kind: derived
+    basis: mechanics
+    unit: kNm
+    range: [10, 50000]
+    formula: N_pl_a * (h_a / 2 + h_c_fl - x_pl / 2)
+    sense: resistance
+    check: M_Ed
+    aliases: [Mpl.Rd.c, M_pl_Rd_c]
+    words: [composite beam moment resistance, plastic moment of a composite beam]
+    checks:
+      - when: "N_pl_a <= N_c_f"
+        text: "Plastic neutral axis in the concrete flange (N_pl,a ≤ N_c,f)"
+        clause: "6.2.1.2(1)"
+    background:
+      - kind: limitation
+        text: "Full shear connection, a solid slab (no sheeting: with sheeting the lever arm grows by h_p and only the concrete above the ribs counts), a doubly symmetric steel section of class 1 or 2, and the neutral axis in the slab. With partial shear connection use 6.2.1.3."
+        refs: ["EN1994-1-1:6.2.1.2, 6.2.1.3"]
+      - kind: pitfall
+        text: "For S420 and S460 steel with x_pl/h > 0.15, M_pl,Rd is reduced by β (6.2.1.2(2)); this object does not apply it."
+        refs: ["EN1994-1-1:6.2.1.2(2), Figure 6.3"]
+
+  # ---- 6.6.1.2 minimum degree of shear connection ----
+  - id: eta_min_sc
+    symbol: "η_{min}"
+    name: Minimum degree of shear connection (steel sections with equal flanges)
+    topic: "6.6.1"
+    clause: "6.6.1.2(1)"
+    eq: "(6.12)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.4, 1]
+    formula: max(1 - (355 / f_y) * (0.75 - 0.03 * L_e / 1000), 0.4)
+    aliases: [eta_min, η_min]
+    words: [degree of shear connection]
+    checks:
+      - when: "L_e <= 25000"
+        text: "L_e ≤ 25 m (above this, full shear connection)"
+        clause: "6.6.1.2(1)"
+    background:
+      - kind: limitation
+        text: "Ductile studs (overall length after welding ≥ 4d, 16 mm ≤ d ≤ 25 mm). Unequal flanges use (6.13); (6.14) and (6.15) apply to studs in sheeting under conditions of 6.6.1.2(3)."
+        refs: ["EN1994-1-1:6.6.1.2, 6.6.1.1(5)"]
+
+  # ---- 6.6.4.2 studs in sheeting with ribs transverse to the beam ----
+  - id: k_t_max
+    symbol: "k_{t,max}"
+    name: Upper limit of the reduction factor k_t
+    topic: "6.6.4"
+    clause: "6.6.4.2(2), Table 6.2"
+    kind: coefficient
+    value: 0.85
+    choices: [{value: 0.85, label: "1 stud per rib, sheeting t ≤ 1 mm, through-deck welded"}, {value: 1.0, label: "1 stud per rib, t > 1 mm, through-deck welded"}, {value: 0.7, label: "2 studs per rib, t ≤ 1 mm"}, {value: 0.8, label: "2 studs per rib, t > 1 mm"}]
+    unit: "-"
+    range: [0.5, 1.0]
+    aliases: [kt.max, k_t_max]
+  - id: k_t_rib
+    symbol: "k_{t}"
+    name: Reduction factor for studs in ribs transverse to the beam
+    topic: "6.6.4"
+    clause: "6.6.4.2(1)"
+    eq: "(6.23)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.3, 1.0]
+    formula: min(0.7 / sqrt(n_r) * b_0_rib / h_p * (h_sc / h_p - 1), k_t_max)
+    aliases: [k_t_rib]
+    background:
+      - kind: limitation
+        text: "Ribs transverse to the beam, h_p ≤ 85 mm, b_0 ≥ h_p, stud diameter ≤ 20 mm through-deck welded (≤ 22 mm in holes), at most two studs per rib. P_Rd of the stud is multiplied by k_t."
+        refs: ["EN1994-1-1:6.6.4.2"]
+
+  # ---- 6.7.3 composite columns: slenderness and buckling ----
+  - id: K_e
+    symbol: "K_{e}"
+    name: Correction factor for the effective flexural stiffness of a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.3(3)"
+    kind: coefficient
+    value: 0.6
+    unit: "-"
+    range: [0.5, 0.6]
+    aliases: [Ke, K_e]
+  - id: EI_eff
+    symbol: "(EI)_{eff}"
+    name: Effective flexural stiffness of a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.3(3)"
+    eq: "(6.40)"
+    kind: derived
+    basis: code
+    unit: kN·m²
+    range: [100, 10000000]
+    formula: E_steel * (I_a + I_s) + K_e * E_cm * I_conc
+    aliases: [EIeff, EI_eff]
+    background:
+      - kind: guidance
+        text: "E_s of the reinforcement is taken equal to E_a = 210 GPa (3.2(2)), so both steel parts use E_steel. For long-term loading E_cm is replaced by the effective modulus E_c,eff (6.41)."
+        refs: ["EN1994-1-1:3.2(2), 6.7.3.3(4)"]
+  - id: N_cr_c
+    symbol: "N_{cr}"
+    name: Elastic critical normal force of a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.3(2)"
+    kind: derived
+    basis: mechanics
+    unit: kN
+    range: [100, 1000000]
+    formula: pi() ** 2 * EI_eff / L_cr ** 2
+    aliases: [Ncr.c, N_cr_c]
+  - id: N_pl_Rk
+    symbol: "N_{pl,Rk}"
+    name: Characteristic plastic resistance to compression of a composite section
+    topic: "6.7.3"
+    clause: "6.7.3.3(2)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [500, 100000]
+    formula: A_a * f_y + 0.85 * A_c * f_ck + A_s * f_yk
+    aliases: [Npl.Rk, "Npl,Rk", N_pl_Rk]
+  - id: lambda_bar_c
+    symbol: "λ̄"
+    name: Relative slenderness of a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.3(2)"
+    eq: "(6.39)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.05, 2.0]
+    formula: sqrt(N_pl_Rk / N_cr_c)
+    aliases: [lambda_bar_c]
+    checks:
+      - when: "lambda_bar_c <= 2"
+        text: "λ̄ ≤ 2.0 (scope of the simplified method)"
+        clause: "6.7.3.1(1)"
+  - id: Phi_c
+    of: Phi
+    bind: {lambda_bar: lambda_bar_c}
+    symbol: "Φ"
+    name: Value to determine χ for a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.5(2)"
+  - id: chi_c
+    of: chi
+    bind: {Phi: Phi_c, lambda_bar: lambda_bar_c}
+    symbol: "χ"
+    name: Reduction factor for flexural buckling of a composite column
+    topic: "6.7.3"
+    clause: "6.7.3.5(2)"
+    background:
+      - kind: pitfall
+        text: "The buckling curve comes from Table 6.5 of EN 1994-1-1, not from EN 1993-1-1 Table 6.2: concrete-filled tubes up to 3 % reinforcement use curve a, encased I sections curve b about y–y and c about z–z."
+        refs: ["EN1994-1-1:6.7.3.5(2), Table 6.5"]
+  - id: N_b_Rd_c
+    symbol: "χ N_{pl,Rd}"
+    name: Buckling resistance of a composite column in axial compression
+    topic: "6.7.3"
+    clause: "6.7.3.5(2)"
+    eq: "(6.44)"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [100, 100000]
+    formula: chi_c * N_pl_Rd
+    sense: resistance
+    check: N_Ed
+    aliases: [Nb.Rd.c, N_b_Rd_c]
+    words: [composite column buckling]
+  - id: delta_a
+    symbol: "δ"
+    name: Steel contribution ratio of a composite column
+    topic: "6.7.3"
+    clause: "6.7.1(4)"
+    eq: "(6.38)"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.1, 1]
+    formula: A_a * f_yd_a / N_pl_Rd
+    aliases: [δ, delta_a]
+    checks:
+      - when: "0.2 <= delta_a <= 0.9"
+        text: "0.2 ≤ δ ≤ 0.9 (a composite column; otherwise a reinforced concrete or a steel column)"
+        clause: "6.7.1(4)"

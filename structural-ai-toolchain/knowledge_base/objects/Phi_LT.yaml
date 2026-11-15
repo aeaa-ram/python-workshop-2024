@@ -1,0 +1,19 @@
+id: Phi_LT
+name: Value to determine the reduction factor χ_LT (general case)
+formula: 0.5 * (1 + alpha_LT * (lambda_bar_LT - 0.2) + lambda_bar_LT ** 2)
+params:
+- alpha_LT
+- lambda_bar_LT
+var: Phi_LT
+symbol: Φ_{LT}
+unit: '-'
+code: EN 1993-1-1
+topic: 6.3.2
+topic_path:
+- 6 Ultimate limit states
+- 6.3 Buckling resistance of members
+- 6.3.2 Uniform members in bending
+clause: 6.3.2.2(1)
+eq: (6.56)
+basis: code
+version: 62ae43bb3350

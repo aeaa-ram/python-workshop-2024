@@ -1,0 +1,22 @@
+id: M_el_Rd
+name: Design elastic moment resistance (class 3)
+formula: W_el * f_y / gamma_M0
+params:
+- W_el
+- f_y
+- gamma_M0
+var: M_el_Rd
+symbol: M_{el,Rd}
+unit: kNm
+code: EN 1993-1-1
+topic: 6.2.5
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.5 Bending moment
+clause: 6.2.5(2)
+eq: (6.14)
+basis: code
+sense: resistance
+check: M_Ed
+version: 3a88e9bcdbd5

@@ -1,0 +1,24 @@
+id: util_vt
+name: Utilisation of a bolt in combined shear and tension
+formula: F_v_Ed / F_v_Rd + F_t_Ed / (1.4 * F_t_Rd)
+params:
+- F_v_Ed
+- F_v_Rd
+- F_t_Ed
+- F_t_Rd
+var: util_vt
+symbol: η_{v+t}
+unit: '-'
+code: EN 1993-1-8
+topic: '3.6'
+topic_path:
+- 3 Connections made with bolts, rivets or pins
+- 3.6 Design resistance of individual fasteners
+clause: 3.6.1(1), Table 3.4
+basis: code
+sense: effect
+checks:
+- when: util_vt <= 1
+  text: F_v,Ed/F_v,Rd + F_t,Ed/(1.4 F_t,Rd) ≤ 1.0
+  clause: Table 3.4
+version: db86ef03fde3

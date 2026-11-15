@@ -1,0 +1,28 @@
+id: b_eff_c
+name: Effective width of the concrete flange of a composite beam (mid-span, internal support)
+formula: b_0 + min(L_e / 8, b_1) + min(L_e / 8, b_2)
+params:
+- b_0
+- L_e
+- b_1
+- b_2
+var: b_eff_c
+symbol: b_{eff}
+unit: mm
+code: EN 1994-1-1
+topic: '5.4'
+topic_path:
+- 5.4 Methods of global analysis
+clause: 5.4.1.2(5)
+eq: (5.3)
+basis: code
+background:
+- kind: guidance
+  text: 'L_e is the distance between points of zero moment (Figure 5.1: 0.85 L_1 in an end span, 0.70 L_2 internal,
+    0.25 (L_1 + L_2) over a support). At an end support (5.4) reduces the outer widths with β_i.'
+  refs:
+  - id: EN1994-1-1
+    at: 5.4.1.2(5), (6), Figure 5.1
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+version: f475b6ae34db

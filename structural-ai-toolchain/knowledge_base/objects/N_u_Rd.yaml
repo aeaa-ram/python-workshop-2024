@@ -1,0 +1,21 @@
+id: N_u_Rd
+name: Design ultimate resistance of the net section at holes
+formula: 0.9 * A_net * f_u / gamma_M2
+params:
+- A_net
+- f_u
+- gamma_M2
+var: N_u_Rd
+symbol: N_{u,Rd}
+unit: kN
+code: EN 1993-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.3 Tension
+clause: 6.2.3(2)
+eq: (6.7)
+basis: code
+sense: resistance
+version: 779c9a2dc2b4

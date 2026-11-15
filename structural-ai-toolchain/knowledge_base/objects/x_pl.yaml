@@ -1,0 +1,20 @@
+id: x_pl
+name: Depth of the plastic neutral axis below the top of the slab (neutral axis in the slab)
+formula: N_pl_a / (0.85 * f_cd * b_eff_c)
+params:
+- N_pl_a
+- f_cd
+- b_eff_c
+var: x_pl
+symbol: x_{pl}
+unit: mm
+code: EN 1994-1-1
+topic: '6.2'
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistances of cross-sections of beams
+clause: 6.2.1.2(1)
+basis: mechanics
+fixed:
+  alpha_cc: 1.0
+version: da5d40162b32

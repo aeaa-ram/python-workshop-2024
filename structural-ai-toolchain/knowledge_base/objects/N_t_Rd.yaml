@@ -1,0 +1,33 @@
+id: N_t_Rd
+name: Design tension resistance
+formula: min(N_pl_Rd_a, N_u_Rd)
+params:
+- N_pl_Rd_a
+- N_u_Rd
+var: N_t_Rd
+symbol: N_{t,Rd}
+unit: kN
+code: EN 1993-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states
+- 6.2 Resistance of cross-sections
+- 6.2.3 Tension
+clause: 6.2.3(2)
+eq: (6.6), (6.7)
+basis: code
+sense: resistance
+check: N_Ed
+background:
+- kind: limitation
+  text: Where ductile behaviour is required (capacity design), N_pl,Rd must be smaller than N_u,Rd (6.2.3(3)). Angles
+    connected by one leg and other eccentric connections follow EN 1993-1-8 3.10.3.
+  refs:
+  - id: EN1993-1-1
+    at: 6.2.3(3)
+    text: 'EN 1993-1-1:2005 + AC:2009 + A1:2014. Eurocode 3: Design of steel structures. Part 1-1: General rules
+      and rules for buildings.'
+  - id: EN1993-1-8
+    at: 3.10.3
+    text: 'EN 1993-1-8:2005 + AC:2009. Eurocode 3: Design of steel structures. Part 1-8: Design of joints.'
+version: d23d88ff1a10

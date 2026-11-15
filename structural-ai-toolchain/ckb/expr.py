@@ -929,6 +929,165 @@ def to_mathml(n: Node, sym: Callable[[str], str], values: dict | None = None,
     return emit(n)
 
 
+# --------------------------------------------------------------------------
+# LaTeX (LaTeX documents; Word's equation editor also takes it)
+# --------------------------------------------------------------------------
+def to_latex(n: Node, sym: Callable[[str], str], values: dict | None = None,
+             fmt: Callable[[float], str] | None = None) -> str:
+    fmt = fmt or (lambda v: f"{v:.4g}")
+
+    def num(v) -> str:
+        s = fmt(v) if values is not None else _short(v)
+        return f"\\left(-{s[1:]}\\right)" if s.startswith("-") else s
+
+    def paren(s: str) -> str:
+        return f"\\left({s}\\right)"
+
+    def emit(x: Node) -> str:
+        if isinstance(x, Num):
+            text = x.text if (x.text and values is None and not x.conv) else _short(x.value)
+            head, _, unit = text.partition(" ")
+            return head + (f"\\,\\mathrm{{{unit}}}" if unit else "")
+        if isinstance(x, Sym):
+            if values is not None and x.name in values and isinstance(values[x.name], (int, float)):
+                return num(values[x.name])
+            return sym(x.name)
+        if isinstance(x, Str):
+            return f"\\text{{{x.value}}}"
+        if isinstance(x, Unit):
+            return f"\\mathrm{{{x.name}}}"
+        if isinstance(x, Bin):
+            if x.op == "/":
+                return f"\\frac{{{emit(x.left)}}}{{{emit(x.right)}}}"
+            if x.op == "**":
+                if x.right in (Num(0.5), Bin("/", Num(1), Num(2))):
+                    return f"\\sqrt{{{emit(x.left)}}}"
+                base = emit(x.left)
+                if not isinstance(x.left, (Sym, Num)):
+                    base = paren(base)
+                return f"{{{base}}}^{{{emit(x.right)}}}"
+            p = _PREC[x.op]
+            left, right = emit(x.left), emit(x.right)
+            if _prec(x.left) < p:
+                left = paren(left)
+            if _prec(x.right) < p or (_prec(x.right) == p and x.op == "-"):
+                right = paren(right)
+            op = {"+": "+", "-": "-", "*": "\\cdot"}[x.op]
+            return f"{left} {op} {right}"
+        if isinstance(x, Neg):
+            inner = emit(x.arg)
+            return f"-{paren(inner) if _prec(x.arg) < _PREC['neg'] else inner}"
+        if isinstance(x, Call):
+            if x.fn == "pi":
+                return "\\pi"
+            if x.fn == "sqrt":
+                return f"\\sqrt{{{emit(x.args[0])}}}"
+            if x.fn == "abs":
+                return f"\\left|{emit(x.args[0])}\\right|"
+            name = {"cot": "\\cot", "tan": "\\tan", "sin": "\\sin", "cos": "\\cos", "ln": "\\ln",
+                    "exp": "\\exp", "min": "\\min", "max": "\\max"}.get(x.fn, f"\\operatorname{{{x.fn}}}")
+            return name + paren(", ".join(emit(a) for a in x.args))
+        if isinstance(x, If):
+            rows, node = [], x
+            while isinstance(node, If):
+                rows.append(f"{emit(node.then)} & \\text{{if }} {emit(node.cond)}")
+                node = node.other
+            rows.append(f"{emit(node)} & \\text{{otherwise}}")
+            return "\\begin{cases} " + " \\\\ ".join(rows) + " \\end{cases}"
+        if isinstance(x, Cmp):
+            op = {"<": "<", ">": ">", "<=": "\\le", ">=": "\\ge", "!=": "\\ne", "==": "="}[x.op]
+            return f"{emit(x.left)} {op} {emit(x.right)}"
+        if isinstance(x, Logic):
+            if x.op == "not":
+                return f"\\neg {paren(emit(x.args[0]))}"
+            return f" \\text{{ {x.op} }} ".join(emit(a) for a in x.args)
+        raise ExprError(type(x).__name__)
+
+    return emit(n)
+
+
+# --------------------------------------------------------------------------
+# Office Math (native Word equations)
+# --------------------------------------------------------------------------
+def to_omml(n: Node, sym: Callable[[str], str], values: dict | None = None,
+            fmt: Callable[[float], str] | None = None) -> str:
+    """Office Math Markup for a tree: Word shows it as a real, editable equation."""
+    fmt = fmt or (lambda v: f"{v:.4g}")
+
+    def run(text: str, upright: bool = False) -> str:
+        sty = '<m:rPr><m:sty m:val="p"/></m:rPr>' if upright else ""
+        return f"<m:r>{sty}<m:t xml:space=\"preserve\">{_esc(text)}</m:t></m:r>"
+
+    def paren(inner: str, beg: str = "(", end: str = ")") -> str:
+        return (f'<m:d><m:dPr><m:begChr m:val="{beg}"/><m:endChr m:val="{end}"/></m:dPr>'
+                f"<m:e>{inner}</m:e></m:d>")
+
+    def num(v) -> str:
+        s = fmt(v) if values is not None else _short(v)
+        return paren(run("−" + s[1:], True)) if s.startswith("-") else run(s, True)
+
+    def emit(x: Node) -> str:
+        if isinstance(x, Num):
+            text = x.text if (x.text and values is None and not x.conv) else _short(x.value)
+            head, _, unit = text.partition(" ")
+            return run(head.replace("-", "−"), True) + (run("\u2009" + unit, True) if unit else "")
+        if isinstance(x, Sym):
+            if values is not None and x.name in values and isinstance(values[x.name], (int, float)):
+                return num(values[x.name])
+            return sym(x.name)
+        if isinstance(x, Str):
+            return run(f"“{x.value}”", True)
+        if isinstance(x, Unit):
+            return run(x.name, True)
+        if isinstance(x, Bin):
+            if x.op == "/":
+                return f"<m:f><m:num>{emit(x.left)}</m:num><m:den>{emit(x.right)}</m:den></m:f>"
+            if x.op == "**":
+                if x.right in (Num(0.5), Bin("/", Num(1), Num(2))):
+                    return f'<m:rad><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e>{emit(x.left)}</m:e></m:rad>'
+                base = emit(x.left)
+                if not isinstance(x.left, (Sym, Num)):
+                    base = paren(base)
+                return f"<m:sSup><m:e>{base}</m:e><m:sup>{emit(x.right)}</m:sup></m:sSup>"
+            p = _PREC[x.op]
+            left, right = emit(x.left), emit(x.right)
+            if _prec(x.left) < p:
+                left = paren(left)
+            if _prec(x.right) < p or (_prec(x.right) == p and x.op == "-"):
+                right = paren(right)
+            return left + run({"+": " + ", "-": " − ", "*": " · "}[x.op], True) + right
+        if isinstance(x, Neg):
+            inner = emit(x.arg)
+            return run("−", True) + (paren(inner) if _prec(x.arg) < _PREC["neg"] else inner)
+        if isinstance(x, Call):
+            if x.fn == "pi":
+                return run("π")
+            if x.fn == "sqrt":
+                return f'<m:rad><m:radPr><m:degHide m:val="1"/></m:radPr><m:deg/><m:e>{emit(x.args[0])}</m:e></m:rad>'
+            if x.fn == "abs":
+                return paren(emit(x.args[0]), "|", "|")
+            args = "".join(f"<m:e>{emit(a)}</m:e>" for a in x.args)
+            delim = f'<m:d><m:dPr><m:sepChr m:val=","/></m:dPr>{args}</m:d>'
+            return f"<m:func><m:fName>{run(x.fn, True)}</m:fName><m:e>{delim}</m:e></m:func>"
+        if isinstance(x, If):
+            rows, node = [], x
+            while isinstance(node, If):
+                rows.append(f"<m:e>{emit(node.then)}{run('   if ', True)}{emit(node.cond)}</m:e>")
+                node = node.other
+            rows.append(f"<m:e>{emit(node)}{run('   otherwise', True)}</m:e>")
+            return paren(f"<m:eqArr>{''.join(rows)}</m:eqArr>", "{", "")
+        if isinstance(x, Cmp):
+            op = {"<": "<", ">": ">", "<=": "≤", ">=": "≥", "!=": "≠", "==": "="}[x.op]
+            return emit(x.left) + run(f" {op} ", True) + emit(x.right)
+        if isinstance(x, Logic):
+            if x.op == "not":
+                return run("not ", True) + paren(emit(x.args[0]))
+            return run(f" {x.op} ", True).join(emit(a) for a in x.args)
+        raise ExprError(type(x).__name__)
+
+    return emit(n)
+
+
 def _short(v: float) -> str:
     """A literal number for display: no float noise, no loss of digits."""
     if float(v).is_integer() and abs(v) < 1e15:

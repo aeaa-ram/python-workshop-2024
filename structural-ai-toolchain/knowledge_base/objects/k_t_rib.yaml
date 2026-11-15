@@ -1,0 +1,31 @@
+id: k_t_rib
+name: Reduction factor for studs in ribs transverse to the beam
+formula: min(0.7 / sqrt(n_r) * b_0_rib / h_p * (h_sc / h_p - 1), k_t_max)
+params:
+- n_r
+- b_0_rib
+- h_p
+- h_sc
+- k_t_max
+var: k_t_rib
+symbol: k_{t}
+unit: '-'
+code: EN 1994-1-1
+topic: 6.6.4
+topic_path:
+- 6 Ultimate limit states
+- 6.6 Shear connection
+- 6.6.4 Headed studs used with profiled steel sheeting
+clause: 6.6.4.2(1)
+eq: (6.23)
+basis: code
+background:
+- kind: limitation
+  text: Ribs transverse to the beam, h_p ≤ 85 mm, b_0 ≥ h_p, stud diameter ≤ 20 mm through-deck welded (≤ 22 mm
+    in holes), at most two studs per rib. P_Rd of the stud is multiplied by k_t.
+  refs:
+  - id: EN1994-1-1
+    at: 6.6.4.2
+    text: 'EN 1994-1-1:2004 + AC:2009. Eurocode 4: Design of composite steel and concrete structures. Part 1-1:
+      General rules and rules for buildings.'
+version: 1b348077f4e0

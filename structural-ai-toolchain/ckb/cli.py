@@ -9,12 +9,14 @@
     status           the evidence behind one object: sources, benchmarks, reference
     run              calculate in the terminal
     report           calculation report (HTML, PDF): one case, or a template over many cases
-    report-template  a commented report template to start from
+    report-template  a report template to start from: YAML, or an Excel form (-o name.xlsx)
     excel            Excel calculator with live formulas and named ranges
     mathcad          Mathcad Prime worksheet
     verify           does a file (xlsx, mcdx, py, html, pdf) carry the knowledge base's logic?
     app              rebuild the web calculator
     check            place a new source file against the knowledge base
+    questions        differences between the sources and the code that nothing explained
+    answer           answer one of those questions (applied in the next build)
     tools            tool definitions for an AI assistant
     health           re-run every check on the knowledge base
 
@@ -95,7 +97,12 @@ def _topic_key(o):
 def cmd_build(args):
     from .pipeline import build
     from .use.webapp import write
-    out = build(Path(args.inbox), Path(args.workspace), Path(args.kb), anonymous=args.anonymous, vision=args.vision)
+    llm = None
+    if args.vision or args.ask_model:
+        from .llm import get_llm_client
+        llm = get_llm_client()
+    out = build(Path(args.inbox), Path(args.workspace), Path(args.kb), anonymous=args.anonymous, vision=args.vision,
+                llm=llm, ask_model=args.ask_model)
     app = write(out.kb, Path(args.app))
     print(f"[6] web calculator -> {app}")
     print(f"    report of this run -> {Path(args.workspace) / 'distillation_report.md'}")
@@ -317,8 +324,11 @@ def cmd_report(args):
     print(f"report -> {out}")
     if args.pdf:
         pdf = out.with_suffix(".pdf")
-        print(f"PDF -> {pdf}" if R.to_pdf(out, pdf) else
+        print(f"PDF (with bookmarks) -> {pdf}" if R.to_pdf(out, pdf) else
               "PDF not written: no Chromium-based browser found (open the HTML and print it to PDF).")
+    if args.docx:
+        from .use.report_docx import render_docx
+        print(f"Word -> {render_docx(kb, template, out.with_suffix('.docx'), base)}")
     for oid in used:
         _log_use(args, oid, "report", kb)
 
@@ -327,6 +337,11 @@ def cmd_report_template(args):
     from .use.report import example_template
     kb = _kb(args)
     oid = _target(kb, args.object)
+    if args.output and Path(args.output).suffix.lower() == ".xlsx":
+        from .use.report_form import write_form
+        write_form(kb, oid, Path(args.output))
+        print(f"report form -> {args.output}   (fill it in, then: python -m ckb report --template {args.output} --pdf --docx)")
+        return
     text = example_template(kb, oid)
     if args.output:
         Path(args.output).write_text(text, encoding="utf-8")
@@ -341,7 +356,7 @@ def cmd_excel(args):
     oid = _target(kb, args.object)
     values, _, given, _ = _values(kb, oid, args)
     out = Path(args.output or Path(args.workspace) / "excel" / f"{oid}.xlsx")
-    export_calculator(kb, oid, out, values, given, _style(args))
+    export_calculator(kb, oid, out, values, given, _style(args), refs=args.refs)
     print(f"Excel calculator -> {out}")
     if args.verify:
         _print_verify(verify(kb, out))
@@ -443,6 +458,41 @@ def cmd_check(args):
         print(f"  ({res['summary']['new topic']} formulas of unknown quantities not listed; --all shows them)")
 
 
+def cmd_questions(args):
+    import yaml
+    f = Path(args.workspace) / "questions.yaml"
+    qs = (yaml.safe_load(f.read_text(encoding="utf-8")) if f.exists() else None) or []
+    if not qs:
+        print("No open questions: every difference between the sources and the code was explained.")
+        return
+    for q in qs:
+        print(f"\n{q['id']}  {q['object']} at {q['source']} {q['where']}" + (f" ({q['case']})" if q.get("case") else ""))
+        print(f"  source {q['source_value']:.6g}, code {q['code_value']:.6g}")
+        if q.get("formula_in_source"):
+            print(f"  source formula: {q['formula_in_source']}")
+        for p, v in q.get("inputs", {}).items():
+            print(f"    {p:10} = {v['value']:.6g}   ({v['from']})")
+        print("  tried: " + "; ".join(q.get("tried", [])))
+        for h in q.get("would_agree_if", []):
+            print(f"  would agree if {h}")
+        if q.get("ai_proposal"):
+            print(f"  language model proposes: {q['ai_proposal']}")
+    print(f"\n{len(qs)} question(s). Answer: python -m ckb answer <id> --verdict explained --text '...' [--lesson '...']")
+
+
+def cmd_answer(args):
+    import yaml
+    f = Path(args.workspace) / "answers.yaml"
+    data = (yaml.safe_load(f.read_text(encoding="utf-8")) if f.exists() else None) or {}
+    data[args.id] = {"verdict": args.verdict, "answer": args.text,
+                     **({"lesson": args.lesson} if args.lesson else {}),
+                     "date": _dt.date.today().isoformat()}
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(yaml.safe_dump(data, sort_keys=True, allow_unicode=True), encoding="utf-8")
+    print(f"answer to {args.id} saved in {f}; it is applied in the next build"
+          + ("; the lesson becomes design background of the object" if args.lesson else ""))
+
+
 def cmd_tools(args):
     from .use.toolschema import definitions
     kb = _kb(args)
@@ -492,6 +542,8 @@ def main(argv=None):
     s.add_argument("--app", default=str(ROOT / "app" / "index.html"))
     s.add_argument("--anonymous", action="store_true", help="leave file and sheet names out of the knowledge base")
     s.add_argument("--vision", action="store_true", help="also read formulas from PDFs with a vision model")
+    s.add_argument("--ask-model", action="store_true",
+                   help="ask a language model for its reading of differences nothing else explains")
     s.set_defaults(fn=cmd_build)
 
     s = sub.add_parser("convert", help="one file -> machine-readable statements")
@@ -526,6 +578,9 @@ def main(argv=None):
         else:
             s.add_argument("-o", "--output")
             s.add_argument("--verify", action="store_true", help="read the file back and compare with the knowledge base")
+        if name == "excel":
+            s.add_argument("--refs", choices=["names", "cells"], default="names",
+                           help="formulas with named ranges (=A_sl/(b_w*d)) or cell references (=C8/(C9*C7))")
         s.set_defaults(fn=fn)
 
     s = sub.add_parser("report", help="calculation report (HTML, PDF)")
@@ -536,7 +591,8 @@ def main(argv=None):
     s.add_argument("--cases", help="cases table (xlsx, csv, yaml) replacing the template's cases")
     s.add_argument("--from-excel", help="take the inputs from an Excel calculator generated by `excel`")
     s.add_argument("-o", "--output")
-    s.add_argument("--pdf", action="store_true", help="also print to PDF (needs Edge, Chrome or Chromium)")
+    s.add_argument("--pdf", action="store_true", help="also print to PDF with bookmarks (needs Edge, Chrome or Chromium)")
+    s.add_argument("--docx", action="store_true", help="also write a Word document with native equations")
     for opt in ("project", "made-by", "checked-by", "number"):
         s.add_argument(f"--{opt}", default="")
     _style_args(s)
@@ -563,6 +619,14 @@ def main(argv=None):
     s.add_argument("--all", action="store_true")
     s.add_argument("--vision", action="store_true")
     s.set_defaults(fn=cmd_check)
+
+    sub.add_parser("questions", help="differences nothing explained, for an engineer").set_defaults(fn=cmd_questions)
+    s = sub.add_parser("answer", help="answer a question (applied in the next build)")
+    s.add_argument("id")
+    s.add_argument("--verdict", default="explained", choices=["explained", "source-error", "project-specific"])
+    s.add_argument("--text", default="", help="the explanation")
+    s.add_argument("--lesson", default="", help="a general lesson to keep with the object (design background)")
+    s.set_defaults(fn=cmd_answer)
 
     s = sub.add_parser("tools", help="tool definitions for an AI assistant")
     s.add_argument("-o", "--output")

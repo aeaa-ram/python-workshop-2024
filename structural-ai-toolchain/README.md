@@ -30,11 +30,12 @@ sheets of slab shear checks:
 |---|---|
 | Conversion | Mathcad: 84/84 formulas re-evaluate to the worksheet's values, 80/80 results stored by Mathcad reproduced. Excel: 1,040/1,040 formulas reproduce Excel's cached values. PDF: 100 printed quantities. |
 | Curation | The PDF is recognised as a print of the worksheet: a benchmark, not a second opinion. |
-| Against the code | 46 objects from EN 1992-1-1 and EN 1994-1-1. Source formulas: 21 as code, 9 simplified, 1 permitted alternative, 5 different, 12 project-specific. |
-| Simplifications found | f_cd: α_cc left out (recommended value 1 assumed). V_Rd,c: lower bound V_Rd,c,min not applied, which governs in 22 of 80 cases; that is on the safe side here. V_Rd,c,min: k_1·σ_cp left out where σ_cp ≠ 0. γ_C = 1.3775 used 72 times against the recommended 1.5. |
-| Benchmarks | 671 source values re-run: 623 reproduced, 37 differ (each with its reason), 11 not comparable. |
+| Against the code | 146 objects from EN 1992-1-1, EN 1993-1-1, EN 1993-1-8 and EN 1994-1-1. Source formulas: 21 as code, 9 simplified, 1 permitted alternative, 6 different, 12 project-specific. |
+| Simplifications found | f_cd: α_cc left out (recommended value 1 assumed). V_Rd,c: lower bound V_Rd,c,min not applied, which governs in 22 of 80 cases; that is on the safe side here. V_Rd,c,min: k_1·σ_cp left out where σ_cp ≠ 0 (8 cases, unsafe side). γ_C = 1.3775 used 72 times against the recommended 1.5. Punching: f_ywd,ef = 250 + 0.2·d against 250 + 0.25·d in the code. |
+| Understanding | A 540× difference was traced to one spreadsheet column holding two calculations (a full-width check and a per-metre strip); the lookup now prefers the same case and section. Per-metre working became context on the objects and on the b_w input. |
+| Benchmarks | 672 source values re-run: 623 reproduced, 38 differ (each with its reason), 11 not comparable. |
 | Independent reference | 21 objects agree with [`structuralcodes`](https://github.com/fib-international/structuralcodes) over 200 random samples each. |
-| Confidence | 31 checked, 15 not yet checked, 0 need review. |
+| Confidence | 31 checked, 115 not yet checked (the wider code seed, not yet seen in a source), 0 need review. |
 
 [`knowledge_base/`](knowledge_base) and [`app/index.html`](app/index.html) are that run, built with
 `--anonymous` (no file or sheet names). The project files are not in this repository.
@@ -52,11 +53,13 @@ python -m ckb status V_Rd_c            # the evidence: sources, simplifications,
 python -m ckb run V_Rd_c d=450 b_w=300 A_sl=942 --check 60
 python -m ckb excel V_Rd_c             # Excel calculator, named ranges, live formulas
 python -m ckb mathcad V_Rd_c           # Mathcad Prime worksheet
-python -m ckb report V_Rd_c d=450 --pdf
+python -m ckb report V_Rd_c d=450 --pdf --docx   # PDF with bookmarks, Word with native equations
+python -m ckb report-template V_Rd_c -o form.xlsx  # a report set up in an Excel form instead of YAML
 python -m ckb verify workspace/excel/V_Rd_c.xlsx
+python -m ckb questions                # differences between sources and code that nothing explained
 ```
 
-`python -m ckb --help` lists every command. Tests: `python -m pytest` (44 tests; four of them need
+`python -m ckb --help` lists every command. Tests: `python -m pytest` (52 tests; four of them need
 real project files in `inbox/` and are skipped without them).
 
 ## Using an object
@@ -64,7 +67,7 @@ real project files in `inbox/` and are skipped without them).
 | Way | What you get |
 |---|---|
 | **Web calculator** `app/index.html` | Code tree with a confidence dot per object, and word search. Per object: **Calculate** (inputs with recommended values and NDP marks, the equation, substituted values and bold result, utilisation and conditions; cases to compare members; a report template from those cases), **Design background** (scope, limitations, pitfalls and guidance with sources; where the object is shared with other codes; a dependency map), **Chart** (the result against any input, with hover), **Code**, **Status** (the evidence). Decimals and units in Settings. |
-| **Excel** `ckb excel` | Native formulas on named ranges (`=MIN(A_sl/(b_w*d),0.02)`), no macros. Inputs are changed in the workbook. |
+| **Excel** `ckb excel` | Native formulas on named ranges (`=MIN(A_sl/(b_w*d),0.02)`), or plain cell references with `--refs cells` (`=MIN(C8/(C9*C7),0.02)`); no macros. Inputs are changed in the workbook. |
 | **Mathcad Prime** `ckb mathcad` | A worksheet with real math regions, units where the empirical formulas need them (`200 mm/d`), `if` regions for conditions. |
 | **Report** `ckb report` | See below. |
 | **Terminal** `ckb run` | Asks for each input, or takes them on the command line. |
@@ -111,11 +114,18 @@ blocks:
   - pagebreak: true
 ```
 
-The output is a static A4 HTML page: bold inline results, utilisation as a number with OK / NOT OK,
-no sliders and no history. It is printed to PDF by headless Edge, Chrome or Chromium (`--pdf`), or
-by the browser's own Print. Every equation is printed from the object's formula tree
-(`expr.to_mathml` in [`ckb/use/report.py`](ckb/use/report.py)), and the footer lists
+The output is a static A4 page: bold inline results, utilisation as a number with OK / NOT OK, no
+sliders and no history. `--pdf` prints it with headless Edge, Chrome or Chromium and adds bookmarks
+for the title, the headings and every calculation. `--docx` writes the same report as a Word
+document with native, editable Word equations and heading styles (navigation pane; *Save as PDF*
+with bookmarks). Every equation is printed from the object's formula tree: `expr.to_mathml` for
+HTML/PDF ([`ckb/use/report.py`](ckb/use/report.py)), `expr.to_omml` for Word
+([`ckb/use/report_docx.py`](ckb/use/report_docx.py)), `expr.to_latex` for LaTeX. The footer lists
 `ckb <object> <version>` for every object used.
+
+Nobody has to edit YAML: `report-template V_Rd_c -o form.xlsx` writes the same template as an Excel
+form (title block, blocks with drop-down choices, cases, remarks), and the web calculator has a
+report builder that fills the template from your cases and choices.
 
 ## How do I know it is the same logic?
 
@@ -132,13 +142,40 @@ verify <file>` reads a file back and checks it:
 `python -m ckb health` re-runs every stored benchmark and catches any edit made without a new
 version.
 
+## When a source and the code disagree
+
+A difference is investigated before it is reported. The investigation tries, by recalculating:
+
+1. An input read from another calculation in the same file.
+2. Two results that differ by a width (per metre against full width).
+3. One input off by a power of ten (a unit).
+4. One input with another value.
+
+Whatever it explains is recorded with the explanation, and general lessons become context on the
+object. Per-metre working, for example, shows on the b_w input. What nothing explains becomes a
+question for an engineer:
+
+```bash
+python -m ckb questions                                  # everything that was tried, and what would make it agree
+python -m ckb answer Q1a2b3c4 --verdict explained --text "load per metre of walkway" --lesson "..."
+```
+
+The answer is applied in the next build, and a lesson becomes design background of the object.
+`python -m ckb build --ask-model` also asks a language model for its reading first; its answer is
+attached as a proposal and never accepted on its own.
+
 ## Several codes, no duplicates
 
 When a later code writes an expression that is already stored, it is linked, not copied.
 EN 1994-1-1 f_cd = f_ck/γ_C is the EN 1992-1-1 object with α_cc fixed to 1 *for EN 1994-1-1*.
 EN 1994-1-1 f_sd = f_yk/γ_S is the same expression as f_yd, so it becomes one object with two names.
-`python -m ckb codes` shows the links. Adding a code means adding one YAML file to
-`ckb/data/codes/`.
+The same expression with other inputs is an *instance*:
+
+- Punching uses k with the mean effective depth (`of: k, bind: {d: d_eff_p}`).
+- A composite column uses the steel buckling curve χ with its own slenderness.
+
+The expression is taken from the original, never typed twice. `python -m ckb codes` shows the links.
+Adding a code means adding one YAML file to `ckb/data/codes/`.
 
 ## Where the web calculator lives
 
@@ -166,8 +203,12 @@ More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Limits
 
-- EN 1992-1-1 (materials, bending, shear, stresses, cracking) and part of EN 1994-1-1 (studs,
-  composite column squash load). Formulas of other topics are reported as not recognised.
+- The registry covers the main clauses of EN 1992-1-1, EN 1993-1-1, EN 1993-1-8 and EN 1994-1-1.
+  The EC3/EC4 objects and most of the added EC2 ones were written from the codes and have not been
+  seen in a source or compared with an independent library: they are marked *not yet checked*.
+  Interaction factors (EN 1993-1-1 6.3.3), M_cr, class 4 sections and second order analysis are
+  not in it.
+- The Word report is checked by reading it back with pandoc; it has not been opened in Word here.
 - Straight-line calculations only: no iteration, interaction diagrams, tables or lookups.
 - The Mathcad export is checked by reading it back and re-running it; it has not been opened in
   Mathcad Prime in this environment.

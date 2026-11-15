@@ -1,0 +1,215 @@
+# Code baseline: EN 1993-1-8 (Eurocode 3, joints), recommended values.  Same format as
+# en1992-1-1.yaml.  Written from the code; not yet seen in a source: "not yet checked".
+
+code: EN 1993-1-8
+title: "Eurocode 3: Design of steel structures, Part 1-8: Design of joints"
+edition: "2005 + AC:2009"
+values: recommended values (no National Annex)
+order: 3
+
+topics:
+  - {id: "2.2",   title: "Partial factors for joints", keywords: [partial factor, bolt, weld]}
+  - {id: "3",     title: "Connections made with bolts, rivets or pins", keywords: [bolt, bolted connection, fastener]}
+  - {id: "3.6",   title: "Design resistance of individual fasteners", keywords: [bolt shear, bearing, bolt tension]}
+  - {id: "4",     title: "Welded connections", keywords: [weld, welded connection]}
+  - {id: "4.5",   title: "Design resistance of fillet welds", keywords: [fillet weld, throat thickness]}
+
+quantities:
+  - id: gamma_M2
+    topic: "2.2"
+    clause: "2.2(2), Table 2.1"
+    same_as: gamma_M2
+
+  # ---- 3.6.1 bolts, Table 3.4 ----
+  - id: alpha_v
+    symbol: "α_{v}"
+    name: Factor for the shear resistance of a bolt
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: coefficient
+    value: 0.6
+    choices: [{value: 0.6, label: "classes 4.6, 5.6, 8.8 through the thread; any class through the shank"}, {value: 0.5, label: "classes 4.8, 5.8, 6.8, 10.9 through the thread"}]
+    unit: "-"
+    range: [0.5, 0.6]
+    aliases: [αv, alpha_v]
+  - id: F_v_Rd
+    symbol: "F_{v,Rd}"
+    name: Shear resistance of a bolt per shear plane
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [5, 1000]
+    formula: alpha_v * f_ub * A_bolt / gamma_M2
+    sense: resistance
+    check: F_v_Ed
+    aliases: [Fv.Rd, "Fv,Rd", F_v_Rd]
+    words: [bolt shear resistance]
+    background:
+      - kind: pitfall
+        text: "A is the tensile stress area A_s when the shear plane passes through the thread and the gross area when it passes through the unthreaded shank; α_v changes with it. Packings, long joints and large grip lengths reduce the resistance (3.6.1(12), 3.8, 3.6.1(13))."
+        refs: ["EN1993-1-8:Table 3.4, 3.6.1, 3.8"]
+  - id: alpha_d
+    symbol: "α_{d}"
+    name: Factor for the end distance (end bolts, bearing)
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.3, 3]
+    formula: e_1 / (3 * d_0)
+    aliases: [αd, alpha_d]
+    alternatives:
+      - formula: "p_1 / (3 * d_0) - 0.25"
+        when: "inner bolts in the direction of load transfer"
+  - id: alpha_b
+    symbol: "α_{b}"
+    name: Factor for bearing in the direction of load transfer
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.2, 1]
+    formula: min(alpha_d, f_ub / f_u, 1)
+    aliases: [αb, alpha_b]
+  - id: k_1_bolt
+    symbol: "k_{1}"
+    name: Factor for bearing perpendicular to the load transfer (edge bolts)
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0.3, 2.5]
+    formula: min(2.8 * e_2 / d_0 - 1.7, 1.4 * p_2 / d_0 - 1.7, 2.5)
+    aliases: [k1.bolt, k_1_bolt]
+    context: ["3.6"]
+    alternatives:
+      - formula: "min(1.4 * p_2 / d_0 - 1.7, 2.5)"
+        when: "inner bolts perpendicular to the load transfer"
+  - id: F_b_Rd
+    symbol: "F_{b,Rd}"
+    name: Bearing resistance of a bolt
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [5, 1000]
+    formula: k_1_bolt * alpha_b * f_u * d_bolt * t_plate / gamma_M2
+    sense: resistance
+    check: F_v_Ed
+    aliases: [Fb.Rd, "Fb,Rd", F_b_Rd]
+    words: [bearing resistance]
+    background:
+      - kind: limitation
+        text: "Normal round holes; oversized and slotted holes reduce it (0.8 and 0.6). The minimum end and edge distances of Table 3.3 (1.2 d_0) still apply."
+        refs: ["EN1993-1-8:Table 3.3, Table 3.4"]
+  - id: k_2_bolt
+    symbol: "k_{2}"
+    name: Factor for the tension resistance of a bolt
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: coefficient
+    value: 0.9
+    choices: [{value: 0.9, label: normal bolts}, {value: 0.63, label: countersunk bolts}]
+    unit: "-"
+    range: [0.63, 0.9]
+    aliases: [k2.bolt, k_2_bolt]
+  - id: F_t_Rd
+    symbol: "F_{t,Rd}"
+    name: Tension resistance of a bolt
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [5, 2000]
+    formula: k_2_bolt * f_ub * A_s_bolt / gamma_M2
+    sense: resistance
+    check: F_t_Ed
+    aliases: [Ft.Rd, "Ft,Rd", F_t_Rd]
+    words: [bolt tension resistance]
+    background:
+      - kind: guidance
+        text: "Prying forces are included in F_t,Ed; the T-stub model of 6.2.4 gives them for end plates and flanges."
+        refs: ["EN1993-1-8:3.11, 6.2.4"]
+  - id: B_p_Rd
+    symbol: "B_{p,Rd}"
+    name: Punching shear resistance of the plate under the bolt head or nut
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: kN
+    range: [10, 3000]
+    formula: 0.6 * pi() * d_m * t_plate * f_u / gamma_M2
+    sense: resistance
+    check: F_t_Ed
+    aliases: [Bp.Rd, "Bp,Rd", B_p_Rd]
+  - id: util_vt
+    symbol: "η_{v+t}"
+    name: Utilisation of a bolt in combined shear and tension
+    topic: "3.6"
+    clause: "3.6.1(1), Table 3.4"
+    kind: derived
+    basis: code
+    unit: "-"
+    range: [0, 3]
+    formula: F_v_Ed / F_v_Rd + F_t_Ed / (1.4 * F_t_Rd)
+    sense: effect
+    aliases: [util_vt]
+    checks:
+      - when: "util_vt <= 1"
+        text: "F_v,Ed/F_v,Rd + F_t,Ed/(1.4 F_t,Rd) ≤ 1.0"
+        clause: "Table 3.4"
+
+  # ---- 4.5.3.3 fillet welds, simplified method ----
+  - id: beta_w
+    symbol: "β_{w}"
+    name: Correlation factor for fillet welds
+    topic: "4.5"
+    clause: "4.5.3.2(6), Table 4.1"
+    kind: coefficient
+    value: 0.9
+    choices: [{value: 0.8, label: S235}, {value: 0.85, label: S275}, {value: 0.9, label: S355}, {value: 1.0, label: "S420, S460"}]
+    unit: "-"
+    range: [0.8, 1.0]
+    aliases: [βw, beta_w]
+  - id: f_vw_d
+    symbol: "f_{vw,d}"
+    name: Design shear strength of a fillet weld
+    topic: "4.5"
+    clause: "4.5.3.3(3)"
+    eq: "(4.4)"
+    kind: derived
+    basis: code
+    unit: MPa
+    range: [100, 400]
+    formula: f_u / sqrt(3) / (beta_w * gamma_M2)
+    aliases: [fvw.d, f_vw_d]
+  - id: F_w_Rd
+    symbol: "F_{w,Rd}"
+    name: Design resistance of a fillet weld per unit length (simplified method)
+    topic: "4.5"
+    clause: "4.5.3.3(2)"
+    eq: "(4.3)"
+    kind: derived
+    basis: code
+    unit: kN/m
+    range: [100, 5000]
+    formula: f_vw_d * a_weld
+    sense: resistance
+    check: F_w_Ed
+    aliases: [Fw.Rd, "Fw,Rd", F_w_Rd]
+    words: [weld resistance, fillet weld resistance]
+    background:
+      - kind: guidance
+        text: "The simplified method takes the resultant of all forces per unit length, whatever their direction; the directional method (4.5.3.2) is less conservative for welds loaded perpendicular to their axis. f_u is that of the weaker part joined."
+        refs: ["EN1993-1-8:4.5.3.2, 4.5.3.3"]
+      - kind: limitation
+        text: "Effective throat thickness a ≥ 3 mm; lap welds longer than 150a are reduced by β_Lw (4.11)."
+        refs: ["EN1993-1-8:4.5.2(2), 4.11"]

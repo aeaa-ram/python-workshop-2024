@@ -1,0 +1,23 @@
+id: A_sw_max
+name: Maximum effective area of vertical shear reinforcement (cot θ = 1)
+formula: 0.5 * alpha_cw * nu_1 * f_cd * b_w * s / f_ywd
+params:
+- alpha_cw
+- nu_1
+- f_cd
+- b_w
+- s
+- f_ywd
+var: A_sw_max
+symbol: A_{sw,max}
+unit: mm²
+code: EN 1992-1-1
+topic: 6.2.3
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.2 Shear
+- 6.2.3 Members requiring design shear reinforcement
+clause: 6.2.3(3)
+eq: (6.12)
+basis: code
+version: 1e28e7a601b5

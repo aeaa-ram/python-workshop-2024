@@ -144,6 +144,49 @@ def mathml(name: str, display: str = "") -> str:
     return f'<msub>{base_ml}<mi mathvariant="normal">{_esc(sub)}</mi></msub>'
 
 
+def split(name: str, display: str = "") -> tuple[str, str]:
+    """(base, subscript) for typesetting: from the display form if there is one."""
+    if display:
+        m = re.fullmatch(r"([^_]+)(?:_\{?([^}]*)\}?)?", display)
+        return (m.group(1), m.group(2) or "") if m else (display, "")
+    return parts(name)
+
+
+_TEX_GREEK = {"α": r"\alpha", "β": r"\beta", "γ": r"\gamma", "δ": r"\delta", "ε": r"\varepsilon", "ζ": r"\zeta",
+              "η": r"\eta", "θ": r"\theta", "λ": r"\lambda", "μ": r"\mu", "ν": r"\nu", "ξ": r"\xi", "π": r"\pi",
+              "ρ": r"\rho", "σ": r"\sigma", "τ": r"\tau", "φ": r"\varphi", "ϕ": r"\phi", "χ": r"\chi",
+              "ψ": r"\psi", "ω": r"\omega", "Δ": r"\Delta", "Σ": r"\Sigma", "Φ": r"\Phi", "Ω": r"\Omega"}
+
+
+def tex_text(s: str) -> str:
+    out = []
+    for ch in s:
+        if ch in _TEX_GREEK:
+            out.append(_TEX_GREEK[ch] + " ")
+        elif ch in "_{}%#&$":
+            out.append("\\" + ch)
+        else:
+            out.append(ch)
+    return "".join(out).strip()
+
+
+def latex(name: str, display: str = "") -> str:
+    """LaTeX rendering with an upright subscript: ``V_{\\mathrm{Rd,c}}``."""
+    base, sub = split(name, display)
+    base_t = tex_text(base)
+    return f"{base_t}_{{\\mathrm{{{tex_text(sub)}}}}}" if sub else base_t
+
+
+def omml(name: str, display: str = "") -> str:
+    """Office Math (Word equations) for a symbol: italic base, upright subscript."""
+    base, sub = split(name, display)
+    b = f"<m:r><m:t>{_esc(base)}</m:t></m:r>"
+    if not sub:
+        return b
+    return (f'<m:sSub><m:e>{b}</m:e><m:sub><m:r><m:rPr><m:sty m:val="p"/></m:rPr>'
+            f"<m:t>{_esc(sub)}</m:t></m:r></m:sub></m:sSub>")
+
+
 def _esc(s: str) -> str:
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 

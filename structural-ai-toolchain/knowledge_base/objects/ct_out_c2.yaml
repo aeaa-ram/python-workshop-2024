@@ -1,0 +1,16 @@
+id: ct_out_c2
+name: Class 2 limit of c/t, outstand flange in compression
+formula: 10 * eps_y
+params:
+- eps_y
+var: ct_out_c2
+symbol: (c/t)_{lim,2}
+unit: '-'
+code: EN 1993-1-1
+topic: '5.5'
+topic_path:
+- 5 Structural analysis
+- 5.5 Classification of cross-sections
+clause: 5.5.2, Table 5.2
+basis: code
+version: bef3022a54bf

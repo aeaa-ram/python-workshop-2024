@@ -1,0 +1,19 @@
+id: rho_w_min
+name: Minimum shear reinforcement ratio
+formula: 0.08 * sqrt(f_ck) / f_yk
+params:
+- f_ck
+- f_yk
+var: rho_w_min
+symbol: ρ_{w,min}
+unit: '-'
+code: EN 1992-1-1
+topic: '9.2'
+topic_path:
+- 9 Detailing of members and particular rules
+- 9.2 Beams
+clause: 9.2.2(5)
+eq: (9.5N)
+basis: code
+ndp: true
+version: be39127a538c

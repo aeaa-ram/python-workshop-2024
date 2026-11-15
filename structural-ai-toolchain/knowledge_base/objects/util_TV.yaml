@@ -1,0 +1,25 @@
+id: util_TV
+name: Utilisation of the concrete struts under torsion and shear
+formula: T_Ed / T_Rd_max + V_Ed / V_Rd_max
+params:
+- T_Ed
+- T_Rd_max
+- V_Ed
+- V_Rd_max
+var: util_TV
+symbol: η_{T+V}
+unit: '-'
+code: EN 1992-1-1
+topic: '6.3'
+topic_path:
+- 6 Ultimate limit states (ULS)
+- 6.3 Torsion
+clause: 6.3.2(4)
+eq: (6.29)
+basis: code
+sense: effect
+checks:
+- when: util_TV <= 1
+  text: T_Ed/T_Rd,max + V_Ed/V_Rd,max ≤ 1.0
+  clause: 6.3.2(4), (6.29)
+version: cbe15cffdfe3

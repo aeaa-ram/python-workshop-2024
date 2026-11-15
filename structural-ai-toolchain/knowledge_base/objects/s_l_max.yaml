@@ -1,0 +1,19 @@
+id: s_l_max
+name: Maximum longitudinal spacing of shear assemblies
+formula: 0.75 * d * (1 + cot(alpha))
+params:
+- d
+- alpha
+var: s_l_max
+symbol: s_{l,max}
+unit: mm
+code: EN 1992-1-1
+topic: '9.2'
+topic_path:
+- 9 Detailing of members and particular rules
+- 9.2 Beams
+clause: 9.2.2(6)
+eq: (9.6N)
+basis: code
+ndp: true
+version: 3e20eec2a6a1
