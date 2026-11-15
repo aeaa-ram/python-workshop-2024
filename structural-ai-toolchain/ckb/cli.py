@@ -1,17 +1,25 @@
 """Command line: ``python -m ckb <command>``.
 
-    build     inbox -> knowledge base, web calculator (all stages)
-    convert   one file -> machine-readable statements and a Python script
-    list      the objects, by clause
-    search    find an object by symbol, clause or words
-    show      one object: formula, variants, benchmarks, reference
-    run       calculate in the terminal (asks for the inputs)
-    report    calculation sheet as HTML (and PDF)
-    excel     Excel calculator with live formulas
-    app       rebuild the web calculator
-    check     place a new source file against the knowledge base
-    tools     tool definitions for an AI assistant
-    health    re-run every check on the knowledge base
+    build            inbox -> knowledge base, code blocks, web calculator (all stages)
+    convert          one file -> machine-readable statements and a Python script
+    codes            the codes in the registry, their chapters and shared objects
+    list             the objects, by code and chapter, with their confidence
+    search           find an object by symbol, clause or words ("concrete shear")
+    show             one object: formula, inputs, conditions, design background
+    status           the evidence behind one object: sources, benchmarks, reference
+    run              calculate in the terminal
+    report           calculation report (HTML, PDF): one case, or a template over many cases
+    report-template  a commented report template to start from
+    excel            Excel calculator with live formulas and named ranges
+    mathcad          Mathcad Prime worksheet
+    verify           does a file (xlsx, mcdx, py, html, pdf) carry the knowledge base's logic?
+    app              rebuild the web calculator
+    check            place a new source file against the knowledge base
+    tools            tool definitions for an AI assistant
+    health           re-run every check on the knowledge base
+
+Number style (every output): ``--decimals 3``, ``--unit V_Rd_c=kN --unit d=m``,
+or ``--style style.yaml``.
 """
 from __future__ import annotations
 
@@ -26,6 +34,7 @@ from . import expr as X
 from . import units as U
 
 ROOT = Path(__file__).resolve().parent.parent
+DOTS = {"high": "●", "medium": "◐", "low": "○"}
 
 
 def _kb(args):
@@ -48,6 +57,17 @@ def _target(kb, name: str) -> str:
     return oid
 
 
+def _style(args):
+    from .use.style import Style
+    style = Style.load(Path(args.style) if getattr(args, "style", None) else None)
+    if getattr(args, "decimals", None) is not None:
+        style.decimals = args.decimals
+    for pair in getattr(args, "unit", None) or []:
+        name, _, unit = pair.partition("=")
+        style.units[name.strip()] = unit.strip()
+    return style
+
+
 def _log_use(args, oid: str, surface: str, kb) -> None:
     try:
         ws = Path(args.workspace)
@@ -61,12 +81,17 @@ def _log_use(args, oid: str, surface: str, kb) -> None:
 
 def _fidelity(s: dict) -> str:
     if s["formulas"] and s["formulas_unverified"] == s["formulas"]:
-        return (f"{s['formulas']} formulas evaluated here (the file stores no calculated values to compare with)")
+        return f"{s['formulas']} formulas evaluated here (the file stores no calculated values to compare with)"
     return (f"{s['formulas_verified']} of {s['formulas']} formulas reproduce the value the source shows"
             + (f"; {s['formulas_mismatch']} differ, {s['formulas_failed']} not evaluated"
                if s["formulas_mismatch"] + s["formulas_failed"] else ""))
 
 
+def _topic_key(o):
+    return [int(x) if x.isdigit() else 0 for x in o.topic.split(".")], o.id
+
+
+# --------------------------------------------------------------------------
 def cmd_build(args):
     from .pipeline import build
     from .use.webapp import write
@@ -108,17 +133,36 @@ def cmd_convert(args):
             print(f"    {st.name[:18]:18} = {str(shown):>12} {st.unit:7} {st.fidelity:10} {st.label[:40]:40} {f[:70]}")
 
 
+def cmd_codes(args):
+    kb = _kb(args)
+    for c in kb.codes:
+        own = [o for o in kb.objects.values() if o.code == c["code"]]
+        shared = [o for o in kb.objects.values() if any(r["code"] == c["code"] for r in o.refs)]
+        print(f"\n{c['code']}  {c.get('title', '')}")
+        print(f"  {len(own)} objects of its own" + (f", {len(shared)} shared with an earlier code" if shared else ""))
+        if c.get("fixed"):
+            print("  fixes: " + ", ".join(f"{kb.name(k)} = {U.fmt(v)}" for k, v in c["fixed"].items()))
+        for o in shared:
+            r = next(r for r in o.refs if r["code"] == c["code"])
+            print(f"    {r.get('symbol', o.id):10} cl. {r.get('clause', ''):12} -> {o.text} of {o.code} ({r.get('how', '')})")
+
+
 def cmd_list(args):
     kb = _kb(args)
-    topic = None
-    for o in sorted(kb.objects.values(), key=lambda o: ([int(x) for x in o.topic.split(".") if x.isdigit()], o.id)):
-        if o.topic != topic:
-            topic = o.topic
-            print(f"\n{' > '.join(o.topic_path)}")
-        b = o.benchmarks
-        print(f"  {o.id:12} {o.text:12} {o.status:14} {b.get('agree', 0):>3}/{b.get('total', 0):<3} benchmarks  "
-              f"ref: {(o.reference or {}).get('status', '-'):8} {o.name}")
-    print(f"\n{len(kb.objects)} objects, {len(kb.quantities)} parameters. `python -m ckb show <object>` for the evidence.")
+    for code in [c["code"] for c in kb.codes] or [""]:
+        objs = sorted((o for o in kb.objects.values() if o.code == code), key=_topic_key)
+        if not objs:
+            continue
+        print(f"\n{code}")
+        topic = None
+        for o in objs:
+            if o.topic != topic:
+                topic = o.topic
+                print(f"  {' > '.join(o.topic_path)}")
+            dot = DOTS.get(o.confidence.get("level"), " ")
+            print(f"    {dot} {o.id:12} {o.text:12} {o.reference_text.replace(o.code + ' ', ''):34} {o.name}")
+    print(f"\n{len(kb.objects)} objects, {len(kb.quantities)} parameters.   "
+          "● checked  ◐ not yet checked  ○ review needed   (python -m ckb status <object>)")
 
 
 def cmd_search(args):
@@ -134,42 +178,66 @@ def cmd_search(args):
 
 
 def cmd_show(args):
+    """The design logic of one object - what a calculation uses."""
     kb = _kb(args)
     o = kb.objects[_target(kb, args.object)]
     print(f"{o.text} - {o.name}\n{o.reference_text}\n{' > '.join(o.topic_path)}\n")
-    print(f"  {o.text} = {X.to_text(o.tree, kb.name)}\n")
-    s = o.support
-    print(f"Status: {o.status} - {s.get('formula_instances', 0)} formulas in {s.get('sources', 0)} independent source(s), "
-          f"{s.get('variants_merged', 0)} variant(s) merged")
-    print("\nVariants")
-    for v in o.variants:
-        print(f"  {'merged    ' if v['merged'] else 'kept apart'} x{v['instances']:<3} {v['text']}   ({', '.join(v['sources'])})")
-        for d in v["differences"]:
-            print(f"               - {d}")
-        if v.get("reason"):
-            print(f"               - {v['reason']}")
-    b = o.benchmarks
-    print(f"\nBenchmarks: {b.get('agree', 0)} of {b.get('total', 0)} source values reproduced"
-          + (f", {b['deviation']} differ" if b.get("deviation") else "")
-          + (f", {b['not_comparable']} not comparable" if b.get("not_comparable") else ""))
-    for it in [i for i in b.get("items", []) if i["status"] == "deviation"][:args.rows]:
-        k, unit = (1000.0, o.unit + "/m") if it.get("per_width") else (1.0, o.unit)
-        print(f"  differs at {it['source']} {it['where']}: source {U.fmt(kb.to_display(o.id, it['expected']) * k)}, "
-              f"unified {U.fmt(kb.to_display(o.id, it['got']) * k)} {unit} - {it.get('detail', '')}")
-    if o.reference:
-        r = o.reference
-        print(f"\nReference: {r['status']} with {r['library']} {r['function']} "
-              f"({r['agreeing_samples']} of {r['samples']} samples)" + (f". {r['note']}" if r.get("note") else ""))
-    for w in o.warnings:
-        print(f"\nWarning: {w}")
-    for w in o.findings:
-        print(f"Finding: {w}")
-    for n in o.notes:
-        print(f"Note: {n}")
+    print(f"  {o.text} = {X.to_text(o.tree, kb.name)}      [{o.unit}]")
+    for a in o.alternatives:
+        print(f"  alternative: {o.text} = {a.get('formula')}   {a.get('text', '')}")
+    if o.fixed:
+        print(f"  with {', '.join(f'{kb.name(k)} = {U.fmt(v)}' for k, v in o.fixed.items())} (fixed by {o.code})")
+    for r in o.refs:
+        print(f"  also {r['code']} cl. {r.get('clause', '')}: {r.get('how', '')}")
     steps, inputs = kb.plan(o.id)
-    print(f"\nInputs when resolved: {', '.join(kb.name(p) for p in inputs)}")
+    print(f"\nInputs: {', '.join(kb.name(p) for p in inputs)}")
     if len(steps) > 1:
         print(f"Calculated on the way: {', '.join(kb.name(p) for p in steps[:-1])}")
+    if o.checks:
+        print("\nConditions")
+        for c in o.checks:
+            print(f"  {c.get('text', c['when'])} ({c.get('clause', '')})")
+    if o.background:
+        print("\nDesign background")
+        for b in o.background:
+            refs = "; ".join(f"{r['id']} {r.get('at', '')}".strip() for r in b.get("refs", []))
+            print(f"  [{b['kind']}] {b['text']}" + (f"  ({refs})" if refs else ""))
+    print(f"\nversion {o.version}   (python -m ckb status {o.id} for the evidence)")
+
+
+def cmd_status(args):
+    """The evidence behind one object - kept out of every calculation."""
+    kb = _kb(args)
+    o = kb.objects[_target(kb, args.object)]
+    c = o.confidence
+    print(f"{o.text} - {o.name}  ({o.reference_text}, version {o.version})\n")
+    print(f"Confidence: {c.get('label', '-')} {DOTS.get(c.get('level'), '')}")
+    for r in c.get("reasons", []):
+        print(f"  - {r}")
+    ev = o.evidence
+    print(f"\nSources: {ev.get('sources', 0)} file(s), {ev.get('formula_instances', 0)} formulas, "
+          f"{ev.get('printed_values', 0)} printed values")
+    for v in ev.get("variants", []):
+        print(f"  {v.get('relation', ''):16} x{v.get('instances', 0):<3} {v.get('text', '')}")
+        for d in v.get("differences", []):
+            print(f"  {'':16}      - {d}")
+        if v.get("reason"):
+            print(f"  {'':16}      - {v['reason']}")
+    for p in ev.get("practice", []):
+        print(f"  practice: {p}")
+    b = o.benchmarks
+    if b.get("total"):
+        print(f"\nBenchmarks: {b.get('agree', 0)} of {b['total']} source values reproduced"
+              + (f", {b['deviation']} differ" if b.get("deviation") else "")
+              + (f", {b['not_comparable']} not comparable" if b.get("not_comparable") else ""))
+        for it in [i for i in b.get("items", []) if i["status"] == "deviation"][:args.rows]:
+            k, unit = (1000.0, o.unit + "/m") if it.get("per_width") else (1.0, o.unit)
+            print(f"  {it['source']} {it['where']}: source {U.fmt(kb.to_display(o.id, it['expected']) * k)}, "
+                  f"code {U.fmt(kb.to_display(o.id, it['got']) * k)} {unit} - {it.get('detail', '')}")
+    if o.reference:
+        r = o.reference
+        print(f"\nIndependent reference: {r.get('status')} with {r.get('library')} {r.get('function')} "
+              f"({r.get('agreeing_samples', 0)} of {r.get('samples', 0)} samples)" + (f". {r['note']}" if r.get("note") else ""))
 
 
 def _values(kb, oid, args):
@@ -198,55 +266,136 @@ def cmd_run(args):
     kb = _kb(args)
     oid = _target(kb, args.object)
     values, origin, given, check = _values(kb, oid, args)
+    style = _style(args)
     try:
         if args.ask or (not args.set and sys.stdin.isatty()):
-            ask(kb, oid, preset={k: v for k, v in values.items() if origin.get(k) == "entered"}, given=given)
+            ask(kb, oid, preset={k: v for k, v in values.items() if origin.get(k) == "entered"}, given=given,
+                style=style)
         else:
-            print(render_text(kb, run(kb, oid, values, given, origin, check)))
+            print(render_text(kb, run(kb, oid, values, given, origin, check, style)))
     except ResolveError as exc:
         sys.exit(str(exc))
     _log_use(args, oid, "terminal", kb)
 
 
 def cmd_report(args):
-    from .kb.objects import ResolveError
-    from .use.calc import run
-    from .use.report import render_html, to_pdf
+    from .use import report as R
     kb = _kb(args)
-    oid = _target(kb, args.object)
-    values, origin, given, check = _values(kb, oid, args)
+    style = _style(args)
+    if args.template:
+        path = Path(args.template)
+        template = R.load_template(path)
+        base = path.parent
+    elif args.object:
+        oid = _target(kb, args.object)
+        values, origin, given, check = _values(kb, oid, args)
+        entered = {k: v for k, v in values.items() if origin.get(k) == "entered"}
+        template = R.quick_template(oid, entered, kb, check, style=style)
+        base = Path.cwd()
+    else:
+        sys.exit("Name an object (python -m ckb report V_Rd_c d=450 ...) or a template (--template report.yaml).")
+    if args.cases:
+        template["cases"] = {"file": str(Path(args.cases).resolve())}
+    if args.from_excel:
+        template["cases"] = R.cases_from_calculator(kb, Path(args.from_excel))
+    if args.decimals is not None or args.unit or args.style:
+        merged = R.Style.load(template.get("style") or {})
+        merged.decimals = style.decimals if args.decimals is not None or args.style else merged.decimals
+        merged.units.update(style.units)
+        template["style"] = merged.to_dict()
+    for opt in ("project", "made_by", "checked_by", "number"):
+        if getattr(args, opt, ""):
+            template[opt] = getattr(args, opt)
     try:
-        res = run(kb, oid, values, given, origin, check)
-    except ResolveError as exc:
+        page, used = R.render(kb, template, base, with_objects=True)
+    except ValueError as exc:
         sys.exit(str(exc))
-    out = Path(args.output or Path(args.workspace) / "reports" / f"{oid}.html")
+    name = Path(args.template).stem if args.template else template["blocks"][0]["calc"]
+    out = Path(args.output or Path(args.workspace) / "reports" / f"{name}.html")
     out.parent.mkdir(parents=True, exist_ok=True)
-    meta = {"project": args.project, "made_by": args.made_by, "checked_by": args.checked_by, "number": args.number}
-    out.write_text(render_html(kb, res, meta), encoding="utf-8")
-    print(f"calculation sheet -> {out}")
+    out.write_text(page, encoding="utf-8")
+    print(f"report -> {out}")
     if args.pdf:
         pdf = out.with_suffix(".pdf")
-        print(f"PDF -> {pdf}" if to_pdf(out, pdf) else
+        print(f"PDF -> {pdf}" if R.to_pdf(out, pdf) else
               "PDF not written: no Chromium-based browser found (open the HTML and print it to PDF).")
-    _log_use(args, oid, "report", kb)
+    for oid in used:
+        _log_use(args, oid, "report", kb)
+
+
+def cmd_report_template(args):
+    from .use.report import example_template
+    kb = _kb(args)
+    oid = _target(kb, args.object)
+    text = example_template(kb, oid)
+    if args.output:
+        Path(args.output).write_text(text, encoding="utf-8")
+        print(f"report template -> {args.output}   (python -m ckb report --template {args.output} --pdf)")
+    else:
+        print(text)
 
 
 def cmd_excel(args):
     from .use.excel_bridge import export_calculator, verify
     kb = _kb(args)
     oid = _target(kb, args.object)
-    values, origin, given, _ = _values(kb, oid, args)
+    values, _, given, _ = _values(kb, oid, args)
     out = Path(args.output or Path(args.workspace) / "excel" / f"{oid}.xlsx")
-    export_calculator(kb, oid, out, values, given)
+    export_calculator(kb, oid, out, values, given, _style(args))
     print(f"Excel calculator -> {out}")
     if args.verify:
-        v = verify(kb, oid, out, values, given)
-        if v is None:
-            print("not verified: LibreOffice is not installed (Excel itself will calculate the formulas)")
-        else:
-            print("verified with LibreOffice: every step matches the knowledge base" if v["agree"]
-                  else "LibreOffice gives different values: " + ", ".join(r["id"] for r in v["rows"] if not r["agree"]))
+        _print_verify(verify(kb, out))
     _log_use(args, oid, "excel", kb)
+
+
+def cmd_mathcad(args):
+    from .use.mathcad_export import export_worksheet, verify
+    kb = _kb(args)
+    oid = _target(kb, args.object)
+    values, _, given, _ = _values(kb, oid, args)
+    out = Path(args.output or Path(args.workspace) / "mathcad" / f"{oid}.mcdx")
+    export_worksheet(kb, oid, out, values, given, _style(args))
+    print(f"Mathcad Prime worksheet -> {out}")
+    if args.verify:
+        _print_verify(verify(kb, out))
+    _log_use(args, oid, "mathcad", kb)
+
+
+def _print_verify(res: dict) -> None:
+    if "reason" in res and not res.get("rows"):
+        print(f"  not verified: {res['reason']}")
+        return
+    if "version_in_file" in res:
+        same = res.get("same_version")
+        print(f"  {res.get('object', '')}: version in the file {res['version_in_file']}, "
+              f"in the knowledge base {res['version_now']}" + ("  (same)" if same else "  (CHANGED since)"))
+    if res.get("edited"):
+        print("  formulas edited in the file: " + ", ".join(res["edited"]))
+    if isinstance(res.get("numbers"), str):
+        print(f"  numbers {res['numbers']}")
+    rows = res.get("rows", [])
+    bad = [r for r in rows if not r.get("agree")]
+    if rows:
+        print(f"  {len(rows) - len(bad)} of {len(rows)} " + ("steps" if "excel" in rows[0] or "mathcad" in rows[0]
+                                                            else "checks") + " agree with the knowledge base")
+    for r in bad[:10]:
+        print("  differs: " + ", ".join(f"{k}={v}" for k, v in r.items() if k != "agree"))
+    if res.get("note"):
+        print(f"  ({res['note']})")
+    print("  -> " + ("same logic" if res.get("ok") else "NOT the same logic, or not checkable (see above)"))
+
+
+def cmd_verify(args):
+    from .use.verify import verify
+    kb = _kb(args)
+    ok = True
+    for f in args.files:
+        print(f)
+        res = verify(kb, Path(f))
+        _print_verify(res)
+        ok &= bool(res.get("ok"))
+    if not ok:
+        sys.exit(1)
 
 
 def cmd_app(args):
@@ -279,7 +428,7 @@ def cmd_check(args):
     c = res["conversion"]
     print(f"{doc.name}: {c['statements']} statements; {_fidelity(c)}")
     print("  " + ", ".join(f"{n} {k}" for k, n in sorted(res["summary"].items())) if res["summary"] else "  no formulas found")
-    order = {"extension": 0, "differs": 1, "new object": 2, "existing": 3, "new topic": 4}
+    order = {"differs": 0, "simplified": 1, "new object": 2, "as code": 3, "project-specific": 4, "new topic": 5}
     shown = 0
     for r in sorted(res["rows"], key=lambda r: order.get(r["verdict"], 9)):
         if r["verdict"] == "new topic" and not args.all:
@@ -287,7 +436,7 @@ def cmd_check(args):
         if shown >= args.rows:
             break
         rep = "" if "reproduced" not in r else ("  [object reproduces the value]" if r["reproduced"] else "  [object gives a different value]")
-        print(f"  {r['verdict']:11} {r['quantity']:12} {r['where']}: {r['detail']}{rep}")
+        print(f"  {r['verdict']:16} {r['quantity']:12} {r['where']}: {r['detail']}{rep}")
         shown += 1
     if not args.all and res["summary"].get("new topic"):
         print(f"  ({res['summary']['new topic']} formulas of unknown quantities not listed; --all shows them)")
@@ -319,8 +468,19 @@ def cmd_health(args):
         sys.exit(1)
 
 
+def _style_args(s):
+    s.add_argument("--decimals", type=int, help="digits after the decimal point (default 2)")
+    s.add_argument("--unit", action="append", metavar="name=unit", help="display unit, e.g. V_Rd_c=kN (repeatable)")
+    s.add_argument("--style", help="a style YAML file (decimals, min_significant, units)")
+
+
 def main(argv=None):
     logging.getLogger("pdfminer").setLevel(logging.ERROR)
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except (OSError, ValueError):
+            pass
     p = argparse.ArgumentParser(prog="python -m ckb", description="Calculation knowledge base")
     p.add_argument("--kb", default=str(ROOT / "knowledge_base"), help="knowledge base folder")
     p.add_argument("--workspace", default=str(ROOT / "workspace"), help="folder for converted sources and outputs")
@@ -339,33 +499,56 @@ def main(argv=None):
     s.add_argument("--vision", action="store_true")
     s.set_defaults(fn=cmd_convert)
 
-    sub.add_parser("list", help="objects by clause").set_defaults(fn=cmd_list)
+    sub.add_parser("codes", help="codes, chapters and shared objects").set_defaults(fn=cmd_codes)
+    sub.add_parser("list", help="objects by code and chapter").set_defaults(fn=cmd_list)
     s = sub.add_parser("search", help="find an object")
     s.add_argument("query", nargs="+")
     s.set_defaults(fn=cmd_search)
-    s = sub.add_parser("show", help="one object with its evidence")
+    s = sub.add_parser("show", help="one object: formula, conditions, design background")
+    s.add_argument("object")
+    s.set_defaults(fn=cmd_show)
+    s = sub.add_parser("status", help="the evidence behind one object")
     s.add_argument("object")
     s.add_argument("--rows", type=int, default=6)
-    s.set_defaults(fn=cmd_show)
+    s.set_defaults(fn=cmd_status)
 
     for name, fn, text in (("run", cmd_run, "calculate in the terminal"),
-                           ("report", cmd_report, "calculation sheet (HTML, PDF)"),
-                           ("excel", cmd_excel, "Excel calculator with live formulas")):
+                           ("excel", cmd_excel, "Excel calculator with live formulas"),
+                           ("mathcad", cmd_mathcad, "Mathcad Prime worksheet")):
         s = sub.add_parser(name, help=text)
         s.add_argument("object")
         s.add_argument("set", nargs="*", metavar="name=value", help="inputs, e.g. d=450 f_ck=30 'b_w=0.3 m'")
         s.add_argument("--check", type=float, help="design value to check against (e.g. V_Ed in kN)")
+        _style_args(s)
         if name == "run":
             s.add_argument("--ask", action="store_true", help="ask for every input")
         else:
             s.add_argument("-o", "--output")
-        if name == "report":
-            s.add_argument("--pdf", action="store_true")
-            for opt in ("project", "made-by", "checked-by", "number"):
-                s.add_argument(f"--{opt}", default="")
-        if name == "excel":
-            s.add_argument("--verify", action="store_true", help="recalculate with LibreOffice and compare")
+            s.add_argument("--verify", action="store_true", help="read the file back and compare with the knowledge base")
         s.set_defaults(fn=fn)
+
+    s = sub.add_parser("report", help="calculation report (HTML, PDF)")
+    s.add_argument("object", nargs="?", help="one object, for a one-case report")
+    s.add_argument("set", nargs="*", metavar="name=value")
+    s.add_argument("--check", type=float, help="design value to check against (e.g. V_Ed in kN)")
+    s.add_argument("--template", help="report template (YAML); see `report-template`")
+    s.add_argument("--cases", help="cases table (xlsx, csv, yaml) replacing the template's cases")
+    s.add_argument("--from-excel", help="take the inputs from an Excel calculator generated by `excel`")
+    s.add_argument("-o", "--output")
+    s.add_argument("--pdf", action="store_true", help="also print to PDF (needs Edge, Chrome or Chromium)")
+    for opt in ("project", "made-by", "checked-by", "number"):
+        s.add_argument(f"--{opt}", default="")
+    _style_args(s)
+    s.set_defaults(fn=cmd_report)
+
+    s = sub.add_parser("report-template", help="a commented report template to start from")
+    s.add_argument("object")
+    s.add_argument("-o", "--output")
+    s.set_defaults(fn=cmd_report_template)
+
+    s = sub.add_parser("verify", help="does a file carry the knowledge base's logic?")
+    s.add_argument("files", nargs="+")
+    s.set_defaults(fn=cmd_verify)
 
     s = sub.add_parser("app", help="rebuild the web calculator")
     s.add_argument("-o", "--output")

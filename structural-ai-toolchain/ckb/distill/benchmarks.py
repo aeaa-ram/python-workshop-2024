@@ -167,6 +167,9 @@ def _inverse(pid: str, env: dict, tax: Taxonomy):
     return None
 
 
+SCALE_MISMATCH = 20.0     # a result this far from the source's is an input mix-up, not a code difference
+
+
 def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Context, tax: Taxonomy,
                   formulas: dict, typical: dict, name) -> Benchmark:
     from .baseline import effect, explain
@@ -242,6 +245,14 @@ def bench_formula(inst: Instance, variant: Variant, cons: Consolidation, ctx: Co
     if close(b.got, inst.value, rel=1e-6):
         b.status = "agree"
         b.detail = "; ".join(n for n in notes if n)
+        return b
+    ratio = abs(b.got / inst.value) if isinstance(b.got, (int, float)) and isinstance(inst.value, (int, float)) \
+        and inst.value and b.got else 1.0
+    if ratio > SCALE_MISMATCH or ratio < 1 / SCALE_MISMATCH:
+        # no code simplification changes a result this much: the values taken from the source
+        # for the inputs are on different scales (another unit, a full width against a strip)
+        b.detail = (f"not comparable: the inputs found in the source are on different scales "
+                    f"(the results differ by a factor of {max(ratio, 1 / ratio):.0f})")
         return b
     b.status = "deviation"
     reasons = []

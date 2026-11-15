@@ -334,7 +334,9 @@ class KnowledgeBase:
                 json.dumps(ev, indent=1, ensure_ascii=False), encoding="utf-8")
         index = {
             "meta": self.meta, "codes": self.codes, "sources": self.sources, "references": self.references,
-            "quantities": {q.id: {k: v for k, v in asdict(q).items() if v not in ("", None, [], False)}
+            # 0 is a value (σ_cp = 0), so test for "empty" explicitly rather than with ``in``
+            "quantities": {q.id: {k: v for k, v in asdict(q).items()
+                                  if not (v is None or v is False or v == "" or v == [])}
                            for q in self.quantities.values()},
             "objects": [o.id for o in self.objects.values()],
         }

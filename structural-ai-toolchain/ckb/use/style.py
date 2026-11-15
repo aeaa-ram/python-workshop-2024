@@ -43,7 +43,7 @@ class Style:
     def unit(self, kb, sid: str) -> str:
         """Display unit of a quantity (checked to be compatible with its own unit)."""
         own = kb.unit(sid)
-        want = self.units.get(sid)
+        want = self.units.get(sid) or self.units.get(kb.var(sid))
         if want:
             try:
                 if U.parse_unit(want).dims == U.parse_unit(own).dims:
@@ -77,6 +77,13 @@ class Style:
         if v != 0 and (abs(v) >= 1e7 or abs(v) < 10 ** -(12)):
             return f"{v:.{max(self.min_significant - 1, 1)}e}".replace("e+0", "e").replace("e-0", "e-")
         return f"{v:.{self.digits(v)}f}"
+
+    def fmt_short(self, v) -> str:
+        """As ``fmt`` without trailing zeros: for numbers substituted into a formula (1000, not 1000.00)."""
+        s = self.fmt(v)
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and "." in s and "e" not in s:
+            s = s.rstrip("0").rstrip(".")
+        return s
 
     def excel_format(self, typical: float | None) -> str:
         """An Excel number format for values of this magnitude."""

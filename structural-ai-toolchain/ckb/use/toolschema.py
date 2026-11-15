@@ -27,13 +27,17 @@ def definitions(kb: KnowledgeBase) -> list[dict]:
                 "type": "number",
                 "description": f"{q.name if q else p} ({kb.name(p)})" + (f", in {unit}" if unit != "-" else ", dimensionless"),
             }
-            required.append(kb.var(p) if _unique(kb, inputs, p) else p)
+            q = kb.quantities.get(p)
+            if q is not None and q.kind == "coefficient" and q.value is not None:
+                props[kb.var(p) if _unique(kb, inputs, p) else p]["description"] += (
+                    f"; recommended {U.fmt(U.from_canonical(q.value, unit))}, used when omitted")
+            else:
+                required.append(kb.var(p) if _unique(kb, inputs, p) else p)
         tools.append({
             "name": f"calc_{o.id}",
-            "description": (f"{o.name} ({o.text}), {o.reference_text}. Result in {o.unit if o.unit != '-' else 'no unit'}. "
-                            f"Status: {o.status}; {o.benchmarks.get('agree', 0)} of {o.benchmarks.get('total', 0)} "
-                            "source values reproduced. Returns the value with every intermediate step and its clause."
-                            + (" Warning: " + " ".join(o.warnings) if o.warnings else "")),
+            "description": (f"{o.name} ({o.text}), {o.reference_text}. Result in "
+                            f"{o.unit if o.unit != '-' else 'no unit'}. Returns the value with every intermediate "
+                            "step, its clause, and the applicability conditions of the expressions used."),
             "input_schema": {"type": "object", "properties": props, "required": required,
                              "additionalProperties": False},
         })
@@ -51,7 +55,7 @@ def call(kb: KnowledgeBase, name: str, arguments: dict) -> dict:
         return {"error": f"unknown tool {name}"}
     _, inputs = kb.plan(oid)
     key = {(kb.var(p) if _unique(kb, inputs, p) else p): p for p in inputs}
-    values = {}
+    values = kb.defaults(oid)
     for k, v in arguments.items():
         if k not in key:
             return {"error": f"{k} is not an input of {name}"}
@@ -63,6 +67,8 @@ def call(kb: KnowledgeBase, name: str, arguments: dict) -> dict:
     return {
         "result": {"symbol": kb.name(oid), "value": res.shown, "unit": res.unit},
         "steps": [{"symbol": ln.text, "name": ln.name, "value": ln.shown, "unit": ln.unit,
-                   "reference": ln.reference, "status": ln.status} for ln in res.steps],
-        "warnings": res.warnings, "notes": res.notes,
+                   "reference": ln.reference} for ln in res.steps],
+        "conditions": [{"text": c["text"], "clause": c["clause"], "status": c["status"]} for c in res.checks],
+        "warnings": res.warnings, "limitations": list(dict.fromkeys(res.limitations)),
+        "version": kb.objects[oid].version,
     }

@@ -243,6 +243,28 @@ def convert_excel(path: Path) -> SourceDocument:
     def sid(sh: _Sheet, r: int, c: int) -> str:
         return f"{sh.index}!{col_letter(c)}{r}"
 
+    # ---- defined names (named ranges) that point at one cell ---------------
+    # =MIN(A_sl/(b_w*d),0.02) is read exactly like =MIN(C8/(C9*C7),0.02); the name
+    # itself is also the best name for the cell.
+    defined: dict[str, tuple[str, str]] = {}
+    for scope, names in [(None, wb_f.defined_names)] + [(ws.title, ws.defined_names) for ws in wb_f.worksheets]:
+        for dn_name, dn in names.items():
+            try:
+                dest = list(dn.destinations)
+            except Exception:                                    # noqa: BLE001
+                continue
+            if len(dest) == 1 and re.fullmatch(r"\$?[A-Z]+\$?\d+", dest[0][1] or ""):
+                defined[(scope, dn_name.lower()) if scope else dn_name.lower()] = (dest[0][0], dest[0][1].replace("$", ""))
+    cell_name = {}
+    for key, (title, cell) in defined.items():
+        if title in by_title:
+            m = re.fullmatch(r"([A-Z]+)(\d+)", cell)
+            nm = key[1] if isinstance(key, tuple) else key
+            original = next((n for n in list(wb_f.defined_names) if n.lower() == nm), nm)
+            cell_name[(by_title[title].index, int(m.group(2)), _col_index(m.group(1)))] = original
+    if defined:
+        doc.meta["defined_names"] = len(defined)
+
     # ---- pass 1: parse formulas, find which constants they use -------------
     trees: dict[str, X.Node] = {}
     errors: dict[str, str] = {}
@@ -250,6 +272,10 @@ def convert_excel(path: Path) -> SourceDocument:
 
     for sh in sheets:
         for (r, c), text in sh.formula.items():
+            def name_ref(nm, _sh=sh):
+                hit = defined.get((_sh.title, nm.lower())) or defined.get(nm.lower())
+                return ref(hit[0], hit[1]) if hit else None
+
             def ref(sheet_name, cell, _sh=sh):
                 target = _sh if sheet_name is None else by_title.get(sheet_name)
                 if target is None:
@@ -265,7 +291,7 @@ def convert_excel(path: Path) -> SourceDocument:
                 return None                                     # empty cell counts as 0
 
             try:
-                trees[sid(sh, r, c)] = parse_formula(text, ref)
+                trees[sid(sh, r, c)] = parse_formula(text, ref, name_ref)
             except X.ExprError as exc:
                 errors[sid(sh, r, c)] = str(exc)
 
@@ -281,7 +307,7 @@ def convert_excel(path: Path) -> SourceDocument:
     for sh, r, c in cells:
         key = sid(sh, r, c)
         info = _describe(sh, r, c)
-        name = info["name"]
+        name = cell_name.get((sh.index, r, c)) or info["name"]
         st = Statement(id=key, name=name or info["label"] or f"{col_letter(c)}{r}",
                        label=info["label"] + (f" ({info['desc']})" if info["desc"] else ""),
                        unit=info["unit"], clause=info["clause"], section=info["section"],

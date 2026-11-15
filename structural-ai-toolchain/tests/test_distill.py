@@ -11,12 +11,47 @@ from conftest import make_excel
 tax = load()
 
 
-def test_the_seed_holds_notation_but_no_formulas():
-    import yaml
+def test_the_registry_holds_the_code_expressions():
     from ckb.distill.taxonomy import DATA
-    data = yaml.safe_load(DATA.read_text(encoding="utf-8"))
-    assert all("formula" not in c and "expr" not in c for c in data["concepts"])
+    assert (DATA / "common.yaml").exists() and len(list((DATA / "codes").glob("*.yaml"))) >= 2
     assert len(tax.concepts) > 50 and tax.concepts["V_Rd_c"].topic == "6.2.2"
+    # the full code expression, even though most sources write f_ck / γ_C
+    assert X.same(tax.concepts["f_cd"].tree, X.parse("alpha_cc * f_ck / gamma_C"))
+    assert tax.concepts["alpha_cc"].ndp and tax.concepts["alpha_cc"].value == 1.0
+    # every object knows when it applies and why
+    v = tax.concepts["V_Rd_c"]
+    assert any("0.2" in c["when"] for c in v.checks) and {b["kind"] for b in v.background} >= {"scope", "pitfall"}
+    assert all(r.split(":")[0] in tax.references for b in v.background for r in b.get("refs", []))
+
+
+def test_a_second_code_reuses_objects_instead_of_repeating_them():
+    # EN 1994-1-1 writes f_cd = f_ck / γ_C: a special case of the EN 1992-1-1 object, not a second formula
+    f_cd = tax.concepts["f_cd"]
+    assert [r["code"] for r in f_cd.refs] == ["EN 1992-1-1", "EN 1994-1-1"] and "α_cc = 1" in f_cd.refs[1]["how"]
+    assert tax.fixed_for("EN 1994-1-1") == {"alpha_cc": 1.0}
+    # f_sd = f_yk / γ_S is the same expression as f_yd: one object, two names
+    assert tax.id_alias.get("f_sd") == "f_yd" and "f_sd" not in tax.concepts
+    assert "f_yd" in X.symbols(tax.concepts["N_pl_Rd"].tree)
+    # E_cm is declared the same object
+    assert any(r["code"] == "EN 1994-1-1" for r in tax.concepts["E_cm"].refs)
+
+
+def test_sources_are_classified_against_the_code():
+    from ckb.distill.baseline import compare
+    code = tax.concepts["V_Rd_c"].tree
+    rel, missing, _ = compare(code, X.parse(
+        "(C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) + k_1 * sigma_cp) * b_w * d"), tax, {})
+    assert rel == "simplified" and [d.kind for d in missing] == ["bound"]
+    rel, missing, _ = compare(tax.concepts["f_cd"].tree, X.parse("f_ck / gamma_C"), tax, {})
+    assert rel == "simplified" and missing[0].kind == "factor"          # α_cc left out
+    rel, _, _ = compare(tax.concepts["f_cd"].tree, X.parse("f_ck / 1.5"), tax, {})
+    assert rel == "simplified"                                             # γ_C typed as a number too
+    assert compare(tax.concepts["nu"].tree, X.parse("0.6 * (1 - f_ck / 250)"), tax, {})[0] == "as code"
+    assert compare(tax.concepts["nu"].tree, X.parse("max(0.7 - f_ck / 200, 0.45)"), tax, {})[0] == "differs"
+    # a source writing A_s where shear needs A_sl is read as A_sl
+    renamed = {}
+    rel, _, _ = compare(tax.concepts["rho_l"].tree, X.parse("min(A_s / (b_w * d), 0.02)"), tax, {}, renamed)
+    assert rel == "as code" and renamed == {"A_s": "A_sl"}
 
 
 def test_a_symbol_is_recognised_however_it_is_spelled():

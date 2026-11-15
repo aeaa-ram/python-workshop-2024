@@ -1,14 +1,26 @@
 """The web calculator: the knowledge base as one self-contained HTML file.
 
-No server and no installation: the file holds the objects, their formulas as
-plain JavaScript functions and the evidence behind them.  An engineer picks a
-quantity from the clause tree, types the inputs, and reads a self-documenting
-calculation that updates as they type.  Dependencies are resolved in the
-page, and any intermediate value can be entered directly instead of being
-calculated.
+No server and no installation: the file holds the objects, their formulas as plain
+JavaScript functions, the design background and - out of the way, on a Status tab -
+the evidence behind each object.  An engineer finds a quantity in the code tree or
+by searching ("concrete shear"), types the inputs and reads a clean calculation that
+updates as they type.  Dependencies are resolved in the page, and any intermediate
+value can be entered directly instead of being calculated.
 
-The JavaScript functions are printed from the same formula trees as the
-Python code blocks, so the calculator cannot drift from the knowledge base.
+Per object there are five tabs:
+
+    Calculate           inputs, the calculation, conditions, cases, a report template
+    Design background   scope, limitations, pitfalls and guidance with their sources;
+                        where the object is shared with other codes; a dependency map
+    Chart               the result against any input (a parameter study)
+    Code                the Python code block and the function this page runs
+    Status              confidence, sources, simplifications found, benchmarks,
+                        independent reference check
+
+The JavaScript functions are printed from the same formula trees as the Python code
+blocks, the Excel formulas, the Mathcad worksheet and the report equations
+(``expr.to_js`` / ``to_python`` / ``to_excel`` / ``to_mathml``), so none of them can
+drift from the knowledge base.
 """
 from __future__ import annotations
 
@@ -19,52 +31,100 @@ from .. import expr as X
 from .. import units as U
 from ..kb.codegen import module_source
 from ..kb.objects import KnowledgeBase
+from ..kb.search import index as search_index
 
-MAX_ROWS = 14        # benchmark rows shown per object (deviations first)
+MAX_POINTS = 160     # benchmark points per object shown on the Status tab
+
+UNIT_CHOICES = ["N", "kN", "MN", "mm", "cm", "m", "mm²", "cm²", "m²", "mm³", "cm³", "m³", "mm⁴", "cm⁴", "m⁴",
+                "MPa", "N/mm²", "kPa", "GPa", "Nmm", "kNm", "MN·m", "kN/m", "N/mm"]
 
 
-def payload(kb: KnowledgeBase) -> dict:
+def unit_choices(unit: str) -> list:
+    """[[text, factor], ...]: the quantity's own unit first, then units it can be shown in."""
+    own = U.parse_unit(unit)
+    if own.text in ("°", "rad"):
+        opts = ["°", "rad"]
+    elif own.text in ("‰", "%"):
+        opts = ["‰", "%", "-"]
+    elif own.dims == U.parse_unit("-").dims:
+        opts = []
+    else:
+        opts = [u for u in UNIT_CHOICES if U.parse_unit(u).dims == own.dims]
+    out, seen = [[own.text, own.factor]], {own.text}
+    for u in opts:
+        info = U.parse_unit(u)
+        if info.text not in seen:
+            seen.add(info.text)
+            out.append([info.text, info.factor])
+    return out
+
+
+def _ref(kb: KnowledgeBase, item) -> str:
+    if not getattr(item, "clause", ""):
+        return ""
+    c = item.clause
+    return f"{item.code or ''} " + (c if c.lower().startswith(("table", "fig")) else f"cl. {c}")
+
+
+def payload(kb: KnowledgeBase, tax=None) -> dict:
     objects = {}
     for o in kb.objects.values():
-        rows = sorted(o.benchmarks.get("items", []), key=lambda r: (r["status"] != "deviation", r["kind"] != "printed"))
+        b = o.benchmarks
+        pts = [[it["expected"], it["got"], it["status"], 1 if it.get("per_width") else 0, it.get("source", ""),
+                it.get("where", ""), it.get("detail", "")]
+               for it in b.get("items", []) if isinstance(it.get("expected"), (int, float))
+               and isinstance(it.get("got"), (int, float))]
+        pts.sort(key=lambda p: p[2] == "agree")
+        ev = o.evidence
         objects[o.id] = {
-            "id": o.id, "text": o.text, "ml": o.ml, "name": o.name, "unit": o.unit,
-            "factor": U.parse_unit(o.unit).factor, "ref": o.reference_text, "topic": o.topic,
-            "path": o.topic_path, "status": o.status, "support": o.support, "params": o.params,
+            "id": o.id, "text": o.text, "ml": o.ml, "name": o.name, "unit": o.unit, "units": unit_choices(o.unit),
+            "ref": o.reference_text, "code": o.code, "topic": o.topic, "path": o.topic_path, "basis": o.basis,
+            "params": o.params, "check": o.check, "sense": o.sense, "fixed": o.fixed, "refs": o.refs,
             "mlF": X.to_mathml(o.tree, kb.ml), "mlS": X.to_mathml(o.tree, kb.ml, slots=True),
-            "txtF": X.to_text(o.tree, kb.name),
-            "warnings": o.warnings, "findings": o.findings, "notes": o.notes,
-            "variants": [{k: v[k] for k in ("text", "instances", "sources", "merged", "differences", "reason") if k in v}
-                         for v in o.variants],
-            "bench": {k: o.benchmarks.get(k, 0) for k in ("total", "agree", "deviation", "not_comparable")},
-            "rows": [{k: r[k] for k in ("source", "where", "case", "kind", "expected", "got", "status", "detail",
-                                        "per_width") if k in r} for r in rows[:MAX_ROWS]],
-            "reference": o.reference, "examples": o.examples, "python": module_source(kb, o),
-            "check": o.check, "version": o.version,
+            "checks": [{"text": c.get("text", c["when"]), "clause": c.get("clause", ""),
+                        "syms": X.symbols(X.parse(c["when"]))} for c in o.checks],
+            "background": o.background,
+            "alternatives": [{"ml": X.to_mathml(X.parse(a["formula"]), kb.ml), "when": a.get("when", "")}
+                             for a in o.alternatives if a.get("formula")],
+            "python": module_source(kb, o), "version": o.version,
+            "conf": o.confidence,
+            "ev": {"sources": ev.get("sources", 0), "formulas": ev.get("formula_instances", 0),
+                   "printed": ev.get("printed_values", 0), "practice": ev.get("practice", []),
+                   "variants": [{k: v[k] for k in ("text", "relation", "instances", "sources", "differences",
+                                                   "reason", "reproduced", "compared") if k in v}
+                                for v in ev.get("variants", [])]},
+            "bench": {"total": b.get("total", 0), "agree": b.get("agree", 0), "deviation": b.get("deviation", 0),
+                      "not_comparable": b.get("not_comparable", 0), "pts": pts[:MAX_POINTS]},
+            "reference": o.reference,
         }
     quantities = {}
     for q in kb.quantities.values():
-        ref = ""
-        if q.clause:
-            ref = f"{kb.meta.get('code', '')} " + (q.clause if q.clause.lower().startswith("table") else f"cl. {q.clause}")
         quantities[q.id] = {"id": q.id, "text": q.text, "ml": q.ml, "name": q.name, "unit": q.unit,
-                            "factor": U.parse_unit(q.unit).factor, "typical": q.typical, "range": q.range,
-                            "kind": q.kind, "ref": ref}
-    return {"meta": kb.meta, "topics": kb.topics, "sources": kb.sources, "objects": objects,
-            "quantities": quantities}
+                            "units": unit_choices(q.unit), "kind": q.kind, "value": q.value, "start": q.start,
+                            "range": q.range, "choices": q.choices, "ndp": q.ndp, "ref": _ref(kb, q).strip(),
+                            "background": q.background, "seen": q.seen}
+    return {"meta": kb.meta, "codes": kb.codes, "references": kb.references, "sources": len(kb.sources),
+            "objects": objects, "quantities": quantities, "index": search_index(kb, tax)}
 
 
 def functions_js(kb: KnowledgeBase) -> str:
     lines = ["const F = {"]
     for o in kb.objects.values():
-        body = X.to_js(o.tree, lambda s: f"e.{s}")
-        lines.append(f"  {json.dumps(o.id)}: function (e) {{ return {body}; }},")
+        lines.append(f"  {json.dumps(o.id)}: function (e) {{ return {X.to_js(o.tree, lambda s: f'e.{s}')}; }},")
+    lines.append("};")
+    lines.append("const C = {")
+    for o in kb.objects.values():
+        if o.checks:
+            fns = ", ".join(f"function (e) {{ return {X.to_js(X.parse(c['when']), lambda s: f'e.{s}')}; }}"
+                            for c in o.checks)
+            lines.append(f"  {json.dumps(o.id)}: [{fns}],")
     lines.append("};")
     return "\n".join(lines)
 
 
 def render(kb: KnowledgeBase, standalone: bool = True) -> str:
-    data = json.dumps(payload(kb), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    from ..distill.taxonomy import load
+    data = json.dumps(payload(kb, load()), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     page = (TEMPLATE.replace("/*__FUNCTIONS__*/", functions_js(kb)).replace("/*__DATA__*/", data)
             .replace("__STANDALONE__", "true" if standalone else "false"))
     if not standalone:
@@ -85,511 +145,956 @@ TEMPLATE = r"""<title>Calculation Knowledge Base</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Math&display=swap">
 <style>
-/* layout: clause tree on the left, one object at a time on the right: inputs beside a calculation sheet, evidence below */
 :root{
-  --bg:#eef1ef; --surface:#ffffff; --raised:#f6f8f7; --ink:#15211f; --muted:#5b6966; --rule:#cfd8d5; --soft:#e6ebe9;
-  --accent:#0b5d73; --accent-ink:#ffffff; --accent-soft:#dcedf1;
-  --ok:#1b7446; --okbg:#e0f2e8; --warn:#9a5b00; --warnbg:#fbeed6; --bad:#b3261e; --badbg:#fbe5e3; --info:#3d5a80; --infobg:#e4ebf5;
+  --bg:#f1f2f0; --surface:#fcfcfb; --raised:#f5f6f4; --ink:#1b2220; --ink2:#47514e; --muted:#6a7471; --rule:#d8dcd9; --soft:#eaece9;
+  --accent:#0b5d73; --accent-soft:#dcecf0; --s1:#2a78d6; --s2:#eb6834;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --ok-ink:#0a7a2f; --bad-ink:#b3261e;
   --font:"IBM Plex Sans","Segoe UI",system-ui,Arial,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
   --math:"Cambria Math","STIX Two Math","Latin Modern Math","Noto Sans Math",math;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#101615; --surface:#182120; --raised:#1f2a28; --ink:#e6edeb; --muted:#9aaaa6; --rule:#34423f; --soft:#263230;
-  --accent:#6cc3d8; --accent-ink:#06222a; --accent-soft:#173940;
-  --ok:#6fd09a; --okbg:#143524; --warn:#f0b65a; --warnbg:#3a2a0d; --bad:#f2928b; --badbg:#431b18; --info:#a9c0e4; --infobg:#1e2b40;
-  color-scheme:dark}}
+  --bg:#121312; --surface:#1a1a19; --raised:#222321; --ink:#e8ebe9; --ink2:#bcc4c1; --muted:#949d9a; --rule:#353836; --soft:#2a2c2a;
+  --accent:#6cc3d8; --accent-soft:#18363e; --s1:#3987e5; --s2:#d95926;
+  --ok-ink:#62d08a; --bad-ink:#f2928b; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#101615; --surface:#182120; --raised:#1f2a28; --ink:#e6edeb; --muted:#9aaaa6; --rule:#34423f; --soft:#263230;
-  --accent:#6cc3d8; --accent-ink:#06222a; --accent-soft:#173940;
-  --ok:#6fd09a; --okbg:#143524; --warn:#f0b65a; --warnbg:#3a2a0d; --bad:#f2928b; --badbg:#431b18; --info:#a9c0e4; --infobg:#1e2b40;
-  color-scheme:dark}
+  --bg:#121312; --surface:#1a1a19; --raised:#222321; --ink:#e8ebe9; --ink2:#bcc4c1; --muted:#949d9a; --rule:#353836; --soft:#2a2c2a;
+  --accent:#6cc3d8; --accent-soft:#18363e; --s1:#3987e5; --s2:#d95926;
+  --ok-ink:#62d08a; --bad-ink:#f2928b; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--font);margin:0}
-math{font-family:var(--math);font-size:1.1em}
-button,input,select{font:inherit;color:inherit}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:14px/1.5 var(--font);margin:0}
+math{font-family:var(--math);font-size:1.08em}
+button,input,select,textarea{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.wrap{max-width:1500px;margin:0 auto;padding-block:16px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header.top{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;margin-bottom:14px}
-header.top h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em}
-header.top p{margin:0;color:var(--muted)}
-.shell{display:grid;grid-template-columns:290px minmax(0,1fr);gap:18px;align-items:start}
-nav.tree{background:var(--surface);border:1px solid var(--rule);padding:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto}
-nav.tree input{width:100%;padding:7px 9px;border:1px solid var(--rule);background:var(--raised);margin-bottom:10px}
-.t-chap{font-weight:600;margin:10px 0 2px;font-size:13px}
-.t-sec{color:var(--muted);font-size:12.5px;margin:6px 0 2px}
-.t-sec.has{color:var(--ink)}
-.t-obj{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-left:2px solid var(--rule);padding:3px 8px;cursor:pointer;margin-left:6px}
+.wrap{max-width:1480px;margin:0 auto;padding-block:max(14px,env(safe-area-inset-top,0px)) 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:space-between;margin-bottom:12px}
+header.top h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em}
+header.top p{margin:0;color:var(--muted);font-size:13px}
+.btn{background:var(--surface);border:1px solid var(--rule);padding:5px 11px;cursor:pointer;border-radius:4px}
+.btn:hover{border-color:var(--ink2)} .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn.small{padding:2px 8px;font-size:12.5px}
+.shell{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+nav.side{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.search{width:100%;padding:7px 10px;border:1px solid var(--rule);background:var(--raised);border-radius:4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 6px}
+.chip{border:1px solid var(--rule);background:var(--raised);border-radius:999px;padding:1px 9px;font-size:12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.t-code{font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}
+.t-chap{font-weight:600;margin:8px 0 1px;font-size:13px}
+.t-sec{color:var(--muted);font-size:12px;margin:5px 0 1px 4px}
+.t-obj{display:flex;gap:8px;align-items:center;width:100%;text-align:left;background:none;border:0;border-left:2px solid var(--rule);padding:3px 8px;cursor:pointer;margin-left:4px;border-radius:0 4px 4px 0}
 .t-obj:hover{background:var(--raised)} .t-obj[aria-current="true"]{border-left-color:var(--accent);background:var(--accent-soft)}
-.t-obj .s{min-width:5.2em} .t-obj .n{color:var(--muted);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dot{width:8px;height:8px;border-radius:50%;flex:none;align-self:center}
-.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
-.ovw{display:block;width:100%;text-align:left;background:var(--raised);border:1px solid var(--rule);padding:7px 9px;cursor:pointer;margin-bottom:6px}
+.t-obj .s{min-width:4.8em;font-size:13px} .t-obj .n{color:var(--muted);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-obj .via{font-size:11px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.dot.good{background:var(--good)} .dot.warn{background:var(--warn)} .dot.crit{background:var(--crit)}
+.legend-dots{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--muted);margin-top:12px;padding-top:8px;border-top:1px solid var(--soft)}
+.legend-dots span{display:inline-flex;gap:5px;align-items:center}
+.ovw{display:block;width:100%;text-align:left;background:var(--raised);border:1px solid var(--rule);padding:6px 9px;cursor:pointer;margin-top:8px;border-radius:4px}
 .ovw[aria-current="true"]{border-color:var(--accent)}
-main{min-width:0;display:flex;flex-direction:column;gap:16px}
-.head{background:var(--surface);border:1px solid var(--rule);padding:14px 16px}
-.head h2{margin:0;font-size:19px;font-weight:600;line-height:1.3;text-wrap:balance}
-.head .ref{color:var(--muted);margin:2px 0 8px}
-.pill{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap}
-.pill.ok{background:var(--okbg);color:var(--ok)} .pill.warn{background:var(--warnbg);color:var(--warn)} .pill.bad{background:var(--badbg);color:var(--bad)} .pill.info{background:var(--infobg);color:var(--info)}
-.facts{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:13px;align-items:center}
-.work{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;align-items:start}
-.panel{background:var(--surface);border:1px solid var(--rule);padding:14px 16px;min-width:0}
-.panel h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.fld{display:grid;grid-template-columns:minmax(0,1fr) 108px 44px;gap:2px 8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--soft)}
-.fld label{min-width:0} .fld label small{display:block;color:var(--muted);font-size:11.5px;line-height:1.3}
-.fld input{width:100%;padding:5px 7px;border:1px solid var(--rule);background:var(--raised);text-align:right;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
-.fld input.out{border-color:var(--warn)}
-.fld .u{color:var(--muted);font-size:12.5px}
-.fld .x{grid-column:1/-1;font-size:11.5px;color:var(--warn)}
-.fld button.lnk,.row button.lnk{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-size:11.5px;text-decoration:underline}
-select.ex{width:100%;padding:6px 7px;border:1px solid var(--rule);background:var(--raised);margin-bottom:6px}
-.exnote{font-size:12.5px;margin:0 0 10px;padding:6px 8px;background:var(--raised);border-left:3px solid var(--rule)}
-.exnote.ok{border-left-color:var(--ok)} .exnote.bad{border-left-color:var(--bad)}
-.sheet .tb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--ink);margin-bottom:14px}
-.sheet .tb label{border:0 solid var(--ink);border-right-width:1px;border-bottom-width:1px;padding:3px 7px;display:block;min-width:0}
-.sheet .tb label:nth-child(3n){border-right-width:0} .sheet .tb label:nth-child(n+4){border-bottom-width:0}
-.sheet .tb small{display:block;color:var(--muted);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase}
-.sheet .tb input{width:100%;border:0;background:transparent;padding:0;font-size:13px}
-.row{display:grid;grid-template-columns:23% minmax(0,1fr) 15%;gap:0 12px;padding:8px 0;border-bottom:1px solid var(--soft)}
-.row .d small{display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap}
-.row .c{color:var(--muted);font-size:12px;text-align:right}
-.row .e{min-width:0;overflow-x:auto;overflow-y:hidden;padding-bottom:2px}
-.eq{display:flex;gap:6px;align-items:baseline;margin:3px 0;white-space:nowrap}
-.eq .lhs{min-width:4.8em;text-align:right;flex:none}
-.eq.res{font-weight:600}
-.result{margin-top:14px;padding:12px 14px;border:1.5px solid var(--ink);display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}
-.result .big{font-size:19px;font-weight:600}
-.chk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;min-width:230px}
-.chk input{width:96px;padding:5px 7px;border:1px solid var(--rule);background:var(--raised);text-align:right;font-family:var(--mono)}
-.bar{height:10px;background:var(--soft);border:1px solid var(--rule);position:relative;flex:1;min-width:120px}
-.bar i{position:absolute;inset:0 auto 0 0;display:block;background:var(--ok)} .bar.warn i{background:var(--warn)} .bar.bad i{background:var(--bad)}
-.msg{margin:10px 0 0;padding-left:18px} .msg li{margin:3px 0} .msg li.w{color:var(--warn)} .msg li.err{color:var(--bad)}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:6px 12px;cursor:pointer;font-weight:500}
-.btn.ghost{background:transparent;color:var(--accent)}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin-bottom:12px;flex-wrap:wrap}
-.tabs button{border:0;background:none;padding:7px 12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-weight:500}
-.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.hit{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--soft);padding:6px 4px;cursor:pointer}
+.hit:hover{background:var(--raised)} .hit .r{color:var(--muted);font-size:12px}
+main{min-width:0;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.crumb{color:var(--muted);font-size:12.5px}
+.head h2{margin:2px 0 4px;font-size:19px;font-weight:600;line-height:1.3;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--ink2);font-size:13px;align-items:center}
+.stat-link{background:none;border:0;padding:0;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink2);font-size:13px;text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+[role="tablist"]{display:flex;gap:2px;margin-top:12px;border-bottom:1px solid var(--rule);overflow-x:auto}
+[role="tab"]{background:none;border:0;border-bottom:2px solid transparent;padding:6px 12px;cursor:pointer;color:var(--ink2);white-space:nowrap}
+[role="tab"][aria-selected="true"]{border-bottom-color:var(--accent);color:var(--ink);font-weight:500}
+.calc-grid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:14px;align-items:start}
+h3{font-size:14px;margin:0 0 8px;font-weight:600}
+h4{font-size:12px;margin:14px 0 6px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.inp{padding:7px 0;border-bottom:1px solid var(--soft)}
+.inp label{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:13px}
+.inp label .nm{color:var(--ink2)}
+.ctl{display:flex;gap:6px;margin-top:3px}
+.ctl input{flex:1;min-width:0;padding:4px 8px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;font-variant-numeric:tabular-nums}
+.ctl select,.ctl .u{min-width:4.2em;padding:4px 6px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;font-size:12.5px}
+.ctl .u{border-color:transparent;background:none;color:var(--muted)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center}
+.tag{border:1px solid var(--rule);border-radius:3px;padding:0 5px;font-size:10.5px;letter-spacing:.03em}
+.warn-text{color:var(--bad-ink)}
+.choice{border:1px dashed var(--rule);background:none;border-radius:3px;padding:0 6px;font-size:11.5px;cursor:pointer;color:var(--ink2)}
+.opts{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--ink2);padding-bottom:8px;border-bottom:1px solid var(--rule);margin-bottom:6px}
+.opts label{display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+.st{padding:6px 0 7px;border-bottom:1px solid var(--soft)}
+.st .hd{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:13px}
+.st .hd .c{color:var(--muted);font-size:12px;text-align:right}
+.st .eqs{padding-left:18px;margin-top:2px;overflow-x:auto}
+.eq{display:flex;gap:6px;align-items:baseline;margin:2px 0;white-space:nowrap}
+.eq .lhs{min-width:3.8em;text-align:right;flex:none}
+.eq.res{font-weight:700} .eq.res math{font-weight:700}
+.give{background:none;border:0;color:var(--muted);font-size:11.5px;cursor:pointer;text-decoration:underline;text-decoration-color:var(--rule);padding:0}
+.verdict{margin:12px 0 4px;padding:9px 12px;border:1.5px solid var(--ink);border-radius:4px;display:flex;gap:6px 20px;flex-wrap:wrap;align-items:baseline}
+.verdict b{font-size:15px}
+.ok{color:var(--ok-ink);font-weight:700}.bad{color:var(--bad-ink);font-weight:700}
+ul.conds{margin:6px 0 0;padding:0;list-style:none;font-size:13px}
+ul.conds li{display:flex;gap:8px;padding:2px 0;align-items:baseline}
+ul.conds .m{min-width:6.5em;font-size:11.5px;font-weight:600}
+details{margin-top:8px} summary{cursor:pointer;color:var(--ink2);font-size:13px}
+details ul{margin:6px 0;padding-left:18px;font-size:13px;color:var(--ink2)}
+table.cases{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.cases th,table.cases td{border-bottom:1px solid var(--soft);padding:4px 6px;text-align:right;white-space:nowrap}
+table.cases th:first-child,table.cases td:first-child{text-align:left}
+table.cases th{font-weight:600;border-bottom-color:var(--rule)} table.cases th small{display:block;font-weight:400;color:var(--muted)}
+table.cases tr.gov td{background:var(--accent-soft);font-weight:600}
 .scroll{overflow-x:auto}
-table.t{border-collapse:collapse;width:100%;font-size:13px}
-table.t th,table.t td{border-bottom:1px solid var(--soft);padding:5px 8px;text-align:left;vertical-align:top}
-table.t th{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
-table.t td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-.note{padding:7px 10px;margin:0 0 8px;border-left:3px solid var(--rule);background:var(--raised)}
-.note.w{border-left-color:var(--warn)} .note.f{border-left-color:var(--info)} .note.b{border-left-color:var(--bad)}
-pre{margin:0;background:var(--raised);border:1px solid var(--rule);padding:12px;overflow-x:auto;font:12.5px/1.5 var(--mono)}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
-.stat{border:1px solid var(--rule);padding:10px 12px;background:var(--raised)}
-.stat b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
-.stat span{color:var(--muted);font-size:12.5px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--rule);background:var(--raised);padding:1px 8px;cursor:pointer;border-radius:10px}
-@media (max-width:1050px){.work{grid-template-columns:1fr}}
-@media (max-width:820px){.shell{grid-template-columns:1fr} nav.tree{position:static;max-height:340px} .row{grid-template-columns:1fr} .row .c{text-align:left}}
-@media print{nav.tree,header.top,.head,.inputs,.evid,.tools,.row button{display:none!important} .shell,.work{display:block} .panel{border:0;padding:0} body{background:#fff}}
+textarea.yaml{width:100%;min-height:220px;font:12px/1.45 var(--mono);border:1px solid var(--rule);background:var(--raised);padding:8px;border-radius:4px}
+pre.code{font:12px/1.5 var(--mono);background:var(--raised);border:1px solid var(--soft);padding:10px 12px;overflow:auto;border-radius:4px;margin:6px 0 12px}
+.note{border-left:3px solid var(--rule);padding:4px 0 4px 10px;margin:8px 0}
+.note.pitfall{border-left-color:var(--serious)} .note.limitation{border-left-color:var(--warn)} .note.scope{border-left-color:var(--s1)}
+.note .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.note .src{font-size:12px;color:var(--muted);margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0 4px}
+.tile{background:var(--raised);border:1px solid var(--soft);border-radius:4px;padding:8px 10px}
+.tile .v{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums} .tile .l{font-size:12px;color:var(--muted)}
+.muted{color:var(--muted)} .small{font-size:12.5px}
+.chartbox{position:relative;margin-top:8px}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:5px 8px;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.12);white-space:nowrap;display:none;z-index:2}
+.tip b{font-variant-numeric:tabular-nums}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:end;font-size:13px}
+.ctrls label{display:flex;flex-direction:column;gap:2px;color:var(--ink2);font-size:12px}
+.ctrls input,.ctrls select{padding:4px 7px;border:1px solid var(--rule);background:var(--raised);border-radius:4px;min-width:6em}
+.series-key{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin-top:8px}
+.series-key span{display:inline-flex;gap:6px;align-items:center}
+.series-key i{display:inline-block;width:16px;height:2px}
+.bars .row{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr);gap:10px;align-items:center;padding:3px 0}
+.bars .lab{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .track{display:flex;align-items:center;gap:2px;min-height:16px}
+.bars .seg{height:14px}
+.bars .seg:last-of-type{border-radius:0 4px 4px 0}
+.bars .n{font-size:12px;color:var(--ink2);margin-left:6px;font-variant-numeric:tabular-nums}
+.depmap{overflow-x:auto;margin-top:6px}
+.depmap svg{display:block}
+.depmap .node{cursor:pointer}
+dialog{border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--ink);max-width:min(520px,calc(100vw - 32px));padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.setrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px solid var(--soft)}
+.setrow select{padding:3px 6px;border:1px solid var(--rule);background:var(--raised);border-radius:4px}
+@media (max-width:900px){.shell{grid-template-columns:minmax(0,1fr)} nav.side{position:static;max-height:46vh}
+  .calc-grid{grid-template-columns:minmax(0,1fr)}}
 </style>
-
 <div class="wrap">
-  <header class="top">
-    <h1>Calculation Knowledge Base</h1>
-    <p id="tagline"></p>
-  </header>
-  <div class="shell">
-    <nav class="tree" aria-label="Code structure">
-      <input id="q" type="search" placeholder="Search: symbol, name or clause" aria-label="Search objects">
-      <button class="ovw" id="ovw" type="button">Overview: sources and coverage</button>
-      <div id="tree"></div>
-    </nav>
-    <main id="main"></main>
-  </div>
+<header class="top">
+  <div><h1>Calculation knowledge base</h1><p id="sub"></p></div>
+  <button class="btn" id="settings-btn" type="button">Settings</button>
+</header>
+<div class="shell">
+  <nav class="side" aria-label="Codes and calculation objects">
+    <input class="search" id="q" type="search" placeholder="Search: concrete shear, V_Rd,c, 6.2.2" aria-label="Search">
+    <div class="chips" id="codes"></div>
+    <div id="tree"></div>
+    <button class="ovw" id="ovw" type="button">Overview of the knowledge base</button>
+    <div class="legend-dots"><span><i class="dot good"></i>checked</span><span><i class="dot warn"></i>not yet checked</span><span><i class="dot crit"></i>review needed</span></div>
+  </nav>
+  <main id="main"></main>
 </div>
-
-<script type="application/json" id="kbdata">/*__DATA__*/</script>
+</div>
+<dialog id="settings">
+  <h3>Settings</h3>
+  <p class="small muted">How numbers are shown here. The calculation itself always runs in N, mm, MPa.</p>
+  <div class="setrow"><span>Digits after the decimal point</span><select id="set-dec"></select></div>
+  <div class="setrow"><span>Significant digits kept for small values</span><select id="set-sig"></select></div>
+  <h4>Units in this calculation</h4>
+  <div id="set-units" class="small"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn" id="set-reset" type="button">Reset</button><button class="btn primary" id="set-close" type="button">Done</button>
+  </div>
+</dialog>
+<div class="tip" id="tip"></div>
 <script>
+"use strict";
+const D = /*__DATA__*/;
 /*__FUNCTIONS__*/
-const KB = JSON.parse(document.getElementById('kbdata').textContent);
 const STANDALONE = __STANDALONE__;
-const O = KB.objects, Q = KB.quantities;
-const state = {id: null, vals: {}, given: {}, check: {}, tab: 'evidence', ex: {}, view: 'object'};
-const $ = (s, r) => (r || document).querySelector(s);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
-const item = id => O[id] || Q[id];
-const statusClass = s => ({consensus: 'ok', unified: 'ok', 'single source': 'warn', disagreement: 'bad'}[s] || 'warn');
-const statusText = s => ({consensus: 'consensus', unified: 'unified', 'single source': 'one source', disagreement: 'sources disagree'}[s] || s);
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("ckb:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("ckb:" + k, JSON.stringify(v)); } catch (e) {} }
+};
 
-function fmt(v, sig) {
-  sig = sig || 5;
-  if (typeof v === 'string') return v;
-  if (v === null || v === undefined || Number.isNaN(v)) return 'n/a';
-  if (!Number.isFinite(v)) return v > 0 ? '∞' : '−∞';
-  if (v === 0) return '0';
-  const a = Math.abs(v);
-  if (a >= Math.pow(10, sig)) return v.toFixed(0);
-  if (a < 1e-4) return v.toExponential(sig - 2).replace('e-', '·10^-');
-  const digits = Math.max(0, sig - 1 - Math.floor(Math.log10(a)));
-  let s = v.toFixed(digits);
-  if (s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+// ---------------------------------------------------------------- style
+const S = Object.assign({decimals: 2, minsig: 3, units: {}}, store.get("style", {}));
+function digits(v) {
+  if (!isFinite(v) || v === 0) return S.decimals;
+  const need = S.minsig - 1 - Math.floor(Math.log10(Math.abs(v)));
+  return Math.max(S.decimals, Math.min(need, 12));
+}
+function fmt(v) {
+  if (v == null) return "–";
+  if (typeof v === "string") return v;
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (!isFinite(v)) return "n/a";
+  if (v !== 0 && (Math.abs(v) >= 1e7 || Math.abs(v) < 1e-12)) return v.toExponential(Math.max(S.minsig - 1, 1));
+  return v.toFixed(digits(v));
+}
+function fmtShort(v) {
+  let s = fmt(v);
+  if (typeof v === "number" && s.includes(".") && !s.includes("e")) s = s.replace(/0+$/, "").replace(/\.$/, "");
   return s;
 }
-const unitText = u => (u === '-' || !u) ? '' : u;
-const show = (id, v) => typeof v === 'number' ? v / item(id).factor : v;
+const item = id => D.objects[id] || D.quantities[id];
+function unitOf(id) {
+  const it = item(id);
+  if (!it) return ["-", 1];
+  return it.units.find(u => u[0] === S.units[id]) || it.units[0];
+}
+const shown = (id, v) => typeof v === "number" ? v / unitOf(id)[1] : v;
+const ulabel = u => u === "-" ? "" : u;
+const symML = id => { const it = item(id); return it ? it.ml : "<mi>" + esc(id) + "</mi>"; };
+const symText = id => { const it = item(id); return it ? it.text : id; };
+const mathNum = v => {
+  const s = typeof v === "number" ? fmt(v) : String(v);
+  return s.startsWith("-") ? "<mo>&#x2212;</mo><mn>" + esc(s.slice(1)) + "</mn>" : "<mn>" + esc(s) + "</mn>";
+};
+const mathUnit = u => u === "-" ? "" : "<mtext>&#x2009;" + esc(u) + "</mtext>";
 
+// ---------------------------------------------------------------- confidence
+const CONF = {high: {cls: "good", label: "checked"}, medium: {cls: "warn", label: "not yet checked"}, low: {cls: "crit", label: "review needed"}};
+const conf = o => CONF[(o.conf || {}).level] || CONF.medium;
+const dot = o => { const c = conf(o); return `<span class="dot ${c.cls}" role="img" aria-label="${c.label}" title="${c.label}"></span>`; };
+
+// ---------------------------------------------------------------- engine (same objects as Python)
 function plan(target, given) {
+  const fixed = D.objects[target].fixed || {};
   const steps = [], inputs = [], done = {};
-  (function visit(id, trail) {
+  function visit(id, trail) {
     if (done[id]) return;
-    if (trail.indexOf(id) >= 0) throw new Error('objects refer to each other in a circle');
-    O[id].params.forEach(p => {
-      if (O[p] && !given[p]) visit(p, trail.concat(id));
-      else if (inputs.indexOf(p) < 0) inputs.push(p);
-    });
+    if (trail.includes(id)) throw new Error("objects refer to each other in a circle: " + trail.concat(id).join(" -> "));
+    for (const p of D.objects[id].params) {
+      if (p in fixed) continue;
+      if (D.objects[p] && !given.has(p)) visit(p, trail.concat(id));
+      else if (!inputs.includes(p)) inputs.push(p);
+    }
     done[id] = 1; steps.push(id);
-  })(target, []);
+  }
+  visit(target, []);
   return {steps, inputs};
 }
-
-function startValue(id) {
-  const q = Q[id];
-  if (q && q.typical !== null && q.typical !== undefined) return q.typical;
-  if (q && q.range) return (q.range[0] + q.range[1]) / 2;
-  return undefined;
-}
-
-function loadExample(id, k) {
-  const ex = O[id].examples[k];
-  if (!ex) return;
-  state.given[id] = {};
-  (ex.given || []).forEach(g => { state.given[id][g] = true; });
-  Object.keys(ex.inputs).forEach(p => { state.vals[p] = ex.inputs[p]; });
-  state.ex[id] = k;
-}
-
-function select(id) {
-  state.view = 'object'; state.id = id;
-  if (!state.given[id]) state.given[id] = {};
-  const o = O[id];
-  if (state.ex[id] === undefined && o.examples.length) {
-    let k = o.examples.findIndex(e => e.matches_source && !(e.given || []).length);
-    if (k < 0) k = o.examples.findIndex(e => e.matches_source);
-    loadExample(id, k < 0 ? 0 : k);
+function evaluate(target, values, given) {
+  const {steps, inputs} = plan(target, given);
+  const e = Object.assign({}, values, D.objects[target].fixed || {});
+  const trace = [];
+  for (const id of steps) {
+    const v = F[id](e);
+    e[id] = v;
+    const env = {};
+    for (const p of D.objects[id].params) env[p] = e[p];
+    trace.push({id, v, env});
   }
-  plan(id, state.given[id]).inputs.forEach(p => { if (state.vals[p] === undefined) state.vals[p] = startValue(p); });
-  renderTree(); renderObject();
+  return {value: e[target], trace, env: e, steps, inputs};
 }
-
-function compute(id) {
-  const given = state.given[id] || {};
-  const pl = plan(id, given), env = {}, out = {steps: [], inputs: pl.inputs, error: null, warn: []};
-  pl.inputs.forEach(p => { env[p] = state.vals[p]; });
-  for (const p of pl.inputs) {
-    if (typeof env[p] !== 'number' || Number.isNaN(env[p])) { out.error = 'Enter a value for ' + item(p).text + '.'; return out; }
-    const q = Q[p];
-    if (q && q.range && (env[p] < q.range[0] - 1e-9 || env[p] > q.range[1] + 1e-9))
-      out.warn.push(item(p).text + ' = ' + fmt(show(p, env[p])) + ' ' + unitText(q.unit) + ' is outside the usual range ' +
-        fmt(show(p, q.range[0])) + ' to ' + fmt(show(p, q.range[1])) + ' ' + unitText(q.unit) + '.');
+function derive(s, env, depth) {
+  if (s in env) return env[s];
+  if (depth > 10) return undefined;
+  const o = D.objects[s];
+  if (o) {
+    const local = Object.assign({}, env);
+    for (const p of o.params) { const v = derive(p, local, depth + 1); if (v === undefined) return undefined; local[p] = v; }
+    try { return F[s](local); } catch (e) { return undefined; }
   }
-  for (const s of pl.steps) {
-    let v;
-    try { v = F[s](env); } catch (err) { v = NaN; }
-    const snap = {}; O[s].params.forEach(p => { snap[p] = env[p]; });
-    out.steps.push({id: s, value: v, env: snap});
-    if (typeof v !== 'number' || !Number.isFinite(v)) {
-      out.error = O[s].text + (typeof v === 'string' ? ': ' + v : ' cannot be evaluated with these inputs.');
-      return out;
-    }
-    env[s] = v;
+  const q = D.quantities[s];
+  return q && q.kind === "coefficient" && q.value != null ? q.value : undefined;
+}
+function checksFor(target, env, given) {
+  const out = [], local = Object.assign({}, env);
+  for (const id of plan(target, given).steps) {
+    (D.objects[id].checks || []).forEach((c, i) => {
+      let ok = true;
+      for (const s of c.syms) {
+        if (!(s in local)) { const v = derive(s, local, 0); if (v === undefined) { ok = false; break; } local[s] = v; }
+      }
+      let status = "not checked";
+      if (ok) { try { status = C[id][i](local) ? "ok" : "violated"; } catch (e) {} }
+      out.push({object: id, text: c.text, clause: c.clause, status});
+    });
   }
-  out.value = env[id];
+  return out;
+}
+function defaults(target, given) {
+  const out = {};
+  for (const p of plan(target, given).inputs) { const q = D.quantities[p]; if (q && q.start != null) out[p] = q.start; }
   return out;
 }
 
-function fillSlots(root, env) {
-  root.querySelectorAll('mn.slot').forEach(n => {
-    const v = env[n.getAttribute('data-s')];
-    const t = fmt(v);
-    n.textContent = (typeof v === 'number' && v < 0) ? '(' + t.replace('-', '−') + ')' : t;
-  });
+// ---------------------------------------------------------------- state
+const state = {view: "overview", target: null, tab: "calc", code: store.get("code", "all"), q: ""};
+const work = {};      // per object: {values, entered:Set, given:Set, check, show, steps, chart}
+function W(id) {
+  if (!work[id]) {
+    const saved = store.get("work:" + id, null);
+    const w = {values: {}, entered: new Set(), given: new Set(), check: null,
+               show: {equation: true, substituted: true, result: true}, steps: "all", chart: {}};
+    if (saved) {
+      w.given = new Set(saved.given || []);
+      Object.assign(w.values, saved.values || {});
+      w.entered = new Set(Object.keys(saved.values || {}));
+      w.check = saved.check == null ? null : saved.check;
+      if (saved.show) w.show = saved.show;
+      if (saved.steps) w.steps = saved.steps;
+    }
+    work[id] = w;
+  }
+  return work[id];
+}
+function saveWork(id) {
+  const w = work[id];
+  const vals = {};
+  for (const k of w.entered) if (k in w.values) vals[k] = w.values[k];
+  store.set("work:" + id, {values: vals, given: [...w.given], check: w.check, show: w.show, steps: w.steps});
+}
+function valuesFor(id) {
+  const w = W(id);
+  const v = defaults(id, w.given);
+  for (const k of w.entered) if (k in w.values) v[k] = w.values[k];
+  return v;
 }
 
-/* ---------- tree ---------- */
+// ---------------------------------------------------------------- tree and search
+const topicKey = t => String(t || "").split(".").map(x => parseInt(x, 10) || 0);
+const cmpTopic = (a, b) => { const x = topicKey(a), y = topicKey(b); for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d; } return 0; };
+function topicTitle(code, tid) {
+  const c = D.codes.find(c => c.code === code);
+  const t = c && c.topics.find(t => t.id === tid);
+  return t ? `${tid} ${t.title}` : tid;
+}
+function entries(code) {
+  const out = [];
+  for (const o of Object.values(D.objects)) {
+    if (o.code === code) out.push({id: o.id, topic: o.topic, label: o.text, name: o.name, via: null});
+    for (const r of o.refs || []) if (r.code === code)
+      out.push({id: o.id, topic: r.topic || "", label: o.text, name: o.name, via: `${o.code}, ${r.how || "shared"}`});
+  }
+  out.sort((a, b) => cmpTopic(a.topic, b.topic) || a.label.localeCompare(b.label));
+  return out;
+}
+function renderCodes() {
+  const opts = [["all", "All codes"]].concat(D.codes.map(c => [c.code, c.code]));
+  $("#codes").innerHTML = opts.map(([k, l]) => `<button class="chip" type="button" data-code="${esc(k)}" aria-pressed="${state.code === k}">${esc(l)}</button>`).join("");
+}
 function renderTree() {
-  const needle = ($('#q').value || '').trim().toLowerCase();
-  const byTopic = {};
-  Object.values(O).forEach(o => {
-    const hay = (o.text + ' ' + o.id + ' ' + o.name + ' ' + o.ref + ' ' + o.path.join(' ')).toLowerCase().replace(/[_,.]/g, '');
-    if (needle && hay.indexOf(needle.replace(/[_,.]/g, '')) < 0) return;
-    (byTopic[o.topic] = byTopic[o.topic] || []).push(o);
-  });
-  let h = '';
-  KB.topics.forEach(t => {
-    const depth = t.id.split('.').length;
-    const has = Object.keys(byTopic).some(k => k === t.id || k.indexOf(t.id + '.') === 0);
-    if (needle && !has) return;
-    if (depth === 1) h += '<div class="t-chap">' + esc(t.id + ' ' + t.title) + '</div>';
-    else h += '<div class="t-sec' + (has ? ' has' : '') + '" style="padding-left:' + (depth - 2) * 10 + 'px">' + esc(t.id + ' ' + t.title) + (has ? '' : ' <span title="no object yet">·</span>') + '</div>';
-    (byTopic[t.id] || []).forEach(o => {
-      h += '<button type="button" class="t-obj" data-id="' + o.id + '"' + (state.view === 'object' && o.id === state.id ? ' aria-current="true"' : '') +
-        ' style="margin-left:' + (6 + (depth - 2) * 10) + 'px"><span class="dot ' + statusClass(o.status) + '" title="' + esc(statusText(o.status)) + '"></span><span class="s"><math>' + o.ml + '</math></span><span class="n">' + esc(o.name) + '</span></button>';
-    });
-  });
-  $('#tree').innerHTML = h || '<p style="color:var(--muted)">Nothing matches.</p>';
-  $('#ovw').setAttribute('aria-current', state.view === 'overview' ? 'true' : 'false');
+  const box = $("#tree");
+  if (state.q.trim()) { renderHits(box); return; }
+  let h = "";
+  for (const c of D.codes) {
+    if (state.code !== "all" && state.code !== c.code) continue;
+    h += `<div class="t-code">${esc(c.code)}</div>`;
+    let chap = null, sec = null;
+    for (const e of entries(c.code)) {
+      const ch = e.topic.split(".")[0];
+      if (ch !== chap) { chap = ch; sec = null; h += `<div class="t-chap">${esc(topicTitle(c.code, ch))}</div>`; }
+      if (e.topic !== ch && e.topic !== sec) { sec = e.topic; h += `<div class="t-sec">${esc(topicTitle(c.code, e.topic))}</div>`; }
+      const o = D.objects[e.id];
+      h += `<button class="t-obj" type="button" data-id="${esc(e.id)}" aria-current="${state.view === "object" && state.target === e.id}">`
+        + `${dot(o)}<span class="s">${esc(e.label)}</span><span class="n">${esc(e.via ? "from " + e.via : e.name)}</span></button>`;
+    }
+  }
+  box.innerHTML = h;
+}
+// word search: the same index and rules as `python -m ckb search`
+const WORD = /[a-z0-9]+(?:\.[0-9]+)*/g;
+const words = t => (String(t).toLowerCase().replace(/_/g, " ").match(WORD) || []);
+const stem = w => { for (const s of ["ing", "es", "s"]) if (w.length > s.length + 3 && w.endsWith(s)) return w.slice(0, -s.length); return w; };
+const symkey = s => String(s).normalize("NFKC").replace("epsilon", "eps").replace(/[\s_.,;:{}\\'’`\-−]+/g, "");
+function hitWord(t, vocab) {
+  const st = stem(t);
+  return vocab.some(w => w === t || w.startsWith(st) || (w.length > 3 && st.startsWith(stem(w)) && st.length - w.length <= 3));
+}
+const FIELDS = [["name", 3], ["chapter", 2], ["other", 1], ["weak", 0.4]];
+function search(q) {
+  q = q.trim();
+  if (!q) return [];
+  const key = symkey(q), tokens = words(q).filter(t => t.length > 1 || /^\d+$/.test(t));
+  let hits = [];
+  for (const [id, e] of Object.entries(D.index)) {
+    const o = D.objects[id];
+    if (key && e.keys.includes(key)) { hits.push([100, id, "symbol"]); continue; }
+    if (q === (o.ref.match(/cl\. ([^,]+)/) || [])[1]) { hits.push([90, id, "clause"]); continue; }
+    if (!tokens.length) continue;
+    let score = 0, found = 0, weak = false;
+    for (const t of tokens) for (const [f, w] of FIELDS) { if (hitWord(t, e[f].split(" "))) { score += w; found++; weak = weak || f === "weak"; break; } }
+    if (!found) continue;
+    score = score / tokens.length + (found === tokens.length ? 20 : 5 * found / tokens.length) + 1.5 * e.rank;
+    hits.push([score, id, (found === tokens.length ? "all words" : `${found} of ${tokens.length} words`) + (weak ? ", partly in the background" : "")]);
+  }
+  hits.sort((a, b) => b[0] - a[0] || a[1].localeCompare(b[1]));
+  if (hits.length && hits[0][0] >= 90) hits = hits.filter(h => h[0] >= 90);
+  else if (hits.length && hits[0][0] >= 20) hits = hits.filter(h => h[0] >= 20);
+  return hits.slice(0, 15);
+}
+function renderHits(box) {
+  const hits = search(state.q).filter(h => state.code === "all" || D.objects[h[1]].code === state.code || (D.objects[h[1]].refs || []).some(r => r.code === state.code));
+  if (!hits.length) { box.innerHTML = `<p class="small muted">Nothing found for “${esc(state.q)}”. Try fewer words, a symbol (V_Rd,c) or a clause (6.2.2).</p>`; return; }
+  box.innerHTML = `<p class="small muted">${hits.length} result${hits.length > 1 ? "s" : ""}</p>` + hits.map(([s, id, why]) => {
+    const o = D.objects[id];
+    return `<button class="hit" type="button" data-id="${esc(id)}">${dot(o)} <b>${esc(o.text)}</b> ${esc(o.name)}<div class="r">${esc(o.ref)} · ${esc(why)}</div></button>`;
+  }).join("");
 }
 
-/* ---------- object view ---------- */
-function renderObject() {
-  const o = O[state.id], s = o.support;
-  const facts = [
-    '<span class="pill ' + statusClass(o.status) + '">' + esc(statusText(o.status)) + '</span>',
-    (s.formula_instances || 0) + ' formulas in ' + (s.sources || 0) + ' independent source' + (s.sources === 1 ? '' : 's'),
-    o.bench.agree + ' of ' + o.bench.total + ' source values reproduced',
-    o.reference && o.reference.status ? 'independent reference: <b>' + esc(o.reference.status) + '</b>' : 'no independent reference'
-  ];
-  let h = '<section class="head"><h2><math>' + o.ml + '</math>&nbsp; ' + esc(o.name) + '</h2>' +
-    '<p class="ref">' + esc(o.ref) + ' · ' + esc(o.path.join(' › ')) + '</p><div class="facts">' + facts.map(f => '<span>' + f + '</span>').join('') + '</div></section>';
-  h += '<div class="work"><section class="panel inputs"><h3>Input</h3><div id="inputs"></div></section>' +
-       '<section class="panel sheet"><div id="sheet"></div></section></div>';
-  h += '<section class="panel evid"><div class="tabs" role="tablist">' +
-    ['evidence', 'code'].map(t => '<button type="button" role="tab" data-tab="' + t + '" aria-selected="' + (state.tab === t) + '">' +
-      ({evidence: 'Evidence', code: 'Code block'}[t]) + '</button>').join('') + '</div><div id="tab"></div></section>';
-  $('#main').innerHTML = h;
-  renderInputs(); renderSheet(); renderTab();
+// ---------------------------------------------------------------- page
+function open(id, tab) {
+  state.view = "object"; state.target = id; state.tab = tab || "calc";
+  renderTree(); renderMain();
+  try {   // on a phone the tree sits above the page: go to the calculation
+    if (window.matchMedia("(max-width: 900px)").matches) $("#main").scrollIntoView({block: "start"});
+    else window.scrollTo({top: 0});
+  } catch (e) {}
+}
+function renderMain() {
+  $("#ovw").setAttribute("aria-current", String(state.view === "overview"));
+  if (state.view !== "object") { renderOverview(); return; }
+  const o = D.objects[state.target], c = conf(o);
+  const crumb = [o.code].concat(o.path || []).join(" › ");
+  const tabs = [["calc", "Calculate"], ["background", "Design background"], ["chart", "Chart"], ["code", "Code"], ["status", "Status"]];
+  $("#main").innerHTML = `<section class="card head"><div class="crumb">${esc(crumb)}</div>
+    <h2><math>${o.ml}</math><span>${esc(o.name)}</span></h2>
+    <div class="meta"><span>${esc(o.ref)}</span><span>Result in ${esc(o.unit === "-" ? "no unit" : o.unit)}</span>
+      <button class="stat-link" type="button" data-tab="status">${dot(o)}${esc(c.label)}</button></div>
+    <div role="tablist">${tabs.map(([k, l]) => `<button role="tab" type="button" data-tab="${k}" aria-selected="${state.tab === k}">${l}</button>`).join("")}</div>
+  </section><section class="card" id="panel"></section>`;
+  ({calc: renderCalc, background: renderBackground, chart: renderChart, code: renderCode, status: renderStatus})[state.tab]();
 }
 
+// ---------------------------------------------------------------- Calculate
+function renderCalc() {
+  const id = state.target, o = D.objects[id], w = W(id);
+  $("#panel").innerHTML = `<div class="calc-grid"><div id="inputs"></div><div><div id="sheet"></div><div id="cases"></div></div></div>`;
+  renderInputs(); renderSheet(); renderCases();
+}
+function inputRow(p, value, isCheck) {
+  const it = item(p), [u] = unitOf(p), q = D.quantities[p];
+  const v = shown(p, value);
+  const sel = it && it.units.length > 1
+    ? `<select data-unit="${esc(p)}" aria-label="unit">${it.units.map(x => `<option ${x[0] === u ? "selected" : ""}>${esc(x[0])}</option>`).join("")}</select>`
+    : `<span class="u">${esc(ulabel(u))}</span>`;
+  const hint = [];
+  const w = W(state.target);
+  if (q && q.kind === "coefficient" && q.value != null) {
+    const rec = Math.abs((value || 0) - q.value) <= 1e-12 * Math.max(1, Math.abs(q.value));
+    hint.push(rec ? `<span class="tag">recommended</span>` : `<span class="tag">recommended ${esc(fmt(shown(p, q.value)))}</span>`);
+  }
+  if (q && q.ndp) hint.push(`<span class="tag" title="Nationally Determined Parameter: check the National Annex">NDP</span>`);
+  if (q && q.choices && q.choices.length) for (const ch of q.choices)
+    hint.push(`<button type="button" class="choice" data-set="${esc(p)}" data-v="${ch.value}" title="${esc(ch.label)}">${esc(fmt(shown(p, ch.value)))} ${esc(ch.label)}</button>`);
+  if (D.objects[p] && w.given.has(p)) hint.push(`<button type="button" class="give" data-ungive="${esc(p)}">calculate instead</button>`);
+  if (q && q.ref) hint.push(`<span>${esc(q.ref)}</span>`);
+  if (q && q.range && typeof value === "number" && (value < q.range[0] - 1e-9 || value > q.range[1] + 1e-9))
+    hint.push(`<span class="warn-text">outside the usual range ${esc(fmt(shown(p, q.range[0])))} to ${esc(fmt(shown(p, q.range[1])))} ${esc(ulabel(u))}</span>`);
+  return `<div class="inp"><label for="in-${esc(p)}"><span class="nm">${esc(it ? it.name : p)}${isCheck ? " (to check against)" : ""}</span><math>${symML(p)}</math></label>
+    <div class="ctl"><input id="in-${esc(p)}" data-in="${esc(p)}" inputmode="decimal" autocomplete="off" value="${value == null ? "" : esc(fmtShort(v))}">${sel}</div>
+    ${hint.length ? `<div class="hint">${hint.join("")}</div>` : ""}</div>`;
+}
 function renderInputs() {
-  const id = state.id, o = O[id], pl = plan(id, state.given[id]);
-  let h = '';
-  if (o.examples.length) {
-    h += '<label for="ex" style="font-size:12.5px;color:var(--muted)">Case from the sources</label><select class="ex" id="ex">' +
-      o.examples.map((e, k) => '<option value="' + k + '"' + (state.ex[id] === k ? ' selected' : '') + '>' + esc(e.label) + '</option>').join('') +
-      '<option value="-1"' + (state.ex[id] === -1 ? ' selected' : '') + '>My own values</option></select><div id="exnote"></div>';
-  }
-  pl.inputs.forEach(p => {
-    const it = item(p), g = state.given[id][p];
-    h += '<div class="fld"><label for="in-' + p + '"><math>' + it.ml + '</math><small>' + esc(it.name) + '</small></label>' +
-      '<input id="in-' + p + '" data-p="' + p + '" type="number" step="any" inputmode="decimal" value="' + (state.vals[p] === undefined ? '' : fmt(show(p, state.vals[p]), 8)) + '">' +
-      '<span class="u">' + esc(unitText(it.unit)) + '</span>' +
-      (g ? '<span class="x">entered directly · <button type="button" class="lnk" data-calc="' + p + '">calculate it instead</button></span>' : '') + '</div>';
-  });
-  $('#inputs').innerHTML = h;
+  const id = state.target, o = D.objects[id], w = W(id);
+  const vals = valuesFor(id);
+  const {inputs} = plan(id, w.given);
+  let h = `<h3>Input</h3>`;
+  h += inputs.map(p => inputRow(p, vals[p], false)).join("");
+  if (o.check) h += inputRow(o.check, w.check, true);
+  const fixed = Object.entries(o.fixed || {});
+  if (fixed.length) h += `<p class="small muted">${fixed.map(([k, v]) => `<math>${symML(k)}<mo>=</mo>${mathNum(v)}</math>`).join(", ")} fixed by ${esc(o.code)}.</p>`;
+  h += `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn small" type="button" id="reset">Reset inputs</button></div>`;
+  $("#inputs").innerHTML = h;
+  refreshInputHints();
 }
-
+function refreshInputHints() {}
 function renderSheet() {
-  const id = state.id, o = O[id], r = compute(id);
-  let h = '<div class="tb">' + [['project', 'Project'], ['subject', 'Subject'], ['number', 'Calc. no.'], ['made', 'Made by / date'], ['checked', 'Checked by / date'], ['approved', 'Approved by / date']]
-    .map(f => '<label><small>' + f[1] + '</small><input id="tb-' + f[0] + '" data-tb="' + f[0] + '" value="' + esc(titleBlock[f[0]] || (f[0] === 'subject' ? o.name : '')) + '"></label>').join('') + '</div>';
-  r.steps.forEach(st => {
-    const so = O[st.id], isNum = typeof st.value === 'number';
-    const canon = isNum && Math.abs(st.value - show(st.id, st.value)) > 1e-12 * Math.max(1, Math.abs(st.value));
-    h += '<div class="row" data-step="' + st.id + '"><div class="d">' + esc(so.name) + '<small><span class="pill ' + statusClass(so.status) + '">' + esc(statusText(so.status)) + '</span>' +
-      (st.id !== id ? '<button type="button" class="lnk" data-give="' + st.id + '">enter directly</button>' : '') +
-      (st.id !== id ? '<button type="button" class="lnk" data-open="' + st.id + '">open</button>' : '') + '</small></div>' +
-      '<div class="e"><div class="eq"><span class="lhs"><math>' + so.ml + '</math></span><math displaystyle="true"><mo>=</mo>' + so.mlF + '</math></div>' +
-      '<div class="eq sub"><span class="lhs"></span><math displaystyle="true"><mo>=</mo>' + so.mlS + '</math></div>' +
-      '<div class="eq res"><span class="lhs"></span><math><mo>=</mo>' + (canon ? '<mn>' + esc(fmt(st.value, 6)) + '</mn><mo>=</mo>' : '') +
-      (isNum ? '<mn>' + esc(fmt(show(st.id, st.value))) + '</mn>' : '<mtext>' + esc(String(st.value)) + '</mtext>') +
-      (unitText(so.unit) ? '<mtext>&#x2009;' + esc(so.unit) + '</mtext>' : '') + '</math></div></div>' +
-      '<div class="c">' + esc(so.ref) + '</div></div>';
-  });
-  if (r.error) {
-    h += '<ul class="msg"><li class="err">' + esc(r.error) + '</li></ul>';
+  const id = state.target, o = D.objects[id], w = W(id);
+  let r;
+  try { r = evaluate(id, valuesFor(id), w.given); }
+  catch (e) { $("#sheet").innerHTML = `<p class="bad">${esc(e.message)}</p>`; return; }
+  const sh = w.show;
+  let h = `<div class="opts"><span>Show</span>`
+    + [["equation", "Equation"], ["substituted", "Substituted values"], ["result", "Result"]].map(([k, l]) =>
+      `<label><input type="checkbox" data-show="${k}" ${sh[k] ? "checked" : ""}>${l}</label>`).join("")
+    + `<label><input type="checkbox" id="only-result" ${w.steps === "result" ? "checked" : ""}>Final step only</label></div>`;
+  const lines = w.steps === "result" ? r.trace.filter(t => t.id === id) : r.trace;
+  for (const t of lines) {
+    const so = D.objects[t.id], [u] = unitOf(t.id), eqs = [];
+    const lhs = () => eqs.length ? "" : `<math>${so.ml}</math>`;
+    if (sh.equation) eqs.push(`<div class="eq"><span class="lhs">${lhs()}</span><math displaystyle="true"><mo>=</mo>${so.mlF}</math></div>`);
+    if (sh.substituted && so.params.length) eqs.push(`<div class="eq sub" data-env="${esc(JSON.stringify(t.env))}"><span class="lhs">${lhs()}</span><math displaystyle="true"><mo>=</mo>${so.mlS}</math></div>`);
+    if (sh.result || !eqs.length) eqs.push(`<div class="eq res"><span class="lhs">${lhs()}</span><math><mo>=</mo>${mathNum(shown(t.id, t.v))}${mathUnit(u)}</math></div>`);
+    const ref = so.code === o.code ? so.ref.replace(o.code + " ", "") : so.ref;
+    const give = t.id !== id ? ` · <button class="give" type="button" data-give="${esc(t.id)}">enter directly</button>` : "";
+    h += `<div class="st"><div class="hd"><span>${esc(so.name)}</span><span class="c">${esc(ref)}${give}</span></div><div class="eqs">${eqs.join("")}</div></div>`;
+  }
+  const [ut] = unitOf(id);
+  if (o.check && w.check != null && typeof r.value === "number" && r.value !== 0) {
+    const res = o.sense === "resistance";
+    const eta = res ? w.check / r.value : r.value / w.check, ok = eta <= 1;
+    const [uc] = unitOf(o.check);
+    h += `<div class="verdict"><span><math>${o.ml}<mo>=</mo>${mathNum(shown(id, r.value))}${mathUnit(ut)}</math></span>
+      <span><math>${symML(o.check)}<mo>=</mo>${mathNum(shown(o.check, w.check))}${mathUnit(uc)}</math></span>
+      <span><math><mi>η</mi><mo>=</mo>${res ? symML(o.check) + "<mo>/</mo>" + o.ml : o.ml + "<mo>/</mo>" + symML(o.check)}</math> = <b>${eta.toFixed(2)}</b> ${ok ? "≤" : ">"} 1.00</span>
+      <span class="${ok ? "ok" : "bad"}">${ok ? "OK" : "NOT OK"}</span></div>`;
   } else {
-    const v = r.value;
-    let box = '<div class="big"><math>' + o.ml + '<mo>=</mo><mn>' + esc(fmt(show(id, v))) + '</mn>' + (unitText(o.unit) ? '<mtext>&#x2009;' + esc(o.unit) + '</mtext>' : '') + '</math></div>';
-    if (o.check && item(o.check)) {
-      const c = item(o.check), cv = state.check[id];
-      box += '<div class="chk"><label for="chk"><math>' + c.ml + '</math> =</label><input id="chk" type="number" step="any" inputmode="decimal" placeholder="optional" value="' + (cv === undefined ? '' : fmt(cv / c.factor, 8)) + '"><span>' + esc(unitText(c.unit)) + '</span>';
-      if (typeof cv === 'number' && cv > 0 && v) {
-        const action = /_Ed$/.test(o.check), u = action ? cv / v : v / cv;
-        const cls = u <= 0.9 ? 'ok' : (u <= 1 ? 'warn' : 'bad');
-        box += '<span>utilisation ' + esc(action ? c.text + ' / ' + o.text : o.text + ' / ' + c.text) + ' = <b>' + u.toFixed(2) + '</b></span><span class="pill ' + cls + '">' + (u <= 1 ? 'OK' : 'NOT OK') + '</span><div class="bar ' + cls + '"><i style="width:' + Math.min(u, 1) * 100 + '%"></i></div>';
-      }
-      box += '</div>';
+    h += `<div class="verdict"><span><math>${o.ml}<mo>=</mo>${mathNum(shown(id, r.value))}${mathUnit(ut)}</math></span>`
+      + (o.check ? `<span class="small muted">Enter <math>${symML(o.check)}</math> to check against it.</span>` : "") + `</div>`;
+  }
+  const checks = checksFor(id, r.env, w.given);
+  if (checks.length) h += `<ul class="conds">` + checks.map(c => {
+    const m = {ok: ["met", "ok"], violated: ["NOT MET", "bad"], "not checked": ["to be checked", ""]}[c.status];
+    return `<li><span class="m ${m[1]}">${m[0]}</span><span>${esc(c.text)} <span class="muted">(${esc(c.clause)})</span></span></li>`;
+  }).join("") + `</ul>`;
+  const lim = [];
+  for (const s of r.steps) for (const b of D.objects[s].background || []) if (b.kind === "scope" || b.kind === "limitation") lim.push(`<li><b>${esc(D.objects[s].text)}</b>: ${esc(b.text)}</li>`);
+  if (lim.length) h += `<details><summary>Scope and limitations of the expressions used (${lim.length})</summary><ul>${lim.join("")}</ul></details>`;
+  h += `<p class="small muted" style="margin-top:10px">Substituted values are in N, mm and MPa. Version ${esc(o.version)}.</p>`;
+  $("#sheet").innerHTML = h;
+  // fill the substituted lines
+  for (const el of document.querySelectorAll("#sheet .eq.sub")) {
+    const env = JSON.parse(el.dataset.env);
+    for (const sl of el.querySelectorAll("mn.slot")) {
+      const v = env[sl.dataset.s];
+      const s = typeof v === "number" ? fmtShort(v) : String(v);
+      sl.textContent = s.startsWith("-") ? "(−" + s.slice(1) + ")" : s;
     }
-    h += '<div class="result">' + box + '</div>';
-  }
-  const msgs = [];
-  r.warn.forEach(w => msgs.push('<li class="w">' + esc(w) + '</li>'));
-  r.steps.forEach(st => O[st.id].warnings.forEach(w => msgs.push('<li class="w">' + esc(O[st.id].text + ': ' + w) + '</li>')));
-  r.steps.forEach(st => O[st.id].notes.forEach(n => msgs.push('<li>' + esc(O[st.id].text + ': ' + n) + '</li>')));
-  if (msgs.length) h += '<ul class="msg">' + msgs.join('') + '</ul>';
-  h += '<p style="color:var(--muted);font-size:12px;margin:10px 0 0">Numbers are substituted in N, mm and MPa. Every step is one object of the knowledge base.</p>';
-  h += '<div class="tools"><button type="button" class="btn ghost" id="copycalc">Copy calculation as text</button>' +
-       (STANDALONE ? '<button type="button" class="btn ghost" id="print">Print or save as PDF</button>' : '') + '<span id="copied" style="align-self:center;color:var(--muted)"></span></div>';
-  $('#sheet').innerHTML = h;
-  r.steps.forEach(st => { const row = $('#sheet .row[data-step="' + st.id + '"] .sub'); if (row) fillSlots(row, st.env); });
-  state.last = r;
-  const note = $('#exnote');
-  if (note) {
-    const ex = o.examples[state.ex[id]];
-    if (ex && !r.error) {
-      const same = Math.abs(r.value - ex.result) <= 1e-9 * Math.abs(ex.result);
-      if (!same) note.innerHTML = '';
-      else if (ex.matches_source) note.innerHTML = '<p class="exnote ok">The source gives ' + esc(fmt(show(id, ex.expected))) + ' ' + esc(unitText(o.unit)) + '. Reproduced.</p>';
-      else note.innerHTML = '<p class="exnote bad">The source gives ' + esc(fmt(show(id, ex.expected))) + ' ' + esc(unitText(o.unit)) + '; the unified logic gives ' + esc(fmt(show(id, ex.result))) + ' ' + esc(unitText(o.unit)) + '. See Evidence for the reason.</p>';
-    } else note.innerHTML = '';
   }
 }
 
-function calcText() {
-  const id = state.id, o = O[id], r = state.last, L = [];
-  L.push(o.text + ' - ' + o.name); L.push(o.ref); L.push('');
-  L.push('Input');
-  r.inputs.forEach(p => L.push('  ' + item(p).text + ' = ' + fmt(show(p, state.vals[p]), 8) + ' ' + unitText(item(p).unit) + '    ' + item(p).name));
-  L.push(''); L.push('Calculation');
-  r.steps.forEach(st => {
-    const so = O[st.id];
-    L.push('  ' + so.text + ' = ' + so.txtF);
-    L.push('      = ' + fmt(show(st.id, st.value)) + ' ' + unitText(so.unit) + '    [' + so.ref + '] (' + statusText(so.status) + ')');
-  });
-  if (!r.error) { L.push(''); L.push('Result: ' + o.text + ' = ' + fmt(show(id, r.value)) + ' ' + unitText(o.unit)); }
-  return L.join('\n');
+// cases: the same calculation for several sets of inputs; the governing one is highlighted
+function cases() { return store.get("cases:" + state.target, []); }
+function setCases(c) { store.set("cases:" + state.target, c); }
+function caseResult(cs) {
+  const id = state.target, o = D.objects[id];
+  const v = Object.assign(defaults(id, new Set(cs.given || [])), cs.values);
+  try {
+    const r = evaluate(id, v, new Set(cs.given || []));
+    let eta = null;
+    if (o.check && cs.check != null && typeof r.value === "number" && r.value) eta = o.sense === "resistance" ? cs.check / r.value : r.value / cs.check;
+    return {r, eta};
+  } catch (e) { return {error: e.message}; }
 }
-
-function renderTab() {
-  const o = O[state.id];
-  let h = '';
-  if (state.tab === 'code') {
-    h = '<p style="margin:0 0 8px;color:var(--muted)">Generated from the object file. Units: N, mm, MPa, rad. The same formula drives this page, the Excel calculator and the report.</p>' +
-      '<pre id="py">' + esc(o.python) + '</pre><div class="tools"><button type="button" class="btn ghost" id="copypy">Copy Python</button><span id="copied2" style="align-self:center;color:var(--muted)"></span></div>' +
-      '<p style="margin:12px 0 4px;color:var(--muted)">Other ways to use this object (from the project folder):</p><pre>python -m ckb run ' + o.id + '        # asks for the inputs in the terminal\npython -m ckb excel ' + o.id + '      # Excel calculator with live formulas\npython -m ckb report ' + o.id + '     # calculation sheet as HTML and PDF</pre>';
-  } else {
-    o.warnings.forEach(w => { h += '<p class="note w">' + esc(w) + '</p>'; });
-    o.findings.forEach(w => { h += '<p class="note f">' + esc(w) + '</p>'; });
-    h += '<h3>Variants found in the sources</h3><div class="scroll"><table class="t"><tr><th>Formula as written (consistent units)</th><th>Instances</th><th>Sources</th><th>Relation to the unified formula</th></tr>';
-    o.variants.forEach(v => {
-      const rel = v.merged ? (v.differences.length ? 'special case: ' + v.differences.join('; ') : 'identical') : 'not merged: ' + (v.reason || '');
-      h += '<tr><td><code>' + esc(v.text) + '</code></td><td class="num">' + v.instances + '</td><td>' + esc(v.sources.join(', ')) + '</td><td>' +
-        '<span class="pill ' + (v.merged ? 'ok' : 'bad') + '">' + (v.merged ? 'merged' : 'kept apart') + '</span> ' + esc(rel) + '</td></tr>';
+function renderCases() {
+  const id = state.target, o = D.objects[id], list = cases();
+  let h = `<h4>Cases</h4><p class="small muted">Add the current inputs as a case to compare several members. The governing case is highlighted; a case opens again when you click its name.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" type="button" id="add-case">Add current inputs as a case</button>
+    <button class="btn small" type="button" id="tpl">Report template${list.length ? ` (${list.length} case${list.length > 1 ? "s" : ""})` : ""}</button>
+    ${list.length ? `<button class="btn small" type="button" id="clear-cases">Remove all cases</button>` : ""}</div>`;
+  if (list.length) {
+    const res = list.map(caseResult);
+    const keys = [];
+    for (const c of list) for (const k of Object.keys(c.values)) if (!keys.includes(k) && k !== o.check) keys.push(k);
+    let gov = -1, best = null;
+    res.forEach((x, i) => {
+      if (x.error) return;
+      const m = x.eta != null ? x.eta : (o.sense === "resistance" ? -x.r.value : x.r.value);
+      if (best == null || m > best) { best = m; gov = i; }
     });
-    h += '</table></div>';
-    h += '<h3 style="margin-top:16px">Benchmarks</h3><p style="margin:0 0 8px">' + o.bench.agree + ' of ' + o.bench.total + ' source values are reproduced' +
-      (o.bench.deviation ? ', ' + o.bench.deviation + ' differ' : '') + (o.bench.not_comparable ? ', ' + o.bench.not_comparable + ' cannot be compared' : '') + '.</p>';
-    if (o.rows.length) {
-      h += '<div class="scroll"><table class="t"><tr><th>Source</th><th>Where</th><th>Source value</th><th>Unified logic</th><th></th><th>Remark</th></tr>';
-      o.rows.forEach(r => {
-        const k = r.per_width ? 1000 : 1, u = unitText(o.unit) + (r.per_width ? '/m' : '');
-        const val = x => typeof x === 'number' ? fmt(show(o.id, x) * k) + ' ' + u : (x === null || x === undefined ? '–' : String(x));
-        const cls = r.status === 'agree' ? 'ok' : (r.status === 'deviation' ? 'bad' : 'info');
-        h += '<tr><td>' + esc(r.source) + '</td><td>' + esc(r.where + (r.case ? ' · ' + r.case : '')) + '</td><td class="num">' + esc(val(r.expected)) + '</td><td class="num">' + esc(val(r.got)) +
-          '</td><td><span class="pill ' + cls + '">' + esc(r.status === 'agree' ? (r.kind === 'printed' ? 'within print rounding' : 'reproduced') : r.status) + '</span></td><td>' + esc(r.detail || '') + '</td></tr>';
-      });
-      h += '</table></div>';
-      if (o.bench.total > o.rows.length) h += '<p style="color:var(--muted);margin:6px 0 0">Showing ' + o.rows.length + ' of ' + o.bench.total + ' (differences first). The full list is in the object file.</p>';
-    }
-    h += '<h3 style="margin-top:16px">Independent reference</h3>';
-    if (o.reference && o.reference.status) {
-      const r = o.reference;
-      h += '<p class="note ' + (r.status === 'agrees' ? '' : 'b') + '">' + esc(r.status === 'agrees' ? 'Agrees' : 'Differs') + ' with ' + esc(r.library) + ' <code>' + esc(r.function) + '</code>: ' +
-        r.agreeing_samples + ' of ' + r.samples + ' random samples over the parameter range, largest relative difference ' + esc(String(r.max_relative_difference)) + '.' + (r.note ? ' ' + esc(r.note) + '.' : '') + '</p>';
-    } else h += '<p class="note">No open-source implementation of this clause is wired in yet.</p>';
-    const uses = o.params.filter(p => O[p]), usedBy = Object.values(O).filter(x => x.params.indexOf(o.id) >= 0);
-    h += '<h3 style="margin-top:16px">Connections</h3><div class="chips">' +
-      (uses.length ? '<span style="color:var(--muted)">uses</span>' + uses.map(p => '<button type="button" class="chip" data-open="' + p + '"><math>' + O[p].ml + '</math></button>').join('') : '') +
-      (usedBy.length ? '<span style="color:var(--muted)">used by</span>' + usedBy.map(x => '<button type="button" class="chip" data-open="' + x.id + '"><math>' + x.ml + '</math></button>').join('') : '') +
-      (!uses.length && !usedBy.length ? '<span style="color:var(--muted)">stands alone</span>' : '') + '</div>';
-    h += '<p style="color:var(--muted);font-size:12px;margin:12px 0 0">Object version ' + esc(o.version) + '</p>';
+    const head = keys.map(k => `<th><math>${symML(k)}</math><small>${esc(ulabel(unitOf(k)[0]))}</small></th>`).join("");
+    h += `<div class="scroll"><table class="cases"><tr><th>Case</th>${head}<th><math>${o.ml}</math><small>${esc(ulabel(unitOf(id)[0]))}</small></th>`
+      + (o.check ? `<th><math>${symML(o.check)}</math><small>${esc(ulabel(unitOf(o.check)[0]))}</small></th><th>η</th><th></th>` : "") + `<th></th></tr>`;
+    list.forEach((c, i) => {
+      const x = res[i];
+      const cells = keys.map(k => `<td>${k in c.values ? esc(fmt(shown(k, c.values[k]))) : "–"}</td>`).join("");
+      const val = x.error ? `<td class="bad">${esc(x.error)}</td>` : `<td>${esc(fmt(shown(id, x.r.value)))}</td>`;
+      const chk = o.check ? `<td>${c.check == null ? "–" : esc(fmt(shown(o.check, c.check)))}</td><td>${x.eta == null ? "–" : x.eta.toFixed(2)}</td><td>${x.eta == null ? "" : (x.eta <= 1 ? '<span class="ok">OK</span>' : '<span class="bad">NOT OK</span>')}</td>` : "";
+      h += `<tr class="${i === gov && list.length > 1 ? "gov" : ""}"><td><button class="give" type="button" data-load="${i}">${esc(c.name)}</button></td>${cells}${val}${chk}<td><button class="give" type="button" data-del="${i}" aria-label="remove ${esc(c.name)}">remove</button></td></tr>`;
+    });
+    h += `</table></div>`;
   }
-  $('#tab').innerHTML = h;
+  h += `<div id="tpl-box"></div>`;
+  $("#cases").innerHTML = h;
+}
+function yamlNum(id, v) {
+  const x = +(v / item(id).units[0][1]).toPrecision(8);
+  return Number.isInteger(x) || Math.abs(x) >= 1e-4 ? String(x) : x.toExponential(6);   // YAML reads 1.0e-07, not 1e-7
+}
+function templateYAML() {
+  const id = state.target, o = D.objects[id], w = W(id);
+  let list = cases();
+  if (!list.length) list = [currentCase("Case 1")];
+  const L = [`# Report template for ${o.text} (${o.ref}).`, `# Save as ${id}_report.yaml and run:`, `#   python -m ckb report --template ${id}_report.yaml --pdf`,
+    `title: ${o.name}`, `project: ''`, `number: ''`, `made_by: ''`, `checked_by: ''`, `style:`, `  decimals: ${S.decimals}`, `  min_significant: ${S.minsig}`];
+  const units = Object.entries(S.units).filter(([k]) => item(k));
+  L.push(`  units: {${units.map(([k, u]) => `${k}: ${u}`).join(", ")}}`);
+  L.push(`cases:          # values in the usual units: ${[...new Set(list.flatMap(c => Object.keys(c.values)))].map(k => `${k} [${item(k) ? item(k).units[0][0] : ""}]`).join(", ")}`);
+  for (const c of list) {
+    const cells = [`case: ${JSON.stringify(c.name)}`].concat(Object.entries(c.values).map(([k, v]) => `${k}: ${yamlNum(k, v)}`));
+    if (o.check && c.check != null) cells.push(`${o.check}: ${yamlNum(o.check, c.check)}`);
+    L.push(`  - {${cells.join(", ")}}`);
+  }
+  const show = Object.keys(w.show).filter(k => w.show[k]);
+  L.push(`blocks:`, `  - heading: ${o.name}`, `  - calc: ${id}`, `    case: governing          # governing | first | a case name`,
+    `    show: [${show.join(", ")}]`, `    steps: ${w.steps === "result" ? "result" : "all"}                # all | result | [k, rho_l, ...]`,
+    `    remarks: {}              # e.g. {d: "from drawing 123"}`, `    limitations: false`);
+  if (list.length > 1) L.push(`  - table: ${id}`, `    sort: ${o.check ? "utilisation desc" : ""}`);
+  const x = plan(id, w.given).inputs.find(p => D.quantities[p] && D.quantities[p].kind === "input");
+  if (x) L.push(`  - chart: ${id}`, `    x: ${x}`);
+  return L.join("\n") + "\n";
+}
+function currentCase(name) {
+  const id = state.target, w = W(id), vals = valuesFor(id), {inputs} = plan(id, w.given), values = {};
+  for (const p of inputs) {
+    const q = D.quantities[p];
+    if (w.entered.has(p) || !(q && q.kind === "coefficient")) values[p] = vals[p];
+  }
+  return {name, values, given: [...w.given], check: w.check};
 }
 
-/* ---------- overview ---------- */
+// ---------------------------------------------------------------- Design background
+const KINDS = [["scope", "Scope"], ["limitation", "Limitations"], ["pitfall", "Pitfalls"], ["guidance", "Guidance"], ["history", "History"]];
+function noteHTML(b) {
+  const refs = (b.refs || []).map(r => `<span title="${esc(r.text || D.references[r.id] || "")}">${esc(r.id)}${r.at ? " " + esc(r.at) : ""}</span>`).join("; ");
+  return `<div class="note ${esc(b.kind)}"><div>${esc(b.text)}</div>${refs ? `<div class="src">${refs}</div>` : ""}</div>`;
+}
+function renderBackground() {
+  const id = state.target, o = D.objects[id];
+  let h = "";
+  if (o.checks.length) h += `<h4>Conditions of application</h4><ul class="conds">${o.checks.map(c => `<li><span>${esc(c.text)} <span class="muted">(${esc(c.clause)})</span></span></li>`).join("")}</ul>`;
+  for (const [k, l] of KINDS) {
+    const notes = (o.background || []).filter(b => b.kind === k);
+    if (notes.length) h += `<h4>${l}</h4>` + notes.map(noteHTML).join("");
+  }
+  if (o.alternatives.length) h += `<h4>Alternatives the code permits</h4>` + o.alternatives.map(a => `<div class="note"><math><mrow>${o.ml}<mo>=</mo>${a.ml}</mrow></math><div class="src">${esc(a.when)}</div></div>`).join("");
+  const params = plan(id, new Set()).inputs.filter(p => D.quantities[p] && (D.quantities[p].background || []).length);
+  if (params.length) h += `<h4>Parameters</h4>` + params.map(p => `<div><b><math>${symML(p)}</math> ${esc(D.quantities[p].name)}</b>${D.quantities[p].background.map(noteHTML).join("")}</div>`).join("");
+  const shared = (o.refs || []);
+  const users = Object.values(D.objects).filter(x => x.params.includes(id));
+  h += `<h4>Where it is used</h4><ul class="small">`;
+  h += `<li>Defined in ${esc(o.ref)}.</li>`;
+  for (const r of shared) h += `<li>Also ${esc(r.code)} cl. ${esc(r.clause || "")}${r.symbol ? ` (written ${esc(r.symbol)})` : ""}: ${esc(r.how || "")}. Stored once; that code's values are applied when it is used there.</li>`;
+  if (users.length) h += `<li>Used by ${users.map(u => `<button class="give" type="button" data-open="${esc(u.id)}">${esc(u.text)}</button>`).join(", ")}.</li>`;
+  h += `</ul>`;
+  h += `<h4>Dependency map</h4><p class="small muted">What ${esc(o.text)} is calculated from. Click an object to open it.</p><div class="depmap" id="depmap"></div>`;
+  if (!h.includes("note")) h = `<p class="small muted">No design background recorded for this object yet.</p>` + h;
+  $("#panel").innerHTML = h;
+  drawDepMap();
+}
+function drawDepMap() {
+  const id = state.target, {steps, inputs} = plan(id, new Set());
+  const depth = {};
+  for (const p of inputs) depth[p] = 0;
+  for (const s of steps) depth[s] = 1 + Math.max(0, ...D.objects[s].params.filter(p => p in depth).map(p => depth[p]));
+  const cols = {};
+  for (const n of inputs.concat(steps)) (cols[depth[n]] = cols[depth[n]] || []).push(n);
+  const nCols = Math.max(...Object.keys(cols).map(Number)) + 1, rows = Math.max(...Object.values(cols).map(c => c.length));
+  const cw = 132, bw = 100, bh = 26, rh = 34, W = nCols * cw, H = rows * rh + 8, pos = {};
+  for (const [c, list] of Object.entries(cols)) list.forEach((n, i) => { pos[n] = [c * cw + 4, 4 + i * rh + (rows - list.length) * rh / 2]; });
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Dependency map of ${esc(D.objects[id].text)}">`;
+  for (const t of steps) for (const p of D.objects[t].params) {
+    if (!(p in pos)) continue;
+    const [x1, y1] = [pos[p][0] + bw, pos[p][1] + bh / 2], [x2, y2] = [pos[t][0], pos[t][1] + bh / 2], mx = (x1 + x2) / 2;
+    s += `<path d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}" fill="none" style="stroke:var(--rule)" stroke-width="1.5"/>`;
+  }
+  for (const [n, [x, y]] of Object.entries(pos)) {
+    const o = D.objects[n], isObj = !!o, cur = n === id;
+    const fill = cur ? "var(--accent-soft)" : (isObj ? "var(--surface)" : "var(--raised)");
+    s += `<g class="${isObj ? "node" : ""}" ${isObj ? `data-open="${esc(n)}" tabindex="0" role="button"` : ""}><title>${esc((item(n) || {}).name || n)}</title>`
+      + `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="4" style="fill:${fill};stroke:${cur ? "var(--accent)" : "var(--rule)"}" stroke-width="1"/>`
+      + (isObj ? `<circle cx="${x + 11}" cy="${y + bh / 2}" r="4" style="fill:var(--${conf(o).cls === "good" ? "good" : conf(o).cls === "warn" ? "warn" : "crit"})"/>` : "")
+      + `<text x="${x + (isObj ? 21 : 9)}" y="${y + bh / 2 + 4}" font-size="12" style="fill:var(--ink)">${esc(symText(n))}</text></g>`;
+  }
+  $("#depmap").innerHTML = s + "</svg>";
+}
+
+// ---------------------------------------------------------------- Chart (parameter study)
+function renderChart() {
+  const id = state.target, o = D.objects[id], w = W(id);
+  const {inputs, steps} = plan(id, w.given);
+  const nums = inputs.filter(p => item(p));
+  const c = w.chart;
+  if (!c.x || !nums.includes(c.x)) c.x = nums.find(p => D.quantities[p] && D.quantities[p].kind === "input") || nums[0];
+  const second = steps.filter(s => s !== id && D.objects[s].units[0][1] === o.units[0][1] && D.objects[s].unit === o.unit);
+  if (c.y2 && !second.includes(c.y2)) c.y2 = "";
+  const vals = valuesFor(id), x0 = vals[c.x], q = D.quantities[c.x];
+  let lo = c.lo, hi = c.hi;
+  if (lo == null || hi == null) {
+    if (q && q.range) { lo = q.range[0]; hi = q.range[1]; }
+    else { lo = 0.5 * (x0 || 1); hi = 1.5 * (x0 || 1); }
+    if (typeof x0 === "number") { lo = Math.min(lo, x0); hi = Math.max(hi, x0); }
+  }
+  const ux = unitOf(c.x)[0];
+  $("#panel").innerHTML = `<div class="ctrls">
+    <label>Vary<select id="cx">${nums.map(p => `<option value="${esc(p)}" ${p === c.x ? "selected" : ""}>${esc(symText(p))} – ${esc(item(p).name)}</option>`).join("")}</select></label>
+    <label>from [${esc(ulabel(ux))}]<input id="clo" inputmode="decimal" value="${esc(fmtShort(shown(c.x, lo)))}"></label>
+    <label>to [${esc(ulabel(ux))}]<input id="chi" inputmode="decimal" value="${esc(fmtShort(shown(c.x, hi)))}"></label>
+    <label>Also show<select id="cy2"><option value="">nothing else</option>${second.map(s => `<option value="${esc(s)}" ${s === c.y2 ? "selected" : ""}>${esc(D.objects[s].text)} – ${esc(D.objects[s].name)}</option>`).join("")}</select></label>
+  </div>
+  <p class="small muted">${esc(o.text)} as ${esc(item(c.x).name.toLowerCase())} varies; every other input as on the Calculate tab. The dot is the current calculation.</p>
+  <div id="chart"></div><details><summary>Values as a table</summary><div id="chart-table" class="scroll"></div></details>`;
+  drawSweep();
+}
+function drawSweep() {
+  const id = state.target, o = D.objects[id], w = W(id), c = w.chart, vals = valuesFor(id);
+  const xin = parseFloat(String($("#clo").value).replace(",", ".")), xhi = parseFloat(String($("#chi").value).replace(",", "."));
+  const f = unitOf(c.x)[1];
+  if (!(isFinite(xin) && isFinite(xhi) && xhi > xin)) return;
+  const lo = xin * f, hi = xhi * f, N = 80, xs = [], s1 = [], s2 = [];
+  for (let i = 0; i <= N; i++) {
+    const xv = lo + (hi - lo) * i / N, v = Object.assign({}, vals);
+    v[c.x] = xv;
+    try {
+      const r = evaluate(id, v, w.given);
+      xs.push(shown(c.x, xv)); s1.push(typeof r.value === "number" ? shown(id, r.value) : null);
+      if (c.y2) s2.push(shown(c.y2, r.env[c.y2]));
+    } catch (e) { /* outside the formula's domain */ }
+  }
+  const series = [{name: o.text, ys: s1, color: "var(--s1)"}];
+  if (c.y2) series.push({name: D.objects[c.y2].text, ys: s2, color: "var(--s2)"});
+  let cur = null;
+  try { const r = evaluate(id, vals, w.given); cur = [shown(c.x, vals[c.x]), shown(id, r.value)]; } catch (e) {}
+  const ref = o.check && w.check != null ? {label: symText(o.check), y: shown(o.check, w.check)} : null;
+  lineChart($("#chart"), {xs, series, xLabel: `${symText(c.x)} [${ulabel(unitOf(c.x)[0])}]`, yUnit: ulabel(unitOf(id)[0]), marker: cur, ref});
+  let t = `<table class="cases"><tr><th>${esc(symText(c.x))}</th>${series.map(s => `<th>${esc(s.name)}</th>`).join("")}</tr>`;
+  for (let i = 0; i < xs.length; i += 8) t += `<tr><td>${esc(fmt(xs[i]))}</td>${series.map(s => `<td>${esc(fmt(s.ys[i]))}</td>`).join("")}</tr>`;
+  $("#chart-table").innerHTML = t + "</table>";
+}
+function nice(lo, hi, n) {
+  if (!(hi > lo)) hi = lo + 1;
+  const raw = (hi - lo) / (n || 5), mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+  const out = [];
+  for (let t = Math.ceil(lo / step - 1e-9) * step; t <= hi + 1e-9 * step; t += step) out.push(+t.toPrecision(12));
+  return out;
+}
+const tick = v => Math.abs(v) >= 1000 || Number.isInteger(v) ? v.toFixed(0) : (+v.toPrecision(3)).toString();
+function lineChart(el, opt) {
+  const W = Math.max(320, el.clientWidth || 640), H = 300, ml = 58, mr = 16, mt = 14, mb = 42;
+  const pw = W - ml - mr, ph = H - mt - mb, xs = opt.xs;
+  if (!xs.length) { el.innerHTML = `<p class="small muted">No values in this range.</p>`; return; }
+  const ys = opt.series.flatMap(s => s.ys).filter(v => v != null && isFinite(v)).concat(opt.ref ? [opt.ref.y] : []);
+  let y0 = Math.min(0, ...ys), y1 = Math.max(...ys) * 1.08 || 1;
+  const yt = nice(y0, y1, 5); y0 = Math.min(y0, yt[0]); y1 = Math.max(y1, yt[yt.length - 1]);
+  const x0 = xs[0], x1 = xs[xs.length - 1], xt = nice(x0, x1, 6);
+  const sx = v => ml + (v - x0) / (x1 - x0 || 1) * pw, sy = v => mt + ph - (v - y0) / (y1 - y0 || 1) * ph;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opt.series.map(x => x.name).join(", "))} against ${esc(opt.xLabel)}">`;
+  for (const t of yt) s += `<line x1="${ml}" x2="${ml + pw}" y1="${sy(t)}" y2="${sy(t)}" style="stroke:var(--soft)" stroke-width="1"/><text x="${ml - 6}" y="${sy(t) + 4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${tick(t)}</text>`;
+  for (const t of xt) if (t >= x0 - 1e-9 && t <= x1 + 1e-9) s += `<text x="${sx(t)}" y="${mt + ph + 16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${tick(t)}</text>`;
+  s += `<line x1="${ml}" x2="${ml + pw}" y1="${mt + ph}" y2="${mt + ph}" style="stroke:var(--muted)" stroke-width="1"/>`;
+  s += `<text x="${ml + pw / 2}" y="${H - 6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">${esc(opt.xLabel)}</text>`;
+  s += `<text x="${ml - 50}" y="${mt + 2}" font-size="11" style="fill:var(--muted)">${esc(opt.yUnit ? "[" + opt.yUnit + "]" : "")}</text>`;
+  if (opt.ref) s += `<line x1="${ml}" x2="${ml + pw}" y1="${sy(opt.ref.y)}" y2="${sy(opt.ref.y)}" style="stroke:var(--ink)" stroke-width="1" stroke-dasharray="4 3"/><text x="${ml + pw - 2}" y="${sy(opt.ref.y) - 5}" text-anchor="end" font-size="11" style="fill:var(--ink)">${esc(opt.ref.label)} = ${esc(fmt(opt.ref.y))}</text>`;
+  for (const se of opt.series) {
+    let d = "";
+    se.ys.forEach((y, i) => { if (y != null && isFinite(y)) d += (d ? "L" : "M") + sx(xs[i]).toFixed(1) + "," + sy(y).toFixed(1); });
+    s += `<path d="${d}" fill="none" style="stroke:${se.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  if (opt.marker && isFinite(opt.marker[1])) s += `<circle cx="${sx(opt.marker[0])}" cy="${sy(opt.marker[1])}" r="5" style="fill:var(--s1);stroke:var(--surface)" stroke-width="2"/>`;
+  s += `<g id="hover" style="display:none"><line id="hx" y1="${mt}" y2="${mt + ph}" style="stroke:var(--muted)" stroke-width="1"/>${opt.series.map((se, k) => `<circle id="hd${k}" r="4.5" style="fill:${se.color};stroke:var(--surface)" stroke-width="2"/>`).join("")}</g>`;
+  s += `<rect x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent" id="hit"/></svg>`;
+  const key = opt.series.length > 1 ? `<div class="series-key">${opt.series.map(se => `<span><i style="background:${se.color}"></i>${esc(se.name)}</span>`).join("")}</div>` : "";
+  el.innerHTML = key + `<div class="chartbox">${s}</div>`;
+  const box = el.querySelector(".chartbox"), svg = box.querySelector("svg"), tip = $("#tip");
+  const move = ev => {
+    const r = svg.getBoundingClientRect(), k = W / r.width, px = (ev.clientX - r.left) * k;
+    let i = Math.round((px - ml) / pw * (xs.length - 1)); i = Math.max(0, Math.min(xs.length - 1, i));
+    const g = svg.querySelector("#hover"); g.style.display = "";
+    svg.querySelector("#hx").setAttribute("x1", sx(xs[i])); svg.querySelector("#hx").setAttribute("x2", sx(xs[i]));
+    opt.series.forEach((se, n) => { const c = svg.querySelector("#hd" + n), y = se.ys[i]; if (y == null) { c.style.display = "none"; return; } c.style.display = ""; c.setAttribute("cx", sx(xs[i])); c.setAttribute("cy", sy(y)); });
+    tip.innerHTML = `${esc(opt.xLabel)}: <b>${esc(fmt(xs[i]))}</b>` + opt.series.map(se => `<br><span style="color:${se.color}">━</span> ${esc(se.name)}: <b>${esc(fmt(se.ys[i]))}</b> ${esc(opt.yUnit)}`).join("");
+    showTip(ev, tip);
+  };
+  const hit = svg.querySelector("#hit");
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => { svg.querySelector("#hover").style.display = "none"; tip.style.display = "none"; });
+}
+function showTip(ev, tip) {
+  tip.style.display = "block";
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let x = ev.clientX + 14 + window.scrollX, y = ev.clientY - th - 10 + window.scrollY;
+  if (ev.clientX + 14 + tw > window.innerWidth - 8) x = ev.clientX - tw - 14 + window.scrollX;
+  if (ev.clientY - th - 10 < 4) y = ev.clientY + 16 + window.scrollY;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+
+// ---------------------------------------------------------------- Code
+function renderCode() {
+  const o = D.objects[state.target];
+  $("#panel").innerHTML = `<h4>Python code block</h4><p class="small muted">Design logic only: the expression, its clause and units, and one line that identifies the version.</p>
+    <pre class="code">${esc(o.python)}</pre>
+    <h4>The function this page runs</h4><pre class="code">${esc(F[o.id].toString())}</pre>
+    <h4>The same logic as a file</h4><p class="small">Every output is printed from the same formula tree and carries the version <code>${esc(o.version)}</code>:</p>
+    <pre class="code">python -m ckb excel ${esc(o.id)}            # Excel calculator, named ranges, live formulas
+python -m ckb mathcad ${esc(o.id)}          # Mathcad Prime worksheet
+python -m ckb report ${esc(o.id)} --pdf     # calculation report (or --template for many cases)
+python -m ckb verify &lt;file&gt;              # is this file still the same logic?</pre>`;
+}
+
+// ---------------------------------------------------------------- Status (evidence, out of the way)
+function renderStatus() {
+  const o = D.objects[state.target], c = conf(o), ev = o.ev, b = o.bench, ref = o.reference || {};
+  let h = `<h3>${dot(o)} ${esc(c.label)}</h3><ul class="small">${(o.conf.reasons || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+    <div class="tiles">
+      <div class="tile"><div class="v">${ev.sources}</div><div class="l">source files that apply it</div></div>
+      <div class="tile"><div class="v">${ev.formulas}</div><div class="l">formulas found in them</div></div>
+      <div class="tile"><div class="v">${b.total ? b.agree + " / " + b.total : "–"}</div><div class="l">source values reproduced</div></div>
+      <div class="tile"><div class="v">${esc(ref.status || "–")}</div><div class="l">independent reference</div></div>
+    </div>`;
+  if (ev.variants.length) {
+    h += `<h4>How the sources apply it</h4><div class="scroll"><table class="cases"><tr><th>Relation to the code</th><th>Formulas</th><th style="text-align:left">As written</th><th style="text-align:left">Differences</th></tr>`
+      + ev.variants.map(v => `<tr><td>${esc(v.relation || "")}</td><td>${v.instances}</td><td style="text-align:left;white-space:normal">${esc(v.text)}</td><td style="text-align:left;white-space:normal">${esc((v.differences || []).concat(v.reason ? [v.reason] : []).join("; "))}</td></tr>`).join("") + `</table></div>`;
+  }
+  if (ev.practice.length) h += `<h4>Practice seen in the sources</h4><ul class="small">${ev.practice.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`;
+  if (b.pts.length) h += `<h4>Benchmarks</h4><p class="small muted">Each dot is a value a source shows, against what the code expression gives for the same inputs. On the line: reproduced.</p><div id="bench"></div>`;
+  if (ref.library) h += `<h4>Independent reference</h4><p class="small">${esc(ref.status)} with ${esc(ref.library)} <code>${esc(ref.function || "")}</code> over ${ref.agreeing_samples || 0} of ${ref.samples || 0} samples.${ref.note ? " " + esc(ref.note) : ""}</p>`;
+  h += `<h4>Use</h4><p class="small muted">Version ${esc(o.version)}. Uses and ratings are not recorded in this single-file copy; a shared deployment (an internal server or Azure) can count downloads and collect ratings per object.</p>`;
+  $("#panel").innerHTML = h;
+  if (b.pts.length) drawBench(o);
+}
+function drawBench(o) {
+  const el = $("#bench"), W = Math.max(300, Math.min(560, el.clientWidth || 480)), H = W * 0.72, m = 52, pw = W - m - 14, ph = H - 14 - 40;
+  const f = o.units[0][1], u = o.units[0][0];
+  const pts = o.bench.pts.map(p => [p[0] / f * (p[3] ? 1000 : 1), p[1] / f * (p[3] ? 1000 : 1), p[2], p[4], p[5], p[6], p[3]]);
+  const all = pts.flatMap(p => [p[0], p[1]]);
+  let lo = Math.min(0, ...all), hi = Math.max(...all) * 1.05 || 1;
+  const t = nice(lo, hi, 5); lo = Math.min(lo, t[0]); hi = Math.max(hi, t[t.length - 1]);
+  const sx = v => m + (v - lo) / (hi - lo) * pw, sy = v => 14 + ph - (v - lo) / (hi - lo) * ph;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Source values against code values">`;
+  for (const v of t) s += `<line x1="${m}" x2="${m + pw}" y1="${sy(v)}" y2="${sy(v)}" style="stroke:var(--soft)"/><text x="${m - 6}" y="${sy(v) + 4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${tick(v)}</text><text x="${sx(v)}" y="${14 + ph + 16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${tick(v)}</text>`;
+  s += `<line x1="${sx(lo)}" y1="${sy(lo)}" x2="${sx(hi)}" y2="${sy(hi)}" style="stroke:var(--muted)" stroke-width="1"/>`;
+  pts.forEach((p, i) => { s += `<circle data-i="${i}" cx="${sx(p[0])}" cy="${sy(p[1])}" r="4.5" style="fill:${p[2] === "agree" ? "var(--s1)" : "var(--s2)"};stroke:var(--surface)" stroke-width="2"/>`; });
+  s += `<text x="${m + pw / 2}" y="${H - 6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">value in the source [${esc(u)}${pts.some(p => p[6]) ? " or " + esc(u) + "/m" : ""}]</text>`;
+  s += `<text x="${m - 46}" y="10" font-size="11" style="fill:var(--muted)">code</text></svg>`;
+  el.innerHTML = `<div class="series-key"><span><i style="background:var(--s1);height:8px;width:8px;border-radius:50%"></i>reproduced</span><span><i style="background:var(--s2);height:8px;width:8px;border-radius:50%"></i>differs</span></div><div class="chartbox" style="max-width:${W}px">${s}</div>`;
+  const svg = el.querySelector("svg"), tip = $("#tip");
+  svg.addEventListener("pointermove", ev => {
+    const r = svg.getBoundingClientRect(), k = W / r.width, px = (ev.clientX - r.left) * k, py = (ev.clientY - r.top) * k;
+    let best = -1, bd = 14 * 14;
+    pts.forEach((p, i) => { const d = (sx(p[0]) - px) ** 2 + (sy(p[1]) - py) ** 2; if (d < bd) { bd = d; best = i; } });
+    if (best < 0) { tip.style.display = "none"; return; }
+    const p = pts[best];
+    tip.innerHTML = `${esc(p[3])} ${esc(p[4])}<br>source <b>${esc(fmt(p[0]))}</b> · code <b>${esc(fmt(p[1]))}</b>${p[5] ? "<br>" + esc(p[5]).slice(0, 120) : ""}`;
+    showTip(ev, tip);
+  });
+  svg.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+}
+
+// ---------------------------------------------------------------- Overview
 function renderOverview() {
-  state.view = 'overview'; renderTree();
-  const objs = Object.values(O), n = s => objs.filter(o => o.status === s).length;
-  const withRef = objs.filter(o => o.reference && o.reference.status === 'agrees').length;
-  const src = KB.sources;
-  let h = '<section class="head"><h2>Sources and coverage</h2><p class="ref">' + esc(KB.meta.title || '') + ' · ' + esc(KB.meta.branch || '') + '</p></section>';
-  h += '<section class="panel"><h3>What the knowledge base holds</h3><div class="cols">' +
-    '<div class="stat"><b>' + objs.length + '</b><span>calculation objects</span></div>' +
-    '<div class="stat"><b>' + (n('consensus') + n('unified')) + '</b><span>confirmed by two or more independent sources</span></div>' +
-    '<div class="stat"><b>' + n('single source') + '</b><span>seen in one source only</span></div>' +
-    '<div class="stat"><b>' + n('disagreement') + '</b><span>where sources disagree</span></div>' +
-    '<div class="stat"><b>' + withRef + '</b><span>agree with the independent reference' + (KB.meta.reference_library ? ' (' + esc(KB.meta.reference_library) + ')' : '') + '</span></div>' +
-    '<div class="stat"><b>' + objs.reduce((a, o) => a + o.bench.total, 0) + '</b><span>source values used as benchmarks</span></div></div></section>';
-  h += '<section class="panel"><h3>Sources</h3><div class="scroll"><table class="t"><tr><th>Source</th><th>Converted with</th><th>Statements</th><th>Formulas re-evaluated</th><th>Recognised</th><th>Formulas of code quantities</th><th>Remark</th></tr>';
-  src.forEach(s => {
-    const rem = [];
-    if (s.stored_results) rem.push(s.stored_results.agree + ' of ' + s.stored_results.compared + ' results stored by Mathcad reproduced');
-    if (s.print_of) rem.push('a print of ' + s.print_of + ': benchmark only, not an independent source');
-    if (s.printed_values) rem.push(s.printed_values + ' printed quantities');
-    h += '<tr><td>' + esc(s.label) + '</td><td>' + esc(s.converter) + '</td><td class="num">' + s.statements + '</td><td class="num">' + (s.formulas ? s.formulas_verified + ' of ' + s.formulas + ' reproduce the source' : '–') +
-      '</td><td class="num">' + s.recognised + '</td><td class="num">' + s.instances + '</td><td>' + esc(rem.join('; ')) + '</td></tr>';
-  });
-  h += '</table></div></section>';
-  h += '<section class="panel"><h3>Objects by status</h3><div class="scroll"><table class="t"><tr><th>Object</th><th>Clause</th><th>Status</th><th>Sources</th><th>Benchmarks</th><th>Reference</th></tr>';
-  objs.forEach(o => {
-    h += '<tr><td><button type="button" class="chip" data-open="' + o.id + '"><math>' + o.ml + '</math></button> ' + esc(o.name) + '</td><td>' + esc(o.ref) + '</td><td><span class="pill ' + statusClass(o.status) + '">' + esc(statusText(o.status)) + '</span></td><td class="num">' +
-      (o.support.sources || 0) + '</td><td class="num">' + o.bench.agree + ' / ' + o.bench.total + '</td><td>' + esc(o.reference && o.reference.status ? o.reference.status : '–') + '</td></tr>';
-  });
-  h += '</table></div></section>';
-  $('#main').innerHTML = h;
+  const objs = Object.values(D.objects), n = {high: 0, medium: 0, low: 0};
+  for (const o of objs) n[(o.conf || {}).level || "medium"]++;
+  let h = `<section class="card"><h3>What this is</h3><p class="small">Design-code expressions as small calculation objects, written from the codes themselves and checked against how real calculation files apply them. Pick a quantity on the left or search for it; every calculation shows its equations, substituted values and the code's conditions. The evidence behind each object is on its Status tab.</p>
+    <div class="tiles"><div class="tile"><div class="v">${objs.length}</div><div class="l">calculation objects</div></div>
+      <div class="tile"><div class="v">${Object.keys(D.quantities).length}</div><div class="l">parameters</div></div>
+      <div class="tile"><div class="v">${D.codes.length}</div><div class="l">codes</div></div>
+      <div class="tile"><div class="v">${D.sources}</div><div class="l">source files distilled</div></div></div></section>`;
+  h += `<section class="card"><h3>Coverage and confidence by chapter</h3>
+    <div class="series-key"><span><i class="dot good" style="width:9px;height:9px"></i>checked (${n.high})</span><span><i class="dot warn" style="width:9px;height:9px"></i>not yet checked (${n.medium})</span><span><i class="dot crit" style="width:9px;height:9px"></i>review needed (${n.low})</span></div>
+    <div class="bars" id="bars" style="margin-top:8px"></div></section>`;
+  h += `<section class="card"><h3>Codes and what they share</h3><div class="scroll"><table class="cases"><tr><th>Code</th><th style="text-align:left">Title</th><th>Objects</th><th>Shared</th><th style="text-align:left">Values it fixes</th></tr>`
+    + D.codes.map(c => {
+      const own = objs.filter(o => o.code === c.code).length, sh = objs.filter(o => (o.refs || []).some(r => r.code === c.code)).length;
+      const fx = Object.entries(c.fixed || {}).map(([k, v]) => `${symText(k)} = ${fmtShort(v)}`).join(", ");
+      return `<tr><td>${esc(c.code)}</td><td style="text-align:left;white-space:normal">${esc(c.title || "")}</td><td>${own}</td><td>${sh}</td><td style="text-align:left">${esc(fx || "–")}</td></tr>`;
+    }).join("") + `</table></div>
+    <p class="small muted">A later code that writes an expression already stored (EN 1994-1-1 f_cd = f_ck/γ_C) is linked to the existing object as a special case, with its own fixed values (α_cc = 1), so no formula is stored twice.</p></section>`;
+  $("#main").innerHTML = h;
+  // bars: one row per chapter, segments by confidence
+  const groups = [];
+  for (const c of D.codes) {
+    const by = {};
+    for (const o of objs.filter(o => o.code === c.code)) { const k = o.topic.split(".").slice(0, 2).join("."); (by[k] = by[k] || {high: 0, medium: 0, low: 0, ids: []})[(o.conf || {}).level || "medium"]++; by[k].ids.push(o.id); }
+    for (const k of Object.keys(by).sort(cmpTopic)) groups.push({label: `${c.code.replace("EN ", "")} · ${topicTitle(c.code, k)}`, ...by[k]});
+  }
+  const max = Math.max(...groups.map(g => g.high + g.medium + g.low));
+  $("#bars").innerHTML = groups.map((g, i) => {
+    const segs = [["high", "good", "checked"], ["medium", "warn", "not yet checked"], ["low", "crit", "review needed"]].filter(([k]) => g[k])
+      .map(([k, cls, l]) => `<span class="seg" data-g="${i}" data-l="${l}" data-n="${g[k]}" style="width:${g[k] / max * 100}%;background:var(--${cls})"></span>`).join("");
+    return `<div class="row"><div class="lab" title="${esc(g.label)}">${esc(g.label)}</div><div class="track">${segs}<span class="n">${g.high + g.medium + g.low}</span></div></div>`;
+  }).join("");
+  const tip = $("#tip");
+  for (const sg of document.querySelectorAll("#bars .seg")) {
+    sg.addEventListener("pointermove", ev => { const g = groups[+sg.dataset.g]; tip.innerHTML = `${esc(g.label)}<br><b>${sg.dataset.n}</b> ${esc(sg.dataset.l)}`; showTip(ev, tip); });
+    sg.addEventListener("pointerleave", () => { tip.style.display = "none"; });
+  }
 }
 
-/* ---------- events ---------- */
-let titleBlock = {};
-try { titleBlock = JSON.parse(localStorage.getItem('ckb-titleblock') || '{}'); } catch (e) { titleBlock = {}; }
-function copy(text, where) {
-  const done = ok => { const n = $(where); if (n) { n.textContent = ok ? 'Copied' : 'Select the text and copy it'; setTimeout(() => { n.textContent = ''; }, 2500); } };
-  try { navigator.clipboard.writeText(text).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+// ---------------------------------------------------------------- settings
+function renderSettings() {
+  $("#set-dec").innerHTML = [0, 1, 2, 3, 4].map(d => `<option ${d === S.decimals ? "selected" : ""}>${d}</option>`).join("");
+  $("#set-sig").innerHTML = [2, 3, 4].map(d => `<option ${d === S.minsig ? "selected" : ""}>${d}</option>`).join("");
+  let ids = [];
+  if (state.view === "object") { const w = W(state.target), p = plan(state.target, w.given); ids = p.steps.slice().reverse().concat(p.inputs); if (D.objects[state.target].check) ids.push(D.objects[state.target].check); }
+  ids = ids.filter((x, i) => ids.indexOf(x) === i && item(x) && item(x).units.length > 1);
+  $("#set-units").innerHTML = ids.length ? ids.map(i => `<div class="setrow"><span><math>${symML(i)}</math> ${esc(item(i).name)}</span><select data-unit="${esc(i)}">${item(i).units.map(u => `<option ${u[0] === unitOf(i)[0] ? "selected" : ""}>${esc(u[0])}</option>`).join("")}</select></div>`).join("")
+    : `<p class="muted">Open a calculation to choose its units.</p>`;
 }
-document.addEventListener('click', ev => {
-  const t = ev.target.closest('button'); if (!t) return;
-  if (t.id === 'ovw') return renderOverview();
-  if (t.dataset.id) return select(t.dataset.id);
-  if (t.dataset.open) return select(t.dataset.open);
-  if (t.dataset.tab) { state.tab = t.dataset.tab; return renderObject(); }
-  if (t.dataset.give) {
-    const g = t.dataset.give, r = state.last, st = r && r.steps.find(s => s.id === g);
-    state.given[state.id][g] = true; if (st && typeof st.value === 'number') state.vals[g] = st.value;
-    state.ex[state.id] = -1; renderInputs(); renderSheet(); return;
-  }
-  if (t.dataset.calc) {
-    delete state.given[state.id][t.dataset.calc];
-    plan(state.id, state.given[state.id]).inputs.forEach(p => { if (state.vals[p] === undefined) state.vals[p] = startValue(p); });
-    state.ex[state.id] = -1; renderInputs(); renderSheet(); return;
-  }
-  if (t.id === 'copycalc') return copy(calcText(), '#copied');
-  if (t.id === 'copypy') return copy(O[state.id].python, '#copied2');
-  if (t.id === 'print') return window.print();
-});
-document.addEventListener('input', ev => {
-  const t = ev.target;
-  if (t.id === 'q') return renderTree();
-  if (t.dataset && t.dataset.p) {
-    const p = t.dataset.p, v = parseFloat(t.value);
-    state.vals[p] = Number.isNaN(v) ? undefined : v * item(p).factor;
-    if (state.ex[state.id] !== -1) { state.ex[state.id] = -1; const s = $('#ex'); if (s) s.value = '-1'; }
-    return renderSheet();
-  }
-  if (t.id === 'chk') {
-    const v = parseFloat(t.value); const c = item(O[state.id].check);
-    state.check[state.id] = Number.isNaN(v) ? undefined : v * c.factor;
-    const pos = t.selectionStart; renderSheet(); const n = $('#chk'); if (n) { n.focus(); }
+
+// ---------------------------------------------------------------- events
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("button, [data-open]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.id) { open(d.id); return; }
+  if (d.open) { open(d.open); return; }
+  if (d.code) { state.code = d.code; store.set("code", d.code); renderCodes(); renderTree(); return; }
+  if (d.tab) { state.tab = d.tab; renderMain(); return; }
+  const id = state.target;
+  if (d.set) { const w = W(id); w.values[d.set] = +d.v; w.entered.add(d.set); saveWork(id); renderInputs(); renderSheet(); return; }
+  if (d.give) { const w = W(id), r = evaluate(id, valuesFor(id), w.given); w.given.add(d.give); w.values[d.give] = r.env[d.give]; w.entered.add(d.give); saveWork(id); renderInputs(); renderSheet(); return; }
+  if (d.ungive) { const w = W(id); w.given.delete(d.ungive); w.entered.delete(d.ungive); saveWork(id); renderInputs(); renderSheet(); return; }
+  if (d.load) { const c = cases()[+d.load], w = W(id); w.values = Object.assign({}, c.values); w.entered = new Set(Object.keys(c.values)); w.given = new Set(c.given || []); w.check = c.check; saveWork(id); renderCalc(); return; }
+  if (d.del) { const l = cases(); l.splice(+d.del, 1); setCases(l); renderCases(); return; }
+  if (t.id === "ovw") { state.view = "overview"; renderTree(); renderMain(); return; }
+  if (t.id === "reset") { const w = W(id); w.values = {}; w.entered = new Set(); w.given = new Set(); w.check = null; saveWork(id); renderInputs(); renderSheet(); return; }
+  if (t.id === "add-case") { const l = cases(); l.push(currentCase(`Case ${l.length + 1}`)); setCases(l); renderCases(); return; }
+  if (t.id === "clear-cases") { setCases([]); renderCases(); return; }
+  if (t.id === "tpl") {
+    $("#tpl-box").innerHTML = `<h4>Report template</h4><p class="small muted">Copy this into a file and run the command in its first lines. Change the cases, what is shown, units and remarks there; the report is regenerated from the knowledge base every time.</p>
+      <textarea class="yaml" id="yaml" spellcheck="false" readonly>${esc(templateYAML())}</textarea><button class="btn small" type="button" id="copy">Copy</button> <span id="copied" class="small muted"></span>`;
     return;
   }
-  if (t.dataset && t.dataset.tb) {
-    titleBlock[t.dataset.tb] = t.value;
-    try { localStorage.setItem('ckb-titleblock', JSON.stringify(titleBlock)); } catch (e) { /* storage unavailable */ }
+  if (t.id === "copy") {
+    const ta = $("#yaml"); ta.select();
+    let ok = false;
+    try { navigator.clipboard.writeText(ta.value).then(() => { $("#copied").textContent = "copied"; }, () => { $("#copied").textContent = "selected: press Ctrl+C"; }); ok = true; } catch (e) {}
+    if (!ok) $("#copied").textContent = "selected: press Ctrl+C";
+    return;
   }
+  if (t.id === "settings-btn") { renderSettings(); try { $("#settings").showModal(); } catch (e) { $("#settings").setAttribute("open", ""); } return; }
+  if (t.id === "set-close") { $("#settings").close(); return; }
+  if (t.id === "set-reset") { S.decimals = 2; S.minsig = 3; S.units = {}; store.set("style", S); renderSettings(); renderMain(); return; }
 });
-document.addEventListener('change', ev => {
-  if (ev.target.id === 'ex') {
-    const k = parseInt(ev.target.value, 10);
-    if (k >= 0) loadExample(state.id, k); else state.ex[state.id] = -1;
-    plan(state.id, state.given[state.id]).inputs.forEach(p => { if (state.vals[p] === undefined) state.vals[p] = startValue(p); });
-    renderInputs(); renderSheet();
+document.addEventListener("keydown", ev => {
+  const t = ev.target.closest && ev.target.closest("[data-open]");
+  if (t && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); open(t.dataset.open); }
+});
+document.addEventListener("input", ev => {
+  const t = ev.target;
+  if (t.id === "q") { state.q = t.value; renderTree(); return; }
+  if (t.dataset.in) {
+    const id = state.target, o = D.objects[id], w = W(id), p = t.dataset.in;
+    const raw = t.value.trim().replace(",", ".");
+    const v = parseFloat(raw);
+    if (raw === "" && p === o.check) { w.check = null; saveWork(id); renderSheet(); return; }
+    if (!isFinite(v)) return;
+    const c = v * unitOf(p)[1];
+    if (p === o.check) w.check = c; else { w.values[p] = c; w.entered.add(p); }
+    saveWork(id); renderSheet();
+    // refresh this row's hints (recommended, usual range) without re-rendering the inputs
+    const row = t.closest(".inp"), tmp = document.createElement("div");
+    tmp.innerHTML = inputRow(p, c, p === o.check);
+    const old = row.querySelector(".hint"), nu = tmp.querySelector(".hint");
+    if (old && nu) old.replaceWith(nu); else if (old) old.remove(); else if (nu) row.appendChild(nu);
+    return;
   }
+  if (t.id === "clo" || t.id === "chi") { const w = W(state.target), f = unitOf(w.chart.x)[1]; const a = parseFloat($("#clo").value.replace(",", ".")), b = parseFloat($("#chi").value.replace(",", ".")); if (isFinite(a) && isFinite(b)) { w.chart.lo = a * f; w.chart.hi = b * f; } drawSweep(); return; }
 });
+document.addEventListener("change", ev => {
+  const t = ev.target;
+  if (t.dataset.show) { const w = W(state.target); w.show[t.dataset.show] = t.checked; saveWork(state.target); renderSheet(); return; }
+  if (t.id === "only-result") { const w = W(state.target); w.steps = t.checked ? "result" : "all"; saveWork(state.target); renderSheet(); return; }
+  if (t.dataset.unit) { S.units[t.dataset.unit] = t.value; store.set("style", S); if ($("#settings").open) renderSettings(); renderMain(); return; }
+  if (t.id === "set-dec") { S.decimals = +t.value; store.set("style", S); renderMain(); return; }
+  if (t.id === "set-sig") { S.minsig = +t.value; store.set("style", S); renderMain(); return; }
+  if (t.id === "cx") { const w = W(state.target); w.chart = {x: t.value, y2: w.chart.y2}; renderChart(); return; }
+  if (t.id === "cy2") { W(state.target).chart.y2 = t.value; drawSweep(); return; }
+});
+let rz = null;
+window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (state.view === "object" && state.tab === "chart") drawSweep(); }, 150); });
 
+// ---------------------------------------------------------------- start
 (function start() {
-  const objs = Object.values(O);
-  const indep = KB.sources.filter(s => !s.print_of).length;
-  $('#tagline').textContent = objs.length + ' calculation objects distilled from ' + KB.sources.length + ' source file' + (KB.sources.length === 1 ? '' : 's') +
-    ' (' + indep + ' independent) · ' + (KB.meta.code || '') + ' · units inside: ' + (KB.meta.units || '');
-  if (!objs.length) { $('#main').innerHTML = '<section class="panel">The knowledge base is empty. Put source files in the inbox and run the build.</section>'; return; }
-  const rank = o => (o.status === 'unified' ? 0 : o.status === 'consensus' ? 1 : 2) * 1e6 - (o.support.formula_instances || 0) - o.params.length;
-  select(objs.slice().sort((a, b) => rank(a) - rank(b))[0].id);
+  const nObj = Object.keys(D.objects).length;
+  $("#sub").textContent = `${nObj} objects from ${D.codes.map(c => c.code).join(" and ")}: expressions from the codes, checked against ${D.sources} calculation file${D.sources === 1 ? "" : "s"}`;
+  if (!D.codes.some(c => c.code === state.code)) state.code = "all";
+  renderCodes(); renderTree(); renderMain();
 })();
-</script>
-"""
+</script>"""

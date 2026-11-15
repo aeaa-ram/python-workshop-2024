@@ -215,7 +215,8 @@ def build(inbox: Path, workspace: Path, kb_dir: Path, *, anonymous: bool = False
                "built_from": f"{len(out.docs)} source file(s)"}
     kb.references = dict(tax.references)
     for code in tax.codes:
-        topics = [{"id": tid, "title": t["title"]} for (cd, tid), t in tax.topics.items() if cd == code["code"]]
+        topics = [{"id": tid, "title": t["title"], **({"keywords": t["keywords"]} if t.get("keywords") else {})}
+                  for (cd, tid), t in tax.topics.items() if cd == code["code"]]
         kb.codes.append(dict(code, topics=topics, fixed=tax.fixed_for(code["code"])))
     for doc, dec in zip(out.docs, out.decs):
         s, d = doc.summary(), dec.summary()

@@ -2,8 +2,8 @@
 
     python -m ckb run V_Rd_c
 
-Each input is asked for with its unit and a starting value taken from a real
-source case; pressing Enter keeps it.  The answer is the self-documenting
+Each input is asked for with its unit and a starting value (the recommended
+value of a coefficient, an example value otherwise); pressing Enter keeps it.  The answer is the self-documenting
 calculation as text.
 """
 from __future__ import annotations
@@ -14,7 +14,8 @@ from .calc import parse_assignments, run, starting_values
 from .report import render_text
 
 
-def ask(kb: KnowledgeBase, target: str, preset: dict | None = None, given=(), read=input, write=print):
+def ask(kb: KnowledgeBase, target: str, preset: dict | None = None, given=(), read=input, write=print,
+        style=None):
     values, origin = starting_values(kb, target, given)
     values.update(preset or {})
     _, inputs = kb.plan(target, given)
@@ -49,7 +50,7 @@ def ask(kb: KnowledgeBase, target: str, preset: dict | None = None, given=(), re
                 check = kb.from_display(obj.check, float(answer.replace(",", ".")))
             except ValueError:
                 write("    not a number; no check made")
-    res = run(kb, target, values, given, origin, check)
+    res = run(kb, target, values, given, origin, check, style)
     write("")
     write(render_text(kb, res))
     return res

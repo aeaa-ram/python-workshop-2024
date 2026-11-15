@@ -8,6 +8,7 @@ or when a new model has regenerated the code blocks:
     formula      the stored formula still gives the stored benchmark results
     version      the object was not edited without its version changing
     code block   the generated Python function gives the same numbers as the object
+                 and carries the object's version
     reference    the object still agrees with the independent library
     dependencies every quantity an object uses exists, and nothing is circular
 """
@@ -49,7 +50,7 @@ def check(kb: KnowledgeBase, kb_dir: Path | None = None) -> dict:
     package = _load_package(Path(kb_dir) / "python" / "ckb_objects") if kb_dir else None
     rows = []
     for oid, o in kb.objects.items():
-        row = {"object": oid, "symbol": o.text, "status": o.status, "problems": []}
+        row = {"object": oid, "symbol": o.text, "confidence": o.confidence.get("level", ""), "problems": []}
         # dependencies
         try:
             steps, inputs = kb.plan(oid)
@@ -82,15 +83,18 @@ def check(kb: KnowledgeBase, kb_dir: Path | None = None) -> dict:
             row["problems"].append(f"{bad} of {n} stored benchmark results are no longer reproduced")
         # generated code block
         fn = getattr(package, o.var or oid, None) if package else None
-        if package is not None and o.examples:
-            ex = o.examples[0]
+        start = kb.defaults(oid) if steps else {}
+        if package is not None and start and len(start) == len(inputs):
             try:
-                want, trace = kb.evaluate(oid, ex["inputs"], given=tuple(ex.get("given", [])))
-                env = dict(ex["inputs"])
+                want, trace = kb.evaluate(oid, start)
+                env = {**start, **o.fixed}
                 for st in trace:
                     env[st.id] = st.value
                 module = sys.modules.get(f"ckb_objects_healthcheck.{oid}")
                 func = getattr(module, o.var or oid, None) if module else fn
+                source = Path(module.__file__).read_text(encoding="utf-8") if module else ""
+                if module and f"# ckb {oid} {o.version}" not in source:
+                    row["problems"].append("the generated code block carries another version (regenerate it)")
                 got = func(*[env[p] for p in o.params]) if func else None
                 row["code_block"] = "ok" if got is not None and close(got, want, rel=1e-12) else "differs"
                 if row["code_block"] != "ok":

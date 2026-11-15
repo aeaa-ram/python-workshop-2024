@@ -37,13 +37,15 @@ def test_every_formula_reproduces_its_source(real):
             assert r["compared"] > 20 and r["agree"] == r["compared"]
 
 
-def test_shear_resistance_is_distilled_and_confirmed(real):
+def test_shear_resistance_is_the_code_expression_and_confirmed(real):
     o = real.kb.objects["V_Rd_c"]
     assert X.same(o.tree, X.parse(
         "max((C_Rd_c * k * (100 * rho_l * f_ck) ** (1 / 3) + k_1 * sigma_cp) * b_w * d, V_Rd_c_min)"))
-    assert o.status == "unified" and o.support["sources"] >= 2
-    assert o.reference.get("status") == "agrees"
-    assert any(e["matches_source"] for e in o.examples)
+    assert o.confidence["level"] == "high" and o.evidence["sources"] >= 2
+    assert o.reference.get("status") == "agrees" and o.benchmarks["agree"] > 0
+    # the code expression keeps α_cc even though the sources leave it out
+    assert "alpha_cc" in real.kb.objects["f_cd"].params
+    assert any("α_cc" in b["text"] for b in real.kb.objects["f_cd"].background)
 
 
 def test_a_pdf_of_a_worksheet_is_a_benchmark_not_a_second_source(real):
