@@ -908,7 +908,7 @@ async function download(kind) {
       text = (await saveFile(`${id}_calculator.xlsx`, bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) || `Excel calculator ${how}.`;
     } else if (kind === "mcdx") {
       const [name, bytes, mime] = await mathcadFile(id);
-      text = name ? ((await saveFile(name, bytes, mime)) || "Mathcad Prime worksheet with example inputs" + (name.endsWith(".zip") ? " (unzip it first)." : ".")) : "The zip library did not load; try again later.";
+      text = name ? ((await saveFile(name, bytes, mime)) || "Mathcad Prime worksheet with example inputs" + (name.endsWith(".zip") ? ". It comes in a zip: right-click it, Extract All, then open the .mcdx in Mathcad (Mathcad cannot open the zip itself)." : ".")) : "The zip library did not load; try again later.";
     } else {
       text = (await saveFile(`${id}_calculation.html`, reportHTML(id), "text/html")) || "Open the page in your browser and print it to PDF.";
     }

@@ -12,14 +12,18 @@ dimensionless (f_ck/MPa) and where the result needs its unit back (·MPa), so th
 worksheet gives the same numbers as the knowledge base.
 
 The written file is read back with ``mcad2py`` and evaluated before it is handed out
-(``verify``).  It follows the structure of worksheets saved by Mathcad Prime 9; it has
-not been opened in Mathcad itself in this environment.
+(``verify``).  The package copies what Mathcad Prime 9 writes when it saves a worksheet:
+the version block in docProps/app.xml (Prime refuses a file without it: "The file type is
+not supported"), header and footer parts, a result entry for every math region, the part
+order and compression.  Mathcad itself does not run in this environment, so the check here
+is structural: every part parses, the package opens as OPC, and mcad2py reads it back.
 """
 from __future__ import annotations
 
 import datetime as _dt
 import io
 import json
+import math
 import re
 import uuid
 import zipfile
@@ -376,39 +380,105 @@ _NS = ('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
        'xmlns:u="http://schemas.mathsoft.com/units10" xmlns:p="http://schemas.mathsoft.com/provenance10" '
        'xmlns="http://schemas.mathsoft.com/worksheet50"')
 
+_BOM = "﻿"
+_DECL = '<?xml version="1.0" encoding="utf-8"?>'
+
+
+def _part(xml: str) -> bytes:
+    """A package part as Mathcad writes it: byte-order mark and declaration."""
+    return (_BOM + _DECL + xml).encode("utf-8")
+
+
+def _rid() -> str:
+    return "R" + uuid.uuid4().hex[:16]
+
+
 _XAML = ('<Section xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xml:space="preserve" '
-         'TextAlignment="Left" FontFamily="Segoe UI" FontSize="{size}" Foreground="#FF000000">'
-         '<Paragraph Margin="0,0,0,0"><Run FontWeight="{weight}">{text}</Run></Paragraph></Section>')
+         'TextAlignment="Left" LineHeight="Auto" IsHyphenationEnabled="False" xml:lang="en-us" '
+         'FlowDirection="LeftToRight" FontFamily="Tahoma" FontStyle="Normal" FontWeight="Normal" FontStretch="Normal" '
+         'FontSize="14.6666666666667" Foreground="#FF000000"><Paragraph Margin="0,0,0,0"><Run FontFamily="Verdana" '
+         'FontWeight="{weight}" FontSize="{size}">{text}</Run></Paragraph></Section>')
+_FLOW = ('<FlowDocument FontFamily="Tahoma" FontStyle="Normal" FontWeight="Normal" FontSize="14.6666666666667" '
+         'Foreground="#FF000000" Background="#00FFFFFF" TextAlignment="Left" xml:lang="en-us" '
+         'Typography.Variants="Normal" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" />')
 
 
 def _xaml_package(text: str, size: float = 13.3333333333333, weight: str = "Normal") -> bytes:
+    """A text region's content: a small package of its own, laid out like the ones Mathcad saves."""
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.'
-                   'openxmlformats.org/package/2006/content-types"><Default Extension="xaml" ContentType="application/'
-                   'vnd.ms-wpf.xaml+xml" /><Default Extension="rels" ContentType="application/vnd.openxmlformats-'
-                   'package.relationships+xml" /></Types>')
-        z.writestr("_rels/.rels", '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.'
-                   'openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.microsoft.com/'
-                   f'wpf/2005/10/xaml/entry" Target="/Xaml/Document.xaml" Id="R{uuid.uuid4().hex[:16]}" />'
-                   '</Relationships>')
-        z.writestr("Xaml/Document.xaml", _XAML.format(text=escape(text), size=size, weight=weight))
+    with zipfile.ZipFile(buf, "w") as z:
+        z.writestr(zipfile.ZipInfo("Xaml/Document.xaml", (1980, 1, 1, 0, 0, 0)),
+                   _XAML.format(text=escape(text), size=size, weight=weight).encode("utf-8"),
+                   compress_type=zipfile.ZIP_DEFLATED)
+        z.writestr("_rels/.rels", _part(
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship '
+            'Type="http://schemas.microsoft.com/wpf/2005/10/xaml/entry" Target="/Xaml/Document.xaml" '
+            f'Id="{_rid()}" /></Relationships>'), compress_type=zipfile.ZIP_STORED)
+        z.writestr("[Content_Types].xml", _part(
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xaml" '
+            'ContentType="application/vnd.ms-wpf.xaml+xml" /><Default Extension="rels" ContentType="application/'
+            'vnd.openxmlformats-package.relationships+xml" /></Types>'), compress_type=zipfile.ZIP_STORED)
     return buf.getvalue()
 
 
-_PRESENTATION = ('<?xml version="1.0" encoding="utf-8"?><presentation xmlns:ws="http://schemas.mathsoft.com/'
-                 'worksheet50" xmlns="http://schemas.ptc.com/mathcad/settings/presentation10"><pageModel '
-                 'paper-code="A4" grid-size="Fine" orientation="Portrait" margin-type="Normal" show-grid="false" '
-                 'show-page-frame="true" show-header-frame="true" spell-check-enabled="false" /><mathRendering>'
-                 '<ws:results><general precision="{p}" show-trailing-zeros="true" radix="dec" zero-threshold="15" '
-                 'imaginary-value="i" exponential-threshold="6" xmlns="http://schemas.mathsoft.com/worksheet50" />'
-                 '<ws:unit simplify-units="false" /></ws:results></mathRendering></presentation>')
-_CALCULATION = ('<?xml version="1.0" encoding="utf-8"?><calculation cache-worksheet="false" xmlns="http://schemas.'
-                'ptc.com/mathcad/settings/calculation10"><builtInVariables array-origin="0" convergence-tolerance='
-                '"0.001" constraint-tolerance="0.001" prn-col-width="8" prn-precision="4" random-seed="1" />'
-                '<calculationBehavior automatic-recalculation="true" strings-use-origin="false" matrix-strict-'
-                'singularity-check="true" exact-boolean="false" units-in-symbolics="false" constants-in-symbolics='
-                '"false" symbolic-engine="axiom" /><units><currentUnitSystem name="si" /></units></calculation>')
+_MATH_STYLES = "".join(
+    f'<mathStyle name="{n}" font-family="Mathcad UniMath Prime" font-size="14.666666666666668" font-weight="{w}" '
+    f'font-style="{s}" color="{c}" font-stretch="Normal" />'
+    for n, w, s, c in (("Variable", "Normal", "Italic", "#FF000000"), ("Unit", "Bold", "Italic", "#FF00008B"),
+                       ("Constant", "Bold", "Italic", "#FF556B2F"), ("Function", "Normal", "Normal", "#FF000000"),
+                       ("System", "Bold", "Normal", "#FF000000"), ("Keyword", "Normal", "Normal", "#FF000000")))
+_TEXT_STYLES = "".join(
+    f'<textStyle name="{n}" style-key="{n}" based-on-key="" font-family="{f}" font-weight="Normal" font-size="{z}" '
+    'font-style="Normal" background="#00FFFFFF" foreground="#FF000000" marker-style="None" text-indent="0" '
+    'text-align="Left" />'
+    for n, f, z in (("Heading 1", "Tahoma", "21.3333333333333"), ("Heading 2", "Tahoma", "17.3333333333333"),
+                    ("Heading 3", "Tahoma", "16"), ("Normal", "Verdana", "13.333333333333334"),
+                    ("Subtitle", "Tahoma", "24"), ("Title", "Tahoma", "37.3333333333333")))
+_PRESENTATION = ('<presentation xmlns:ws="http://schemas.mathsoft.com/worksheet50" xmlns="http://schemas.ptc.com/'
+                 'mathcad/settings/presentation10"><pageModel paper-code="A4" grid-size="Fine" orientation="Portrait" '
+                 'margin-type="Normal" show-grid="false" show-page-frame="true" show-header-frame="true" '
+                 f'spell-check-enabled="false" /><mathRendering><mathStyles>{_MATH_STYLES}</mathStyles><formatting '
+                 'FontFamily="Times New Roman" FontSize="10" Bold="false" Italic="false" Underline="false" '
+                 'ForegroundColor="#FF000000" BackgroundColor="#00FFFFFF" /><ws:results><general precision="{p}" '
+                 'show-trailing-zeros="true" radix="dec" zero-threshold="15" imaginary-value="i" '
+                 'exponential-threshold="5" xmlns="http://schemas.mathsoft.com/worksheet50" /><matrix size="12,12" '
+                 'offset="0,0" show-indices="false" expand-nested-arrays="false" xmlns="http://schemas.mathsoft.com/'
+                 'worksheet50" /><ws:unit simplify-units="false" /></ws:results></mathRendering><textRendering>'
+                 f'<textStyles>{_TEXT_STYLES}</textStyles></textRendering></presentation>')
+_CALCULATION = ('<calculation cache-worksheet="false" xmlns="http://schemas.ptc.com/mathcad/settings/calculation10">'
+                '<builtInVariables array-origin="0" convergence-tolerance="0.001" constraint-tolerance="0.001" '
+                'prn-col-width="8" prn-precision="4" random-seed="1" /><calculationBehavior automatic-recalculation='
+                '"true" strings-use-origin="false" matrix-strict-singularity-check="true" exact-boolean="false" '
+                'units-in-symbolics="false" constants-in-symbolics="false" symbolic-engine="axiom" /><units>'
+                '<currentUnitSystem name="si" /></units></calculation>')
+# The version block Mathcad Prime reads first to recognise the file; without it Prime reports
+# "The file type is not supported".  These are the schema versions of Mathcad Prime 9.
+_APP = ('<properties xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-'
+        'instance" xmlns="http://schemas.mathsoft.com/extended-properties"><appVersion>9.0.0.0</appVersion>'
+        '<serializationVersion architecture="x64" Culture="en-US" UiCulture="en-US">9.0.0.0</serializationVersion>'
+        '<engineVersion>9.0.0.17</engineVersion><build>2023.02.16.001</build><schemaPropertiesList>' + "".join(
+            f'<schemaProperties name="{n}" version="{v}" />' for n, v in (
+                ("App", "1.3.4"), ("Calculation", "1.4.2"), ("Integration", "1.3.1"), ("Math", "5.9.0"),
+                ("Presentation", "1.7.1"), ("Provenance", "1.3.1"), ("Result", "1.8.1"), ("SimpleTypes", "1.3.1"),
+                ("Units", "12.3.1"), ("Worksheet", "5.7.0"))) + '</schemaPropertiesList></properties>')
+_TYPES = ('<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" '
+          'ContentType="application/vnd.openxmlformats-officedocument.mathprocessingml.mathcad.main+xml" />'
+          '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />'
+          '<Default Extension="XamlPackage" ContentType="application/zip" /><Override PartName="/docProps/core.xml" '
+          'ContentType="application/vnd.openxmlformats-package.core-properties+xml" /><Override PartName="/docProps/'
+          'app.xml" ContentType="application/mathcad.extended-properties+xml" /><Override PartName="/mathcad/'
+          'settings/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.mathprocessingml.'
+          'mathcad.settings.presentation+xml" /><Override PartName="/mathcad/settings/calculation.xml" ContentType='
+          '"application/vnd.openxmlformats-officedocument.mathprocessingml.mathcad.settings.calculation+xml" />'
+          '<Override PartName="/mathcad/result.xml" ContentType="application/vnd.openxmlformats-officedocument.'
+          'mathprocessingml.mathcad.result+xml" /><Override PartName="/mathcad/integration.xml" ContentType='
+          '"application/vnd.openxmlformats-officedocument.mathprocessingml.mathcad.integration+xml" /></Types>')
+_REL = '<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/{t}" Target="{target}" Id="{id}" />'
+_RELS = '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{}</Relationships>'
+
+
+def _real(v: float) -> str:
+    return repr(float(v)) if math.isfinite(v) else "0"
 
 
 def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | None = None, given=(),
@@ -420,23 +490,35 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
         values, _ = starting_values(kb, target, given)
     all_ids = list(inputs) + list(obj.fixed) + steps
     names = mathcad_names(kb, all_ids)
-    regions, rels, xaml = [], [], {}
+    try:                                                         # results shown until Mathcad recalculates
+        _, trace = kb.evaluate(target, {k: v for k, v in values.items() if k in inputs})
+        computed = {s.id: s.value for s in trace}
+    except Exception:                                            # noqa: BLE001 - Mathcad works them out anyway
+        computed = {}
+    regions, rels, xaml, results = [], [], {}, []
     y = 20.0
     rid = 0
 
     def text(t: str, top: float, left: float = 10.0, size: float = 13.3333333333333, weight: str = "Normal"):
         nonlocal rid
-        key = f"R{uuid.uuid4().hex[:16]}"
-        part = f"mathcad/xaml/FlowDocument{len(xaml)}.XamlPackage"
+        key = _rid()
+        part = f"mathcad/xaml/FlowDocument{rid}.XamlPackage"
         xaml[part] = _xaml_package(t, size, weight)
         rels.append((key, "/" + part))
-        regions.append(f'<region region-id="{rid}" width="420" top="{top:.3f}" left="{left:.3f}"><text '
-                       f'item-idref="{key}" /></region>')
+        height = 1.6 * size * max(1, len(t) // 60 + 1)
+        regions.append(f'<region region-id="{rid}" width="310" actualWidth="310" actualHeight="{height:.2f}" '
+                       f'top="{top:.3f}" left="{left:.3f}"><text item-idref="{key}">{_FLOW}</text></region>')
         rid += 1
 
-    def math(body: str, top: float, left: float = 330.0):
+    def math(body: str, top: float, result: float | None = None, left: float = 330.0):
         nonlocal rid
-        regions.append(f'<region region-id="{rid}" top="{top:.3f}" left="{left:.3f}"><math>{body}</math></region>')
+        n = len(results)
+        regions.append(f'<region region-id="{rid}" top="{top:.3f}" left="{left:.3f}"><math resultRef="{n}">'
+                       f'{body}</math></region>')
+        value = (f'<ml:result><ml:real>{_real(result)}</ml:real></ml:result>'
+                 if isinstance(result, (int, float)) and not isinstance(result, bool) else "")
+        results.append(f'<resultData result-id="{n}" calculation-status="Synchronized"'
+                       + (f">{value}</resultData>" if value else " />"))
         rid += 1
 
     def unit_override(sid: str) -> str:
@@ -471,60 +553,47 @@ def export_worksheet(kb: KnowledgeBase, target: str, path: Path, values: dict | 
         text(f"{o.name} ({o.reference_text.replace(o.code + ' ', '')})", y)
         b, s = names[sid]
         body = to_xml(with_units(kb, sid), names)
-        math(f"<ml:define>{_id(b, s)}<ml:eval>{body}{unit_override(sid)}</ml:eval></ml:define>", y)
+        shown = style.show(kb, sid, computed[sid]) if sid in computed else None
+        math(f"<ml:define>{_id(b, s)}<ml:eval>{body}{unit_override(sid)}</ml:eval></ml:define>", y, shown)
         y += 56
-    worksheet = f'<?xml version="1.0" encoding="utf-8"?><worksheet {_NS}><regions>{"".join(regions)}</regions></worksheet>'
+    worksheet = f'<worksheet {_NS}><regions>{"".join(regions)}</regions></worksheet>'
     marker = json.dumps({"ckb": target, "version": obj.version, "names": {k: list(v) for k, v in names.items()}})
-    files = {
-        "[Content_Types].xml": (
-            '<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/'
-            'content-types"><Default Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.'
-            'mathprocessingml.mathcad.main+xml" /><Default Extension="rels" ContentType="application/vnd.openxmlformats-'
-            'package.relationships+xml" /><Default Extension="XamlPackage" ContentType="application/zip" />'
-            '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-'
-            'properties+xml" /><Override PartName="/docProps/app.xml" ContentType="application/mathcad.extended-'
-            'properties+xml" /><Override PartName="/mathcad/settings/presentation.xml" ContentType="application/vnd.'
-            'openxmlformats-officedocument.mathprocessingml.mathcad.settings.presentation+xml" /><Override PartName='
-            '"/mathcad/settings/calculation.xml" ContentType="application/vnd.openxmlformats-officedocument.'
-            'mathprocessingml.mathcad.settings.calculation+xml" /><Override PartName="/mathcad/result.xml" '
-            'ContentType="application/vnd.openxmlformats-officedocument.mathprocessingml.mathcad.result+xml" />'
-            '<Override PartName="/mathcad/integration.xml" ContentType="application/vnd.openxmlformats-'
-            'officedocument.mathprocessingml.mathcad.integration+xml" /></Types>'),
-        "_rels/.rels": (
-            '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/'
-            '2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/'
-            'relationships/officeDocument" Target="/mathcad/worksheet.xml" Id="Rws" /><Relationship Type="http://'
-            'schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/docProps/'
-            'core.xml" Id="Rcore" /><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/'
-            'relationships/extended-properties" Target="/docProps/app.xml" Id="Rapp" /></Relationships>'),
-        "docProps/core.xml": (
-            '<?xml version="1.0" encoding="utf-8"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/'
+    core = ('<?xml version="1.0" encoding="utf-8"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/'
             'package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>'
             f'{escape(obj.text + " - " + obj.name)}</dc:title><dc:description>{escape(marker)}</dc:description>'
-            f'<dc:creator>calculation knowledge base</dc:creator><cp:revision>1</cp:revision></cp:coreProperties>'),
-        "docProps/app.xml": (
-            '<?xml version="1.0" encoding="utf-8"?><properties xmlns="http://schemas.mathsoft.com/extended-'
-            'properties"><appVersion>9.0.0.0</appVersion><engineVersion>9.0.0.17</engineVersion></properties>'),
-        "mathcad/worksheet.xml": worksheet,
-        "mathcad/_rels/worksheet.xml.rels": (
-            '<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/'
-            '2006/relationships">' + "".join(
-                f'<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/'
-                f'flowDocument" Target="{t}" Id="{k}" />' for k, t in rels) + "</Relationships>"),
-        "mathcad/settings/presentation.xml": _PRESENTATION.replace("{p}", str(style.decimals)),
-        "mathcad/settings/calculation.xml": _CALCULATION,
-        "mathcad/result.xml": ('<?xml version="1.0" encoding="utf-8"?><resultsList xmlns:ml="http://schemas.'
-                               'mathsoft.com/math50" xmlns:u="http://schemas.mathsoft.com/units10" xmlns="http://'
-                               'schemas.mathsoft.com/result10" />'),
-        "mathcad/integration.xml": '<?xml version="1.0" encoding="utf-8"?><regions xmlns="http://schemas.ptc.com/integration10" />',
-    }
+            '<dc:creator>calculation knowledge base</dc:creator><cp:revision>1</cp:revision></cp:coreProperties>')
+    package_rels = "".join(_REL.format(t="officeDocument", target=f"/mathcad/{n}.xml", id=_rid())
+                           for n in ("worksheet", "header", "footer"))
+    package_rels += ('<Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/'
+                     f'core-properties" Target="/docProps/core.xml" Id="{_rid()}" />')
+    deflate, stored = zipfile.ZIP_DEFLATED, zipfile.ZIP_STORED
+    # parts in the order and with the compression Mathcad Prime uses when it saves a worksheet
+    parts = [("mathcad/worksheet.xml", worksheet.encode("utf-8"), deflate),
+             ("_rels/.rels", _part(_RELS.format(package_rels)), stored)]
+    parts += [(name, data, stored) for name, data in xaml.items()]
+    parts += [
+        ("mathcad/_rels/worksheet.xml.rels", _part(_RELS.format("".join(
+            _REL.format(t="flowDocument", target=t, id=k) for k, t in rels))), deflate),
+        ("mathcad/header.xml", f"<header {_NS}><regions /></header>".encode("utf-8"), deflate),
+        ("mathcad/footer.xml", f"<footer {_NS}><regions /></footer>".encode("utf-8"), deflate),
+        ("[Content_Types].xml", _part(_TYPES), deflate),
+        ("docProps/core.xml", core.encode("utf-8"), deflate),
+        ("docProps/app.xml", _part(_APP), deflate),
+        ("mathcad/settings/presentation.xml", _part(_PRESENTATION.replace("{p}", str(style.decimals))), deflate),
+        ("mathcad/settings/calculation.xml", _part(_CALCULATION), deflate),
+        ("mathcad/result.xml", _part('<resultsList xmlns:ml="http://schemas.mathsoft.com/math50" xmlns:u="http://'
+                                     'schemas.mathsoft.com/units10" xmlns="http://schemas.mathsoft.com/result10">'
+                                     + "".join(results) + "</resultsList>"), deflate),
+        ("mathcad/integration.xml", _part('<regions xmlns="http://schemas.ptc.com/integration10" />'), deflate),
+    ]
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-        for name, data in files.items():
-            z.writestr(name, data)
-        for name, data in xaml.items():
-            z.writestr(name, data)
+    stamp = _dt.datetime.now().timetuple()[:6]
+    with zipfile.ZipFile(path, "w") as z:
+        for name, data, how in parts:
+            info = zipfile.ZipInfo(name, stamp)
+            info.compress_type = how
+            z.writestr(info, data)
     return path
 
 

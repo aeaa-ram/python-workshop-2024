@@ -196,6 +196,16 @@ def test_mathcad_worksheet_round_trip(kb, tmp_path):
     path = export_worksheet(kb, "V_Rd_c", tmp_path / "calc.mcdx", PRIMARY)
     res = verify(kb, path)
     assert res["ok"] and res["same_version"] and all(r["agree"] for r in res["rows"])
+    # the parts Mathcad Prime needs to recognise the file, as Prime 9 saves them
+    import zipfile
+    with zipfile.ZipFile(path) as z:
+        app = z.read("docProps/app.xml").decode("utf-8-sig")
+        ws = z.read("mathcad/worksheet.xml").decode("utf-8")
+        results = z.read("mathcad/result.xml").decode("utf-8-sig")
+        names = z.namelist()
+    assert "<serializationVersion" in app and '<schemaProperties name="Worksheet"' in app
+    assert {"mathcad/header.xml", "mathcad/footer.xml"} <= set(names) and names[0] == "mathcad/worksheet.xml"
+    assert ws.count("resultRef=") == results.count("<resultData") == ws.count("<math")
 
 
 def test_verify_tells_whether_a_file_is_the_same_logic(built, kb, tmp_path):
