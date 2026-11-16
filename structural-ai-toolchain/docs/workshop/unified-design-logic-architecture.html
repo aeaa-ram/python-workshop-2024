@@ -5,7 +5,7 @@
 <style>
 /* Layout: a drawing sheet. Page one = title block, problem, objective and the
    flowchart (one row per phase, flowing down). Then one card per component:
-   what it does and what it addresses. Worked example at the end, one step per stage. */
+   what it does. */
 :root {
   --bg: #eef1f4;
   --sheet: #ffffff;
@@ -80,13 +80,14 @@ a:focus-visible, .node:focus-visible { outline: 2px solid var(--p1); outline-off
 @media (max-width: 760px) { .po { grid-template-columns: 1fr; } }
 
 figure { margin: 0; display: grid; gap: 8px; }
+.intro { display: grid; gap: 8px; max-width: 900px; }
 .drawing { overflow-x: auto; }
 .drawing svg { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
 figcaption { color: var(--muted); font-size: 13.5px; }
 .t-phase { font-family: var(--f-mono); font-size: 13px; font-weight: 500; letter-spacing: .08em; }
 .t-no { font-family: var(--f-mono); font-size: 15px; font-weight: 500; }
 .t-title { font-family: var(--f-display); font-size: 21px; font-weight: 600; fill: var(--ink); }
-.t-build { font-family: var(--f-body); font-size: 14.5px; fill: var(--ink); }
+.t-build { font-family: var(--f-body); font-size: 13.5px; fill: var(--ink); }
 .t-ic { font-family: var(--f-mono); font-size: 13px; font-weight: 500; }
 .t-loop { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; fill: var(--ink); }
 .wire { fill: none; stroke: var(--ink); stroke-width: 1.6; }
@@ -103,9 +104,6 @@ figcaption { color: var(--muted); font-size: 13.5px; }
 .hr-c { fill: var(--ink); stroke: var(--sheet); stroke-width: 2.5; }
 .hr-p { fill: var(--sheet); }
 .t-hr { font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: .06em; fill: var(--ink); }
-.human { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 10px; }
-.human svg { width: 22px; height: 22px; }
-.inline-person { display: inline-block; width: 15px; height: 15px; vertical-align: -3px; margin-right: 4px; }
 
 /* component cards */
 .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -125,21 +123,6 @@ figcaption { color: var(--muted); font-size: 13.5px; }
 .card-head .label { color: var(--c); }
 .card-body { padding: 12px 16px; display: grid; gap: 10px; align-content: start; }
 .build { font-weight: 600; }
-/* worked example */
-.files { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; }
-table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
-th, td { text-align: left; vertical-align: top; padding: 7px 12px; border-bottom: 1px solid var(--rule); }
-th { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--tint); }
-tr:last-child td { border-bottom: 0; }
-td:first-child { font-weight: 600; }
-td.c { text-align: center; }
-.timeline { list-style: none; padding: 0; display: grid; gap: 0; }
-.timeline li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 12px; }
-.timeline li::after { content: ""; position: absolute; left: 15px; top: 32px; bottom: 0; border-left: 2px solid var(--rule); }
-.timeline li:last-child::after { display: none; }
-.timeline .n { width: 32px; height: 32px; border-radius: 50%; background: var(--c); color: var(--sheet); display: grid; place-items: center; font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
-.timeline li > div { display: grid; gap: 2px; min-width: 0; padding-top: 4px; }
-.timeline b { font-family: var(--f-display); font-size: 19px; font-weight: 600; color: var(--c); }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
 
@@ -151,8 +134,8 @@ td.c { text-align: center; }
       <h1>Unified Design Logic Architecture</h1>
     </div>
     <div><span class="label">Status</span><span class="val">Issued for workshop</span></div>
-    <div><span class="label">Revision</span><span class="val">G</span></div>
-    <div><span class="label">Date</span><span class="val">2026-11-15</span></div>
+    <div><span class="label">Revision</span><span class="val">H</span></div>
+    <div><span class="label">Date</span><span class="val">2026-11-16</span></div>
   </header>
 
   <!-- ================= page one ================= -->
@@ -161,22 +144,26 @@ td.c { text-align: center; }
       <div>
         <h2>Problem</h2>
         <ul>
-          <li>Calculations are spread across servers and project folders in many formats. Their origin, author, code edition and quality are often unknown.</li>
+          <li>Calculations are spread across servers and project folders in many formats and languages. Their origin, author, code edition and quality are often unknown.</li>
           <li>The same checks are rebuilt on every project. The versions are not connected, so a correction made in one is not carried to the others and the same errors are repeated.</li>
           <li>Many calculations are incomplete: assumptions, limits of validity and references to the design code are missing.</li>
-          <li>Spreadsheets are easy to read but hard to version and reuse; code is reusable but does not read as a calculation.</li>
+          <li>Spreadsheets and calculation sheets are easy to create and read but hard to version and reuse; code is reusable but not user-friendly, and does not read as a calculation.</li>
         </ul>
       </div>
       <div>
-        <h2>Objective</h2>
+        <h2>Solution</h2>
         <p>A knowledge base that holds one verified design logic for each topic of structural engineering. From this single logic we can create customisable calculation reports, engineering tools such as spreadsheets and calculation sheets, and AI-assisted tools, all giving the same results.</p>
         <p>The knowledge base is built by a pipeline that retrieves the calculations we own, distils the design logic in them, compares it with the design codes and consolidates it under engineer review. It is version-controlled, shows which topics are covered and where the gaps are, and improves with every project that uses it.</p>
       </div>
     </div>
 
+    <div class="intro">
+      <h2>Proposed architecture</h2>
+      <p>The knowledge base is built and maintained by a pipeline of eight modular components, grouped in four phases: ingestion, distillation, knowledge base, and use and maintenance. Each component is built and validated separately and has its own challenges to resolve. Engineers review the logic at two points: before consolidated logic enters the knowledge base, and before a correction is released. Select a component for its description.</p>
+    </div>
     <figure>
       <div class="drawing">
-        <svg viewBox="0 0 1110 720" role="img" aria-label="Flowchart in four phases, flowing down. Ingestion: 1 retrieval and curation, 2 conversion. Distillation: 3 decomposition into calculation objects mapped to the code framework, 4 consolidation by consensus into one unified design logic. Knowledge base: 5 object generation, 6 central repository. Use and maintenance: 7 calculations, reports and tools, 8 maintenance. Feedback returns from maintenance to consolidation as a new version.">
+        <svg viewBox="0 0 1110 720" role="img" aria-label="Flowchart in four phases, flowing down. Ingestion: 1 retrieval and curation, 2 conversion. Distillation: 3 decomposition into calculation objects mapped to the code framework, 4 consolidation by consensus into one unified design logic. Knowledge base: 5 object generation, 6 central repository. Use and maintenance: 7 extraction, 8 maintenance. Feedback returns from maintenance to consolidation as a new version.">
           <defs>
             <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
           </defs>
@@ -201,9 +188,8 @@ td.c { text-align: center; }
               <rect x="4" y="4" width="24" height="8" rx="2"/><rect x="4" y="15" width="24" height="8" rx="2"/><rect x="4" y="26" width="24" height="8" rx="2"/>
               <circle cx="30" cy="29" r="6" class="disc"/><path d="M34.5 33.5 L39 38"/>
             </g>
-            <text x="266" y="74" class="t-title"><tspan class="t-no f1">1 </tspan>Retrieval and curation</text>
-            <text x="266" y="99" class="t-build">Retrieves calculations and reports</text>
-            <text x="266" y="118" class="t-build">from databases and curates them</text>
+            <text x="266" y="70" class="t-title"><tspan class="t-no f1">1 </tspan>Retrieval and curation</text>
+            <text x="266" y="94.0" class="t-build">Retrieves calculations and reports from</text><text x="266" y="111.5" class="t-build">existing project databases and curates</text><text x="266" y="129.0" class="t-build">the files that enter the pipeline.</text>
           </a>
           <path d="M550 100 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c2" class="node">
@@ -213,9 +199,8 @@ td.c { text-align: center; }
               <path d="M7 3 H22 L31 12 V37 H7 Z"/><path d="M22 3 V12 H31"/>
               <text x="19" y="31" text-anchor="middle" class="t-ic f1" stroke="none">{ }</text>
             </g>
-            <text x="726" y="74" class="t-title"><tspan class="t-no f1">2 </tspan>Conversion</text>
-            <text x="726" y="99" class="t-build">Parses files into a machine-readable</text>
-            <text x="726" y="118" class="t-build">form that reproduces original values</text>
+            <text x="726" y="70" class="t-title"><tspan class="t-no f1">2 </tspan>Conversion</text>
+            <text x="726" y="94.0" class="t-build">Parses each document into a machine-</text><text x="726" y="111.5" class="t-build">readable format from which the original</text><text x="726" y="129.0" class="t-build">values can be recreated.</text>
           </a>
           <path d="M820 160 V187 H360 V213" class="wire" marker-end="url(#ah)"/>
 
@@ -226,9 +211,8 @@ td.c { text-align: center; }
             <g transform="translate(200 255)" class="ic k2">
               <rect x="3" y="3" width="15" height="15" rx="3"/><rect x="22" y="3" width="15" height="15" rx="3"/><rect x="3" y="22" width="15" height="15" rx="3"/><rect x="25" y="25" width="15" height="15" rx="3"/>
             </g>
-            <text x="266" y="249" class="t-title"><tspan class="t-no f2">3 </tspan>Decomposition</text>
-            <text x="266" y="274" class="t-build">AI distils files into calculation</text>
-            <text x="266" y="293" class="t-build">objects mapped to the code framework</text>
+            <text x="266" y="245" class="t-title"><tspan class="t-no f2">3 </tspan>Decomposition</text>
+            <text x="266" y="269.0" class="t-build">Distils the design logic from each file</text><text x="266" y="286.5" class="t-build">and maps it across the topics of</text><text x="266" y="304.0" class="t-build">structural engineering.</text>
           </a>
           <path d="M550 275 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c4" class="node">
@@ -237,9 +221,8 @@ td.c { text-align: center; }
             <g transform="translate(660 255)" class="ic k2">
               <path d="M6 4 C6 18 20 16 20 27"/><path d="M34 4 C34 18 20 16 20 27"/><path d="M20 27 V38"/><path d="M15 33 L20 38 L25 33"/>
             </g>
-            <text x="726" y="249" class="t-title"><tspan class="t-no f2">4 </tspan>Consolidation</text>
-            <text x="726" y="274" class="t-build">Consensus rules based on sampling</text>
-            <text x="726" y="293" class="t-build">merge objects into one design logic</text>
+            <text x="726" y="245" class="t-title"><tspan class="t-no f2">4 </tspan>Consolidation</text>
+            <text x="726" y="269.0" class="t-build">Merges the logic from many sources into</text><text x="726" y="286.5" class="t-build">one unified design logic through</text><text x="726" y="304.0" class="t-build">consensus mechanisms.</text>
           </a>
           <path d="M820 335 V362 H360 V388" class="wire" marker-end="url(#ah)"/>
 
@@ -251,9 +234,8 @@ td.c { text-align: center; }
               <rect x="3" y="6" width="34" height="28" rx="5"/>
               <text x="20" y="25" text-anchor="middle" class="t-ic f3" stroke="none">&lt;/&gt;</text>
             </g>
-            <text x="266" y="424" class="t-title"><tspan class="t-no f3">5 </tspan>Object generation</text>
-            <text x="266" y="449" class="t-build">LLM that turns unified logic into</text>
-            <text x="266" y="468" class="t-build">tested Python calculation objects</text>
+            <text x="266" y="420" class="t-title"><tspan class="t-no f3">5 </tspan>Object generation</text>
+            <text x="266" y="444.0" class="t-build">Turns each unified design logic into a</text><text x="266" y="461.5" class="t-build">modular, tested calculation object.</text>
           </a>
           <path d="M550 450 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c6" class="node">
@@ -262,9 +244,8 @@ td.c { text-align: center; }
             <g transform="translate(660 430)" class="ic k3">
               <ellipse cx="20" cy="8" rx="14" ry="5"/><path d="M6 8 V32 A14 5 0 0 0 34 32 V8"/><path d="M6 20 A14 5 0 0 0 34 20"/>
             </g>
-            <text x="726" y="424" class="t-title"><tspan class="t-no f3">6 </tspan>Repository and search</text>
-            <text x="726" y="449" class="t-build">Knowledge base with an AI-curated</text>
-            <text x="726" y="468" class="t-build">search engine</text>
+            <text x="726" y="420" class="t-title"><tspan class="t-no f3">6 </tspan>Repository and search</text>
+            <text x="726" y="444.0" class="t-build">A secure, version-controlled knowledge</text><text x="726" y="461.5" class="t-build">base with an AI-curated search engine.</text>
           </a>
           <path d="M820 510 V537 H360 V563" class="wire" marker-end="url(#ah)"/>
 
@@ -277,9 +258,8 @@ td.c { text-align: center; }
               <text x="15" y="20" text-anchor="middle" class="t-ic f4" stroke="none">Σ</text>
               <path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/>
             </g>
-            <text x="266" y="599" class="t-title"><tspan class="t-no f4">7 </tspan>Calculations, reports and tools</text>
-            <text x="266" y="624" class="t-build">Self-documenting calculations, reports</text>
-            <text x="266" y="643" class="t-build">and engineering tools from one logic</text>
+            <text x="266" y="595" class="t-title"><tspan class="t-no f4">7 </tspan>Extraction</text>
+            <text x="266" y="619.0" class="t-build">Produces multi-format calculations,</text><text x="266" y="636.5" class="t-build">reports and tools from a single source</text><text x="266" y="654.0" class="t-build">of truth.</text>
           </a>
           <path d="M550 625 H628" class="wire" marker-end="url(#ah)"/>
           <a href="#c8" class="node">
@@ -289,46 +269,30 @@ td.c { text-align: center; }
               <path d="M31 13 A13 13 0 1 0 33 25"/><path d="M24 12 L31 13 L32 6"/>
               <path d="M15 20 L19 24 L26 16"/>
             </g>
-            <text x="726" y="599" class="t-title"><tspan class="t-no f4">8 </tspan>Maintenance</text>
-            <text x="726" y="624" class="t-build">Auditing, health checks and</text>
-            <text x="726" y="643" class="t-build">feedback released as new versions</text>
+            <text x="726" y="595" class="t-title"><tspan class="t-no f4">8 </tspan>Maintenance</text>
+            <text x="726" y="619.0" class="t-build">Audits the knowledge base through</text><text x="726" y="636.5" class="t-build">scheduled health checks and provides a</text><text x="726" y="654.0" class="t-build">route for corrections and new</text><text x="726" y="671.5" class="t-build">components.</text>
           </a>
 
-          <!-- human review: after stages 3, 4, 5 and 8 -->
-          <g>
-            <circle cx="589" cy="275" r="16" class="hr-c"/>
-            <circle cx="589" cy="271" r="4.5" class="hr-p"/>
-            <path d="M581 285 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="589" y="308" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="589" y="320" text-anchor="middle" class="t-hr">REVIEW</text>
-          </g>
+          <!-- human review: before stage 5 and between stages 7 and 8 -->
           <g>
             <circle cx="590" cy="362" r="16" class="hr-c"/>
             <circle cx="590" cy="358" r="4.5" class="hr-p"/>
             <path d="M582 372 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
             <text x="613" y="354" class="t-hr">HUMAN REVIEW</text>
           </g>
-          <g>
-            <circle cx="589" cy="450" r="16" class="hr-c"/>
-            <circle cx="589" cy="446" r="4.5" class="hr-p"/>
-            <path d="M581 460 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="589" y="483" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="589" y="495" text-anchor="middle" class="t-hr">REVIEW</text>
-          </g>
 
           <!-- feedback loop: 8 back to 4 -->
           <path d="M1010 625 H1062 V275 H1013" class="wire-loop" marker-end="url(#ah)"/>
           <g>
-            <circle cx="1036" cy="625" r="16" class="hr-c"/>
-            <circle cx="1036" cy="621" r="4.5" class="hr-p"/>
-            <path d="M1028 635 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
-            <text x="1036" y="658" text-anchor="middle" class="t-hr">HUMAN</text>
-            <text x="1036" y="670" text-anchor="middle" class="t-hr">REVIEW</text>
+            <circle cx="589" cy="625" r="16" class="hr-c"/>
+            <circle cx="589" cy="621" r="4.5" class="hr-p"/>
+            <path d="M581 635 a8 7.5 0 0 1 16 0 z" class="hr-p"/>
+            <text x="589" y="658" text-anchor="middle" class="t-hr">HUMAN</text>
+            <text x="589" y="670" text-anchor="middle" class="t-hr">REVIEW</text>
           </g>
           <text x="1086" y="450" text-anchor="middle" transform="rotate(-90 1086 450)" class="t-loop">FEEDBACK → NEW VERSION</text>
         </svg>
       </div>
-      <figcaption>Each box is a component to be built. <svg class="inline-person" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg>marks where human review is required. Select a box for a description of the component.</figcaption>
     </figure>
   </section>
 
@@ -345,9 +309,9 @@ td.c { text-align: center; }
         <div class="card-body">
           <p class="build">Retrieves calculations and reports from existing project databases and curates the files that enter the pipeline.</p>
           <ul>
-            <li>Searches project databases, servers and document systems</li>
-            <li>Records for each file: project, department, author, date, design code and design topics</li>
-            <li>Removes duplicates and superseded versions; keeps files that are relevant, complete, of known origin and to a current code edition</li>
+            <li>Searches project databases, servers and document management systems; files can also be selected by hand</li>
+            <li>Records the metadata of each file where available: project, department, author, date, design code and design topics</li>
+            <li>Removes duplicates and superseded versions; retains files that are relevant, complete, of known origin and to a current code edition</li>
             <li>New calculations enter through the same route</li>
           </ul>
         </div>
@@ -359,10 +323,11 @@ td.c { text-align: center; }
           <div><span class="label">Ingestion · 2</span><h3>Conversion</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Parses each document into a machine-readable format from which the computer can recreate the original values.</p>
+          <p class="build">Parses each document into a machine-readable format from which the original values can be recreated.</p>
           <ul>
             <li>Readers for Excel, Mathcad, Word, PDF, Python and Jupyter; scanned documents are read by text recognition</li>
             <li>Each converted file is recalculated and compared with the values in the original before it is accepted</li>
+            <li>Each reader is validated separately</li>
           </ul>
         </div>
       </article>
@@ -373,14 +338,13 @@ td.c { text-align: center; }
           <div><span class="label">Distillation · 3</span><h3>Decomposition</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">An AI that distils each file into modular calculation objects and maps them to the design topics, using a framework pre-mapped from the design codes.</p>
+          <p class="build">Distils the design logic from each file and maps it across the topics of structural engineering.</p>
           <ul>
-            <li>Design logic separated from project data</li>
-            <li>The framework is mapped from the Eurocodes in advance: topic, element, clause, expression and nationally determined parameters</li>
-            <li>Each object is compared with the code: as in the code, simplified, alternative or different</li>
-            <li>A topic map: what is covered, what is missing, where sources are many</li>
+            <li>Design logic is separated from project data</li>
+            <li>The topic map is prepared in advance by AI and pre-populated with the design logic of the codes</li>
+            <li>AI assists in extracting the logic: elements, expressions, parameters, warnings, pitfalls and design background</li>
+            <li>A coverage map shows what is covered, what is missing and where sources are many</li>
           </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer checks the extracted objects and their classification. Drafts never enter the knowledge base.</p></div>
         </div>
       </article>
 
@@ -391,10 +355,14 @@ td.c { text-align: center; }
           <div><span class="label">Distillation · 4</span><h3>Consolidation</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Deterministic consensus rules that merge the objects from many sources into one unified design logic per topic.</p>
-          <p>Each object is evaluated over a common, sampled parameter domain. Sources whose results converge within a tolerance are merged, so one logic is reviewed instead of many. Where results do not converge, the cause is identified, such as a simplification, a unit or a misread value, or the difference is referred to an engineer.</p>
-          <p>Agreement between sources is not proof of correctness. Accuracy is established by benchmarks against independent references: code worked examples, design guides, hand calculations and FE results.</p>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer reviews each unified logic and settles every disagreement.</p></div>
+          <p class="build">Merges the logic from many sources into one unified design logic through consensus mechanisms.</p>
+          <ul>
+            <li>Consensus rules, deterministic or probabilistic, use sampling, benchmarking and testing across sources to classify them as agreeing or disagreeing</li>
+            <li>Each object is evaluated over a common, sampled parameter domain. Sources whose results converge within a specified tolerance are merged, so one logic is reviewed instead of many. Where results do not converge, the cause is identified, such as a simplification, a unit or a misread value, or the difference is referred to an engineer</li>
+            <li>Agreement between sources is not proof of correctness. Accuracy is established by benchmarks against independent references: code worked examples, design guides, hand calculations and FE results</li>
+            <li>Each new calculation is classified as already covered, an extension of an existing topic, or a new design topic</li>
+            <li>Engineers review the resulting specifications and sign off those that enter the knowledge base. This is the first point of human review</li>
+          </ul>
         </div>
       </article>
 
@@ -404,12 +372,11 @@ td.c { text-align: center; }
           <div><span class="label">Knowledge base · 5</span><h3>Object generation</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Turns each unified design logic into a tested calculation object.</p>
+          <p class="build">Turns each unified design logic into a modular, tested calculation object.</p>
           <ul>
-            <li>Written in Python from a structured specification per object</li>
-            <li>Benchmarked against the original files, other checked projects and independent references</li>
+            <li>The object specification is software-agnostic: Python code, Excel spreadsheets and Mathcad worksheets are generated from the same logic</li>
+            <li>Objects are benchmarked against the original files, other checked projects and independent references</li>
           </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> An engineer signs off each block before it enters the knowledge base; full review at first, sampling once confidence is established.</p></div>
         </div>
       </article>
 
@@ -423,7 +390,8 @@ td.c { text-align: center; }
           <ul>
             <li>Finds the relevant calculation object for a design task</li>
             <li>Checks every new calculation: already covered, an extension, or a new design topic</li>
-            <li>Versions, access rights, approvals and written rules for contributors and the AI</li>
+            <li>Versions, access rights, approvals and written rules for contributors and for the AI</li>
+            <li>An API makes the objects available to other workflows and tools</li>
           </ul>
         </div>
       </article>
@@ -431,16 +399,16 @@ td.c { text-align: center; }
       <article class="card" id="c7" style="--c: var(--p4); --ct: var(--p4t)">
         <div class="card-head">
           <svg viewBox="0 0 40 40" aria-hidden="true"><g class="ic" stroke="currentColor"><rect x="7" y="3" width="26" height="34" rx="3"/><path d="M21 15 H28"/><path d="M12 26 H28"/><path d="M12 31 H23"/></g><text x="15" y="20" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" fill="currentColor">Σ</text></svg>
-          <div><span class="label">Use and maintenance · 7</span><h3>Calculations, reports and tools</h3></div>
+          <div><span class="label">Use and maintenance · 7</span><h3>Extraction</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Produces calculations, reports and tools from the same verified logic.</p>
+          <p class="build">Produces multi-format calculations, reports and tools from a single source of truth.</p>
           <ul>
             <li>Self-documenting calculations: equation, substituted values, result and clause for each step, at the quality of our existing calculations</li>
             <li>Customisable reports over many design cases, in the company template, as PDF or Word</li>
-            <li>Engineering tools: spreadsheets and Mathcad sheets with live formulas</li>
+            <li>Engineering tools: spreadsheets and Mathcad worksheets with live formulas</li>
             <li>AI-assisted tools that use the same calculation objects</li>
-            <li>Every output carries the version of the logic it was made from; signed off by the project engineer and checker, as today</li>
+            <li>Every deliverable carries the version of the logic it was made from and is signed off by the project engineer and checker, as today</li>
           </ul>
         </div>
       </article>
@@ -451,43 +419,16 @@ td.c { text-align: center; }
           <div><span class="label">Use and maintenance · 8</span><h3>Maintenance</h3></div>
         </div>
         <div class="card-body">
-          <p class="build">Auditing of the knowledge base, scheduled health checks, and a route for corrections and new components.</p>
+          <p class="build">Audits the knowledge base through scheduled health checks and provides a route for corrections and new components.</p>
           <ul>
-            <li>Health checks re-run every benchmark</li>
-            <li>Corrections and new components pass consolidation and testing again, and are released as a new version</li>
-            <li>Maturity of each object: retrieved, converted, consolidated, verified, approved</li>
+            <li>Health checks re-run every benchmark whenever a change is made</li>
+            <li>Corrections and new components pass consolidation and testing again and are released as a new version</li>
+            <li>Engineers review calculations in use and approve every correction and new component</li>
+            <li>AI can propose fixes directly from user feedback</li>
           </ul>
-          <div class="human"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="10" class="hr-c" stroke="none"/><circle cx="10" cy="7.5" r="3" class="hr-p"/><path d="M5 16 a5 4.5 0 0 1 10 0 z" class="hr-p"/></svg><p><b>Human review.</b> Engineers review calculations in use and approve every correction and new component.</p></div>
         </div>
       </article>
     </div>
-  </section>
-
-  <!-- ================= worked example ================= -->
-  <section class="band" id="example">
-    <h2>Worked example: four bridge calculations</h2>
-    <p>Four files from four bridge projects. They overlap only partly and use different national annexes.</p>
-    <div class="files">
-      <table>
-        <thead><tr><th>File</th><th>Format</th><th>Project</th><th>Bending</th><th>Shear</th><th>National annex</th></tr></thead>
-        <tbody>
-          <tr><td>A</td><td>Python script</td><td>Bridge 1</td><td class="c">✓</td><td class="c">✓</td><td>DK</td></tr>
-          <tr><td>B</td><td>Jupyter notebook</td><td>Bridge 2</td><td class="c">✓</td><td class="c">–</td><td>UK</td></tr>
-          <tr><td>C</td><td>Excel workbook</td><td>Bridge 3</td><td class="c">–</td><td class="c">✓</td><td>DK</td></tr>
-          <tr><td>D</td><td>Mathcad sheet</td><td>Bridge 4</td><td class="c">✓</td><td class="c">✓</td><td>NO</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <ol class="timeline">
-      <li style="--c: var(--p1)"><span class="n">1</span><div><b>Retrieval and curation</b><p>The four files are found in the project databases and tagged with project, author, date and design code. Two older copies of file C are removed as duplicates.</p></div></li>
-      <li style="--c: var(--p1)"><span class="n">2</span><div><b>Conversion</b><p>The four files are converted and recalculated. The recalculated values match the originals.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">3</span><div><b>Decomposition</b><p>Six calculation objects are drafted: three for bending (A, B, D) and three for shear (A, C, D), each mapped to its clause in the code framework. An engineer checks them.</p></div></li>
-      <li style="--c: var(--p2)"><span class="n">4</span><div><b>Consolidation</b><p>Bending: the national annex coefficients are separated out as parameters, after which the three objects converge over the whole domain and are merged into one, with the national annex as an input. Shear: the objects use different lever arms, one approximate and one calculated. The rest of the logic converges and is merged; an engineer decides which lever arm is correct.</p></div></li>
-      <li style="--c: var(--p3)"><span class="n">5</span><div><b>Object generation</b><p>Python objects are generated and benchmarked against the four original files, other checked bridge projects and a code worked example. An engineer signs off each object.</p></div></li>
-      <li style="--c: var(--p3)"><span class="n">6</span><div><b>Repository and search</b><p>The objects are released as version 0.1. An engineer on a fifth bridge searches for shear design and is given the unified object.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">7</span><div><b>Calculations, reports and tools</b><p>The engineer runs the object for every girder and receives a self-documenting report, and a spreadsheet for the checker, both from the same version.</p></div></li>
-      <li style="--c: var(--p4)"><span class="n">8</span><div><b>Maintenance</b><p>A torsion calculation is submitted. The search identifies it as a new component; it passes consolidation and the benchmarks, an engineer signs it off, and it is released as version 0.2. Every health check re-runs the benchmarks of all four projects.</p></div></li>
-    </ol>
   </section>
 
 </main>
